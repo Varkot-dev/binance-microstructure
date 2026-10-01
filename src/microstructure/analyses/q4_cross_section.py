@@ -294,60 +294,47 @@ def _write_results_md(out_dir: Path, result: dict) -> None:
     regs = result["regressions"]
 
     lines: list[str] = []
-    lines.append("# Q4: trades-side cross-section — results")
+    lines.append("# Q4: trades-side cross-section")
     lines.append("")
-    lines.append("## Methodology")
+    lines.append("## Method")
     lines.append("")
     lines.append(
-        f"For each symbol in the requested universe, one month ({period}) of aggTrades "
-        "is loaded and collapsed into aggressor-level events (`load_events`), producing a "
-        "±1 sign series per symbol. Symbols are processed one at a time and their frames "
-        "released (`del`) before moving to the next symbol, bounding peak memory across "
-        "the full universe. Symbols with fewer than "
-        f"`min_events` = {min_events:,} events are **skipped** (logged, reason "
-        "\"below min_events\") rather than analyzed; any other per-symbol failure "
-        "(missing parquet, malformed data, or any other exception) is caught and logged "
-        "into `failures` with the symbol and the exception, and never aborts the run for "
-        "the remaining symbols."
+        f"For each symbol in the universe I load one month ({period}) of aggTrades and "
+        "collapse it into aggressor-level events (`load_events`), giving a ±1 sign series. "
+        "Symbols are processed one at a time to bound peak memory. Symbols with fewer than "
+        f"`min_events` = {min_events:,} events are skipped (\"below min_events\"). Any "
+        "other per-symbol failure is logged in `failures` and does not abort the run."
     )
     lines.append("")
-    lines.append("Per successful symbol, five statistics are computed on the sign series:")
+    lines.append("Per symbol I compute:")
     lines.append("")
+    lines.append("- **n_events**: the number of aggressor events (activity).")
     lines.append(
-        "- **n_events**: activity, the number of aggressor events in the period."
-    )
-    lines.append(
-        "- **γ̂ + OLS stderr**: sign-ACF power-law exponent, fit the same way as Q1 "
+        "- **γ̂ + OLS stderr**: sign-ACF power-law exponent, fit as in Q1 "
         "(`fit_power_law(sign_acf(signs, max_lag), lo=10, hi=max_lag//2)`)."
     )
     lines.append("- **lag-1 ACF**: `sign_acf(signs, max_lag)[1]`.")
     lines.append(
-        "- **p_flip**: `P(sign_{t+1} != sign_t)`, the empirical fraction of consecutive "
-        "sign flips — 0.5 is the no-persistence benchmark (independent coin flips)."
+        "- **p_flip**: `P(sign_{t+1} != sign_t)`, the fraction of consecutive sign flips. "
+        "0.5 is the no-persistence benchmark."
     )
     lines.append(
-        "- **zigzag amplitude**: Phase-1.5's definition (Q1b) — mean ACF at even lags "
-        "2,4,6,8,10 minus mean ACF at odd lags 1,3,5,7,9."
+        "- **zigzag amplitude**: as in Q1b, mean ACF at lags 2,4,6,8,10 minus mean ACF at "
+        "lags 1,3,5,7,9."
     )
-    lines.append("- **total_qty**: sum of aggressor-event quantity over the period.")
+    lines.append("- **total_qty**: summed aggressor-event quantity.")
     lines.append("")
     lines.append(
-        "**Cross-sectional regressions**: on the successful set, ordinary least squares "
-        "(`np.polyfit`, degree 1, with intercept — not through-origin, since there is no "
-        "reason to expect γ̂ or p_flip to vanish at zero activity) is used to regress (a) "
-        "γ̂ on log10(n_events) and (b) p_flip on log10(n_events)."
+        "**Cross-sectional regressions**: OLS (`np.polyfit`, degree 1, with intercept) of "
+        "(a) γ̂ and (b) p_flip on log10(n_events)."
     )
     lines.append("")
     lines.append(
-        "**Heteroskedasticity caveat**: each symbol's own γ̂ stderr comes from "
-        "`fit_power_law`'s i.i.d.-residual OLS assumption applied to autocorrelated ACF "
-        "values, which already understates that symbol's true uncertainty (documented in "
-        "Q1). That understatement is *not* uniform across symbols — it scales with each "
-        "symbol's own n_events and ACF shape — so per-symbol γ̂ noise is heteroskedastic "
-        "across the cross-section. The cross-sectional regressions above therefore also "
-        "violate the homoskedastic-residual assumption behind their own OLS stderr; the "
-        "reported regression stderr/R² should be read as descriptive, not as a valid "
-        "confidence interval on the true relationship."
+        "**Heteroskedasticity caveat**: each symbol's γ̂ stderr comes from `fit_power_law`'s "
+        "i.i.d.-residual OLS on autocorrelated ACF values, which understates its "
+        "uncertainty (see Q1) by an amount that varies with n_events and ACF shape. γ̂ "
+        "noise is therefore heteroskedastic across symbols, and the regression stderr and "
+        "R² are descriptive, not a valid confidence interval."
     )
     lines.append("")
     lines.append("## Run summary")
@@ -392,7 +379,7 @@ def _write_results_md(out_dir: Path, result: dict) -> None:
                 )
             lines.append("")
     else:
-        lines.append("No symbols produced usable results — no table to show.")
+        lines.append("No symbols produced usable results, so there is no table.")
         lines.append("")
 
     lines.append("## Cross-sectional regressions")
@@ -409,10 +396,10 @@ def _write_results_md(out_dir: Path, result: dict) -> None:
     flip_reg = regs.get("p_flip_vs_activity")
     if gamma_reg is not None:
         lines.append(
-            f"The fitted order-flow memory exponent γ̂ **{_direction_word(gamma_reg['slope'])}** "
-            f"with log-activity across the {gamma_reg['n']}-symbol successful set "
-            f"(slope {gamma_reg['slope']:.4f}, R² {gamma_reg['r2']:.4f}), i.e. more actively "
-            "traded symbols in this sample tend to show "
+            f"γ̂ {_direction_word(gamma_reg['slope'])} log-activity across the "
+            f"{gamma_reg['n']}-symbol successful set "
+            f"(slope {gamma_reg['slope']:.4f}, R² {gamma_reg['r2']:.4f}). More actively "
+            "traded symbols in this sample show "
             f"{'stronger' if gamma_reg['slope'] > 0 else 'weaker' if gamma_reg['slope'] < 0 else 'no different'} "
             "long-memory decay than less actively traded ones."
         )
@@ -424,14 +411,11 @@ def _write_results_md(out_dir: Path, result: dict) -> None:
     lines.append("")
     if flip_reg is not None:
         lines.append(
-            f"The sign-flip probability p_flip **{_direction_word(flip_reg['slope'])}** with "
-            f"log-activity (slope {flip_reg['slope']:.4f}, R² {flip_reg['r2']:.4f}); since "
-            "p_flip = 0.5 corresponds to no persistence, this indicates that persistence "
+            f"p_flip {_direction_word(flip_reg['slope'])} log-activity "
+            f"(slope {flip_reg['slope']:.4f}, R² {flip_reg['r2']:.4f}). Since "
+            "p_flip = 0.5 means no persistence, persistence "
             f"{'strengthens' if flip_reg['slope'] < 0 else 'weakens' if flip_reg['slope'] > 0 else 'is unrelated to activity level'} "
-            "as activity increases "
-            f"(a slope {'below' if flip_reg['slope'] < 0 else 'above' if flip_reg['slope'] > 0 else 'equal to'} zero means "
-            f"p_flip {'falls toward more persistent' if flip_reg['slope'] < 0 else 'rises toward more anti-persistent' if flip_reg['slope'] > 0 else 'does not change'} "
-            "behavior at higher activity)."
+            "as activity increases."
         )
     else:
         lines.append(
@@ -461,26 +445,22 @@ def _write_results_md(out_dir: Path, result: dict) -> None:
     lines.append("## Caveats")
     lines.append("")
     lines.append(
-        f"- Single month ({period}); this is one specific market regime, and per Phase 1.5 "
-        "diagnostics, order-flow memory statistics are regime-dependent — these results "
-        "may not generalize to other months or volatility regimes."
+        f"- Single month ({period}) in one market regime. Order-flow memory statistics "
+        "are regime-dependent (see Q8), so these results may not carry over to other "
+        "months or volatility regimes."
     )
     lines.append(
-        "- Each symbol's γ̂ OLS stderr understates true uncertainty (autocorrelated ACF "
-        "values violate the i.i.d.-residual assumption, same caveat as Q1), and this "
-        "understatement is heteroskedastic across the cross-section (see Methodology); "
-        "the cross-sectional regression stderr/R² inherit this problem and should be read "
-        "as descriptive summaries, not as valid confidence intervals."
+        "- Each symbol's γ̂ OLS stderr understates the uncertainty (autocorrelated ACF "
+        "values, as in Q1), and the understatement is heteroskedastic across the "
+        "cross-section. The regression stderr and R² inherit this and are descriptive only."
     )
     lines.append(
-        "- `q4_gamma_vs_activity.png` deliberately omits per-symbol error bars on γ̂: "
-        "plotting the OLS stderr would imply a precision the estimate does not have, for "
-        "the same heteroskedasticity/understatement reason given above."
+        "- `q4_gamma_vs_activity.png` omits per-symbol error bars on γ̂, because the OLS "
+        "stderr would imply a precision the estimate lacks."
     )
     lines.append(
-        "- Symbols are only included in the regressions if they clear `min_events`; the "
-        "cross-section is therefore a survivorship-filtered subset of the requested "
-        "universe, not the full universe."
+        "- Only symbols clearing `min_events` enter the regressions, so the cross-section "
+        "is a survivorship-filtered subset of the requested universe."
     )
     lines.append("")
     (out_dir / "q4_cross_section.md").write_text("\n".join(lines))

@@ -401,102 +401,79 @@ def _write_results_md(out_dir: Path, result: dict) -> None:
     agreement = result["agreement"]
 
     lines: list[str] = []
-    lines.append("# Q6: branching-ratio panel — Hawkes endogeneity cross-section")
+    lines.append("# Q6: branching-ratio panel, Hawkes endogeneity cross-section")
     lines.append("")
-    lines.append("## Methodology")
+    lines.append("## Method")
     lines.append("")
     lines.append(
-        f"**Symbol selection**: the requested panel is the {result['n_symbols_requested']}-symbol "
-        "union of (a) the fixed 16-symbol panel (`results/panel_2023-06.txt`) and (b) the top "
-        f"`--top-n` (default 40) most-active symbols by June-2023 `n_events`, restricted to the "
-        "207-symbol universe (`results/universe_2023-06.txt`) and ranked using the already-"
-        "computed activity column in `results/q4_cross_section.parquet` (Q4's cross-section, "
-        "not a fresh count — the universe file itself is not activity-ranked). The union is "
-        "deduplicated (`results/q6_symbols_2023-06.txt`, one entry per symbol, order preserving "
-        "first occurrence). In this run the two source sets overlap 15/16 — nearly every panel "
-        "symbol is ALSO one of the 40 most-active universe symbols — so the deduplicated union "
-        f"lands at {result['n_symbols_requested']} symbols, not the ~50-56 a naive 16+40 sum "
-        "would suggest. This is reported honestly here rather than padded to hit a round number: "
-        "the panel and \"most active\" sets are highly correlated by construction (the panel was "
-        "itself chosen to include liquid, well-known symbols), so their union is smaller than "
-        "the sum of their sizes."
+        f"**Symbol selection**: the {result['n_symbols_requested']}-symbol union of (a) the "
+        "fixed 16-symbol panel (`results/panel_2023-06.txt`) and (b) the top `--top-n` "
+        "(default 40) symbols by June-2023 `n_events` within the 207-symbol universe "
+        "(`results/universe_2023-06.txt`), ranked with the activity column in "
+        "`results/q4_cross_section.parquet`. The union is deduplicated "
+        "(`results/q6_symbols_2023-06.txt`). The panel was chosen to be liquid, so the two "
+        f"sets overlap 15/16 and the union has {result['n_symbols_requested']} symbols, not "
+        "the ~50-56 a naive 16+40 sum suggests."
     )
     lines.append("")
     lines.append(
-        f"For each symbol, one month ({month}) of aggTrades is loaded and collapsed to "
-        "aggressor-level events (`load_events`). Symbols are processed one at a time; any "
-        "per-symbol exception (missing parquet, too few events for the window/guard "
-        "requirements) is caught and logged into `failures` without aborting the run."
+        f"For each symbol I load one month ({month}) of aggTrades and collapse it to "
+        "aggressor-level events (`load_events`). A per-symbol exception (missing parquet, "
+        "too few events for the window/guard requirements) is logged in `failures` and "
+        "does not abort the run."
     )
     lines.append("")
     lines.append(
-        "**Business time first, and why.** Event timestamps are converted to a normalized "
-        "intraday rate profile (`intraday_rate_profile`, 48 bins) and rescaled to business "
-        "time (`rescale_to_business_time`) BEFORE any Hawkes fitting is attempted. This step "
-        "is not optional — fitting a Hawkes MLE (or the model-free count-variance estimator) "
-        "directly on clock time cannot distinguish genuine self-excitation from a merely "
-        "time-varying, non-self-exciting baseline rate. This repo's own synthetic trap test "
-        "(`test_regime_switching_poisson_produces_spurious_endogeneity_trap`) shows a "
-        "regime-switching Poisson process — NO self-excitation anywhere, just a rate that "
-        "alternates on a fixed clock — produces a spurious count-variance n̂ > 0.2 and a "
-        "spurious fitted MLE alpha > 0.5 (Filimonov & Sornette 2015). Every crypto symbol's "
-        "aggressor flow has at least that strong an intraday U-shape / funding-hour "
-        "clustering pattern, so any clock-time endogeneity estimate on this data would be "
-        "unable to separate real branching from that artifact. The `raw_delta` column below "
-        "quantifies the actual size of this bias, per symbol, rather than merely asserting "
-        "the fix is needed."
+        "**Business time first.** Timestamps are rescaled to business time "
+        "(`intraday_rate_profile`, 48 bins, then `rescale_to_business_time`) before any "
+        "Hawkes fitting. On clock time, neither the Hawkes MLE nor the count-variance "
+        "estimator can separate self-excitation from a time-varying baseline rate. A "
+        "synthetic trap test (`test_regime_switching_poisson_produces_spurious_"
+        "endogeneity_trap`) shows a regime-switching Poisson process with no "
+        "self-excitation yields a spurious count-variance n̂ > 0.2 and a spurious MLE alpha "
+        "> 0.5 (Filimonov & Sornette 2015). Crypto flow has at least that strong an "
+        "intraday U-shape and funding-hour clustering. The `raw_delta` column measures the "
+        "bias per symbol."
     )
     lines.append("")
     lines.append(
-        f"**Sub-windows**: the full-month business-time series is split into {windows} equal "
-        "contiguous sub-windows. Each is fit independently via `fit_hawkes_exp` on "
-        "(business_time − window_start). **Runtime cap**: a sub-window with more than "
-        f"{MAX_FIT_EVENTS:,} events is fit on only the FIRST {MAX_FIT_EVENTS:,} of that "
-        "window's events — this bounds the O(N log N) per-fit MLE cost. Per this repo's own "
-        "multi-seed synthetic tests, fitted-alpha sampling sd at comparable sample sizes is "
-        "~0.004-0.02, so subsampling this large does not materially widen the uncertainty "
-        "already present from having only 6 windows per symbol. That sd figure was measured "
-        "on well-specified-kernel synthetic data; it bounds sampling noise from the "
-        "truncation itself, not the separate, larger effect of exponential-kernel "
-        "misspecification against a true power-law kernel (see the kernel caveat below), "
-        "which this sd transfer does not speak to."
+        f"**Sub-windows**: the business-time series is split into {windows} equal "
+        "contiguous sub-windows, each fit with `fit_hawkes_exp` on "
+        f"(business_time − window_start). **Runtime cap**: a sub-window with more than "
+        f"{MAX_FIT_EVENTS:,} events is fit on its first {MAX_FIT_EVENTS:,} only, to bound "
+        "the O(N log N) MLE cost. Multi-seed synthetic tests give a fitted-alpha sampling "
+        f"sd of ~0.004-0.02 at comparable sizes, small next to the spread from having only "
+        f"{windows} windows per symbol. That sd comes from well-specified-kernel data. It "
+        "does not cover exponential-kernel misspecification against a true power-law "
+        "kernel (see the kernel caveat)."
     )
     lines.append("")
     lines.append(
-        "**alpha_median / alpha_iqr**: the median and interquartile range of the 6 "
-        "per-window fitted alphas — the panel's primary point estimate and its "
-        "within-symbol dispersion. **n_converged**: how many of the 6 window fits reported "
-        "`converged=True` (see `fit_hawkes_exp`'s docstring on what that flag does and does "
-        "NOT mean — it reflects the optimizer settling, not that the parameters are well "
-        "identified, especially near alpha≈1)."
+        f"**alpha_median / alpha_iqr**: median and IQR of the {windows} per-window alphas. "
+        f"**n_converged**: how many of the {windows} fits reported `converged=True`. The "
+        "flag means the optimizer settled, not that the parameters are well identified, "
+        "especially near alpha≈1 (see the `fit_hawkes_exp` docstring)."
     )
     lines.append("")
     lines.append(
-        "**raw_delta (seasonality-bias measurement)**: ONE additional fit is run on the "
-        "first sub-window's events using RAW clock time (no business-time rescaling), same "
-        "event subset and same runtime cap. `raw_delta = alpha_raw − alpha_rescaled_window1` "
-        "is the per-symbol, empirically measured size of the seasonality bias this whole "
-        "analysis is designed to avoid — a positive raw_delta means the naive clock-time fit "
-        "would have overstated endogeneity relative to the business-time-corrected estimate."
+        "**raw_delta**: one extra fit on the first sub-window using raw clock time, same "
+        "events and cap. `raw_delta = alpha_raw − alpha_rescaled_window1`. A positive value "
+        "means the clock-time fit overstates endogeneity."
     )
     lines.append("")
     lines.append(
-        "**alpha_cv (count-variance n̂)**: `branching_count_variance` on the FULL "
-        "business-time series (not per-window), with window_bt = 200 business-time seconds "
-        "by default. This must be ≫ the kernel decay timescale 1/beta (typically ~0.1-2s for "
-        "liquid crypto aggressor flow) for the estimator's large-window asymptotic to hold — "
-        "short windows truncate the kernel's memory and bias n̂ toward 0. A sanity assertion "
-        "widens the window to 100/median_beta whenever 200s does not clear the 20/median_beta "
-        "threshold for that symbol's own fitted decay rate, so the window scales up "
-        "automatically for unusually slow-decaying symbols instead of silently understating "
-        "their n̂."
+        "**alpha_cv (count-variance n̂)**: `branching_count_variance` on the full "
+        "business-time series, with window_bt = 200 business-time seconds by default. The "
+        "window must be much larger than the kernel decay timescale 1/beta (typically "
+        "~0.1-2s for liquid crypto flow), or the estimator truncates the kernel's memory "
+        "and biases n̂ toward 0. When 200s does not clear 20/median_beta for a symbol, the "
+        "window widens to 100/median_beta."
     )
     lines.append("")
     lines.append(
         "**Cross-section**: OLS (`np.polyfit`, with intercept) of alpha_median on "
-        "log10(n_events) across the successful symbols. **MLE-vs-CV agreement**: median "
-        "absolute difference and Pearson correlation between alpha_median (MLE) and alpha_cv "
-        "(count-variance) — an honesty check on whether the two independent estimators agree."
+        "log10(n_events). **MLE-vs-CV agreement**: median absolute difference and Pearson "
+        "correlation between alpha_median and alpha_cv."
     )
     lines.append("")
     lines.append("## Run summary")
@@ -525,8 +502,7 @@ def _write_results_md(out_dir: Path, result: dict) -> None:
             )
         lines.append("")
 
-        # Estimator-agreement honesty table
-        lines.append("## Estimator-agreement honesty table")
+        lines.append("## Estimator agreement")
         lines.append("")
         lines.append("| symbol | α̂_median (MLE) | n̂_CV (count-variance) | |diff| |")
         lines.append("|---|---|---|---|")
@@ -544,7 +520,7 @@ def _write_results_md(out_dir: Path, result: dict) -> None:
             )
             lines.append("")
     else:
-        lines.append("No symbols produced usable results — no table to show.")
+        lines.append("No symbols produced usable results, so there is no table.")
         lines.append("")
 
     lines.append("## Activity regression")
@@ -567,27 +543,24 @@ def _write_results_md(out_dir: Path, result: dict) -> None:
         lines.append("")
         lines.append(
             "**Comparison to the literature**: Mark, Sila & Weber (2022, *European Journal "
-            "of Finance*, docs/research/02 citation) find BTC's endogeneity level, fit with "
-            "power-law kernels, comparable to fiat FX markets — i.e. crypto is not "
-            "structurally different from mature, near-critical asset classes in that study. "
+            "of Finance*) find BTC's endogeneity level, fit with power-law kernels, "
+            "comparable to fiat FX markets, so crypto is not structurally different from "
+            "mature, near-critical asset classes in that study. "
             f"This panel's exponential-kernel median of {overall_median:.4f} is "
             f"{'broadly consistent with a near-critical' if overall_median > 0.6 else 'well below a near-critical'} "
-            "regime at face value, but the exponential-kernel caveat below means this number "
-            "is a LOWER bound on the true (power-law) endogeneity level, not a directly "
-            "comparable point estimate to that literature's power-law fits."
+            "regime at face value. Given the exponential-kernel caveat below, it is a "
+            "lower bound on the true (power-law) endogeneity level and not directly "
+            "comparable to that literature's power-law fits."
         )
         lines.append("")
         if reg is not None:
             direction = "increases" if reg["slope"] > 0 else "decreases" if reg["slope"] < 0 else "shows no relationship with"
             lines.append(
-                f"Endogeneity **{direction}** with log-activity across the panel "
+                f"Endogeneity {direction} with log-activity across the panel "
                 f"(slope {reg['slope']:.4f}, R² {reg['r2']:.4f}, n={reg['n']})."
             )
         else:
-            lines.append(
-                "Activity regression not estimable in this run (see Activity regression "
-                "section above)."
-            )
+            lines.append("The activity regression is not estimable in this run.")
         lines.append("")
         if agreement["median_abs_diff"] is not None:
             mle_med = float(np.median([r["alpha_median"] for r in records]))
@@ -598,44 +571,36 @@ def _write_results_md(out_dir: Path, result: dict) -> None:
             else:
                 corr_strength = "weak" if abs(corr_val) < 0.4 else "moderate" if abs(corr_val) < 0.7 else "strong"
                 corr_sign = "positive" if corr_val > 0 else "negative" if corr_val < 0 else "zero"
-                corr_phrase = f"{corr_val:.4f} — {corr_strength} {corr_sign}, not a strong cross-check"
+                corr_phrase = f"{corr_val:.4f}, {corr_strength} {corr_sign}"
+                if corr_strength != "strong":
+                    corr_phrase += ", not a strong cross-check"
             n_cv_higher = sum(1 for r in records if r["alpha_cv"] > r["alpha_median"])
             frac_cv_higher = n_cv_higher / len(records)
             if frac_cv_higher >= 0.9 or frac_cv_higher <= 0.1:
                 direction_note = (
-                    f"the disagreement is systematically ONE-DIRECTIONAL: count-variance reads "
-                    f"higher than the MLE for {n_cv_higher}/{len(records)} symbols "
-                    f"({frac_cv_higher:.0%}), not just on average (median n̂_CV ≈ {cv_med:.4f} "
-                    f"vs. median α̂_median ≈ {mle_med:.4f})"
+                    f"the gap is one-directional: count-variance reads higher than the MLE "
+                    f"for {n_cv_higher}/{len(records)} symbols ({frac_cv_higher:.0%}), not "
+                    f"just on average (median n̂_CV ≈ {cv_med:.4f} vs. median α̂_median ≈ "
+                    f"{mle_med:.4f})"
                 )
             else:
                 direction_note = (
-                    f"the direction of disagreement is mixed across symbols (count-variance "
-                    f"reads higher for {n_cv_higher}/{len(records)}, {frac_cv_higher:.0%}) "
-                    f"rather than a uniform one-directional bias"
+                    f"the direction is mixed across symbols (count-variance reads higher "
+                    f"for {n_cv_higher}/{len(records)}, {frac_cv_higher:.0%})"
                 )
             lines.append(
-                f"**MLE-vs-CV disagreement is large and should not be papered over.** The "
-                f"two independent branching-ratio estimators disagree by a median of "
-                f"{agreement['median_abs_diff']:.4f} across the panel (Pearson correlation "
-                f"{corr_phrase}), and {direction_note}. Two plausible, non-exclusive "
-                "explanations for a gap in this direction: "
-                "(1) **exponential-kernel MLE misspecification** — if the true kernel is a "
-                "slowly-decaying power law, the exponential-kernel MLE truncates long-range "
-                "excitation and understates alpha (see the exp-kernel caveat below), while "
-                "`branching_count_variance` assumes no kernel shape at all and is free of that "
-                "particular bias, so a gap in exactly this direction is consistent with real "
-                "kernel misspecification, not just noise; (2) **count-variance window "
-                "sensitivity** — n̂_CV uses one fixed 200s (business-time) window per symbol, "
-                "and `branching_count_variance`'s own docstring warns that its large-window "
-                "asymptotic is an approximation, not exact, at any finite window, so part of "
-                "the gap could be window-choice artifact rather than a genuine kernel-shape "
-                "signal. This analysis cannot cleanly separate the two explanations with the "
-                "data collected here — a power-law-kernel MLE refit (out of scope for this "
-                "task) and/or a window-sensitivity sweep on alpha_cv would be needed to "
-                "attribute the gap with any confidence. Reporting both estimators side by "
-                "side, disagreeing this much, is the honest result; averaging or picking "
-                "whichever one looks more publishable would not be."
+                f"**The two branching-ratio estimators disagree substantially.** The median "
+                f"absolute difference is {agreement['median_abs_diff']:.4f} (Pearson "
+                f"correlation {corr_phrase}), and {direction_note}. Two explanations, not "
+                "mutually exclusive. (1) Exponential-kernel misspecification: if the true "
+                "kernel is a slowly decaying power law, the exponential MLE truncates "
+                "long-range excitation and understates alpha, while "
+                "`branching_count_variance` assumes no kernel shape. A gap in this "
+                "direction fits that, but not uniquely. (2) Window sensitivity: n̂_CV uses "
+                "one fixed 200s window per symbol, and its large-window asymptotic is "
+                "approximate at any finite window (see the `branching_count_variance` "
+                "docstring). The data here cannot separate the two. A power-law-kernel MLE "
+                "refit and a window sweep on alpha_cv would, and I did not run either."
             )
         lines.append("")
         if records:
@@ -645,47 +610,32 @@ def _write_results_md(out_dir: Path, result: dict) -> None:
             small_bias = max_abs_raw_delta < 0.05
             if small_bias:
                 lines.append(
-                    f"**The near-zero seasonality bias is itself a real, interesting finding, "
-                    f"not a null result.** Median raw-vs-rescaled delta across the panel: "
-                    f"**{median_raw_delta:+.4f}** (largest magnitude across all symbols: "
-                    f"{max_abs_raw_delta:.4f}) — a naive clock-time-only fit on this data would "
-                    "have mismeasured endogeneity by only a small fraction of a unit of alpha, "
-                    "relative to the business-time-corrected estimate. This is NOT evidence "
-                    "that business-time rescaling was unnecessary or that this module's central "
-                    "methodological argument was overstated — it is evidence about THIS "
-                    "market's intraday shape specifically. Crypto futures trade 24/7 with no "
-                    "exchange open/close, no lunch lull, and no single dominant regional session "
-                    "the way equities or FX do; the 48-bin intraday rate profile "
-                    "`intraday_rate_profile` recovers from a month of aggTrades on these symbols "
-                    "is close to flat (see the profile's own mean-1 normalization — a genuinely "
-                    "flat profile makes `rescale_to_business_time` close to the identity map), "
-                    "so there is comparatively little seasonal confound for rescaling to remove "
-                    "in the first place. This is the sharp contrast worth stating explicitly: "
-                    "this repo's OWN synthetic justification test for business-time rescaling "
-                    "(`test_eventtime.py`'s seasonal-baseline Hawkes justification test, task-2 "
-                    "report) used a deliberately deep intraday trough (shape amplitude as low as "
-                    "1.05x baseline) and measured a raw-fit alpha inflated by +0.22 to +0.55 "
-                    "over truth, comfortably rescaled back down to within ~0.01 of truth by this "
-                    "same pipeline — proving the fix works when the seasonal confound is large. "
-                    "This real panel's near-zero raw_delta says the confound this pipeline was "
-                    "built to remove is simply much smaller in a 24/7 crypto market than in that "
-                    "synthetic (or a traditional-hours) stress test, not that the correction is "
-                    "inert. The pipeline still ran on every symbol as a matter of methodological "
-                    "discipline — not knowing in advance how flat a given symbol's profile would "
-                    "be is exactly why the correction is applied unconditionally rather than "
-                    "skipped based on a guess."
+                    f"**The seasonality bias is near zero.** Median raw-vs-rescaled delta "
+                    f"across the panel: **{median_raw_delta:+.4f}** (largest magnitude across "
+                    f"all symbols: {max_abs_raw_delta:.4f}). A clock-time-only fit would have "
+                    "mismeasured alpha by only a small fraction of a unit. That reflects this "
+                    "market, not a redundant correction: crypto futures trade 24/7 with no "
+                    "open/close or dominant regional session, and the 48-bin "
+                    "`intraday_rate_profile` is close to flat, so `rescale_to_business_time` "
+                    "is close to the identity. By contrast, the synthetic seasonal-baseline "
+                    "Hawkes test in `test_eventtime.py` used a deep intraday trough (shape "
+                    "amplitude as low as 1.05x baseline). Its raw-fit alpha was inflated by "
+                    "+0.22 to +0.55 over truth, and this pipeline rescaled it back to within "
+                    "~0.01. The fix works when the confound is large, and here the confound "
+                    "is small. I apply it to every symbol since the profile's flatness is "
+                    "not known in advance."
                 )
             else:
                 lines.append(
                     f"Median raw-vs-rescaled seasonality-bias delta across the panel: "
-                    f"**{median_raw_delta:+.4f}** (largest magnitude: {max_abs_raw_delta:.4f}) "
-                    "— the typical amount by which a naive clock-time-only fit would have "
-                    "mismeasured endogeneity relative to the business-time-corrected estimate "
-                    "on this data."
+                    f"**{median_raw_delta:+.4f}** (largest magnitude: {max_abs_raw_delta:.4f}), "
+                    "the typical amount by which a clock-time-only fit would have "
+                    "mismeasured endogeneity relative to the business-time estimate on "
+                    "this data."
                 )
             lines.append("")
     else:
-        lines.append("No successful symbols in this run — no finding to report.")
+        lines.append("No successful symbols in this run, so there is no finding.")
         lines.append("")
 
     if result["failures"]:
@@ -700,50 +650,42 @@ def _write_results_md(out_dir: Path, result: dict) -> None:
     lines.append("## Caveats")
     lines.append("")
     lines.append(
-        f"- **Single month** ({month}): one specific market regime; endogeneity levels are "
-        "plausibly regime-dependent (activity, volatility) and may not generalize to other "
-        "months."
+        f"- **Single month** ({month}): one market regime. Endogeneity levels are "
+        "plausibly regime-dependent (activity, volatility) and may not carry over to "
+        "other months."
     )
     lines.append(
         "- **Exponential kernel only**: per Hardiman & Bouchaud (2014) and the broader "
-        "power-law-kernel literature this module's own research notes cite, fitting an "
-        "exponential kernel to data whose TRUE kernel is a slowly-decaying power law "
-        "systematically UNDERSTATES the branching ratio — the exponential kernel's finite "
-        "memory truncates the long-range contribution a power-law kernel would capture. "
-        "This panel's alpha estimates should therefore be read as a LOWER-bound-flavored "
-        "estimate of true endogeneity, not an exact point estimate; a power-law-kernel refit "
-        "would likely push every number in this table upward, potentially materially so."
+        "power-law-kernel literature, an exponential kernel fit to data with a true "
+        "slowly decaying power-law kernel understates the branching ratio, because its "
+        "finite memory truncates the long-range contribution. Read the alpha estimates "
+        "as lower-bound-flavored, not exact. A power-law-kernel refit would likely push "
+        "every number in the table up, possibly materially."
     )
     lines.append(
-        "- **convergence-flag semantics**: `n_converged` reflects only that a window's "
-        "Nelder-Mead search stopped improving locally — it does NOT certify that mu/alpha "
-        "are well identified. Near alpha≈1 the likelihood surface has a shallow mu-alpha "
-        "ridge (`fit_hawkes_exp`'s docstring), so a `converged=True` window near the "
-        "boundary of alpha is a weaker signal than the same flag away from it."
+        "- **Convergence flag**: `n_converged` only says the Nelder-Mead search stopped "
+        "improving locally. Near alpha≈1 the likelihood has a shallow mu-alpha ridge "
+        "(`fit_hawkes_exp` docstring), so `converged=True` there is a weak signal."
     )
     lines.append(
-        f"- **Runtime cap** ({MAX_FIT_EVENTS:,} events/window): windows above this cap are "
-        "fit on a truncated prefix, not the full window. This bounds cost but means those "
-        "windows' alpha reflects only the earliest events in an otherwise larger window."
+        f"- **Runtime cap** ({MAX_FIT_EVENTS:,} events/window): windows above the cap are "
+        "fit on a truncated prefix, so their alpha reflects only the earliest events of "
+        "the window."
     )
     lines.append(
-        "- **count-variance window (200s business-time default)**: a fixed, documented "
-        "choice, not tuned per symbol beyond the 20/median_beta sanity widening described "
-        "above; a different window choice could shift alpha_cv, particularly for symbols "
-        "near the sanity threshold."
+        "- **Count-variance window (200s default)**: fixed apart from the 20/median_beta "
+        "widening. A different window could shift alpha_cv, especially near that threshold."
     )
     lines.append(
-        "- **Heteroskedasticity in the activity regression**: as in Q4/Q5, per-symbol "
-        "alpha_median dispersion (alpha_iqr) is not uniform across the cross-section, so the "
-        "OLS regression's homoskedastic-residual assumption is almost certainly violated; "
-        "the reported slope/R²/stderr are descriptive, not a formal confidence interval."
+        "- **Heteroskedasticity in the activity regression**: alpha_iqr varies across the "
+        "cross-section, so the OLS homoskedasticity assumption is almost certainly "
+        "violated. The slope, R² and stderr are descriptive."
     )
     lines.append(
-        "- **48-bin intraday profile**: `intraday_rate_profile` estimates the seasonal "
-        "shape from the SAME month's data being fit, not an independent sample — any "
-        "genuine self-excitation clustering at the same time-of-day scale (unlikely at "
-        "48-bin, ~30-minute resolution, but not provably absent) could partially leak into "
-        "the profile and be removed along with the seasonal confound."
+        "- **48-bin intraday profile**: it is estimated from the same month being fit, so "
+        "real self-excitation clustering at the same time-of-day scale (unlikely at "
+        "~30-minute resolution, but not provably absent) could be removed with the "
+        "seasonal confound."
     )
     lines.append("")
     (out_dir / "q6_endogeneity.md").write_text("\n".join(lines))

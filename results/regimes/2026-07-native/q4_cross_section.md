@@ -1,21 +1,21 @@
-# Q4: trades-side cross-section — results
+# Q4: trades-side cross-section
 
-## Methodology
+## Method
 
-For each symbol in the requested universe, one month (2026-07) of aggTrades is loaded and collapsed into aggressor-level events (`load_events`), producing a ±1 sign series per symbol. Symbols are processed one at a time and their frames released (`del`) before moving to the next symbol, bounding peak memory across the full universe. Symbols with fewer than `min_events` = 1,000,000 events are **skipped** (logged, reason "below min_events") rather than analyzed; any other per-symbol failure (missing parquet, malformed data, or any other exception) is caught and logged into `failures` with the symbol and the exception, and never aborts the run for the remaining symbols.
+For each symbol in the universe I load one month (2026-07) of aggTrades and collapse it into aggressor-level events (`load_events`), giving a ±1 sign series. Symbols are processed one at a time to bound peak memory. Symbols with fewer than `min_events` = 1,000,000 events are skipped ("below min_events"). Any other per-symbol failure is logged in `failures` and does not abort the run.
 
-Per successful symbol, five statistics are computed on the sign series:
+Per symbol I compute:
 
-- **n_events**: activity, the number of aggressor events in the period.
-- **γ̂ + OLS stderr**: sign-ACF power-law exponent, fit the same way as Q1 (`fit_power_law(sign_acf(signs, max_lag), lo=10, hi=max_lag//2)`).
+- **n_events**: the number of aggressor events (activity).
+- **γ̂ + OLS stderr**: sign-ACF power-law exponent, fit as in Q1 (`fit_power_law(sign_acf(signs, max_lag), lo=10, hi=max_lag//2)`).
 - **lag-1 ACF**: `sign_acf(signs, max_lag)[1]`.
-- **p_flip**: `P(sign_{t+1} != sign_t)`, the empirical fraction of consecutive sign flips — 0.5 is the no-persistence benchmark (independent coin flips).
-- **zigzag amplitude**: Phase-1.5's definition (Q1b) — mean ACF at even lags 2,4,6,8,10 minus mean ACF at odd lags 1,3,5,7,9.
-- **total_qty**: sum of aggressor-event quantity over the period.
+- **p_flip**: `P(sign_{t+1} != sign_t)`, the fraction of consecutive sign flips. 0.5 is the no-persistence benchmark.
+- **zigzag amplitude**: as in Q1b, mean ACF at lags 2,4,6,8,10 minus mean ACF at lags 1,3,5,7,9.
+- **total_qty**: summed aggressor-event quantity.
 
-**Cross-sectional regressions**: on the successful set, ordinary least squares (`np.polyfit`, degree 1, with intercept — not through-origin, since there is no reason to expect γ̂ or p_flip to vanish at zero activity) is used to regress (a) γ̂ on log10(n_events) and (b) p_flip on log10(n_events).
+**Cross-sectional regressions**: OLS (`np.polyfit`, degree 1, with intercept) of (a) γ̂ and (b) p_flip on log10(n_events).
 
-**Heteroskedasticity caveat**: each symbol's own γ̂ stderr comes from `fit_power_law`'s i.i.d.-residual OLS assumption applied to autocorrelated ACF values, which already understates that symbol's true uncertainty (documented in Q1). That understatement is *not* uniform across symbols — it scales with each symbol's own n_events and ACF shape — so per-symbol γ̂ noise is heteroskedastic across the cross-section. The cross-sectional regressions above therefore also violate the homoskedastic-residual assumption behind their own OLS stderr; the reported regression stderr/R² should be read as descriptive, not as a valid confidence interval on the true relationship.
+**Heteroskedasticity caveat**: each symbol's γ̂ stderr comes from `fit_power_law`'s i.i.d.-residual OLS on autocorrelated ACF values, which understates its uncertainty (see Q1) by an amount that varies with n_events and ACF shape. γ̂ noise is therefore heteroskedastic across symbols, and the regression stderr and R² are descriptive, not a valid confidence interval.
 
 ## Run summary
 
@@ -59,9 +59,9 @@ Requested: 371. Successful: 231. Skipped (below min_events): 138. Failed: 2.
 
 ## Findings
 
-The fitted order-flow memory exponent γ̂ **increases** with log-activity across the 231-symbol successful set (slope 0.0612, R² 0.0196), i.e. more actively traded symbols in this sample tend to show stronger long-memory decay than less actively traded ones.
+γ̂ increases log-activity across the 231-symbol successful set (slope 0.0612, R² 0.0196). More actively traded symbols in this sample show stronger long-memory decay than less actively traded ones.
 
-The sign-flip probability p_flip **increases** with log-activity (slope 0.0006, R² 0.0000); since p_flip = 0.5 corresponds to no persistence, this indicates that persistence weakens as activity increases (a slope above zero means p_flip rises toward more anti-persistent behavior at higher activity).
+p_flip increases log-activity (slope 0.0006, R² 0.0000). Since p_flip = 0.5 means no persistence, persistence weakens as activity increases.
 
 ## Failures
 
@@ -215,7 +215,7 @@ The sign-flip probability p_flip **increases** with log-activity (slope 0.0006, 
 
 ## Caveats
 
-- Single month (2026-07); this is one specific market regime, and per Phase 1.5 diagnostics, order-flow memory statistics are regime-dependent — these results may not generalize to other months or volatility regimes.
-- Each symbol's γ̂ OLS stderr understates true uncertainty (autocorrelated ACF values violate the i.i.d.-residual assumption, same caveat as Q1), and this understatement is heteroskedastic across the cross-section (see Methodology); the cross-sectional regression stderr/R² inherit this problem and should be read as descriptive summaries, not as valid confidence intervals.
-- `q4_gamma_vs_activity.png` deliberately omits per-symbol error bars on γ̂: plotting the OLS stderr would imply a precision the estimate does not have, for the same heteroskedasticity/understatement reason given above.
-- Symbols are only included in the regressions if they clear `min_events`; the cross-section is therefore a survivorship-filtered subset of the requested universe, not the full universe.
+- Single month (2026-07) in one market regime. Order-flow memory statistics are regime-dependent (see Q8), so these results may not carry over to other months or volatility regimes.
+- Each symbol's γ̂ OLS stderr understates the uncertainty (autocorrelated ACF values, as in Q1), and the understatement is heteroskedastic across the cross-section. The regression stderr and R² inherit this and are descriptive only.
+- `q4_gamma_vs_activity.png` omits per-symbol error bars on γ̂, because the OLS stderr would imply a precision the estimate lacks.
+- Only symbols clearing `min_events` enter the regressions, so the cross-section is a survivorship-filtered subset of the requested universe.

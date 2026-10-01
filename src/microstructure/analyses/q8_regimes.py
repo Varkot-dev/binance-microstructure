@@ -629,14 +629,15 @@ def _kernel_mode_lines(
     )
     return [
         (
-            "**Kernel-mode shift — do not read the α median as an endogeneity change for: "
-        f"{details}.** The fast-mode share is the fraction of symbols whose single-exponential "
-        f"fit has β̂ > {FAST_MODE_BETA:g} (decay faster than {1 / FAST_MODE_BETA:g} business-time "
-        f"seconds); in the baseline ({baseline_label}) it is {base_fast:.2f}. A fit in the fast mode "
-        "captures only the fast component of a multi-timescale kernel, so its α̂ is lower by "
-        "construction. Compare these regimes on the slow-mode α median (fits with β̂ ≤ "
-        f"{FAST_MODE_BETA:g} only) or on the count-variance n̂_CV column, which assumes no "
-        "kernel shape."
+            f"**Kernel-mode shift: do not read the α median as an endogeneity change for "
+            f"{details}.** The fast-mode share is the fraction of symbols whose "
+            f"single-exponential fit has β̂ > {FAST_MODE_BETA:g} (decay faster than "
+            f"{1 / FAST_MODE_BETA:g} business-time seconds). In the baseline "
+            f"({baseline_label}) it is {base_fast:.2f}. A fast-mode fit captures only the "
+            "fast component of a multi-timescale kernel, so its α̂ is lower by "
+            "construction. Compare these regimes on the slow-mode α median (fits with "
+            f"β̂ ≤ {FAST_MODE_BETA:g} only) or on the count-variance n̂_CV column, which "
+            "assumes no kernel shape."
         ),
         "",
     ]
@@ -657,11 +658,11 @@ def _cohort_split_lines(
         "### Cohort split (native-universe regimes)",
         "",
         (
-            "Both laws refit on three cohorts: the baseline's own data restricted to the symbols "
-            "present in both periods, this regime's data on those same symbols, and this "
-            "regime's newly listed symbols alone. A law that changes between the first two rows "
-            "changed within the same contracts; a law that differs only in the third row is a "
-            "composition effect. t = slope / OLS stderr."
+            "I refit both laws on three cohorts: the baseline's data restricted to symbols "
+            "present in both periods, this regime's data on the same symbols, and this "
+            "regime's newly listed symbols alone. A law that changes between the first two "
+            "rows changed within the same contracts. A law that differs only in the third "
+            "row is a composition effect. t = slope / OLS stderr."
         ),
         "",
         "| regime | cohort | n | flip slope (t) | flip R² | γ slope (t) | γ R² |",
@@ -872,46 +873,37 @@ def _write_md(
     native_regimes: set[str],
 ) -> None:
     lines: list[str] = []
-    lines.append("# Q8: regime comparator — temporal robustness of the cross-sectional laws")
+    lines.append("# Q8: regime comparison, stability of the cross-sectional laws over time")
     lines.append("")
-    lines.append("## Methodology")
+    lines.append("## Method")
     lines.append("")
     lines.append(
-        f"Loads `q4_cross_section.json` (required) and `q6_endogeneity.json` (optional — not "
-        "every regime necessarily has a Q6 run) from a baseline directory "
-        f"(`{baseline_label}`) and one or more regime directories. Every cross-sectional "
-        "regression (γ̂ vs. log10(activity), p_flip vs. log10(activity), and α̂_median vs. "
-        "log10(activity) when Q6 is present) is **recomputed from the per-symbol records "
-        "using this module's own `np.polyfit`-based OLS** — the upstream jsons' stored "
-        "`regressions` / `activity_regression` blocks are never trusted directly, only "
-        "cross-checked against the recomputed values; any mismatch beyond a tight numerical "
-        f"tolerance ({REGRESSION_MISMATCH_TOL:g}) is reported as an explicit warning below "
-        "rather than silently accepted or overwritten."
+        f"I load `q4_cross_section.json` (required) and `q6_endogeneity.json` (optional) "
+        f"from a baseline directory (`{baseline_label}`) and one or more regime "
+        "directories. Each cross-sectional regression (γ̂, p_flip, and α̂_median vs. "
+        "log10(activity), the last when Q6 is present) is recomputed from the per-symbol "
+        "records with this module's `np.polyfit` OLS. The stored regression blocks in the "
+        "upstream jsons are only cross-checked, and a mismatch beyond "
+        f"{REGRESSION_MISMATCH_TOL:g} is reported as a warning below."
     )
     lines.append("")
     lines.append(
-        "**Survivorship**: for each regime, the baseline's successful symbol set is compared "
-        "against that regime's successful symbol set. Baseline symbols absent from a regime "
-        "are non-survivors; each is annotated with a reason drawn from that regime's own Q4 "
-        "`skips` (below `min_events`) and `failures` (missing parquet / other exception) "
-        "lists when available, distinguishing symbols that simply fell below the activity "
-        "threshold in that regime from symbols that failed or are missing outright."
+        "**Survivorship**: baseline symbols absent from a regime's successful set are "
+        "non-survivors. Each gets a reason from that regime's Q4 `skips` (below "
+        "`min_events`) and `failures` (missing parquet / other exception) when available."
     )
     lines.append("")
     lines.append(
         "**Rank correlation**: Spearman's rho on the symbol overlap for p_flip, γ̂ (and α̂ "
-        "when both sides have a Q6 run), computed via average-rank ranking (ties share the "
-        "mean of their ranks) and Pearson correlation of the ranks — the standard exact "
-        "definition of Spearman's rho, implemented with numpy only (no scipy dependency)."
+        "when both sides have a Q6 run), as the Pearson correlation of average ranks."
     )
     lines.append("")
     lines.append(
-        "**Law-stability verdicts**: same-sign check on the flip-law slope across baseline "
-        "and every regime; slope ratio of each regime vs. baseline; γ-invariance is verdicted "
-        f"true iff EVERY regime's (baseline included) γ-vs-activity R² falls below "
-        f"{GAMMA_FLAT_R2_THRESHOLD:g}. All verdict text below is generated from these computed "
-        "values — the wording is not hardcoded to a particular conclusion; either the law "
-        "holds or it does not, and this report states whichever the data shows."
+        "**Law-stability verdicts**: a same-sign check on the flip-law slope across the "
+        "baseline and every regime, plus each regime's slope ratio to the baseline. "
+        "γ-invariance holds iff every regime's (baseline included) γ-vs-activity R² is "
+        f"below {GAMMA_FLAT_R2_THRESHOLD:g}. The verdict text is generated from these "
+        "values."
     )
     lines.append("")
 
@@ -970,8 +962,8 @@ def _write_md(
         lines.append("## Regression cross-check warnings")
         lines.append("")
         lines.append(
-            "The following recomputed regressions disagreed with the stored json's own "
-            "regression block beyond tolerance:"
+            "These recomputed regressions disagreed with the stored json's own regression "
+            "block beyond tolerance:"
         )
         lines.append("")
         lines.extend(warnings)
@@ -988,17 +980,17 @@ def _write_md(
     elif same_sign:
         lines.append(
             "**Flip-law sign stability**: the flip-law slope has the **same sign** in every "
-            "regime as in the baseline — the direction of the p_flip-vs-activity relationship "
-            "is stable across regimes."
+            "regime as in the baseline, so the direction of the p_flip-vs-activity "
+            "relationship is stable across regimes."
         )
         flat = law_stability.get("flip_law_flat_regimes") or []
         if flat:
             lines.append("")
             lines.append(
-                f"Sign agreement is weaker than it looks: in {', '.join(flat)} the slope is "
-                f"within {FLIP_SLOPE_MIN_SE:g} standard errors of zero, i.e. indistinguishable "
-                "from zero, so its sign carries no information. The law is absent there, not "
-                "confirmed."
+                f"The sign agreement is weaker than it looks. In {', '.join(flat)} the slope "
+                f"is within {FLIP_SLOPE_MIN_SE:g} standard errors of zero, indistinguishable "
+                "from zero, so its sign carries no information. The law is absent there, "
+                "not confirmed."
             )
     else:
         flipped = [
@@ -1009,8 +1001,8 @@ def _write_md(
         ]
         lines.append(
             "**Flip-law sign stability**: the flip-law slope **changes sign** relative to the "
-            f"baseline in at least one regime ({', '.join(flipped) if flipped else 'see table'}) "
-            "— the direction of the p_flip-vs-activity relationship does NOT hold across "
+            f"baseline in at least one regime ({', '.join(flipped) if flipped else 'see table'}). "
+            "The direction of the p_flip-vs-activity relationship does not hold across "
             "regimes."
         )
     lines.append("")
@@ -1035,8 +1027,8 @@ def _write_md(
     elif gamma_inv:
         lines.append(
             f"**γ invariance**: every regime's γ-vs-activity R² is below "
-            f"{GAMMA_FLAT_R2_THRESHOLD:g} — γ shows **no detectable activity dependence in any "
-            "regime**, consistent with the liquidity-invariance finding holding across time."
+            f"{GAMMA_FLAT_R2_THRESHOLD:g}, so γ shows **no detectable activity dependence in "
+            "any regime**, consistent with liquidity-invariance holding across time."
         )
     else:
         above = [
@@ -1044,8 +1036,8 @@ def _write_md(
         ]
         lines.append(
             f"**γ invariance**: at least one regime's γ-vs-activity R² is at or above "
-            f"{GAMMA_FLAT_R2_THRESHOLD:g} ({', '.join(above)}) — γ's liquidity-invariance does "
-            "**not** hold uniformly across every regime examined here."
+            f"{GAMMA_FLAT_R2_THRESHOLD:g} ({', '.join(above)}), so γ's liquidity-invariance "
+            "does **not** hold in every regime examined."
         )
     lines.append("")
 
@@ -1059,12 +1051,9 @@ def _write_md(
         lines.append(f"### Survivorship-free test: {display} (native universe)")
         lines.append("")
         lines.append(
-            f"**{display}** was run on the market's own requested universe for that period "
-            "rather than the baseline's fixed symbol list, so its flip-law and γ-vs-activity "
-            "verdicts below are **not confounded by survivorship** — the overlap comparison "
-            "(see the Overlap section) restricts to symbols present in both periods, and any "
-            "agreement or disagreement with the baseline law reflects the law itself, not "
-            "which symbols happened to still exist in the baseline's original panel."
+            f"**{display}** was run on the market's own universe for that period, not the "
+            "baseline's fixed list, so the verdicts below are not confounded by "
+            "survivorship."
         )
         lines.append("")
         if flip_slope is None or baseline_flip_slope is None or baseline_flip_slope == 0.0:
@@ -1075,21 +1064,21 @@ def _write_md(
         elif not law_stability["flip_law_distinguishable_by_label"].get(label, True):
             lines.append(
                 f"- Flip-law slope for {display} ({flip_slope:.4f}) is within "
-                f"{FLIP_SLOPE_MIN_SE:g} standard errors of zero — indistinguishable from zero. "
-                "The flip law is **absent** in this survivorship-free test, so its direction is "
-                "neither confirmed nor reversed."
+                f"{FLIP_SLOPE_MIN_SE:g} standard errors of zero, indistinguishable from zero. The "
+                "flip law is **absent** in this survivorship-free test, so its direction "
+                "is neither confirmed nor reversed."
             )
         elif np.sign(flip_slope) == np.sign(baseline_flip_slope):
             lines.append(
                 f"- Flip-law slope for {display} ({flip_slope:.4f}) has the **same sign** as "
-                f"the baseline ({baseline_flip_slope:.4f}) — the flip law's direction survives "
-                "this survivorship-free test."
+                f"the baseline ({baseline_flip_slope:.4f}), so the flip law's direction "
+                "survives this survivorship-free test."
             )
         else:
             lines.append(
                 f"- Flip-law slope for {display} ({flip_slope:.4f}) has the **opposite sign** "
-                f"from the baseline ({baseline_flip_slope:.4f}) — the flip law's direction does "
-                "**not** survive this survivorship-free test."
+                f"from the baseline ({baseline_flip_slope:.4f}), so the flip law's direction "
+                "does **not** survive this survivorship-free test."
             )
         if gamma_r2 is None:
             lines.append(f"- γ-vs-activity R² for {display}: not evaluable.")
@@ -1100,21 +1089,21 @@ def _write_md(
                 lines.append(
                     f"- γ-vs-activity R² for {display} ({gamma_r2:.4f}) is below "
                     f"{GAMMA_FLAT_R2_THRESHOLD:g}, but the slope ({g_law['slope']:.4f}, "
-                    f"{g_t:.1f} standard errors) is distinguishable from zero — a weak but "
-                    "nonzero activity dependence, not strict flatness."
+                    f"{g_t:.1f} standard errors) is distinguishable from zero. That is a "
+                    "weak but nonzero activity dependence, not strict flatness."
                 )
             else:
                 lines.append(
                     f"- γ-vs-activity R² for {display} ({gamma_r2:.4f}) is below "
                     f"{GAMMA_FLAT_R2_THRESHOLD:g} and the slope is within "
-                    f"{FLIP_SLOPE_MIN_SE:g} standard errors of zero — γ remains flat "
+                    f"{FLIP_SLOPE_MIN_SE:g} standard errors of zero. γ remains flat "
                     "(liquidity-invariant) in this survivorship-free test."
                 )
         else:
             lines.append(
                 f"- γ-vs-activity R² for {display} ({gamma_r2:.4f}) is at or above "
-                f"{GAMMA_FLAT_R2_THRESHOLD:g} — γ shows detectable activity dependence in this "
-                "survivorship-free test, i.e. the liquidity-invariance finding breaks down here."
+                f"{GAMMA_FLAT_R2_THRESHOLD:g}. γ shows detectable activity dependence in this "
+                "survivorship-free test, so the liquidity-invariance finding breaks down here."
             )
         lines.append("")
 
@@ -1137,9 +1126,8 @@ def _write_md(
             stays_positive = influence["slope_stays_positive_every_drop"]
             lines.append(
                 f"For **{display}** (n={influence['n']}, full-sample slope="
-                f"{influence['full_slope']:.4f}, R²={influence['full_r2']:.4f}), a "
-                "drop-one-out refit of γ vs. log10(activity) — removing each symbol one at "
-                "a time and re-fitting — gives an **R² range of "
+                f"{influence['full_slope']:.4f}, R²={influence['full_r2']:.4f}), refitting γ "
+                "vs. log10(activity) with each symbol removed in turn gives an **R² range of "
                 f"[{influence['loo_r2_min']:.4f} (dropping {influence['loo_r2_min_symbol']}), "
                 f"{influence['loo_r2_max']:.4f} (dropping {influence['loo_r2_max_symbol']})]** "
                 f"and a **slope range of [{influence['loo_slope_min']:.4f} (dropping "
@@ -1147,11 +1135,9 @@ def _write_md(
                 f"(dropping {influence['loo_slope_max_symbol']})]**. The highest-influence "
                 f"points by Cook's distance are {top_desc}. The slope "
                 + ("**stays positive under every single-symbol removal**" if stays_positive else "does **not** stay positive under every single-symbol removal")
-                + " — the break's direction is not an artifact of any one symbol — but R² "
+                + ", so the direction of the break does not depend on any one symbol. R² "
                 "swings by a large relative amount depending on which point is dropped, so "
-                "the *strength* (not the sign) of the break is outlier-sensitive. This "
-                "replaces an earlier unquantified 'a handful of outliers' hedge with the "
-                "measured sensitivity."
+                "the strength of the break is outlier-sensitive."
             )
             lines.append("")
 
@@ -1159,9 +1145,9 @@ def _write_md(
         lines.append("## Survivorship")
         lines.append("")
         lines.append(
-            "Fixed-universe regimes only — a native-universe regime was run on its own "
-            "requested universe rather than the baseline's, so survivorship (which assumes a "
-            "shared requested universe) does not apply to it; see the Overlap section instead."
+            "Fixed-universe regimes only. A native-universe regime was run on its own "
+            "requested universe, not the baseline's, so survivorship does not apply to it "
+            "(see Overlap)."
         )
         lines.append("")
         for label in ordered_regime_labels:
@@ -1185,12 +1171,10 @@ def _write_md(
         lines.append("## Overlap (native-universe regimes)")
         lines.append("")
         lines.append(
-            "For a regime run on the market's own native universe rather than the baseline's "
-            "fixed symbol list, survivorship does not apply (a symbol being absent from this "
-            "regime's universe may simply mean it did not exist yet, not that it disappeared). "
-            "Instead this reports the plain overlap between the baseline's successful symbol "
-            "set and this regime's own successful symbol set, plus Spearman rank correlation "
-            "on that overlap — the survivorship-free comparison."
+            "Survivorship does not apply to a native-universe regime, since a symbol "
+            "absent from it may not have existed yet. I report the overlap between the "
+            "baseline's successful symbols and the regime's own, with Spearman rank "
+            "correlation on that overlap."
         )
         lines.append("")
         lines.append(
@@ -1214,13 +1198,11 @@ def _write_md(
         lines.append("### Universe accounting (own requested universe, per regime)")
         lines.append("")
         lines.append(
-            "Accounts for the **full requested universe of each regime** — the baseline's "
-            "fixed symbol list for a fixed-universe regime, or that regime's own market-native "
-            "universe for a native-universe one — across three buckets: successful (passed "
-            "`min_events`), skipped (downloaded but below `min_events`), and failed (no data "
-            "to download at all for that period). These three buckets always sum to **that "
-            "regime's own** requested universe size by construction of the upstream Q4 run — "
-            "for a native-universe regime this is its own total, not the baseline's."
+            "Each regime's full requested universe (the baseline's list for a "
+            "fixed-universe regime, its own native universe otherwise) splits into "
+            "successful (passed `min_events`), skipped (downloaded but below `min_events`), "
+            "and failed (no data for that period). The three sum to that regime's requested "
+            "universe size by construction of the Q4 run."
         )
         lines.append("")
         lines.append("| regime | requested | successful | skipped (below floor) | failed (no data) | reconciles |")
@@ -1232,7 +1214,7 @@ def _write_md(
             lines.append(
                 f"| {label} | {ua['n_requested']} | {ua['n_successful']} | "
                 f"{ua['n_skipped_below_floor']} | {ua['n_failed_no_data']} | "
-                f"{'yes' if ua['reconciles'] else 'NO — see json'} |"
+                f"{'yes' if ua['reconciles'] else 'NO, see json'} |"
             )
         lines.append("")
         for label in ordered_regime_labels:
@@ -1261,44 +1243,35 @@ def _write_md(
     lines.append("## Caveats")
     lines.append("")
     lines.append(
-        "- **`min_events` filter shifts membership across regimes**: a symbol's activity "
-        "level in a given month determines whether it clears the Q4 `min_events` threshold "
-        "at all, so the 'successful' symbol set is not the same fixed panel across regimes — "
-        "some non-survivors are genuinely below the activity bar in that regime, not "
-        "delisted or otherwise absent, and this is reported as such via the skip/failure "
-        "reason above rather than conflated with true delistings."
+        "- **The `min_events` filter shifts membership across regimes**, so the "
+        "successful set is not a fixed panel. Some non-survivors are below the activity "
+        "bar in that regime, not delisted. The skip/failure reasons above say which."
     )
     if overlap_by_label:
         lines.append(
             "- **Fixed and native universes answer different questions**: fixed-universe "
-            "regimes re-run the baseline's own symbol list (`results/universe_2023-06.txt`), "
-            "so they track the fate of the original panel and exclude later listings. "
+            "regimes re-run the baseline's symbol list (`results/universe_2023-06.txt`) and "
+            "track the original panel. "
             f"Native-universe regimes ({', '.join(sorted(overlap_by_label))}) include later "
-            "listings, which differ in composition (new contract types as well as new coins); "
-            "the cohort split above separates the two. The native universe still applies the "
-            "same min_events floor and only contains symbols that exist in that period."
+            "listings, which differ in composition (new contract types as well as new "
+            "coins). The cohort split above separates the two. Both apply the same "
+            "min_events floor."
         )
     else:
         lines.append(
-            "- **The regime universe is fixed to the baseline symbol list**: any symbol newly "
-            "listed in a later regime but absent from the baseline period is deliberately "
-            "excluded from every regime's requested universe upstream (Q4/Q6 are run against "
-            "`results/universe_2023-06.txt`), to keep the panel fixed and comparable across "
-            "regimes — this survivorship analysis therefore cannot and does not speak to new "
-            "listings, only to the fate of the original panel."
+            "- **The regime universe is fixed to the baseline symbol list** (Q4/Q6 run "
+            "against `results/universe_2023-06.txt`), so symbols listed after the baseline "
+            "period are excluded. The survivorship analysis says nothing about new "
+            "listings, only about the fate of the original panel."
         )
     lines.append(
-        "- **Regression stderr/R² inherit Q4/Q6's own heteroskedasticity caveat**: as "
-        "documented in `q4_cross_section.md` and `q6_endogeneity.md`, per-symbol estimator "
-        "noise is not uniform across the cross-section, so the OLS regressions recomputed "
-        "here (same assumptions, same caveat) should be read descriptively, not as formal "
+        "- **Regression stderr and R² inherit the heteroskedasticity caveat** in "
+        "`q4_cross_section.md` and `q6_endogeneity.md` and are descriptive, not "
         "confidence intervals."
     )
     lines.append(
         "- **Spearman rho on a possibly small overlap**: rank correlation is only as "
-        "informative as the overlap size allows; a small `n_overlap` (see the table above) "
-        "should be weighted accordingly rather than treated as a precise correlation "
-        "estimate."
+        "informative as the overlap allows. Weight a small `n_overlap` accordingly."
     )
     lines.append("")
 

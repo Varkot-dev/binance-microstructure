@@ -170,31 +170,28 @@ def _write_results_md(out_dir: Path, result: dict, symbol: str, periods: list[st
     lo, hi = CONT_EQUITIES_R2_RANGE
     ds = result["depth_scaling_check"]
     lines: list[str] = []
-    lines.append("# Q3: OFI linearity — results")
+    lines.append("# Q3: OFI linearity")
     lines.append("")
-    lines.append("## Methodology")
+    lines.append("## Method")
     lines.append("")
     lines.append(
-        f"For {symbol}, daily bookTicker L1 snapshots for the given periods are loaded and "
-        "sorted by timestamp. Per-update order-flow imbalance (OFI) is computed with the "
-        "Cont, Kukanov & Stoikov (2014) formula (`ofi_events`): each consecutive pair of L1 "
-        "updates contributes a signed quantity reflecting bid/ask price improvements and "
-        "same-price size changes. Each OFI value is attached to the timestamp of the later "
-        f"update in its pair. Updates are then bucketed into fixed `{window}` bars via "
-        "`pl.group_by_dynamic` on ts. Within each bar: OFI values are summed, delta_mid is "
-        "computed as the last mid minus the first mid observed in the bar, and mean depth "
-        "is the bar-average of (bid_qty + ask_qty)/2. Bars with fewer than 2 updates are "
-        "dropped (no meaningful delta_mid). The resulting (summed OFI, delta_mid) pairs are "
+        f"For {symbol}, I load daily bookTicker L1 snapshots and sort by timestamp. "
+        "Per-update order-flow imbalance (OFI) follows Cont, Kukanov & Stoikov (2014) "
+        "(`ofi_events`): each consecutive pair of L1 updates contributes a signed quantity "
+        "from bid/ask price improvements and same-price size changes, stamped with the "
+        f"later update's time. Updates are bucketed into fixed `{window}` bars via "
+        "`pl.group_by_dynamic`. Within each bar, OFI is summed, delta_mid is the last mid "
+        "minus the first mid, and mean depth is the bar average of (bid_qty + ask_qty)/2. "
+        "Bars with fewer than 2 updates are dropped. The (summed OFI, delta_mid) pairs are "
         "regressed through the origin (`ols_through_origin`): delta_mid = beta * OFI_sum."
     )
     lines.append("")
     lines.append(
-        "**Depth-scaling check**: bars are split into 5 depth quintiles by mean depth; a "
-        "through-origin slope is fit per quintile, then log|slope| is regressed (ordinary "
-        "least squares, not through origin) on log(mean depth) across quintiles. Cont's "
-        "theory (slope ~ 1/depth) predicts this log-log regression's slope to be "
-        "approximately -1. Quintiles whose fitted slope is zero or negative are excluded "
-        "from the log-log fit (undefined under the log) and noted below."
+        "**Depth-scaling check**: bars are split into 5 depth quintiles by mean depth, a "
+        "through-origin slope is fit per quintile, and log|slope| is regressed (OLS, not "
+        "through origin) on log(mean depth) across quintiles. Cont's theory (slope ~ "
+        "1/depth) predicts a log-log slope near -1. Quintiles with a zero or negative "
+        "slope are excluded from the log-log fit and listed below."
     )
     lines.append("")
     lines.append(f"Periods analyzed: {', '.join(periods)}.")
@@ -232,9 +229,8 @@ def _write_results_md(out_dir: Path, result: dict, symbol: str, periods: list[st
     lines.append("")
     lines.append(
         f"Cont, Kukanov & Stoikov (2014) report R² ≈ {lo:.0%}–{hi:.0%} for OFI-vs-price-change "
-        "linear regressions on equities. Silantyev (2019) studied BitMEX order flow and found "
-        "trade-flow imbalance (net signed trade volume) a stronger price-change predictor than "
-        "book-based OFI in that venue."
+        "regressions on equities. Silantyev (2019) found trade-flow imbalance (net signed "
+        "trade volume) a stronger price-change predictor than book-based OFI on BitMEX."
     )
     lines.append("")
     lines.append("| our R² | Cont equities R² | benchmark comparison |")
@@ -246,23 +242,21 @@ def _write_results_md(out_dir: Path, result: dict, symbol: str, periods: list[st
     lines.append("## Caveats")
     lines.append("")
     lines.append(
-        "- OFI is computed from L1 (best bid/ask) bookTicker snapshots only; no order-book "
-        "depth beyond the top level is observed, so OFI understates true order-flow pressure "
-        "from deeper levels."
+        "- OFI uses L1 (best bid/ask) snapshots only. Deeper levels are not observed, so "
+        "OFI understates order-flow pressure from them."
     )
     lines.append(
-        "- `ols_through_origin`'s stderr assumes i.i.d. residuals; bar-level delta_mid and OFI "
-        "sums are likely autocorrelated across adjacent bars, so this stderr understates true "
-        "uncertainty."
+        "- The `ols_through_origin` stderr assumes i.i.d. residuals. Bar-level delta_mid "
+        "and OFI sums are likely autocorrelated across adjacent bars, so it understates "
+        "the uncertainty."
     )
     lines.append(
-        "- The depth-scaling check uses only 5 quintiles over a fixed 14-day sample, giving a "
-        "log-log regression with very few points; its exponent estimate carries wide "
-        "(unreported) uncertainty and should be treated as suggestive, not confirmatory."
+        "- The depth-scaling check regresses on 5 quintiles from a 14-day sample. Its "
+        "exponent has wide, unreported uncertainty and is suggestive only."
     )
     lines.append(
-        "- The sample covers a single symbol over 14 days of a specific market regime; results "
-        "may not generalize to other symbols, venues, or volatility regimes."
+        "- One symbol over 14 days of one market regime; results may not carry over to "
+        "other symbols, venues, or volatility regimes."
     )
     lines.append("")
     (out_dir / "q3_results.md").write_text("\n".join(lines))

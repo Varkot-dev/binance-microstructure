@@ -172,38 +172,36 @@ def _write_results_md(out_dir: Path, result: dict) -> None:
     rel_change_c = abs(amp_c - amp_a) / abs(amp_a) if amp_a else float("nan")
 
     lines: list[str] = []
-    lines.append("# Q1b: short-lag ACF zigzag — tie-break robustness")
+    lines.append("# Q1b: short-lag ACF zigzag and the tie-break")
     lines.append("")
-    lines.append("## Methodology")
+    lines.append("## Method")
     lines.append("")
     lines.append(
-        f"Aggressor events for {result['symbol']} {result['period']} are loaded via "
-        "`load_events` (sorted by `(ts, sign)`; within a shared millisecond, sells precede "
-        "buys). Three sign series are compared, all evaluated on the identical FFT sign ACF "
-        "(`sign_acf`) at lags 1-10:"
+        f"Aggressor events for {result['symbol']} {result['period']} come from "
+        "`load_events`, sorted by `(ts, sign)`: within a millisecond, sells precede buys. "
+        "I compare three sign series on the same FFT sign ACF (`sign_acf`) at lags 1-10:"
     )
     lines.append("")
     lines.append(
-        "- **A (baseline):** the series as `load_events` produces it -- deterministic "
-        "`(ts, sign)` tie-break."
+        "- **A (baseline):** the series as `load_events` produces it, with the "
+        "deterministic `(ts, sign)` tie-break."
     )
     lines.append(
-        "- **B (randomized tie-break):** same-timestamp adjacent pairs (after aggregation, "
-        "always exactly one sell + one buy, since `to_aggressor_events` never emits two "
-        "same-(ts, side) rows) have their order swapped with p=0.5 using a fixed-seed RNG "
-        f"(`numpy.random.default_rng({RNG_SEED})`), which destroys the deterministic ordering "
-        "convention while leaving every other event untouched."
+        "- **B (randomized tie-break):** same-timestamp adjacent pairs (after aggregation "
+        "always one sell and one buy, since `to_aggressor_events` never emits two "
+        "same-(ts, side) rows) are swapped with p=0.5 using a fixed-seed RNG "
+        f"(`numpy.random.default_rng({RNG_SEED})`). Every other event is untouched."
     )
     lines.append(
-        "- **C (netted):** each same-timestamp group of opposite-signed events is collapsed "
-        "into a single event with sign = sign(sum(sign * qty)); groups whose signed notional "
-        "exactly nets to zero are dropped (undefined sign)."
+        "- **C (netted):** each same-timestamp group of opposite-signed events collapses "
+        "into one event with sign = sign(sum(sign * qty)). Groups whose signed notional "
+        "nets to exactly zero are dropped (undefined sign)."
     )
     lines.append("")
     lines.append(
-        "The **zigzag amplitude** is `mean(ACF at lags 2,4,6,8,10) - mean(ACF at lags "
-        "1,3,5,7,9)` -- large and positive when even lags run noticeably higher than "
-        "odd lags, which is the pattern visible in Q1's log-log ACF plot at short lags."
+        "The zigzag amplitude is `mean(ACF at lags 2,4,6,8,10) - mean(ACF at lags "
+        "1,3,5,7,9)`. It is large and positive when even lags run higher than odd lags, "
+        "the pattern visible in Q1's log-log ACF plot at short lags."
     )
     lines.append("")
     lines.append("## Results")
@@ -212,12 +210,12 @@ def _write_results_md(out_dir: Path, result: dict) -> None:
     lines.append("")
     lines.append(
         f"Fraction of consecutive event pairs sharing a millisecond timestamp: "
-        f"**{result['frac_consecutive_pairs_same_ts']:.4%}** "
-        f"({result['n_same_ts_pairs']:,} same-ts pairs). Among those same-ts adjacent pairs, "
-        f"**{result['frac_opposite_sign_among_same_ts_adjacent_pairs']:.2%}** are "
-        f"opposite-signed (by construction: `to_aggressor_events` produces at most one buy "
-        f"and one sell per millisecond, so max same-ts group size = "
-        f"{result['max_same_ts_group_size']}). Variant B is therefore a random 50/50 swap of "
+        f"{result['frac_consecutive_pairs_same_ts']:.4%} "
+        f"({result['n_same_ts_pairs']:,} same-ts pairs). Among those, "
+        f"{result['frac_opposite_sign_among_same_ts_adjacent_pairs']:.2%} are "
+        f"opposite-signed by construction: `to_aggressor_events` produces at most one buy "
+        f"and one sell per millisecond, so the maximum same-ts group size is "
+        f"{result['max_same_ts_group_size']}. Variant B is a random 50/50 swap of "
         f"{b['pairs_swapped']:,} of those pairs, not a general permutation."
     )
     lines.append("")
@@ -242,61 +240,53 @@ def _write_results_md(out_dir: Path, result: dict) -> None:
     lines.append("## Verdict")
     lines.append("")
     lines.append(
-        f"**The zigzag is real structure, not a tie-break artifact.** The amplitude barely "
-        f"moves under the randomized tie-break ({amp_a:.6f} -> {amp_b:.6f}, a "
-        f"{rel_change_b:.2%} change) and remains large under netting ({amp_c:.6f}, a "
-        f"{rel_change_c:.2%} change). A sanity check agrees: only "
+        f"**The zigzag survives both perturbations, so it is not a tie-break artifact.** "
+        f"The amplitude barely moves under the randomized tie-break ({amp_a:.6f} -> "
+        f"{amp_b:.6f}, a {rel_change_b:.2%} change) and stays large under netting "
+        f"({amp_c:.6f}, a {rel_change_c:.2%} change). Only "
         f"{result['frac_consecutive_pairs_same_ts']:.2%} of consecutive event pairs share a "
-        "timestamp, so the deterministic tie-break simply does not touch enough adjacent "
-        "pairs to manufacture an alternation of this size. The most likely explanation is "
-        "genuine market structure -- alternation consistent with bid-ask bounce or "
-        "interleaved liquidity-taking reversals -- surviving both perturbations."
+        "timestamp, so the tie-break touches too few adjacent pairs to produce an "
+        "alternation this size. The most likely explanation is market structure, such as "
+        "bid-ask bounce or interleaved liquidity-taking reversals."
     )
     lines.append("")
     lines.append(
-        "**This is consistent with Q1's headline gamma fits being unaffected, though not "
-        "directly measured.** Q1's power-law fit window starts "
-        "at lag 10 (`fit_power_law(..., lo=10, ...)`); the zigzag reported here is measured "
-        "over lags 1-10, i.e. entirely at or before the "
-        "start of the fit window, not inside it. Whether the alternation itself persists "
-        "PAST lag 10 (and could therefore influence the fit) is not established by this "
-        "analysis, which only computes lags 1-10 -- that would require extending this same "
-        "three-way comparison to lags 11+ before the 'fit window unaffected' claim could be "
-        "made without qualification."
+        "This suggests Q1's gamma fits are unaffected, but I did not measure that. Q1's "
+        "power-law fit window starts at lag 10 (`fit_power_law(..., lo=10, ...)`), and the "
+        "zigzag here is measured over lags 1-10, at or before the start of the window. "
+        "Whether the alternation persists past lag 10 is not established, because I only "
+        "computed lags 1-10. Settling it needs the same three-way comparison at lags 11+."
     )
     lines.append("")
     lines.append("## Caveats")
     lines.append("")
     lines.append(
-        f"- Single symbol-month ({result['symbol']} {result['period']}); this analysis was "
-        "not repeated on other symbols or periods in this run."
+        f"- Single symbol-month ({result['symbol']} {result['period']}), not repeated on "
+        "other symbols or periods."
     )
     lines.append(
         "- Among same-ts adjacent pairs, 100% are opposite-signed by construction "
-        "(post-aggregation, each timestamp holds at most one buy and one sell event), so "
-        "variant B reduces to random pair swaps rather than a general permutation -- "
-        "equivalent here since groups never exceed size 2."
+        "(post-aggregation each timestamp holds at most one buy and one sell), so variant "
+        "B reduces to random pair swaps. This is equivalent to a permutation here since "
+        "groups never exceed size 2."
     )
     lines.append(
-        "- `sign_acf` uses the unbiased normalization (divide by n-lag); at lags <=10 with "
-        "n in the tens of millions this makes no practical difference."
+        "- `sign_acf` uses the unbiased normalization (divide by n-lag). At lags <=10 with "
+        "n in the tens of millions the difference is negligible."
     )
     lines.append(
-        "- Netting (C) measurably dampens the zigzag amplitude relative to baseline, so "
-        "same-ts buy/sell pairs do contribute something to it, but the dominant odd/even "
-        "pattern (negative ACF(1), large positive ACF(2)) persists through both "
-        "perturbations."
+        "- Netting (C) dampens the zigzag amplitude relative to baseline, so same-ts "
+        "buy/sell pairs contribute some of it. The dominant odd/even pattern (negative "
+        "ACF(1), large positive ACF(2)) persists through both perturbations."
     )
     lines.append(
-        "- Timestamps have millisecond resolution; finer-than-millisecond ordering "
-        "information is unrecoverable, so 'real structure' means real at the "
-        "millisecond-aggregated event level, not at the level of true arrival order within "
-        "a millisecond."
+        "- Timestamps have millisecond resolution and finer ordering is unrecoverable. "
+        "\"Real structure\" means real at the millisecond-aggregated event level, not "
+        "within a millisecond."
     )
     lines.append(
-        "- This analysis does not extend past lag 10, so it cannot by itself confirm or "
-        "rule out zigzag-driven distortion of Q1's [10, 500] fit window; see the note under "
-        "Verdict above."
+        "- Nothing past lag 10 is computed, so this cannot confirm or rule out "
+        "zigzag-driven distortion of Q1's [10, 500] fit window (see Verdict)."
     )
     lines.append("")
     (out_dir / "q1b_zigzag.md").write_text("\n".join(lines))

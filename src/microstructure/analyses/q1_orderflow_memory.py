@@ -49,21 +49,18 @@ def run_q1(root: Path, out_dir: Path, symbols: list[str], periods: list[str],
 def _write_results_md(out_dir: Path, results: dict, periods: list[str]) -> None:
     lo, hi = LIT_RANGE
     lines: list[str] = []
-    lines.append("# Q1: Order-flow memory — results")
+    lines.append("# Q1: Order-flow memory")
     lines.append("")
-    lines.append("## Methodology")
+    lines.append("## Method")
     lines.append("")
     lines.append(
         "For each symbol, Binance aggTrades prints for the given periods are collapsed "
-        "into aggressor-level events (all same-millisecond, same-side prints merged into "
-        "one taker decision — see `to_aggressor_events`), producing a ±1 sign series where "
-        "+1 is a buyer-initiated (taker-buy) event and -1 is a seller-initiated event. The "
-        "sample autocorrelation function (ACF) of this sign series is computed via FFT "
-        "(Wiener-Khinchin) out to `max_lag` events. A power law of the form "
-        "ACF(lag) ~ lag^(-γ) is then fit by ordinary least squares on log(ACF) vs log(lag) "
-        "over the window [10, max_lag // 2], skipping any non-positive ACF values in that "
-        "window. The fitted exponent γ̂ is the analysis's estimate of the order-flow "
-        "long-memory decay rate."
+        "into aggressor-level events (same-millisecond, same-side prints merged into one "
+        "taker decision, see `to_aggressor_events`). The result is a ±1 sign series: +1 "
+        "for a taker buy, -1 for a taker sell. I compute the sample ACF of the signs by FFT "
+        "(Wiener-Khinchin) out to `max_lag` events, then fit ACF(lag) ~ lag^(-γ) by OLS on "
+        "log(ACF) vs log(lag) over [10, max_lag // 2], skipping non-positive ACF values. "
+        "γ̂ is the estimate of the order-flow memory decay rate."
     )
     lines.append("")
     lines.append(f"Periods analyzed: {', '.join(periods)}.")
@@ -89,27 +86,23 @@ def _write_results_md(out_dir: Path, results: dict, periods: list[str]) -> None:
         in_range = lo <= gamma <= hi
         lines.append(f"| {sym} | {gamma:.4f} | {lo:.1f}–{hi:.1f} | {'yes' if in_range else 'no'} |")
     lines.append("")
-    lines.append(
-        "Falling inside or outside this range is a documented empirical finding either way, "
-        "not a pass/fail criterion for the analysis."
-    )
+    lines.append("Landing inside or outside this range is a result, not a pass/fail test.")
     lines.append("")
     lines.append("## Caveats")
     lines.append("")
     lines.append(
-        "- The OLS standard error on γ̂ is computed from the log-log regression residuals "
-        "under an i.i.d.-error assumption; because the ACF values at nearby lags are "
-        "themselves autocorrelated, this stderr **understates** the true uncertainty in γ̂."
+        "- The OLS standard error on γ̂ assumes i.i.d. errors in the log-log regression. "
+        "ACF values at nearby lags are autocorrelated, so it **understates** the "
+        "uncertainty in γ̂."
     )
     lines.append(
-        "- Millisecond-timestamp ties are merged by aggressor aggregation before computing "
-        "signs (multiple same-ms, same-side prints from one sweep become a single event), "
-        "so the event count is smaller than the raw aggTrades row count and lag-1 structure "
-        "reflects aggressor decisions, not raw prints."
+        "- Same-millisecond, same-side prints are merged before signing, so the event "
+        "count is below the raw aggTrades row count and lag-1 structure reflects "
+        "aggressor decisions, not raw prints."
     )
     lines.append(
-        "- The sample covers 2 months of a specific market regime for each symbol; the "
-        "estimated γ̂ may not generalize to other periods, volatility regimes, or symbols."
+        "- The sample is 2 months of one market regime per symbol, so γ̂ may not carry "
+        "over to other periods, volatility regimes, or symbols."
     )
     lines.append("")
     (out_dir / "q1_results.md").write_text("\n".join(lines))

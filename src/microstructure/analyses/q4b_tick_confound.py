@@ -380,57 +380,51 @@ def _fmt_regression(reg: dict | None) -> str:
 def _write_results_md(out_dir: Path, result: dict) -> None:
     regs = result["regressions"]
     lines: list[str] = []
-    lines.append("# Q4b: tick-size confound test — results")
+    lines.append("# Q4b: tick-size confound")
     lines.append("")
     lines.append("## Question")
     lines.append("")
     lines.append(
-        "Q4 found `p_flip ~ log10(n_events)` with slope **+0.1114** (R² = 0.2632, n = 121): "
-        "more actively traded symbols flip sign more often. LEARNING.md Sec.6.2 named, but did "
-        "not test, an alternative: **relative tick size** (`tickSize / price`) is a mechanical "
-        "driver of bid-ask bounce, and it plausibly correlates with activity. If relative tick "
-        "size is the real driver, \"activity\" in Q4's regression is a proxy variable and the "
-        "competitive-response interpretation is decoration on a bid-ask-bounce artifact. This "
-        "analysis runs the discriminating regression directly."
+        "Q4 found `p_flip ~ log10(n_events)` with slope +0.1114 (R² = 0.2632, n = 121): "
+        "more actively traded symbols flip sign more often. One alternative is relative "
+        "tick size (`tickSize / price`), a mechanical driver of bid-ask bounce that "
+        "plausibly correlates with activity. If it is the real driver, \"activity\" in "
+        "Q4's regression is a proxy and the competitive-response reading is an artifact of "
+        "bid-ask bounce. This analysis runs the regression that separates the two."
     )
     lines.append("")
-    lines.append("## Methodology")
+    lines.append("## Method")
     lines.append("")
     lines.append(
-        "1. **Tick size**: fetched from Binance futures `exchangeInfo` "
-        f"(`{result['exchange_info_url']}`), a public unauthenticated endpoint. Each symbol's "
-        "`PRICE_FILTER.tickSize` is extracted. The raw response is cached to "
-        "`exchangeinfo_snapshot.json` for provenance."
+        "1. **Tick size**: from the Binance futures `exchangeInfo` endpoint "
+        f"(`{result['exchange_info_url']}`, public, unauthenticated), taking each symbol's "
+        "`PRICE_FILTER.tickSize`. The raw response is cached in "
+        "`exchangeinfo_snapshot.json`."
     )
     source_note = result.get("exchange_info_source_note")
     if source_note:
         lines.append("")
-        lines.append(f"   **Source substitution for this run**: {source_note}")
+        lines.append("   The endpoint used differs from the default; see Caveats.")
     lines.append(
-        "2. **Mean price**: for each of Q4's 121 successful symbols, the mean aggTrades trade "
-        f"price over {result['period']} is computed via a lazy Polars scan "
-        "(`pl.scan_parquet(...).select(pl.col(\"price\").mean())`) of the same parquet Q4 used. "
+        "2. **Mean price**: for each of Q4's 121 successful symbols, the mean aggTrades "
+        f"price over {result['period']}, from a lazy Polars scan of the parquet Q4 used. "
         "`rel_tick = tickSize / mean_price`."
     )
     lines.append(
-        "3. **Regressions**: three OLS fits via `numpy.linalg.lstsq` on the usable symbols "
-        "(intersection of Q4's successful set, symbols present in the exchangeInfo snapshot, "
-        "and symbols with a readable mean price): (a) `p_flip ~ log10(n_events)` — reproduces "
-        "Q4's law as a baseline on this potentially-reduced sample; (b) `p_flip ~ "
-        "log10(rel_tick)` — does tick size alone predict it; (c) `p_flip ~ log10(n_events) + "
-        "log10(rel_tick)` — the discriminating regression: which variable's coefficient "
-        "survives once the other is controlled for. `corr(log10(n_events), log10(rel_tick))` "
-        "is also reported — the collinearity that motivates this whole test."
+        "3. **Regressions**: three OLS fits (`numpy.linalg.lstsq`) on the usable symbols "
+        "(in Q4's successful set, in the exchangeInfo snapshot, with a readable mean "
+        "price): (a) `p_flip ~ log10(n_events)`, Q4's law on this possibly smaller sample; "
+        "(b) `p_flip ~ log10(rel_tick)`; (c) `p_flip ~ log10(n_events) + log10(rel_tick)`, "
+        "which shows whose coefficient survives once the other is controlled. I also report "
+        "`corr(log10(n_events), log10(rel_tick))`."
     )
     lines.append("")
     lines.append(
-        "**Honesty caveat on t-ratios**: coefficient significance is reported as a t-ish ratio "
-        "(coefficient / classical-OLS stderr), assuming i.i.d. homoskedastic residuals. That "
-        "assumption is not verified and is likely violated — this is a heterogeneous "
-        "cross-section of 121 different assets with no correction for cross-sectional "
-        "dependence or heteroskedasticity (same caveat Q4 makes about its own regressions). "
-        "Read these ratios as descriptive orientation on coefficient size relative to noise, "
-        "not as a formal hypothesis test with a valid p-value."
+        "**t-ratios** are the coefficient over its classical-OLS stderr, which assumes "
+        "i.i.d. homoskedastic residuals. That is unverified and likely violated in a "
+        "heterogeneous cross-section of 121 assets with no correction for cross-sectional "
+        "dependence or heteroskedasticity (the same caveat as Q4). Read them as coefficient "
+        "size relative to noise, not as a test with a valid p-value."
     )
     lines.append("")
     lines.append("## Run summary")
@@ -448,14 +442,14 @@ def _write_results_md(out_dir: Path, result: dict) -> None:
     lines.append("")
     lines.append(f"**(b) p_flip ~ log10(rel_tick)**: {_fmt_regression(regs.get('reg_tick'))}")
     lines.append("")
-    lines.append(f"**(c) p_flip ~ log10(n_events) + log10(rel_tick)** [discriminating regression]: "
+    lines.append(f"**(c) p_flip ~ log10(n_events) + log10(rel_tick)** [joint]: "
                   f"{_fmt_regression(regs.get('reg_joint'))}")
     lines.append("")
     corr = regs.get("corr_log_n_log_rel_tick")
     corr_str = f"{corr:.4f}" if corr is not None else "not estimable"
     lines.append(
-        f"**corr(log10(n_events), log10(rel_tick))** = {corr_str} — the collinearity between "
-        "activity and relative tick size that motivates this test."
+        f"corr(log10(n_events), log10(rel_tick)) = {corr_str}, the collinearity between "
+        "activity and relative tick size."
     )
     lines.append("")
 
@@ -478,34 +472,28 @@ def _write_results_md(out_dir: Path, result: dict) -> None:
     if source_note:
         lines.append(f"- **exchangeInfo source substitution**: {source_note}")
     lines.append(
-        "- **Tick size is current, not June-2023.** `exchangeInfo` returns Binance's tick size "
-        "as of whenever this analysis is run, not as of the June 2023 period the trade data and "
-        "Q4's p_flip come from. Binance does change `PRICE_FILTER.tickSize` occasionally "
-        "(usually only after large price moves, e.g. after a symbol's price falls by an order "
-        "of magnitude), so for a symbol whose price regime shifted materially between June 2023 "
-        "and today, `rel_tick` computed here may not reflect the tick size actually in force "
-        "during the data window. This is a real, if probably small for most symbols, source of "
-        "error and is not corrected for."
+        "- **Tick size is current, not June-2023.** `exchangeInfo` returns the tick size as "
+        "of the day the analysis is run, not for the June 2023 period behind the trade data "
+        "and Q4's p_flip. Binance occasionally changes `PRICE_FILTER.tickSize`, usually "
+        "after large price moves. For a symbol whose price regime shifted materially since "
+        "June 2023, `rel_tick` may not match the tick size in force during the data "
+        "window. This error is probably small for most symbols and is not corrected."
     )
     lines.append(
-        "- **121-symbol sample**, further reduced to the usable subset above (symbols missing "
-        "from the exchangeInfo snapshot — e.g. delisted or renamed since June 2023 — are "
-        "dropped, not imputed)."
+        "- 121-symbol sample, reduced to the usable subset above. Symbols missing from the "
+        "snapshot (e.g. delisted or renamed since June 2023) are dropped, not imputed."
     )
     lines.append(
-        "- **Single month** (2023-06), same as Q4: one specific market regime; not tested for "
-        "generalization to other periods."
+        "- Single month (2023-06), as in Q4: one market regime, not tested on other periods."
     )
     lines.append(
-        "- **OLS assumptions unverified** (see Methodology): reported stderr/t-ratios/R² are "
-        "descriptive, not formal inference, for the same reasons Q4 gives about its own "
-        "cross-sectional regressions (heteroskedastic, non-i.i.d. residuals across a "
-        "heterogeneous set of assets)."
+        "- The OLS assumptions are unverified (see Method), so the reported stderr, "
+        "t-ratios and R² are descriptive. Same reasons as Q4: heteroskedastic, non-i.i.d. "
+        "residuals across heterogeneous assets."
     )
     lines.append(
-        "- **Correlation is not causation either way**: even a clean result in (c) establishes "
-        "which variable better explains this cross-section statistically, not the causal "
-        "mechanism generating p_flip."
+        "- Even a clean result in (c) shows which variable better explains this "
+        "cross-section statistically. It does not identify the mechanism generating p_flip."
     )
     lines.append("")
     (out_dir / "q4b_tick_confound.md").write_text("\n".join(lines))
@@ -531,51 +519,48 @@ def _verdict_paragraph(regs: dict) -> str:
     if n_survives and not tick_survives:
         verdict = (
             f"**Activity survives, relative tick size does not.** In the joint regression (c), "
-            f"log10(n_events) has coefficient {n_coef['value']:.4f} (t≈{n_coef['t_ratio']:.2f}), "
-            f"while log10(rel_tick) has coefficient {tick_coef['value']:.4f} "
-            f"(t≈{tick_coef['t_ratio']:.2f}) — indistinguishable from zero by this rough "
-            "measure. Despite the collinearity between the two variables "
-            f"(corr = {corr:.4f}), activity is the one that keeps explanatory power once tick "
-            "size is controlled for. This is evidence against the tick-size-confound "
-            "hypothesis: the p_flip law looks like it is really about activity, not a "
-            "bid-ask-bounce artifact riding on activity's coattails."
+            f"log10(n_events) has coefficient {n_coef['value']:.4f} (t≈{n_coef['t_ratio']:.2f}) "
+            f"and log10(rel_tick) has {tick_coef['value']:.4f} "
+            f"(t≈{tick_coef['t_ratio']:.2f}), indistinguishable from zero by this rough "
+            f"measure. Despite the collinearity (corr = {corr:.4f}), activity keeps its "
+            "explanatory power once tick size is controlled for. This is evidence against "
+            "the tick-size confound: the p_flip law appears to be about activity, not a "
+            "bid-ask-bounce artifact."
         )
     elif tick_survives and not n_survives:
         verdict = (
             f"**Relative tick size survives, activity does not.** In the joint regression (c), "
             f"log10(rel_tick) has coefficient {tick_coef['value']:.4f} "
-            f"(t≈{tick_coef['t_ratio']:.2f}), while log10(n_events) has coefficient "
-            f"{n_coef['value']:.4f} (t≈{n_coef['t_ratio']:.2f}) — indistinguishable from zero. "
-            f"Given the collinearity between the two (corr = {corr:.4f}), this is exactly the "
-            "confound LEARNING.md flagged: what looked like an activity effect in Q4 is better "
-            "explained by relative tick size, a mechanical driver of bid-ask bounce. The "
-            "competitive-response interpretation of Q4's p_flip law should be treated as "
-            "unsupported until re-tested against this control."
+            f"(t≈{tick_coef['t_ratio']:.2f}) and log10(n_events) has "
+            f"{n_coef['value']:.4f} (t≈{n_coef['t_ratio']:.2f}), indistinguishable from zero. "
+            f"Given the collinearity (corr = {corr:.4f}), this is the tick-size confound: "
+            "what looked like an activity effect in Q4 is better explained by relative tick "
+            "size, a mechanical driver of bid-ask bounce. Q4's competitive-response "
+            "interpretation of the p_flip law is unsupported until re-tested against this "
+            "control."
         )
     elif n_survives and tick_survives:
         verdict = (
             "**Both variables survive jointly.** In regression (c), log10(n_events) "
             f"(coef {n_coef['value']:.4f}, t≈{n_coef['t_ratio']:.2f}) and log10(rel_tick) "
             f"(coef {tick_coef['value']:.4f}, t≈{tick_coef['t_ratio']:.2f}) both remain "
-            f"distinguishable from zero despite their collinearity (corr = {corr:.4f}). Neither "
-            "single-variable story is sufficient on its own: activity and relative tick size "
-            "appear to carry at least partially independent information about p_flip in this "
-            "cross-section, so the confound is real but does not fully explain away the "
-            "activity effect."
+            f"distinguishable from zero despite their collinearity (corr = {corr:.4f}). "
+            "Each carries at least partly independent information about p_flip in this "
+            "cross-section, so the tick-size confound is present but does not fully explain "
+            "away the activity effect."
         )
     else:
         verdict = (
             "**Neither variable clearly survives jointly.** In regression (c), neither "
             f"log10(n_events) (coef {n_coef['value']:.4f}, t≈{n_coef['t_ratio']:.2f}) nor "
             f"log10(rel_tick) (coef {tick_coef['value']:.4f}, t≈{tick_coef['t_ratio']:.2f}) is "
-            f"clearly distinguishable from zero once the other is controlled for, consistent "
-            f"with their strong collinearity (corr = {corr:.4f}) making the two effects hard "
-            "to separate with this sample size. This is inconclusive rather than a clean "
-            "verdict either way."
+            f"clearly distinguishable from zero once the other is controlled for. This fits "
+            f"their strong collinearity (corr = {corr:.4f}) making the two effects hard to "
+            "separate at this sample size. The result is inconclusive."
         )
 
     r2_note = (
-        f" For context: univariate R² is {reg_activity_r2:.4f} for activity alone and "
+        f" Univariate R² is {reg_activity_r2:.4f} for activity alone and "
         f"{reg_tick_r2:.4f} for relative tick size alone, versus {joint_r2:.4f} jointly."
     )
     return verdict + r2_note

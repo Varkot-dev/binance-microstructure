@@ -257,61 +257,48 @@ def _plot(out_dir: Path, records: list[dict]) -> None:
 def _write_results_md(out_dir: Path, result: dict) -> None:
     records = result["records"]
     lines: list[str] = []
-    lines.append("# Q5: kernel panel — critical balance across the cross-section")
+    lines.append("# Q5: kernel panel, critical balance across the cross-section")
     lines.append("")
-    lines.append("## Methodology")
+    lines.append("## Method")
     lines.append("")
     lines.append(
-        f"For each symbol in the requested panel, one week of aggTrades "
+        f"For each symbol in the panel I load one week of aggTrades "
         f"({result['start_day']}..{result['end_day']}, from the monthly period "
-        f"`{result['month']}`) is loaded and filtered to that timestamp range, then "
-        "joined to the bookTicker mid strictly before each event "
-        "(`events_with_prior_mid`). Symbols are processed one at a time; any "
-        "per-symbol failure (missing parquet, no events in range, or "
-        "`kernel_exponent_blocked`'s n/L≥100 sample-sufficiency guard raising for a "
-        "too-thin symbol) is caught and logged into `failures` without aborting the "
-        "run for the remaining symbols."
+        f"`{result['month']}`) and join each event to the bookTicker mid strictly before "
+        "it (`events_with_prior_mid`). A per-symbol failure (missing parquet, no events in "
+        "range, or the n/L≥100 sample-sufficiency guard in `kernel_exponent_blocked`) is "
+        "logged in `failures` and does not abort the run."
     )
     lines.append("")
     lines.append(
-        "**gamma_week**: the sign-ACF power-law exponent over the same week's trades "
-        "(`fit_power_law(sign_acf(signs, 1000), lo=10, hi=500)`), Q1's order-flow-"
-        "memory statistic."
+        "**gamma_week**: the sign-ACF power-law exponent over the same week "
+        "(`fit_power_law(sign_acf(signs, 1000), lo=10, hi=500)`), the Q1 statistic."
     )
     lines.append(
-        "**beta (deconvolved kernel exponent)**: `kernel_exponent_blocked` (Phase-2 "
-        "Task 1's propagator deconvolution) recovers the BARE impact kernel by solving "
-        "the Toeplitz system `sign_price_cross_cov = sign_ACF ⊛ kappa`, separating the "
-        "kernel from the confound of order-flow memory that a naive read of the "
-        "response function R(ℓ) would mix in. `beta_block_sd` (block-bootstrap "
-        "standard deviation across 5 contiguous blocks) is used for uncertainty, NOT "
-        "the fitted power law's OLS stderr, which `propagator.py`'s docstring measures "
-        "to understate true uncertainty by roughly 6.8x on synthetic long-memory data."
+        "**beta (deconvolved kernel exponent)**: `kernel_exponent_blocked` recovers the "
+        "bare impact kernel by solving the Toeplitz system `sign_price_cross_cov = "
+        "sign_ACF ⊛ kappa`, which separates the kernel from the order-flow memory that "
+        "R(ℓ) mixes in. For uncertainty I use `beta_block_sd` (block-bootstrap sd over 5 "
+        "contiguous blocks), not the fit's OLS stderr, which the `propagator.py` "
+        "docstring measures as understating the uncertainty by roughly 6.8x on synthetic "
+        "long-memory data."
     )
     lines.append(
-        "**Critical balance**: the Bouchaud et al. (2004) propagator-diffusivity "
-        "relation predicts beta = (1 - gamma_week) / 2 for a LINEAR propagator model "
-        "whose accumulated price response grows no faster than diffusively "
-        "(dm[t] = sum_n kappa[n] * signs[t-n] + noise, i.e. impacts superpose "
-        "additively across events — see `propagator.py`'s module docstring for the "
-        "exact model assumption). balance_delta = beta - (1-gamma_week)/2 measures the "
-        "signed departure from that prediction per symbol."
+        "**Critical balance**: the Bouchaud et al. (2004) propagator-diffusivity relation "
+        "predicts beta = (1 - gamma_week) / 2 for a linear propagator whose accumulated "
+        "response grows no faster than diffusively (dm[t] = sum_n kappa[n] * signs[t-n] + "
+        "noise; see the `propagator.py` module docstring). balance_delta = beta - "
+        "(1-gamma_week)/2 is the signed departure per symbol."
     )
     lines.append("")
     lines.append(
         "**Judgement rule**: |balance_delta| <= 2*max(beta_block_sd, 0.04) => "
-        "\"consistent\", else \"violated\". The 0.04 floor is not an arbitrary safety "
-        "margin — `propagator.py`'s docstring for `kernel_exponent_blocked` reports a "
-        "measured systematic finite-L bias of roughly +0.03 to +0.04 in the recovered "
-        "beta at L=300 (20-seed Monte Carlo on `fractional_signs(d=0.35)`), i.e. even a "
-        "genuinely balanced symbol's beta_hat typically reads ~0.03-0.04 too high purely "
-        "from finite-sample deconvolution bias. Without this floor, a low-noise symbol "
-        "(small beta_block_sd) with a truly-zero balance_delta could be flagged "
-        "\"violated\" by nothing more than the method's own known, already-quantified "
-        "bias — a dishonest false positive. Flooring the band at the measured bias "
-        "scale is the honest choice: it states plainly that departures smaller than the "
-        "method's own bias cannot be distinguished from zero, rather than implying a "
-        "precision the estimate does not have."
+        "\"consistent\", else \"violated\". The 0.04 floor is the finite-L bias of roughly "
+        "+0.03 to +0.04 in the recovered beta at L=300 that the `kernel_exponent_blocked` "
+        "docstring reports (20-seed Monte Carlo on `fractional_signs(d=0.35)`). Without "
+        "the floor, a low-noise symbol with a truly zero balance_delta could be flagged "
+        "\"violated\" by that bias alone. Departures smaller than the bias cannot be "
+        "distinguished from zero."
     )
     lines.append("")
     lines.append("## Run summary")
@@ -341,7 +328,7 @@ def _write_results_md(out_dir: Path, result: dict) -> None:
             )
         lines.append("")
     else:
-        lines.append("No symbols produced usable results — no table to show.")
+        lines.append("No symbols produced usable results, so there is no table.")
         lines.append("")
 
     lines.append("## Findings")
@@ -351,34 +338,30 @@ def _write_results_md(out_dir: Path, result: dict) -> None:
         if result["n_violated"] == 0:
             lines.append(
                 f"All {len(records)} successful panel symbols land within the balance "
-                "band: the critical-balance relation beta = (1-gamma_week)/2 **holds "
-                "across this cross-section** at the stated bias-floored tolerance. This "
-                "is consistent with a linear propagator model applying uniformly across "
-                "the panel, though see Caveats for what this test can and cannot rule out."
+                "band: the relation beta = (1-gamma_week)/2 **holds across this "
+                "cross-section** at the bias-floored tolerance. That is consistent with a "
+                "linear propagator model applying across the panel; see Caveats for what "
+                "the test cannot rule out."
             )
         elif result["n_consistent"] == 0:
             lines.append(
-                f"All {len(records)} successful panel symbols land OUTSIDE the balance "
-                "band: the critical-balance relation **fails systematically** across "
-                "this cross-section, not just for isolated symbols. This is itself a "
-                "novel finding — it suggests the linear propagator model's diffusivity "
-                "constraint does not hold uniformly for this panel/period, not merely "
-                "that individual symbols are noisy."
+                f"All {len(records)} successful panel symbols land outside the balance "
+                "band: the relation **fails systematically** across this cross-section, "
+                "not just for isolated symbols. The linear propagator model's diffusivity "
+                "constraint does not hold uniformly for this panel and period."
             )
         else:
             lines.append(
                 f"{result['n_consistent']} of {len(records)} symbols "
                 f"({frac_consistent:.0%}) land within the balance band and "
-                f"{result['n_violated']} do not — critical balance holds for SOME but "
-                "not all of the panel. Whether the split correlates with activity "
-                "(n_events) or other symbol characteristics is visible in the panel "
-                "table above (and in the companion plot, see README); no such "
-                "correlation is asserted here beyond what the table shows, since a "
-                f"resolution below {len(records)} points is not enough to fit a "
-                "reliable trend."
+                f"{result['n_violated']} do not, so critical balance holds for some but "
+                "not all of the panel. Whether the split tracks activity (n_events) or "
+                "other symbol characteristics is visible in the panel table. I assert no "
+                f"such relation beyond the table, since {len(records)} points are too few "
+                "to fit a reliable trend."
             )
     else:
-        lines.append("No successful symbols in this run — no finding to report.")
+        lines.append("No successful symbols in this run, so there is no finding.")
     lines.append("")
 
     if result["failures"]:
@@ -393,40 +376,34 @@ def _write_results_md(out_dir: Path, result: dict) -> None:
     lines.append("## Caveats")
     lines.append("")
     lines.append(
-        f"- **7-day window** ({result['start_day']}..{result['end_day']}): one "
-        "specific week is one specific market regime; per Phase 1.5 diagnostics, "
-        "order-flow memory statistics are regime-dependent, and these results may not "
-        "generalize to other weeks or volatility regimes."
+        f"- **7-day window** ({result['start_day']}..{result['end_day']}): one week in "
+        "one market regime. Order-flow memory statistics are regime-dependent (see Q8), "
+        "so these results may not carry over to other weeks or volatility regimes."
     )
     lines.append(
-        "- **L1 mids only**: the mid price used throughout is the best-bid/best-ask "
-        "midpoint from bookTicker (top-of-book only); no order-book depth is used, so "
-        "impact through queue depletion or hidden liquidity is not captured."
+        "- **L1 mids only**: the mid is the best-bid/best-ask midpoint from bookTicker. "
+        "No order-book depth is used, so impact through queue depletion or hidden "
+        "liquidity is not captured."
     )
     lines.append(
-        "- **Linear-propagator model assumption**: the deconvolved kernel beta relies "
-        "entirely on `propagator.py`'s model, dm[t] = sum_n kappa[n]*signs[t-n] + "
-        "noise — i.e. that each signed event's price impact superposes additively and "
-        "linearly with all other events' impacts. If real impact is nonlinear "
-        "(e.g. saturating, or state-dependent on spread/depth), the deconvolved beta "
-        "is a linear-model artifact, not evidence for or against a nonlinear "
-        "propagator. The critical-balance relation itself (beta = (1-gamma)/2) is "
-        "ALSO a linear/diffusive-propagator prediction (Bouchaud et al. 2004); a "
-        "\"violated\" verdict is equally consistent with (a) the panel's true impact "
-        "process being nonlinear, and (b) the linear model holding but with a genuinely "
-        "different beta-gamma relationship than the diffusivity constraint predicts. "
-        "This analysis cannot distinguish those two explanations."
+        "- **Linear-propagator assumption**: the deconvolved beta relies on the model "
+        "dm[t] = sum_n kappa[n]*signs[t-n] + noise, in which each signed event's impact "
+        "superposes additively and linearly. If real impact is nonlinear (saturating, or "
+        "dependent on spread or depth), beta is an artifact of the linear model. The "
+        "critical-balance relation beta = (1-gamma)/2 is also a linear/diffusive "
+        "prediction (Bouchaud et al. 2004). A \"violated\" verdict fits both (a) nonlinear "
+        "true impact and (b) a linear model whose beta-gamma relationship differs from the "
+        "diffusivity constraint. This analysis cannot tell them apart."
     )
     lines.append(
-        "- **0.04 bias floor**: see Methodology — this is the measured finite-L "
-        "deconvolution bias at L=300 from Task 1's synthetic validation, not a "
-        "generic safety margin; the true bias at this panel's actual max_lag "
-        f"({result['max_lag']}) may differ from the L=300 measurement it is based on."
+        "- **0.04 bias floor**: the measured finite-L deconvolution bias at L=300 from the "
+        "synthetic validation. The bias at this panel's max_lag "
+        f"({result['max_lag']}) may differ."
     )
     lines.append(
-        "- **beta_block_sd** comes from only 5 contiguous non-overlapping blocks per "
-        "symbol; with few blocks, the block standard deviation is itself a noisy "
-        "estimate of uncertainty, and is not a formal confidence interval."
+        "- **beta_block_sd** uses only 5 contiguous non-overlapping blocks per symbol. "
+        "With so few blocks it is a noisy uncertainty estimate and not a formal "
+        "confidence interval."
     )
     lines.append("")
     (out_dir / "q5_kernel_panel.md").write_text("\n".join(lines))

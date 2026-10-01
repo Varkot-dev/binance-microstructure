@@ -1,14 +1,14 @@
-# Q8: regime comparator — temporal robustness of the cross-sectional laws
+# Q8: regime comparison, stability of the cross-sectional laws over time
 
-## Methodology
+## Method
 
-Loads `q4_cross_section.json` (required) and `q6_endogeneity.json` (optional — not every regime necessarily has a Q6 run) from a baseline directory (`2023-06`) and one or more regime directories. Every cross-sectional regression (γ̂ vs. log10(activity), p_flip vs. log10(activity), and α̂_median vs. log10(activity) when Q6 is present) is **recomputed from the per-symbol records using this module's own `np.polyfit`-based OLS** — the upstream jsons' stored `regressions` / `activity_regression` blocks are never trusted directly, only cross-checked against the recomputed values; any mismatch beyond a tight numerical tolerance (1e-06) is reported as an explicit warning below rather than silently accepted or overwritten.
+I load `q4_cross_section.json` (required) and `q6_endogeneity.json` (optional) from a baseline directory (`2023-06`) and one or more regime directories. Each cross-sectional regression (γ̂, p_flip, and α̂_median vs. log10(activity), the last when Q6 is present) is recomputed from the per-symbol records with this module's `np.polyfit` OLS. The stored regression blocks in the upstream jsons are only cross-checked, and a mismatch beyond 1e-06 is reported as a warning below.
 
-**Survivorship**: for each regime, the baseline's successful symbol set is compared against that regime's successful symbol set. Baseline symbols absent from a regime are non-survivors; each is annotated with a reason drawn from that regime's own Q4 `skips` (below `min_events`) and `failures` (missing parquet / other exception) lists when available, distinguishing symbols that simply fell below the activity threshold in that regime from symbols that failed or are missing outright.
+**Survivorship**: baseline symbols absent from a regime's successful set are non-survivors. Each gets a reason from that regime's Q4 `skips` (below `min_events`) and `failures` (missing parquet / other exception) when available.
 
-**Rank correlation**: Spearman's rho on the symbol overlap for p_flip, γ̂ (and α̂ when both sides have a Q6 run), computed via average-rank ranking (ties share the mean of their ranks) and Pearson correlation of the ranks — the standard exact definition of Spearman's rho, implemented with numpy only (no scipy dependency).
+**Rank correlation**: Spearman's rho on the symbol overlap for p_flip, γ̂ (and α̂ when both sides have a Q6 run), as the Pearson correlation of average ranks.
 
-**Law-stability verdicts**: same-sign check on the flip-law slope across baseline and every regime; slope ratio of each regime vs. baseline; γ-invariance is verdicted true iff EVERY regime's (baseline included) γ-vs-activity R² falls below 0.05. All verdict text below is generated from these computed values — the wording is not hardcoded to a particular conclusion; either the law holds or it does not, and this report states whichever the data shows.
+**Law-stability verdicts**: a same-sign check on the flip-law slope across the baseline and every regime, plus each regime's slope ratio to the baseline. γ-invariance holds iff every regime's (baseline included) γ-vs-activity R² is below 0.05. The verdict text is generated from these values.
 
 ## Regime table
 
@@ -21,13 +21,13 @@ Loads `q4_cross_section.json` (required) and `q6_endogeneity.json` (optional —
 | 2026-07 | fixed | 46 | 0.0230 | 0.0113 | 0.1683 | 0.2441 | 0.1991 (0.1510) | 0.4154 | 4 | 0.5766 (0.4159) | 0.6595 | 0.8903 | 0.31 |
 | 2026-07-native | native | 231 | 0.0006 | 0.0000 | 0.0612 | 0.0196 | 0.2071 (0.1321) | 0.3986 | 11 | n/a | n/a | n/a | n/a |
 
-**Kernel-mode shift — do not read the α median as an endogeneity change for: 2024-07 (0.49), 2025-07 (0.33).** The fast-mode share is the fraction of symbols whose single-exponential fit has β̂ > 10 (decay faster than 0.1 business-time seconds); in the baseline (2023-06) it is 0.12. A fit in the fast mode captures only the fast component of a multi-timescale kernel, so its α̂ is lower by construction. Compare these regimes on the slow-mode α median (fits with β̂ ≤ 10 only) or on the count-variance n̂_CV column, which assumes no kernel shape.
+**Kernel-mode shift: do not read the α median as an endogeneity change for 2024-07 (0.49), 2025-07 (0.33).** The fast-mode share is the fraction of symbols whose single-exponential fit has β̂ > 10 (decay faster than 0.1 business-time seconds). In the baseline (2023-06) it is 0.12. A fast-mode fit captures only the fast component of a multi-timescale kernel, so its α̂ is lower by construction. Compare these regimes on the slow-mode α median (fits with β̂ ≤ 10 only) or on the count-variance n̂_CV column, which assumes no kernel shape.
 
 ## Law-stability verdicts
 
-**Flip-law sign stability**: the flip-law slope has the **same sign** in every regime as in the baseline — the direction of the p_flip-vs-activity relationship is stable across regimes.
+**Flip-law sign stability**: the flip-law slope has the **same sign** in every regime as in the baseline, so the direction of the p_flip-vs-activity relationship is stable across regimes.
 
-Sign agreement is weaker than it looks: in 2026-07, 2026-07-native the slope is within 2 standard errors of zero, i.e. indistinguishable from zero, so its sign carries no information. The law is absent there, not confirmed.
+The sign agreement is weaker than it looks. In 2026-07, 2026-07-native the slope is within 2 standard errors of zero, indistinguishable from zero, so its sign carries no information. The law is absent there, not confirmed.
 
 Flip-law slope ratio vs. baseline, per regime:
 
@@ -37,24 +37,24 @@ Flip-law slope ratio vs. baseline, per regime:
 - 2026-07: 0.2069x baseline slope
 - 2026-07-native: 0.0056x baseline slope
 
-**γ invariance**: at least one regime's γ-vs-activity R² is at or above 0.05 (2025-07, 2026-07) — γ's liquidity-invariance does **not** hold uniformly across every regime examined here.
+**γ invariance**: at least one regime's γ-vs-activity R² is at or above 0.05 (2025-07, 2026-07), so γ's liquidity-invariance does **not** hold in every regime examined.
 
 ### Survivorship-free test: 2026-07-native (native universe)
 
-**2026-07-native** was run on the market's own requested universe for that period rather than the baseline's fixed symbol list, so its flip-law and γ-vs-activity verdicts below are **not confounded by survivorship** — the overlap comparison (see the Overlap section) restricts to symbols present in both periods, and any agreement or disagreement with the baseline law reflects the law itself, not which symbols happened to still exist in the baseline's original panel.
+**2026-07-native** was run on the market's own universe for that period, not the baseline's fixed list, so the verdicts below are not confounded by survivorship.
 
-- Flip-law slope for 2026-07-native (0.0006) is within 2 standard errors of zero — indistinguishable from zero. The flip law is **absent** in this survivorship-free test, so its direction is neither confirmed nor reversed.
-- γ-vs-activity R² for 2026-07-native (0.0196) is below 0.05, but the slope (0.0612, 2.1 standard errors) is distinguishable from zero — a weak but nonzero activity dependence, not strict flatness.
+- Flip-law slope for 2026-07-native (0.0006) is within 2 standard errors of zero, indistinguishable from zero. The flip law is **absent** in this survivorship-free test, so its direction is neither confirmed nor reversed.
+- γ-vs-activity R² for 2026-07-native (0.0196) is below 0.05, but the slope (0.0612, 2.1 standard errors) is distinguishable from zero. That is a weak but nonzero activity dependence, not strict flatness.
 
 ### γ-break outlier sensitivity (drop-one-out)
 
-For **2025-07** (n=94, full-sample slope=0.1588, R²=0.2505), a drop-one-out refit of γ vs. log10(activity) — removing each symbol one at a time and re-fitting — gives an **R² range of [0.1937 (dropping ETHUSDT), 0.4666 (dropping BTCDOMUSDT)]** and a **slope range of [0.1373 (dropping ETHUSDT), 0.1823 (dropping BTCDOMUSDT)]**. The highest-influence points by Cook's distance are BTCDOMUSDT (Cook's D=0.589, leverage=0.025); ETHUSDT (Cook's D=0.313, leverage=0.105); 1000PEPEUSDT (Cook's D=0.096, leverage=0.072). The slope **stays positive under every single-symbol removal** — the break's direction is not an artifact of any one symbol — but R² swings by a large relative amount depending on which point is dropped, so the *strength* (not the sign) of the break is outlier-sensitive. This replaces an earlier unquantified 'a handful of outliers' hedge with the measured sensitivity.
+For **2025-07** (n=94, full-sample slope=0.1588, R²=0.2505), refitting γ vs. log10(activity) with each symbol removed in turn gives an **R² range of [0.1937 (dropping ETHUSDT), 0.4666 (dropping BTCDOMUSDT)]** and a **slope range of [0.1373 (dropping ETHUSDT), 0.1823 (dropping BTCDOMUSDT)]**. The highest-influence points by Cook's distance are BTCDOMUSDT (Cook's D=0.589, leverage=0.025); ETHUSDT (Cook's D=0.313, leverage=0.105); 1000PEPEUSDT (Cook's D=0.096, leverage=0.072). The slope **stays positive under every single-symbol removal**, so the direction of the break does not depend on any one symbol. R² swings by a large relative amount depending on which point is dropped, so the strength of the break is outlier-sensitive.
 
-For **2026-07** (n=46, full-sample slope=0.1683, R²=0.2441), a drop-one-out refit of γ vs. log10(activity) — removing each symbol one at a time and re-fitting — gives an **R² range of [0.1738 (dropping BTCUSDT), 0.2959 (dropping LTCUSDT)]** and a **slope range of [0.1442 (dropping BTCUSDT), 0.1867 (dropping YFIUSDT)]**. The highest-influence points by Cook's distance are BTCUSDT (Cook's D=0.168, leverage=0.165); YFIUSDT (Cook's D=0.130, leverage=0.062); LTCUSDT (Cook's D=0.112, leverage=0.045). The slope **stays positive under every single-symbol removal** — the break's direction is not an artifact of any one symbol — but R² swings by a large relative amount depending on which point is dropped, so the *strength* (not the sign) of the break is outlier-sensitive. This replaces an earlier unquantified 'a handful of outliers' hedge with the measured sensitivity.
+For **2026-07** (n=46, full-sample slope=0.1683, R²=0.2441), refitting γ vs. log10(activity) with each symbol removed in turn gives an **R² range of [0.1738 (dropping BTCUSDT), 0.2959 (dropping LTCUSDT)]** and a **slope range of [0.1442 (dropping BTCUSDT), 0.1867 (dropping YFIUSDT)]**. The highest-influence points by Cook's distance are BTCUSDT (Cook's D=0.168, leverage=0.165); YFIUSDT (Cook's D=0.130, leverage=0.062); LTCUSDT (Cook's D=0.112, leverage=0.045). The slope **stays positive under every single-symbol removal**, so the direction of the break does not depend on any one symbol. R² swings by a large relative amount depending on which point is dropped, so the strength of the break is outlier-sensitive.
 
 ## Survivorship
 
-Fixed-universe regimes only — a native-universe regime was run on its own requested universe rather than the baseline's, so survivorship (which assumes a shared requested universe) does not apply to it; see the Overlap section instead.
+Fixed-universe regimes only. A native-universe regime was run on its own requested universe, not the baseline's, so survivorship does not apply to it (see Overlap).
 
 **2023-07**: 101/121 baseline symbols survive into this regime's successful set (117 symbols total in this regime). 20 non-survivor(s).
 
@@ -278,7 +278,7 @@ Fixed-universe regimes only — a native-universe regime was run on its own requ
 
 ## Overlap (native-universe regimes)
 
-For a regime run on the market's own native universe rather than the baseline's fixed symbol list, survivorship does not apply (a symbol being absent from this regime's universe may simply mean it did not exist yet, not that it disappeared). Instead this reports the plain overlap between the baseline's successful symbol set and this regime's own successful symbol set, plus Spearman rank correlation on that overlap — the survivorship-free comparison.
+Survivorship does not apply to a native-universe regime, since a symbol absent from it may not have existed yet. I report the overlap between the baseline's successful symbols and the regime's own, with Spearman rank correlation on that overlap.
 
 | regime | n baseline | n regime | n overlap | baseline-only | regime-only | p_flip Spearman ρ | γ Spearman ρ |
 |---|---|---|---|---|---|---|---|
@@ -286,7 +286,7 @@ For a regime run on the market's own native universe rather than the baseline's 
 
 ### Cohort split (native-universe regimes)
 
-Both laws refit on three cohorts: the baseline's own data restricted to the symbols present in both periods, this regime's data on those same symbols, and this regime's newly listed symbols alone. A law that changes between the first two rows changed within the same contracts; a law that differs only in the third row is a composition effect. t = slope / OLS stderr.
+I refit both laws on three cohorts: the baseline's data restricted to symbols present in both periods, this regime's data on the same symbols, and this regime's newly listed symbols alone. A law that changes between the first two rows changed within the same contracts. A law that differs only in the third row is a composition effect. t = slope / OLS stderr.
 
 | regime | cohort | n | flip slope (t) | flip R² | γ slope (t) | γ R² |
 |---|---|---|---|---|---|---|
@@ -296,7 +296,7 @@ Both laws refit on three cohorts: the baseline's own data restricted to the symb
 
 ### Universe accounting (own requested universe, per regime)
 
-Accounts for the **full requested universe of each regime** — the baseline's fixed symbol list for a fixed-universe regime, or that regime's own market-native universe for a native-universe one — across three buckets: successful (passed `min_events`), skipped (downloaded but below `min_events`), and failed (no data to download at all for that period). These three buckets always sum to **that regime's own** requested universe size by construction of the upstream Q4 run — for a native-universe regime this is its own total, not the baseline's.
+Each regime's full requested universe (the baseline's list for a fixed-universe regime, its own native universe otherwise) splits into successful (passed `min_events`), skipped (downloaded but below `min_events`), and failed (no data for that period). The three sum to that regime's requested universe size by construction of the Q4 run.
 
 | regime | requested | successful | skipped (below floor) | failed (no data) | reconciles |
 |---|---|---|---|---|---|
@@ -320,7 +320,7 @@ Accounts for the **full requested universe of each regime** — the baseline's f
 
 ## Caveats
 
-- **`min_events` filter shifts membership across regimes**: a symbol's activity level in a given month determines whether it clears the Q4 `min_events` threshold at all, so the 'successful' symbol set is not the same fixed panel across regimes — some non-survivors are genuinely below the activity bar in that regime, not delisted or otherwise absent, and this is reported as such via the skip/failure reason above rather than conflated with true delistings.
-- **Fixed and native universes answer different questions**: fixed-universe regimes re-run the baseline's own symbol list (`results/universe_2023-06.txt`), so they track the fate of the original panel and exclude later listings. Native-universe regimes (2026-07-native) include later listings, which differ in composition (new contract types as well as new coins); the cohort split above separates the two. The native universe still applies the same min_events floor and only contains symbols that exist in that period.
-- **Regression stderr/R² inherit Q4/Q6's own heteroskedasticity caveat**: as documented in `q4_cross_section.md` and `q6_endogeneity.md`, per-symbol estimator noise is not uniform across the cross-section, so the OLS regressions recomputed here (same assumptions, same caveat) should be read descriptively, not as formal confidence intervals.
-- **Spearman rho on a possibly small overlap**: rank correlation is only as informative as the overlap size allows; a small `n_overlap` (see the table above) should be weighted accordingly rather than treated as a precise correlation estimate.
+- **The `min_events` filter shifts membership across regimes**, so the successful set is not a fixed panel. Some non-survivors are below the activity bar in that regime, not delisted. The skip/failure reasons above say which.
+- **Fixed and native universes answer different questions**: fixed-universe regimes re-run the baseline's symbol list (`results/universe_2023-06.txt`) and track the original panel. Native-universe regimes (2026-07-native) include later listings, which differ in composition (new contract types as well as new coins). The cohort split above separates the two. Both apply the same min_events floor.
+- **Regression stderr and R² inherit the heteroskedasticity caveat** in `q4_cross_section.md` and `q6_endogeneity.md` and are descriptive, not confidence intervals.
+- **Spearman rho on a possibly small overlap**: rank correlation is only as informative as the overlap allows. Weight a small `n_overlap` accordingly.

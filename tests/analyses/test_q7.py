@@ -237,7 +237,7 @@ def test_run_q7_end_to_end_synthetic(tmp_path: Path):
     assert (out_dir / "q7_execution.png").exists()
 
     md_text = (out_dir / "q7_execution.md").read_text()
-    assert "NO-TRADING-CLAIM" in md_text or "no trading claim" in md_text.lower()
+    assert "not a trading recommendation" in md_text.lower()
     assert "cost model" in md_text.lower()
 
 

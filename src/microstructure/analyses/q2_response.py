@@ -35,13 +35,12 @@ from microstructure.estimators.response import response_function
 from microstructure.signals.load import events_with_prior_mid, load_book_ticker, load_events
 
 BENCHMARK_NOTE = (
-    "Bouchaud et al. (2004) report that the bare impact KERNEL G(l) decays slowly, "
-    "roughly as a power law, over hundreds to thousands of trades -- evidence that "
-    "price impact is not a single-event, exponentially-forgotten shock but reflects "
-    "long-range order-flow correlation. The MEASURED response function R(l) is a "
-    "different object: it mixes G with order-flow memory C, and Bouchaud's own "
-    "equity data shows R(l) rising to a maximum around 10^2-10^3 trades before any "
-    "slow decline -- the same rise this analysis measures, not a contradiction of it."
+    "Bouchaud et al. (2004) report that the bare impact kernel G(l) decays slowly, "
+    "roughly as a power law, over hundreds to thousands of trades. Price impact is "
+    "therefore not an exponentially forgotten single-event shock; it reflects long-range "
+    "order-flow correlation. The measured response R(l) is a different object: it mixes "
+    "G with order-flow memory C. Bouchaud's equity data shows R(l) rising to a maximum "
+    "around 10^2-10^3 trades before any slow decline, the same rise measured here."
 )
 
 _FIT_LO = 10
@@ -203,21 +202,21 @@ def _plot(
 
 def _write_results_md(out_dir: Path, result: dict, symbol: str, periods: list[str], month: str) -> None:
     lines: list[str] = []
-    lines.append("# Q2: Response function — results")
+    lines.append("# Q2: Response function")
     lines.append("")
-    lines.append("## Methodology")
+    lines.append("## Method")
     lines.append("")
     lines.append(
-        f"Aggressor events for {symbol} are loaded from monthly aggTrades period `{month}` "
-        f"and filtered to the timestamp span covered by the daily bookTicker periods "
-        f"{', '.join(periods)}. Each event is joined to the best bid/ask mid price "
-        "prevailing STRICTLY BEFORE its timestamp (`events_with_prior_mid`, ms resolution). "
-        "The average price response R(ℓ) = E[sign_t * (m_{t+ℓ} - m_t)] is then computed via "
-        "`response_function` out to `max_lag` events. Two candidate decay shapes are fit "
-        f"over the window ℓ ∈ [{_FIT_LO}, {_FIT_HI}]: a power law R(ℓ) ~ ℓ^(-γ) (OLS on "
-        "log R vs log ℓ) and an exponential R(ℓ) ~ A·exp(-λℓ) (OLS on log R vs ℓ, positive "
-        "R values only in both cases). The fit with the lower residual sum of squares (RSS) "
-        "on the log scale is judged the better-fitting shape."
+        f"Aggressor events for {symbol} come from the monthly aggTrades period `{month}`, "
+        f"filtered to the timestamp span of the daily bookTicker periods "
+        f"{', '.join(periods)}. Each event is joined to the mid price prevailing strictly "
+        "before its timestamp (`events_with_prior_mid`, ms resolution). I compute the "
+        "average response R(ℓ) = E[sign_t * (m_{t+ℓ} - m_t)] with `response_function` out "
+        "to `max_lag` events, then fit two decay shapes over ℓ ∈ "
+        f"[{_FIT_LO}, {_FIT_HI}]: a power law R(ℓ) ~ ℓ^(-γ) (OLS on log R vs log ℓ) and an "
+        "exponential R(ℓ) ~ A·exp(-λℓ) (OLS on log R vs ℓ). Both use positive R values "
+        "only. The shape with the lower log-scale residual sum of squares (RSS) is the "
+        "better fit."
     )
     lines.append("")
     lines.append(f"Events after joining to prior mid: {result['n_events']:,} "
@@ -230,14 +229,12 @@ def _write_results_md(out_dir: Path, result: dict, symbol: str, periods: list[st
     growing = result["response_exponent"] < 0 or result["exponential_rate"] < 0
     if growing:
         lines.append(
-            f"**Note:** both fitted parameters are negative, i.e. R(ℓ) is *growing* with "
-            f"lag over the fit window, not decaying -- a negative γ̂ means "
-            f"R(ℓ) ~ ℓ^{{{-result['response_exponent']:+.4f}}} (growth), and a negative λ̂ "
-            f"means R(ℓ) ~ exp({-result['exponential_rate']:+.4f}·ℓ) (growth). Read the "
-            "sign of γ̂/λ̂ before reading their magnitude as a 'decay rate'. This growth is "
-            "the EXPECTED shape given long-memory order flow, not an anomaly -- see the "
-            "Benchmark and Caveats sections below for the R ≈ G + Σ G·C decomposition "
-            "that explains why."
+            f"Both fitted parameters are negative: R(ℓ) grows with lag over the fit "
+            f"window instead of decaying. A negative γ̂ means "
+            f"R(ℓ) ~ ℓ^{{{-result['response_exponent']:+.4f}}} and a negative λ̂ "
+            f"means R(ℓ) ~ exp({-result['exponential_rate']:+.4f}·ℓ). Read the sign "
+            "before the magnitude. Growth is the expected shape under long-memory order "
+            "flow (R ≈ G + Σ G·C, see Caveats)."
         )
         lines.append("")
     lines.append("| quantity | value |")
@@ -261,10 +258,9 @@ def _write_results_md(out_dir: Path, result: dict, symbol: str, periods: list[st
     verdict = "power-law" if result["better_fit"] == "power_law" else "exponential"
     direction = "growing" if result["response_exponent"] < 0 else "decaying"
     lines.append(
-        f"**Verdict:** the {verdict} form has lower residual sum of squares on the log "
-        f"scale over lags {_FIT_LO}-{_FIT_HI} and is judged the better-fitting shape "
-        f"for {symbol}'s response function in this sample, which is {direction} "
-        f"over lags 1-{_FIT_HI}."
+        f"**Verdict:** the {verdict} form has the lower log-scale RSS over lags "
+        f"{_FIT_LO}-{_FIT_HI} and is the better fit for {symbol}'s response function in "
+        f"this sample, which is {direction} over lags 1-{_FIT_HI}."
     )
     lines.append("")
     lines.append("## Benchmark vs. literature")
@@ -274,51 +270,47 @@ def _write_results_md(out_dir: Path, result: dict, symbol: str, periods: list[st
     lines.append("## Caveats")
     lines.append("")
     lines.append(
-        "- The OLS standard errors on γ̂ and λ̂ assume i.i.d. residuals; because R(ℓ) at "
-        "nearby lags is itself autocorrelated (both through the impact kernel and any "
-        "order-flow memory), these stderrs understate the true uncertainty."
+        "- The OLS standard errors on γ̂ and λ̂ assume i.i.d. residuals. R(ℓ) at nearby "
+        "lags is autocorrelated (through the impact kernel and order-flow memory), so "
+        "they understate the uncertainty."
     )
     lines.append(
-        "- Real order flow is NOT i.i.d. (Q1 finds long-memory signs), so R(ℓ) here mixes "
-        "the bare impact kernel with sign autocorrelation; it is not a clean kernel estimate "
-        "the way it would be under the iid-sign assumption used to validate the estimator."
+        "- Order flow is not i.i.d. (Q1 finds long-memory signs), so R(ℓ) mixes the bare "
+        "impact kernel with sign autocorrelation. It is not a clean kernel estimate."
     )
     lines.append(
-        f"- The sample is a single 14-day window ({periods[0]}..{periods[-1]}) for one "
-        f"symbol ({symbol}); the fitted decay shape and rate may not generalize to other "
-        "periods, volatility regimes, or symbols."
+        f"- One 14-day window ({periods[0]}..{periods[-1]}) and one symbol ({symbol}); the "
+        "fitted shape and rate may not carry over to other periods, regimes, or symbols."
     )
     lines.append(
-        "- RSS comparison is on the log scale over a fixed window; a different window or a "
-        "linear-scale comparison could favor the other shape, especially since power laws "
-        "and exponentials with matched short-lag behavior often diverge only at large lag."
+        "- The RSS comparison is on the log scale over a fixed window. A different window "
+        "or a linear-scale comparison could favor the other shape, since the two often "
+        "diverge only at large lag."
     )
     if result["response_exponent"] < 0:
         band_lo, band_hi = _PREDICTED_RISE_BAND
         measured_ratio = r500 / r1
         lines.append(
-            f"- A growing R(ℓ) over lags 1-{_FIT_HI} is the EXPECTED response shape given "
-            "long-memory order flow, not a departure from Bouchaud (2004). The measured "
-            "response mixes the (decaying) bare impact kernel G with the sign "
-            "autocorrelation C: R(ℓ) ≈ G(ℓ) + Σ_{n<ℓ} G(ℓ-n)·C(n). With Q1's measured "
-            "sign-ACF exponent γ≈0.24 for ETH, the accumulation term Σ G·C dominates G "
-            "itself, so R keeps climbing well past where G alone would have decayed -- "
-            "Bouchaud's own equity response functions show the same rise-then-slow-decline "
-            "shape, peaking around 10^2-10^3 trades before turning over. "
-            f"R({min(500, len(result['response']) - 1)})/R(1) = {measured_ratio:.2f}x in "
-            "this sample; a toy transient-impact calculation using γ≈0.24 and the "
-            "diffusivity-consistent kernel exponent β=(1-γ)/2≈0.38 predicts "
-            f"R(500)/R(1) in roughly the {band_lo:.1f}-{band_hi:.1f}x range (depending on "
-            "lag-1 sign autocorrelation in 0.2-0.4), and the measured "
-            f"{measured_ratio:.2f}x falls inside it. What decays in the literature is the "
-            "KERNEL G(ℓ) itself, not R(ℓ) -- this analysis measures R only; separating G "
-            "from C requires propagator deconvolution, which is out of scope here."
+            f"- A growing R(ℓ) over lags 1-{_FIT_HI} is the expected shape under "
+            "long-memory order flow and is consistent with Bouchaud (2004). The measured "
+            "response mixes the decaying bare kernel G with the sign autocorrelation C: "
+            "R(ℓ) ≈ G(ℓ) + Σ_{n<ℓ} G(ℓ-n)·C(n). With Q1's sign-ACF exponent γ≈0.24 for "
+            "ETH, the accumulation term Σ G·C dominates G, so R keeps climbing well past "
+            "where G alone would have decayed. Bouchaud's equity response functions show "
+            "the same rise-then-slow-decline shape, peaking around 10^2-10^3 trades. "
+            f"R({min(500, len(result['response']) - 1)})/R(1) = {measured_ratio:.2f}x here. "
+            "A toy transient-impact calculation with γ≈0.24 and kernel exponent "
+            "β=(1-γ)/2≈0.38 predicts R(500)/R(1) in roughly "
+            f"{band_lo:.1f}-{band_hi:.1f}x (for lag-1 sign autocorrelation in 0.2-0.4), "
+            f"and the measured {measured_ratio:.2f}x falls inside it. What decays in the "
+            "literature is the kernel G(ℓ), not R(ℓ). This analysis measures R only; "
+            "separating G from C needs propagator deconvolution, which I did not do."
         )
         lines.append(
             f"- R(ℓ) plateaus around ℓ≈300-500 (see the response array in "
-            "`q2_results.json`), outside the fitted window of "
-            f"[{_FIT_LO}, {_FIT_HI}]; the power-law/exponential fits above describe only "
-            "the rising portion and say nothing about behavior at or past the plateau."
+            "`q2_results.json`), outside the fitted window "
+            f"[{_FIT_LO}, {_FIT_HI}]. The fits describe only the rising portion and say "
+            "nothing about behavior at or past the plateau."
         )
     lines.append("")
     (out_dir / "q2_results.md").write_text("\n".join(lines))

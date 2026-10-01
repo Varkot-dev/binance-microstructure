@@ -748,8 +748,8 @@ def _drift_section_lines(result: dict) -> list[str]:
     drift_blocks = result.get("drift_blocks", 0)
     if not drift_blocks:
         lines.append(
-            "The block-wise-baseline control was disabled for this run (`--drift-blocks 0`); "
-            "the K=1→K=2 rise is therefore not separated into drift and memory here."
+            "The block-wise-baseline control was disabled for this run (`--drift-blocks 0`), "
+            "so the K=1→K=2 rise is not separated into drift and memory here."
         )
         lines.append("")
         return lines
@@ -778,38 +778,39 @@ def _drift_section_lines(result: dict) -> list[str]:
         if width_s else "n/a"
     )
     lines.append(
-        f"Per symbol, on the FIRST business-time window only (to bound cost; that window is "
-        f"capped at {MAX_FIT_EVENTS:,} events), K=1 with one constant baseline is compared "
-        f"with K=1 using a piecewise-constant baseline over {drift_blocks} equal blocks, and "
-        f"with the window's K=2 fit. Median block width: {width_txt}. `dll_pw` and `dll_k2` "
-        "are the log-likelihood gains over constant-baseline K=1 from the block baseline and "
-        "from the second kernel component; `threshold` is chi-square(0.95, blocks−1)/2."
+        f"Per symbol, on the first business-time window only (to bound cost; that window is "
+        f"capped at {MAX_FIT_EVENTS:,} events), I compare K=1 with one constant baseline "
+        f"against K=1 with a piecewise-constant baseline over {drift_blocks} equal blocks, "
+        f"and against the window's K=2 fit. Median block width: {width_txt}. `dll_pw` and "
+        "`dll_k2` are the log-likelihood gains over constant-baseline K=1 from the block "
+        "baseline and from the second kernel component. `threshold` is "
+        "chi-square(0.95, blocks−1)/2."
     )
     lines.append("")
     lines.append("**Method caveats.**")
     lines.append(
-        "- This is a heuristic likelihood-ratio screen, not a formal test: the fits are "
+        "- This is a heuristic likelihood-ratio screen, not a formal test. The fits are "
         "Nelder-Mead optima, the chi-square calibration is only approximate for Hawkes "
         "likelihoods, and the half-of-`dll_k2` cut-off is a convention."
     )
     lines.append(
         f"- Resolution limit: a block baseline absorbs only drift slower than the block "
-        f"width (median {width_txt}). Faster baseline wobble averages out inside a block and "
-        "is indistinguishable from long memory, so `long_memory_candidate` carries meaning "
-        "only for drift slower than that width."
+        f"width (median {width_txt}). Faster baseline wobble averages out inside a block "
+        "and looks like long memory, so `long_memory_candidate` means something only for "
+        "drift slower than that width."
     )
     lines.append(
-        "- Misspecification: when K=1 is wrong (genuine long memory) block counts are more "
-        "dispersed than K=1 predicts, inflating `dll_pw`. That can push a symbol with real "
-        "long memory to `inconclusive` OR across the drift threshold into `drift`. A `drift` "
-        "label means only that the block baseline recovers at least half of the K=2 gain; it "
-        "does not exclude long memory."
+        "- Misspecification: when K=1 is wrong (real long memory), block counts are more "
+        "dispersed than K=1 predicts, which inflates `dll_pw`. That can push a symbol with "
+        "real long memory to `inconclusive` OR across the drift threshold into `drift`. A "
+        "`drift` label means only that the block baseline recovers at least half of the K=2 "
+        "gain. It does not exclude long memory."
     )
     lines.append(
         f"- `inconclusive` is split by reason: `no_rise` (K=2 n̂ − K=1 n̂ ≤ "
         f"{DRIFT_K2_RISE_MIN:g}, so there is nothing to explain), `k2_insignificant` (the "
         f"K=2 gain `dll_k2` is below {K2_GAIN_MIN_DLL:.2f} nats = chi-square(0.95, 2)/2), "
-        "`mixed` (a material, significant K=2 gain that the block baseline recovers "
+        "and `mixed` (a material, significant K=2 gain that the block baseline recovers "
         "significantly but by less than half)."
     )
     lines.append(
@@ -848,83 +849,73 @@ def _write_results_md(out_dir: Path, result: dict) -> None:
     cross_section = result["cross_section"]
 
     lines: list[str] = []
-    lines.append("# Q6b: kernel-K sensitivity panel — does n̂ rise with K, and why?")
+    lines.append("# Q6b: kernel-K sensitivity panel, does n̂ rise with K, and why?")
     lines.append("")
-    lines.append("## Methodology")
+    lines.append("## Method")
     lines.append("")
     lines.append(
-        f"For each symbol, one month ({month}) of aggTrades is loaded (`load_events`), "
-        "rescaled to business time (`intraday_rate_profile` + `rescale_to_business_time`, "
-        f"{N_BINS} bins) exactly as in Q6, then split into {windows} equal contiguous "
-        f"sub-windows. Each sub-window is refit at every K in {ks} via "
-        "`fit_hawkes_multiexp` (sum-of-K-exponentials Hawkes MLE), instead of Q6's single "
-        "K=1 fit. Per symbol, per sub-window, this records n̂_K = sum(alpha_k) and "
-        "β_slow_K = min(betas_K) (the slowest-decaying component's rate) for every K."
+        f"For each symbol I load one month ({month}) of aggTrades (`load_events`), rescale "
+        "to business time as in Q6 (`intraday_rate_profile` + `rescale_to_business_time`, "
+        f"{N_BINS} bins), and split it into {windows} equal contiguous sub-windows. Each "
+        f"sub-window is refit at every K in {ks} with `fit_hawkes_multiexp` (a "
+        "sum-of-K-exponentials Hawkes MLE), where Q6 used a single K=1 fit. For every K I "
+        "record, per symbol and sub-window, n̂_K = sum(alpha_k) and β_slow_K = min(betas_K), "
+        "the rate of the slowest-decaying component."
     )
     lines.append("")
     lines.append(
         f"**Runtime cap**: a sub-window with more than {MAX_FIT_EVENTS:,} events is fit "
-        f"on only the first {MAX_FIT_EVENTS:,} of that window's events (same cap and "
-        "justification as Q6's MAX_FIT_EVENTS, applied per-K here)."
+        f"on its first {MAX_FIT_EVENTS:,} only, the same cap as Q6, applied at each K."
     )
     lines.append("")
     lines.append(
         "**Per-symbol summary**: the median across sub-windows of n̂_1, n̂_2, n̂_3, and "
-        "Δ21 = median(n̂_2) − median(n̂_1) — the headline K=1→K=2 branching-ratio jump. "
-        "Also reported: the median across sub-windows of 1/β_slow at K=2 (the slower "
-        f"component's timescale, in business-time seconds), compared against the "
-        f"deseasonalization bin width ({DESEASON_BIN_WIDTH_S:.1f}s = 86400/{N_BINS}) and "
-        "against the sub-window length itself, as two independent ratios."
+        "Δ21 = median(n̂_2) − median(n̂_1), the K=1→K=2 branching-ratio jump. I also report "
+        "the median across sub-windows of 1/β_slow at K=2 (the slower component's "
+        "timescale in business-time seconds), as two ratios: against the deseasonalization "
+        f"bin width ({DESEASON_BIN_WIDTH_S:.1f}s = 86400/{N_BINS}) and against the "
+        "sub-window length."
+    )
+    lines.append("")
+    lines.append("## The confound Δ21 alone does not resolve")
+    lines.append("")
+    lines.append(
+        "**A K=1→K=2 rise in n̂ together with a slow kernel component can also come from "
+        "residual baseline non-stationarity, not only from a long-memory kernel.** A "
+        "synthetic control in this repo's tests (\"Case A\") shows it: a true n=0.4 "
+        "single-exponential process with a ±30% baseline-rate wobble that survives "
+        "imperfect deseasonalization fits at K=1 with n̂≈0.46 and at K=2 with n̂≈0.83. That "
+        "is a large, spurious Δ21 with no long-memory kernel in the generating model. A "
+        "second exponential with a very slow beta is flexible enough to absorb a slow drift "
+        "in the baseline rate and inflate the K=2 branching-ratio sum. Filimonov & Sornette "
+        "(2015) document the same mechanism for the count-variance estimator's "
+        "regime-switching trap. Here it also affects the sum-of-exponentials MLE."
     )
     lines.append("")
     lines.append(
-        "## The confound this analysis does NOT resolve on its own"
-    )
-    lines.append("")
-    lines.append(
-        "**A K=1→K=2 rise in n̂ together with a slow kernel component is also produced by "
-        "residual baseline non-stationarity, not only by a genuine long-memory kernel.** "
-        "This repo's own synthetic control (test_q6b.py, \"Case A\") demonstrates the "
-        "trap directly: a TRUE n=0.4 single-exponential process with a ±30% baseline-rate "
-        "wobble that survives imperfect deseasonalization fits at K=1 n̂≈0.46 and at K=2 "
-        "n̂≈0.83 — a large, spurious Δ21 with no long-memory kernel anywhere in the "
-        "generative model. A second exponential component with a very slow beta is "
-        "flexible enough to partially absorb a slow drift in the baseline rate, inflating "
-        "the K=2 branching-ratio sum without any genuine long-range kernel mass being "
-        "present. This is the same mechanism Filimonov & Sornette (2015) document for the "
-        "model-free count-variance estimator's regime-switching trap, now shown to affect "
-        "the sum-of-exponentials MLE as well."
-    )
-    lines.append("")
-    lines.append(
-        "**Why this analysis reports 1/β_slow vs. bin width instead of trusting Δ21 "
-        "alone.** A slow component decaying on a timescale comparable to or longer than "
-        "the deseasonalization bin width is exactly the shape a residual bin-scale "
-        "seasonality artifact would produce — the 48-bin intraday profile cannot resolve "
-        "structure finer than one bin, so any leftover non-stationarity at or above that "
-        "scale is a plausible source for a slow K=2 component, not necessarily a genuine "
-        f"long-memory kernel. Symbols where the median 1/β_slow (K=2) exceeds "
-        f"{DRIFT_SUSPECT_MULTIPLIER:.0f}x the bin width are flagged **drift-suspect** in "
-        "the panel table below — a large Δ21 on a drift-suspect symbol should be read as "
-        "ambiguous between genuine long-memory and residual non-stationarity, not as "
-        "confirmed endogeneity."
+        "**Why I report 1/β_slow vs. bin width and not Δ21 alone.** A slow component "
+        "decaying on a timescale comparable to or longer than the deseasonalization bin "
+        "width is the shape a residual seasonality artifact at that scale would produce. "
+        "The 48-bin intraday profile cannot resolve structure finer than one bin, so "
+        "leftover non-stationarity at or above that scale could generate a slow K=2 "
+        f"component. Symbols whose median 1/β_slow (K=2) exceeds {DRIFT_SUSPECT_MULTIPLIER:.0f}x "
+        "the bin width are flagged **drift-suspect** in the panel table. For those, a "
+        "large Δ21 is ambiguous between long memory and residual non-stationarity."
     )
     lines.append("")
     if result.get("drift_blocks"):
         lines.append(
-            "**The decisive control is run on one window per symbol** (see "
-            "\"Is the K=2 rise drift or memory?\" below): K=1 is refit with a block-wise "
-            "(piecewise-constant) mu and compared with the K=2 gain. It is a heuristic "
-            "screen with a stated resolution limit, so the Δ21 and drift-suspect flag above "
-            "remain triage quantities."
+            "**The decisive control runs on one window per symbol** (see \"Is the K=2 rise "
+            "drift or memory?\" below): K=1 is refit with a block-wise (piecewise-constant) "
+            "mu and compared with the K=2 gain. It is a heuristic screen with a stated "
+            "resolution limit, so Δ21 and the drift-suspect flag remain triage quantities."
         )
     else:
         lines.append(
-            "**The decisive control was not run** (`--drift-blocks 0`): refitting K=1 with "
-            "a block-wise (time-varying, piecewise-constant) mu would separate these two "
-            "explanations. Until it is run, this panel's Δ21 and drift-suspect flag should "
-            "be read as a triage tool, not a final verdict on kernel misspecification vs. "
-            "residual drift."
+            "**The decisive control was not run** (`--drift-blocks 0`). Refitting K=1 with a "
+            "block-wise (piecewise-constant) mu would separate the two explanations. Until "
+            "then, Δ21 and the drift-suspect flag are triage quantities, not a verdict on "
+            "kernel misspecification vs. residual drift."
         )
     lines.append("")
 
@@ -964,7 +955,7 @@ def _write_results_md(out_dir: Path, result: dict) -> None:
             )
         lines.append("")
     else:
-        lines.append("No symbols produced usable results — no table to show.")
+        lines.append("No symbols produced usable results, so there is no table.")
         lines.append("")
 
     lines.append("## Cross-section")
@@ -984,18 +975,17 @@ def _write_results_md(out_dir: Path, result: dict) -> None:
     if null_floor is not None:
         n_within = sum(1 for r in records if r.get("within_finite_sample_null"))
         lines.append(
-            f"**Δ21 is reported alongside a null floor computed at the panel's per-window "
-            f"event count** ({null_floor['n_events_per_window']:,} events, from "
+            f"**Null floor for Δ21**, computed at the panel's per-window event count "
+            f"({null_floor['n_events_per_window']:,} events) from "
             f"{null_floor['n_sims']} simulated well-specified K=1 processes with "
-            f"alpha={null_floor['alpha_used']:.4f} (this panel's own median n̂_1), "
-            f"beta={null_floor['beta_used']:.1f} — see `spurious_delta21_null`). The null's "
+            f"alpha={null_floor['alpha_used']:.4f} (this panel's median n̂_1) and "
+            f"beta={null_floor['beta_used']:.1f} (see `spurious_delta21_null`). The null's "
             f"90th percentile is **{null_floor['p90']:.4f}** (median {null_floor['median']:.4f}). "
-            f"Symbols whose Δ21 does not exceed this null's 90th percentile are labeled "
-            f"**\"within finite-sample null\"** in the panel table above ({n_within}/"
-            f"{len(records)} symbols here) — their Δ21 is no larger than what a well-"
-            "specified, non-long-memory K=1 process of this panel's typical per-window size "
-            "would produce from sampling noise alone, so it should not be read as evidence "
-            "of genuine long-memory kernel structure on its own."
+            f"Symbols whose Δ21 does not exceed it are labeled **\"within finite-sample "
+            f"null\"** in the panel table ({n_within}/{len(records)} symbols). Their Δ21 is "
+            "no larger than a well-specified, non-long-memory K=1 process of this size "
+            "would produce from sampling noise alone, so it is not evidence of "
+            "long-memory kernel structure on its own."
         )
     else:
         lines.append(
@@ -1018,23 +1008,22 @@ def _write_results_md(out_dir: Path, result: dict) -> None:
         lines.append(
             f"**Correlation of Δ21 with the Q6 count-variance gap** (alpha_cv − "
             f"alpha_median, from `--q6-json`): **{cv_corr['correlation']:.4f}** "
-            f"(n={cv_corr['n']}). A positive correlation is consistent with Q6's "
-            "MLE-vs-count-variance disagreement being driven, at least partly, by the "
-            "same K=1 exponential-kernel underestimation this module's Δ21 is designed "
-            "to detect — but per the confound discussion above, is equally consistent "
-            "with both estimators sharing exposure to the same residual baseline "
-            "non-stationarity, and cannot on its own distinguish the two."
+            f"(n={cv_corr['n']}). A positive correlation fits Q6's MLE-vs-count-variance "
+            "disagreement being driven, at least partly, by the K=1 exponential-kernel "
+            "underestimation that Δ21 is built to detect. It equally fits both estimators "
+            "sharing exposure to the same residual baseline non-stationarity, and cannot "
+            "distinguish the two."
         )
     elif result.get("q6_json_used"):
         lines.append(
             "Correlation of Δ21 with the Q6 count-variance gap was requested "
-            f"(`--q6-json {result['q6_json_used']}`) but not estimable (fewer than 2 "
+            f"(`--q6-json {result['q6_json_used']}`) but is not estimable (fewer than 2 "
             "overlapping symbols, or zero variance in one of the two series)."
         )
     else:
         lines.append(
-            "No `--q6-json` supplied — correlation of Δ21 with the Q6 count-variance gap "
-            "was skipped."
+            "No `--q6-json` supplied, so the correlation of Δ21 with the Q6 "
+            "count-variance gap was skipped."
         )
     lines.append("")
 
@@ -1058,43 +1047,41 @@ def _write_results_md(out_dir: Path, result: dict) -> None:
             f"jump is **{dist['median']:+.4f}**. {drift_count}/{len(records)} symbols are "
             "flagged drift-suspect (median 1/β_slow at K=2 exceeds "
             f"{DRIFT_SUSPECT_MULTIPLIER:.0f}x the deseasonalization bin width of "
-            f"{DESEASON_BIN_WIDTH_S:.1f}s) — for these symbols, the Δ21 reported above "
-            "should be treated as ambiguous between genuine long-memory kernel structure "
-            "and residual baseline drift leaking through deseasonalization, per the "
-            "confound discussion above."
+            f"{DESEASON_BIN_WIDTH_S:.1f}s). For these, Δ21 is ambiguous between "
+            "long-memory kernel structure and residual baseline drift leaking through "
+            "deseasonalization."
         )
     else:
-        lines.append("No successful symbols in this run — no finding to report.")
+        lines.append("No successful symbols in this run, so there is no finding.")
     lines.append("")
 
     lines.append("## Caveats")
     lines.append("")
     lines.append(
-        "- **The confound is only partly resolved.** A large Δ21 is consistent with BOTH "
-        "genuine long-memory kernel structure and residual baseline non-stationarity "
-        "surviving deseasonalization. The block-wise-baseline control (first window per "
-        "symbol, heuristic, limited to drift slower than its block width) is reported in "
-        "\"Is the K=2 rise drift or memory?\"; it is absent when `--drift-blocks 0`."
+        "- **The confound is only partly resolved.** A large Δ21 fits both long-memory "
+        "kernel structure and residual baseline non-stationarity that survives "
+        "deseasonalization. The block-wise-baseline control (first window per symbol, "
+        "heuristic, limited to drift slower than its block width) is reported in \"Is the "
+        "K=2 rise drift or memory?\" and is absent when `--drift-blocks 0`."
     )
     lines.append(
-        f"- **Single month** ({month}): one specific market regime; results may not "
-        "generalize to other months."
+        f"- **Single month** ({month}): one market regime; results may not carry over to "
+        "other months."
     )
     lines.append(
-        "- **Higher-K identifiability**: per `fit_hawkes_multiexp`'s own docstring, "
-        "individual alpha_k/beta_k components become less identified as K grows relative "
-        "to what the sample size and window can resolve — n̂_K (the sum) is more "
-        "trustworthy than any individual component, but β_slow (the min beta) can still "
-        "be noisy at K=3 in particular."
+        "- **Higher-K identifiability**: per the `fit_hawkes_multiexp` docstring, "
+        "individual alpha_k and beta_k become less identified as K grows relative to what "
+        "the sample can resolve. n̂_K (the sum) is more trustworthy than any single "
+        "component, but β_slow (the min beta) can still be noisy, at K=3 in particular."
     )
     lines.append(
-        f"- **Runtime cap** ({MAX_FIT_EVENTS:,} events/window): windows above this cap "
-        "are fit on a truncated prefix, applied independently at each K."
+        f"- **Runtime cap** ({MAX_FIT_EVENTS:,} events/window): windows above the cap are "
+        "fit on a truncated prefix, applied independently at each K."
     )
     lines.append(
-        "- **48-bin intraday profile**: same caveat as Q6 — the profile is estimated "
-        "from the same month being fit, and any genuine excitation clustering at "
-        "~30-minute resolution could leak into deseasonalization."
+        "- **48-bin intraday profile**: as in Q6, the profile is estimated from the same "
+        "month being fit, and real excitation clustering at ~30-minute resolution "
+        "could leak into the deseasonalization."
     )
     lines.append("")
     (out_dir / "q6b_kernel_sensitivity.md").write_text("\n".join(lines))
