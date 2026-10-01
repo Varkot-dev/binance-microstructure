@@ -1,22 +1,21 @@
-"""Tests for Q5: kernel panel analysis (Phase 2, Task 3).
+"""Tests for Q5: kernel panel analysis.
 
-Contract under test (see task-3-brief.md):
+Contract under test:
 1. Two "good" synthetic symbols, each built from `fractional_signs(d=0.35)`
    convolved with a planted power-law kernel G0(l) = l^(-0.35), so both the
    kernel exponent beta and the sign-memory exponent gamma_week are close to
    their theoretical values (beta=0.35, gamma=1-2*d=0.30) and the critical
-   balance relation beta = (1-gamma)/2 holds BY CONSTRUCTION (0.35 =
-   (1-0.30)/2 = 0.35 exactly, in the infinite-sample limit). n=500,000 events
-   per symbol is used (not the brief's illustrative "~60_000") because at
-   smaller n the fit_power_law(sign_acf(signs, 1000), 10, 500) estimate of
-   gamma_week is itself too noisy/biased (see probe measurements in the
-   task-3 report) for the balance verdict to land "consistent" reliably;
-   500,000 keeps runtime in the ~1-2s range via FFT convolution while giving
-   both exponent estimates enough samples to land near their planted values.
+   balance relation beta = (1-gamma)/2 holds by construction (0.35 =
+   (1-0.30)/2 exactly, in the infinite-sample limit). n=500,000 events per
+   symbol is used because at smaller n the
+   fit_power_law(sign_acf(signs, 1000), 10, 500) estimate of gamma_week is too
+   noisy and biased for the balance verdict to land "consistent" reliably;
+   500,000 keeps runtime at ~1-2s via FFT convolution while giving both
+   exponent estimates enough samples to land near their planted values.
 2. One symbol with no parquet on disk at all -> must land in `failures`,
-   never abort the run.
+   without aborting the run.
 3. Output files (.json, .md, .png) must exist and the json's per-symbol
-   records must carry all the fields the brief specifies.
+   records must carry the expected fields.
 """
 from __future__ import annotations
 
@@ -101,7 +100,7 @@ def _write_synthetic_kernel_fixture(
 
     Signs are fractional_signs(d=0.35) (long-memory, gamma_week ~ 0.30 in
     theory); mids are built by convolving signs with G0(l)=l^(-0.35)
-    directly (Task 1's pattern), so the deconvolved kernel exponent recovers
+    directly, so the deconvolved kernel exponent recovers
     ~0.35 and the balance relation beta = (1-gamma)/2 holds by construction.
     Events are spaced 3ms apart starting at day 1 00:00 UTC so all events and
     the one week of bookTicker periods fall inside 2023-06-01..07. bookTicker
@@ -170,11 +169,11 @@ def _write_synthetic_kernel_fixture(
 
 def test_run_q5_recovers_planted_kernel_and_balance_and_reports_failure(tmp_path: Path):
     symbols = ["AAAUSDT", "BBBUSDT", "MISSINGUSDT"]
-    # Both seeds independently checked (see task-3 report) to land the balance
-    # verdict "consistent" at n=500_000, d=0.35, planted beta=0.35.
+    # Both seeds land the balance verdict "consistent" at n=500_000, d=0.35,
+    # planted beta=0.35.
     _write_synthetic_kernel_fixture(tmp_path, "AAAUSDT", N_EVENTS, seed=2)
     _write_synthetic_kernel_fixture(tmp_path, "BBBUSDT", N_EVENTS, seed=3)
-    # MISSINGUSDT deliberately has no parquet on disk -> must land in failures.
+    # MISSINGUSDT has no parquet on disk -> must land in failures.
 
     out_dir = tmp_path / "results"
     result = run_q5(
@@ -204,7 +203,7 @@ def test_run_q5_recovers_planted_kernel_and_balance_and_reports_failure(tmp_path
         assert len(rec["G"]) == 100
         assert 0.0 <= rec["drop_rate"] <= 1.0
 
-    # --- missing symbol lands in failures, never aborts the run ---
+    # --- missing symbol lands in failures without aborting the run ---
     failures = {f["symbol"]: f for f in result["failures"]}
     assert "MISSINGUSDT" in failures
     assert failures["MISSINGUSDT"]["reason"]
@@ -239,7 +238,7 @@ def test_run_q5_never_aborts_on_all_failures(tmp_path: Path):
 
 def test_run_q5_thin_symbol_fails_gracefully_not_crashes(tmp_path: Path):
     """A symbol too thin to satisfy the n/L>=100 guard must land in failures,
-    not raise out of run_q5 (per-symbol try/except is the point)."""
+    not raise out of run_q5."""
     thin_n = 5_000  # n/max_lag = 50, below MIN_SAMPLES_PER_LAG=100 at max_lag=100
     _write_synthetic_kernel_fixture(tmp_path, "THINUSDT", thin_n, seed=7)
 

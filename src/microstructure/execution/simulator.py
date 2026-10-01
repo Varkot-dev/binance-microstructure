@@ -14,26 +14,22 @@ input qty column):
 
 `G[1]` is the symbol's measured lag-1 deconvolved-kernel value (Q5,
 `propagator.py`): the price impact, in mid-price units, one event after a
-single "typical-sized" signed event. Scaling it LINEARLY by
-`q / typical_event_qty` is a strong, explicitly-flagged assumption: the
-market-microstructure square-root law (Almgren et al. 2005; Bouchaud et al.
-2018 "Trades, Quotes and Prices") observes temporary impact growing
-sublinearly (~sqrt(q)) at large child sizes relative to typical trade/bar
-size, so linear scaling systematically OVERSTATES the cost of large children
-and UNDERSTATES it for very small ones once q/typical_event_qty grows much
-beyond O(1). This module's own child sizes are capped in practice at
-<=3x typical_event_qty (Q7's parent_qty_events in {2, 10} split across 20
-children puts each child well under that), where the linear and sqrt curves
-are close enough that the linearization is a defensible local
-approximation — but it is NOT validated against real large-child data and
-should not be extrapolated beyond that regime.
+single typical-sized signed event. Scaling it linearly by
+`q / typical_event_qty` is a strong assumption. The square-root law
+(Almgren et al. 2005; Bouchaud et al. 2018, "Trades, Quotes and Prices")
+has temporary impact growing sublinearly (~sqrt(q)) at large child sizes, so
+linear scaling overstates the cost of large children and understates it for
+very small ones once q/typical_event_qty grows well beyond O(1). Child sizes
+here stay within <=3x typical_event_qty (Q7's parent_qty_events in {2, 10}
+split across 20 children), where the linear and sqrt curves are close enough
+for a local approximation. It is not validated against real large-child data
+and should not be extrapolated beyond that regime.
 
-Impact always costs the trader (it is not offset by side): a buy always
-pays the impact term positively, a sell always pays it positively too, since
-executing in either direction pushes the price against the order. Drift, by
-contrast, is genuinely signed: a favorable mid move (e.g. price falling
-while trying to buy) makes `(mid_at_child - arrival_mid) * side` negative,
-partially offsetting the always-positive spread and impact terms.
+Impact always costs the trader: buys and sells both pay it positively, since
+executing in either direction pushes the price against the order. Drift is
+signed: a favorable mid move (e.g. price falling while buying) makes
+`(mid_at_child - arrival_mid) * side` negative, partly offsetting the
+positive spread and impact terms.
 
 shortfall_per_unit = sum(cost_i * q_i) / sum(q_i) over all filled children
 — quantity-weighted average implementation shortfall vs. the arrival mid.
@@ -79,10 +75,9 @@ class ScheduleResult:
 def replay_day(events: pl.DataFrame, bt: pl.DataFrame) -> ReplayData:
     """Build a `ReplayData` from one symbol-day's aggressor events + bookTicker.
 
-    Reuses `events_with_prior_mid`'s "strictly before" asof convention for
-    both the prior mid and the half-spread, so both quantities reflect the
-    book state immediately prior to (never concurrent with or after) each
-    event — the same convention Q1-Q5 use throughout.
+    Uses `events_with_prior_mid`'s "strictly before" asof convention for both
+    the prior mid and the half-spread, so both reflect the book state before
+    each event, as in Q1-Q5.
     """
     from microstructure.signals.load import events_with_prior_mid
 
@@ -99,9 +94,8 @@ def replay_day(events: pl.DataFrame, bt: pl.DataFrame) -> ReplayData:
         ((pl.col("ask_price") - pl.col("bid_price")) / 2).alias("half_spread")
     )
 
-    # Align half-spread onto the same (mid-)dropped, ts-sorted row order as
-    # `joined` via a join on ts+sign+qty (events are already unique per
-    # (ts, sign) after aggressor merging) rather than relying on row order.
+    # Align half-spread to `joined`'s row order with a join on ts+sign+qty
+    # (events are unique per (ts, sign) after aggressor merging), not row order.
     merged = joined.join(
         spread_joined.select("ts", "sign", "qty", "half_spread"),
         on=["ts", "sign", "qty"],
@@ -141,18 +135,18 @@ def simulate_schedule(
     """Cost a parent order executed as children at the given event indices.
 
     `child_times` are event-index offsets from the arrival event (0-based,
-    within `[0, horizon_events)`). `child_sizes` are FRACTIONS of the parent
-    order, summing to (approximately) 1.0 — the pure schedule generators
-    below return exactly this shape. The parent's total size, in the input
+    within `[0, horizon_events)`). `child_sizes` are fractions of the parent
+    order summing to approximately 1.0, as the schedule generators below
+    return. The parent's total size, in the input
     qty units, is `parent_qty_events * rd.typical_event_qty`; each child's
     absolute size is `child_sizes[i] * parent_qty_events * rd.typical_event_qty`.
 
-    `kernel_g` is the symbol's deconvolved cumulative kernel array (Q5's
-    `G`); only `kernel_g[1]` (the lag-1 value) is used, per the module
-    docstring's linear-scaling temporary-impact model.
+    `kernel_g` is the symbol's deconvolved cumulative kernel (Q5's `G`); only
+    `kernel_g[1]` is used (linear temporary-impact model, see the module
+    docstring).
 
-    Arrival mid is `rd.prior_mids[0]` — the mid prevailing before the first
-    event of the replay window, i.e. the moment the parent order arrives.
+    Arrival mid is `rd.prior_mids[0]`, the mid before the first event of the
+    replay window, i.e. when the parent order arrives.
     """
     if horizon_events > rd.prior_mids.size:
         raise ValueError(
@@ -208,11 +202,10 @@ def frontloaded_schedule(
     """Exponentially front-loaded (Almgren-Chriss-flavored) schedule.
 
     Child i (0-indexed) gets a raw weight `exp(-decay * i / n_children)`,
-    normalized to sum to 1.0. Times are the same evenly spaced grid as
-    `twap_schedule` (only the SIZE profile is front-loaded, not the timing
-    grid) — this isolates the effect of size front-loading from any change
-    in when children are placed. Larger `decay` concentrates more size in
-    the earliest children.
+    normalized to sum to 1.0. Times are `twap_schedule`'s grid (only the size
+    profile is front-loaded), which isolates the effect of front-loading from
+    child placement. Larger `decay` concentrates more size in the earliest
+    children.
     """
     times, _ = twap_schedule(horizon_events, n_children)
     i = np.arange(n_children, dtype=np.float64)
@@ -225,17 +218,13 @@ def kernel_half_life_lag(kernel_g: np.ndarray) -> int:
     """Lag (events) at which G first decays to half its post-peak maximum.
 
     The panel's measured kernels (Q5) rise from G[0]=0 to a peak within the
-    first few-to-dozen lags, then decay (mean-reversion / kernel fade) —
-    see q7_execution.py's module docstring for the panel-wide measurement
-    that motivates this definition. `frontloaded_schedule`'s `decay`
-    parameter is set from this timescale: impact peaks quickly then fades,
-    so a schedule that front-loads execution before the peak decays away
-    is the AC-flavored intuition this half-life operationalizes.
+    first few-to-dozen lags, then decay. `frontloaded_schedule`'s `decay` is
+    set from this timescale, so execution is front-loaded before the impact
+    fades (see the q7_execution.py module docstring).
 
-    Falls back to `len(kernel_g) // 4` if G is monotone non-decreasing
-    over its full recorded range (no post-peak decay observed within the
-    recorded lags) — a defensive default, documented as a caveat when it
-    triggers, not a validated timescale.
+    Falls back to `len(kernel_g) // 4` if G is monotone non-decreasing over
+    its recorded range (no post-peak decay observed). That default is not a
+    validated timescale.
     """
     peak_idx = int(np.argmax(kernel_g))
     peak_val = float(kernel_g[peak_idx])
@@ -260,23 +249,15 @@ def reactive_schedule(
 ) -> tuple[np.ndarray, np.ndarray, int]:
     """Flow-reactive TWAP: defer a child slot when trailing flow opposes the parent.
 
-    Starts from `twap_schedule`'s evenly spaced slot grid. At each planned
-    slot t, computes the trailing signed-flow imbalance over the `lookback`
-    events immediately before t: `mean(signs[t-lookback:t]) * side`. If that
-    imbalance is below `-pause_threshold` (flow opposing the parent side
-    beyond the threshold), the child is deferred to the NEXT available
-    event (t+1), re-checked there, and so on, up to `horizon_events - 1`.
-    Children are never reordered relative to each other (each child's
-    earliest possible slot is its own TWAP slot; deferrals only push a
-    child later, and each child's slot is bounded below by the previous
-    child's final slot via cumulative deferral pressure naturally keeping
-    times non-decreasing since later TWAP slots start no earlier than
-    n_deferrals-adjusted earlier slots).
-
-    If a deferred slot would run past `horizon_events - 1`, or past the next
-    child's original TWAP slot, it is force-filled at `horizon_events - 1`
-    (the last event) rather than left unfilled — "all must fill by horizon
-    end" per the brief. Returns (child_times, child_sizes, n_deferrals).
+    Starts from `twap_schedule`'s slot grid. At each planned slot t, computes
+    the trailing signed-flow imbalance over the `lookback` events before t,
+    `mean(signs[t-lookback:t]) * side`. If it is below `-pause_threshold` (flow
+    opposing the parent side beyond the threshold), the child is deferred to
+    the next event (t+1) and re-checked, up to `horizon_events - 1`. A child
+    never executes before the previous child's final slot, so times stay
+    non-decreasing. A child still deferred at `horizon_events - 1` is filled
+    there, so every child fills by the horizon end. Returns
+    (child_times, child_sizes, n_deferrals).
     """
     base_times, sizes = twap_schedule(horizon_events, n_children)
     signs_f = rd.signs.astype(np.float64)

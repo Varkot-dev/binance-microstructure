@@ -19,7 +19,7 @@ Three variants of the sign series are compared, all restricted to lags
                      single event, sign = sign(sum(sign * qty)); zero-net
                      groups (exact offsetting notional) are dropped.
 
-If the zigzag amplitude survives B and C essentially unchanged, it is not a
+If the zigzag amplitude survives B and C roughly unchanged, it is not a
 tie-break artifact -- the deterministic sort touches too few pairs, and
 netting still leaves the alternation intact.
 """

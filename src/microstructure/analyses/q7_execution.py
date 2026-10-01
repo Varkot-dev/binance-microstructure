@@ -1,45 +1,40 @@
 """Q7: execution-cost comparison of TWAP, front-loaded, and flow-reactive schedules.
 
-Method: for 6 panel symbols spanning the panel's activity range (ranks
-1, 4, 7, 10, 13, 16 of Q5's n_events ordering, chosen programmatically —
-BTCUSDT, XRPUSDT, SOLUSDT, ARBUSDT, APTUSDT, BCHUSDT for the current
+Method: for 6 panel symbols spanning the panel's activity range (ranks 1, 4,
+7, 10, 13, 16 of Q5's n_events ordering, chosen programmatically: BTCUSDT,
+XRPUSDT, SOLUSDT, ARBUSDT, APTUSDT, BCHUSDT for the current
 `results/q5_kernel_panel.json`), each of 2023-06-01..07 is replayed
-(`execution.simulator.replay_day`) into a `ReplayData` and, for each
-side in {+1, -1} and each parent size in {2, 10} typical-event-units, a
-parent order of `horizon_events=2000` events / `n_children=20` is executed
-under three schedules:
+(`execution.simulator.replay_day`) into a `ReplayData`. For each side in
+{+1, -1} and each parent size in {2, 10} typical-event-units, a parent order
+of `horizon_events=2000` events / `n_children=20` is executed under three
+schedules:
 
   - TWAP: uniform child sizes at evenly spaced event indices.
   - front-loaded: exponential size decay from `decay = horizon_events /
-    kernel_half_life_lag(G)` (see `simulator.kernel_half_life_lag`'s
-    docstring — the panel's measured kernels rise to a peak within the
-    first few-to-dozen lags then decay, so front-loading execution ahead
-    of that decay is the AC-flavored intuition this operationalizes).
-  - flow-reactive: TWAP's slot grid, with children deferred whenever
-    trailing signed-flow opposes the parent side beyond a threshold
+    kernel_half_life_lag(G)` (see `simulator.kernel_half_life_lag`). The
+    panel's measured kernels rise to a peak within the first few-to-dozen
+    lags and then decay, so this front-loads execution ahead of the decay.
+  - flow-reactive: TWAP's slot grid, with children deferred whenever trailing
+    signed flow opposes the parent side beyond a threshold
     (`simulator.reactive_schedule`).
 
-Every schedule pays the SAME own-impact cost model (own kernel G[1],
-linearly scaled by child size / typical_event_qty — see
-`simulator.py`'s module docstring for the sqrt-law caveat this
-approximation carries) plus half-spread plus realized adverse drift vs.
-the arrival mid. This is a MODEL-BASED cost comparison: it does not model
-queueing, latency, other participants' reaction to the schedule, or any
-form of price impact beyond the symbol's own measured linear kernel. See
-the NO-TRADING-CLAIM paragraph in the generated .md for the full caveat.
+Every schedule pays the same own-impact cost model (own kernel G[1], linearly
+scaled by child size / typical_event_qty; see the `simulator.py` module
+docstring for the sqrt-law caveat) plus half-spread plus realized adverse
+drift vs. the arrival mid. This is a model-based cost comparison: it does not
+model queueing, latency, other participants' reaction to the schedule, or any
+price impact beyond the symbol's own measured linear kernel. The generated
+.md carries the full no-trading-claim caveat.
 
-Calibration/evaluation split (binding, no leakage): the reactive
-schedule's (lookback, pause_threshold) are chosen via grid search over
-{50, 200} x {0.2, 0.4}, maximizing MEAN ADVANTAGE vs. TWAP
-(mean(twap_shortfall - reactive_shortfall), pooled across all 6 symbols,
-both sides, and both parent sizes) using ONLY days 1-3
-(2023-06-01..03). Those fixed params are then evaluated ONLY on days 4-7
-(2023-06-04..07); the reported "evaluation" summary NEVER includes
-calibration-window data, and the chosen params are frozen before any
-evaluation-window result is computed. `_build_calibration_scorer` and
-`calibrate_reactive_params` are the two pieces of this — kept separate
-and independently testable so the no-leakage property can be verified
-directly (see tests/analyses/test_q7.py).
+Calibration/evaluation split (no leakage): the reactive schedule's
+(lookback, pause_threshold) are chosen by grid search over {50, 200} x
+{0.2, 0.4}, maximizing mean advantage vs. TWAP (mean(twap_shortfall -
+reactive_shortfall), pooled across all 6 symbols, both sides and both parent
+sizes) using only days 1-3 (2023-06-01..03). Those parameters are then fixed
+and evaluated only on days 4-7 (2023-06-04..07); the reported evaluation
+summary never includes calibration-window data. `_build_calibration_scorer`
+and `calibrate_reactive_params` are kept separate so the no-leakage property
+can be tested directly (see tests/analyses/test_q7.py).
 
 Outputs: q7_execution.{md,json,png}.
 """
@@ -100,7 +95,7 @@ def _pick_panel_symbols(kernels: dict, n_pick: int = N_PANEL_PICK) -> list[str]:
     else:
         raw = [round(r / 16 * n) for r in PANEL_RANKS[:n_pick]]
         ranks = sorted({max(1, min(n, r)) for r in raw})
-        # top up with evenly spaced ranks if de-duplication left us short
+        # top up with evenly spaced ranks if de-duplication left too few
         i = 1
         while len(ranks) < min(n_pick, n):
             candidate = max(1, min(n, i))
@@ -119,13 +114,10 @@ def _pick_panel_symbols(kernels: dict, n_pick: int = N_PANEL_PICK) -> list[str]:
 def _load_symbol_month_events(root: Path, symbol: str, month: str) -> pl.DataFrame:
     """Load one symbol's full monthly aggressor-events parquet, once.
 
-    The monthly aggTrades parquet is large (tens of millions of rows for
-    the busiest panel symbols) and every day-slice this analysis needs
-    comes from the SAME month, so callers load this once per symbol and
-    reuse it across every calibration and evaluation day via
-    `_slice_day_events`, instead of re-reading and re-aggregating the full
-    month from disk once per day (7x redundant I/O + aggressor-merge work
-    per symbol otherwise).
+    The monthly parquet is large (tens of millions of rows for the busiest
+    symbols) and every day-slice comes from the same month, so callers load
+    it once per symbol and reuse it across all days via `_slice_day_events`,
+    avoiding 7x redundant I/O and aggressor-merge work.
     """
     from microstructure.signals.load import load_events
 
@@ -437,12 +429,10 @@ def _plot(out_dir: Path, per_symbol: list[dict]) -> None:
     """Small multiples: one subplot per symbol, each with its OWN y-scale.
 
     Absolute shortfall spans orders of magnitude across the panel (BTCUSDT
-    trades in the tens of thousands of price units per event; low-priced
-    alts trade in fractions of a cent), so a single shared y-axis would
-    make every symbol except the highest-priced one visually flat. Each
-    subplot's own scale keeps the schedule comparison legible per symbol;
-    cross-symbol magnitude comparisons belong in the per-symbol table, not
-    this plot.
+    trades in the tens of thousands of price units, low-priced alts in
+    fractions of a cent), so a shared y-axis would flatten every symbol but
+    the highest-priced one. Cross-symbol magnitudes belong in the per-symbol
+    table, not this plot.
     """
     n_symbols = max(1, len(per_symbol))
     n_cols = min(3, n_symbols)

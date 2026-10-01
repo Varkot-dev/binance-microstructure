@@ -1,16 +1,16 @@
-"""Tests for the execution-cost replay simulator (Phase 3, Task 4).
+"""Tests for the execution-cost replay simulator.
 
-Contract under test (see task-4-brief.md):
+Contract under test:
 1. `replay_day` builds a `ReplayData` from events + bookTicker: event ts,
    signs, qtys, prior-mids, half-spreads (asof from bt, "strictly before"
    convention matching `events_with_prior_mid`), and typical_event_qty
    (median qty).
 2. `simulate_schedule` costs each child at
    (mid_at_child - arrival_mid)*side + half_spread_at_child + temp_impact(q),
-   temp_impact(q) = side * G[1] * (q / typical_event_qty) (LINEAR scaling of
-   the lag-1 kernel value; documented caveat vs. sqrt-law literature).
+   temp_impact(q) = G[1] * (q / typical_event_qty) (linear scaling of the
+   lag-1 kernel value; see the sqrt-law caveat in the simulator docstring).
    shortfall_per_unit = sum(cost_i * q_i) / sum(q_i). Verified by hand for a
-   2-child case (exact equality, see module docstring below).
+   2-child case (exact equality, see below).
 3. Schedule generators are pure and satisfy invariants: child sizes sum to
    the parent qty, indices lie in [0, horizon_events), indices non-decreasing
    (children never reordered).
@@ -167,7 +167,7 @@ def test_simulate_schedule_two_child_exact_shortfall():
     kernel_g = np.array([0.0, 2.0, 2.0, 2.0])  # G[1] = 2.0
 
     # Parent = 3.0 typical-event-units = 30 units total (typical_event_qty=10).
-    # Two children as FRACTIONS of the parent: 1/3 (-> 10 units) at event
+    # Two children as fractions of the parent: 1/3 (-> 10 units) at event
     # index 0 (mid=100.0, half_spread=0.5), 2/3 (-> 20 units) at event index 1
     # (mid=101.0, half_spread=0.3).
     child_times = np.array([0, 1])
@@ -237,7 +237,7 @@ def test_twap_schedule_invariants(horizon, n_children):
     assert np.all(times >= 0) and np.all(times < horizon)
     assert np.all(np.diff(times) >= 0)  # monotone non-decreasing
     assert np.all(sizes >= 0)
-    # sizes are FRACTIONS of the parent order, summing to 1.0
+    # sizes are fractions of the parent order, summing to 1.0
     assert sizes.sum() == pytest.approx(1.0)
 
 

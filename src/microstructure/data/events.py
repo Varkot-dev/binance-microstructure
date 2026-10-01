@@ -3,7 +3,7 @@
 One market order sweeping several book levels prints as several aggTrades
 rows with identical (ts, is_buyer_maker). Analyses of order-flow memory or
 impact must see ONE event per aggressor decision, or self-excitation at
-0-1ms lags is pure artifact (see docs/research/02-hawkes-processes.md, pitfalls).
+0-1ms lags is pure artifact.
 
 Sign convention: is_buyer_maker == False -> buyer was the taker -> +1.
 """
@@ -16,8 +16,8 @@ def to_aggressor_events(df: pl.DataFrame | pl.LazyFrame) -> pl.DataFrame:
     """Merge ALL same-(ts, side) prints in the frame; returns a new frame.
 
     The group_by merges every row sharing the same (ts, is_buyer_maker) pair
-    anywhere in the input, not just adjacent/consecutive rows — input row
-    order does not affect which rows get merged or the resulting output.
+    anywhere in the input, not just adjacent rows, so input row order does
+    not affect the output.
 
     Raises ValueError if any aggregated group has qty <= 0 (prevents NaN prices).
     Tie-break for same-ts opposite-side events: sort by (ts, sign) so sells (-1)

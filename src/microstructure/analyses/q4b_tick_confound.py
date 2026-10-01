@@ -2,17 +2,16 @@
 
 Q4 (results/q4_cross_section.json) found p_flip ~ log10(n_events) with slope
 +0.1114, R^2 = 0.2632, n = 121: more actively traded symbols flip sign more
-often. LEARNING.md Sec.6.2 names, but does not test, an alternative
-explanation: relative tick size (tickSize / price) is a mechanical driver of
-bid-ask bounce, and it plausibly correlates with activity (liquid symbols
-tend to have small ticks relative to price). If that is the true driver,
-"activity" in the Q4 regression is a proxy and the competitive-response
-story is decoration on a bid-ask-bounce artifact.
+often. A possible alternative explanation is relative tick size
+(tickSize / price), a mechanical driver of bid-ask bounce that plausibly
+correlates with activity (liquid symbols tend to have small ticks relative to
+price). If it is the true driver, "activity" in the Q4 regression is a proxy
+and the competitive-response story rests on a bid-ask-bounce artifact.
 
 Method:
 1. Fetch current PRICE_FILTER.tickSize per symbol from Binance futures
-   exchangeInfo (public, unauthenticated). This is TODAY's tick size, not
-   June 2023's — see the caveat in the md output and in LEARNING.md. The raw
+   exchangeInfo (public, unauthenticated). This is today's tick size, not
+   June 2023's (see the caveat in the md output). The raw
    response is cached to `exchangeinfo_snapshot.json` for provenance.
 2. For each of Q4's 121 successful symbols, compute mean trade price over
    2023-06 via a lazy Polars scan of the same aggTrades parquet Q4 used, and
@@ -25,12 +24,11 @@ Method:
    Also reports corr(log10(n_events), log10(rel_tick)), the collinearity
    that motivates the whole test.
 
-Coefficient significance is reported as a "t-ish ratio" (coef / stderr)
-with the same honesty caveat Q4 uses for its own regressions: this
-cross-section's OLS assumptions (i.i.d., homoskedastic residuals) are not
-verified and are almost certainly violated (heterogeneous symbols, no
-correction for cross-sectional dependence), so these ratios are descriptive
-orientation, not a formal hypothesis test.
+Coefficient significance is reported as a "t-ish ratio" (coef / stderr) with
+the caveat Q4 uses for its own regressions: the cross-section's OLS
+assumptions (i.i.d., homoskedastic residuals) are unverified and almost
+certainly violated (heterogeneous symbols, no correction for cross-sectional
+dependence), so the ratios are descriptive, not a formal test.
 
 Outputs: q4b_tick_confound.{md,json} plus one PNG (p_flip vs log10(rel_tick),
 points colored by log10(n_events)).
@@ -56,7 +54,7 @@ EXCHANGE_INFO_URL = "https://fapi.binance.com/fapi/v1/exchangeInfo"
 
 
 # --------------------------------------------------------------------------
-# Regression machinery (numpy lstsq, honesty-caveated t-ish ratios and R^2)
+# Regression machinery (numpy lstsq, t-ish ratios and R^2)
 # --------------------------------------------------------------------------
 
 
@@ -142,16 +140,14 @@ def fit_bivariate(x1: np.ndarray, x2: np.ndarray, y: np.ndarray, x1_name: str, x
 def fetch_exchange_info(client: httpx.Client | None = None, url: str = EXCHANGE_INFO_URL) -> dict:
     """Fetch the raw Binance futures exchangeInfo response.
 
-    Public endpoint, no key required. This reflects tick sizes as of *now*
-    (whenever this is run), not as of June 2023 — see module docstring and
-    the md caveats section. Tick-size changes are rare but do happen, so
-    this is a real (if probably small) source of error.
+    Public endpoint, no key required. Tick sizes are as of the time of the
+    run, not June 2023 (see module docstring and the md caveats). Tick-size
+    changes are rare but do happen, so this is a small source of error.
 
-    `url` defaults to the documented mainnet endpoint; a caller can pass a
-    different URL (e.g. a reachable mirror, if mainnet is geo-blocked from
-    the running environment) — pair with `run_q4b(source_url=..., "
-    source_note=...)` so the substitution is recorded in the output, not
-    silently hidden.
+    `url` defaults to the mainnet endpoint. Pass a different URL (e.g. a
+    mirror, if mainnet is geo-blocked) together with
+    `run_q4b(source_url=..., source_note=...)` so the substitution is
+    recorded in the output.
     """
     owns_client = client is None
     client = client or httpx.Client(timeout=30)
@@ -267,14 +263,11 @@ def run_q4b(
 ) -> dict:
     """Run the tick-confound analysis.
 
-    `source_url`/`source_note` record provenance for *what was actually
-    fetched* in this run, independent of `client` (which may be a
-    `httpx.MockTransport`-backed client in tests, or a real client pointed
-    at a non-default URL — see `fetch_exchange_info`). They default to the
-    documented mainnet endpoint and no note; callers that fetch from
-    elsewhere (e.g. a reachable mirror when mainnet is geo-blocked) should
-    pass the URL actually used and a note explaining the substitution, so
-    the output provenance is never silently wrong.
+    `source_url`/`source_note` record what was actually fetched in this run,
+    independent of `client` (which may be a mock in tests or a real client
+    pointed at a non-default URL; see `fetch_exchange_info`). They default to
+    the mainnet endpoint and no note. A caller that fetches elsewhere should
+    pass the URL used and a note explaining the substitution.
     """
     out_dir.mkdir(parents=True, exist_ok=True)
     q4_symbols = _load_q4_symbols(q4_json_path)

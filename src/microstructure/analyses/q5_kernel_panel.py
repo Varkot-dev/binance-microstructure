@@ -9,7 +9,7 @@ and compute:
   (`fit_power_law(sign_acf(signs, 1000), 10, 500)`), Q1's order-flow-memory
   statistic.
 - beta (+ beta_block_sd): the DECONVOLVED impact-kernel exponent, via
-  `kernel_exponent_blocked` (Phase-2 Task 1's propagator deconvolution). This
+  `kernel_exponent_blocked` (propagator deconvolution). This
   separates the bare kernel from the confound of order-flow memory that a
   naive read of the response function R(l) would mix in.
 - R(l): the naive (non-deconvolved) response function, kept for reference and
@@ -25,26 +25,21 @@ response grows no faster than diffusively. balance_delta = beta - (1-gamma)/2
 measures the (signed) departure from that prediction for each symbol.
 
 Judgement rule: |balance_delta| <= 2*max(beta_block_sd, 0.04) => "consistent",
-else "violated". The 2x multiplier gives a two-sigma-style band around
-beta_block_sd, the block-bootstrap uncertainty on beta (`propagator.py`
-documents why fit_power_law's OLS stderr must NOT be used for this -- it
-understates true uncertainty by roughly 6.8x on synthetic long-memory data).
-The 0.04 floor is not an arbitrary safety margin: propagator.py's own
-docstring measures a systematic finite-L bias of ~+0.03 to +0.04 in the
-recovered beta at L=300 (20-seed Monte Carlo, fractional_signs d=0.35),
-i.e. even a PERFECTLY balanced symbol's beta_hat will typically read ~0.03-
-0.04 too high purely from finite-sample deconvolution bias. Without this
-floor, a low-noise symbol (small beta_block_sd) with a genuinely-zero true
-balance_delta could still be flagged "violated" by nothing more than that
-known, already-quantified bias -- which would be a dishonest false positive.
-Flooring the band at the measured bias scale is the honest choice: it says
-"we cannot distinguish a departure smaller than our own method's known bias
-from a departure of zero," rather than pretending false precision.
+else "violated". beta_block_sd is the block-bootstrap uncertainty on beta
+(`propagator.py` explains why fit_power_law's OLS stderr must not be used
+for this: it understates the true uncertainty by roughly 6.8x on synthetic
+long-memory data), and the 2x multiplier gives a two-sigma-style band. The
+0.04 floor reflects a systematic finite-L bias of ~+0.03 to +0.04 in the
+recovered beta at L=300 (20-seed Monte Carlo, fractional_signs d=0.35), so
+even a perfectly balanced symbol's beta_hat typically reads ~0.03-0.04 high
+from deconvolution bias alone. Without the floor, a low-noise symbol (small
+beta_block_sd) with a true balance_delta of zero could be flagged "violated"
+by that known bias. A departure smaller than the method's own bias cannot be
+distinguished from zero.
 
-Symbols are processed one at a time; any per-symbol exception (missing
+Symbols are processed one at a time; a per-symbol exception (missing
 parquet, insufficient n/L ratio for `kernel_exponent_blocked`'s guard, no
-events in range, etc.) is caught and logged into `failures`, and never
-aborts the run for the remaining symbols.
+events in range, etc.) is logged into `failures` and does not abort the run.
 
 Outputs: q5_kernel_panel.{json,md,png}. The PNG has two subplots: G(l)
 log-log for all symbols (colored by log10(n_events)), and balance_delta vs
@@ -188,7 +183,7 @@ def run_q5(
     for symbol in symbols:
         try:
             records.append(_symbol_record(root, symbol, month, daily_periods, max_lag))
-        except Exception as e:  # noqa: BLE001 - per-symbol robustness is the point
+        except Exception as e:  # noqa: BLE001 - a per-symbol failure is logged, not fatal
             failures.append({"symbol": symbol, "reason": f"{type(e).__name__}: {e}"})
 
     n_consistent = sum(1 for r in records if r["verdict"] == "consistent")

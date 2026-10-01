@@ -79,8 +79,7 @@ const sign = (x, d = 4) => (x >= 0 ? '+' : '') + Number(x).toFixed(d);
 /** Interpolate a colour ramp by activity rank — low to high. */
 function activityColor(frac, t) {
   // Blend the two measurement hues: quiet symbols cool, active symbols
-  // saturated. Colour here encodes activity, which is the panel's
-  // organising variable, not decoration.
+  // saturated. Colour encodes activity, the panel's organising variable.
   const a = hexish(t.plot2);
   const b = hexish(t.plot);
   if (!a || !b) return t.plot;
@@ -197,7 +196,7 @@ function drawCrossSection(data, axisSpec) {
   const xMin = Math.min(...xs) - 0.05;
   const xMax = Math.max(...xs) + 0.05;
 
-  // OLS line drawn from the artifact's own regression block — never refit here.
+  // OLS line drawn from the artifact's own regression block, not refit here.
   const reg = axisSpec.regression ? data.regressions[axisSpec.regression] : null;
   if (reg) {
     traces.push({

@@ -27,7 +27,7 @@ def _read_zipped_csv(zip_path: Path, columns: list[str]) -> pl.DataFrame:
         inner = members[0]
         raw = zf.read(inner)
     first_cell = raw.split(b",", 1)[0].split(b"\n", 1)[0]
-    # Strip quotes before checking if numeric (CRITICAL 2: handle quoted numeric first cells)
+    # Strip quotes first so a quoted numeric first cell is not mistaken for a header
     first_cell_unquoted = first_cell.strip().strip(b'"').strip(b"'")
     has_header = not first_cell_unquoted.lstrip(b"-").isdigit()
     df = pl.read_csv(io.BytesIO(raw), has_header=has_header, infer_schema_length=1000)
@@ -46,7 +46,7 @@ def ingest_agg_trades(zip_path: Path, out_dir: Path) -> Path:
     df = _read_zipped_csv(zip_path, _AGG_COLS)
     out = (
         df.with_columns(
-            # CRITICAL 1: explicit Int64 cast for all ID columns to enforce schema contract
+            # Explicit Int64 casts on the ID columns enforce the schema
             pl.col("agg_trade_id").cast(pl.Int64),
             pl.col("first_trade_id").cast(pl.Int64),
             pl.col("last_trade_id").cast(pl.Int64),
@@ -67,7 +67,7 @@ def ingest_book_ticker(zip_path: Path, out_dir: Path) -> Path:
     df = _read_zipped_csv(zip_path, _BT_COLS)
     out = (
         df.with_columns(
-            # CRITICAL 1: explicit Int64 cast for update_id to enforce schema contract
+            # Explicit Int64 cast on update_id enforces the schema
             pl.col("update_id").cast(pl.Int64),
             _epoch_to_ms_utc(pl.col("ts_raw").cast(pl.Int64)).alias("ts"),
             pl.col("bid_price").cast(pl.Float64),

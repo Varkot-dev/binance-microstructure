@@ -2,8 +2,8 @@
 
 R(l) = E[ sign_t * (m_{t+l} - m_t) ], with m_t the mid strictly BEFORE
 event t. For uncorrelated signs, R(l) recovers the impact kernel itself;
-for real (long-memory) signs it mixes kernel and flow memory — that
-distinction is the point of the analysis comparing both.
+for real (long-memory) signs it mixes kernel and flow memory, which is why
+the analysis compares both.
 """
 from __future__ import annotations
 

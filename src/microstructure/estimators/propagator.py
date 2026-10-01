@@ -22,26 +22,19 @@ b) implicitly assumes C = delta (iid signs). When signs are long-memory,
 that assumption is wrong and the naive read mixes the kernel's decay with
 the flow's persistence — this module performs the correction.
 
-Conditioning caveat: the Toeplitz matrix built from an estimated ACF is only
-as well-conditioned as that ACF estimate. Near-unit-root/long-memory C can
-make the system nearly singular (small singular values), so the solve uses
-least-squares (np.linalg.lstsq) rather than a direct solve, and an explicit
-rank check raises before returning a meaningless answer. HOWEVER: the rank
-and condition number of the Toeplitz matrix are properties of the ACF
-*values*, not of how well those values were estimated from finite data.
-A well-conditioned Toeplitz matrix built from a noisy, short-sample ACF
-estimate can still produce a garbage kappa, because lstsq happily fits the
-noise. Empirically (see task-1-report.md for the exact reproduction), at
-n_samples=1,000 and L=300 (ratio 3.3), Toeplitz condition numbers of
-~40-500 (well within the range that "looks fine") were observed across
-seeds while the recovered power-law exponent ranged roughly 0.15..0.65 in
-a 20-seed sweep -- pure estimation noise, undetectable by rank/condition
-checks alone. This is why deconvolve_kernel requires n_samples and
-enforces a minimum samples-per-degree-of-freedom ratio (see its docstring),
-and why callers must use kernel_exponent_blocked's block_sd rather than
-fit_power_law's OLS stderr to characterize uncertainty on any recovered
-exponent (see that docstring for the measured magnitude of the OLS
-stderr's under-statement).
+Conditioning: near-unit-root/long-memory C can make the Toeplitz system
+nearly singular, so the solve uses least squares (np.linalg.lstsq) and an
+explicit rank check raises before returning a meaningless answer. Rank and
+condition number describe the ACF values, not how well finite data
+estimated them: a well-conditioned matrix built from a noisy short-sample
+ACF still gives a garbage kappa, because lstsq fits the noise. At
+n_samples=1,000 and L=300 (ratio 3.3), condition numbers of ~40-500 were
+observed across seeds while the recovered power-law exponent ranged
+roughly 0.15..0.65 over a 20-seed sweep, which rank and condition checks
+cannot detect. Hence deconvolve_kernel requires n_samples and enforces a
+minimum samples-per-lag ratio, and callers should use
+kernel_exponent_blocked's block_sd rather than fit_power_law's OLS stderr
+for the uncertainty on a recovered exponent.
 """
 from __future__ import annotations
 
@@ -99,22 +92,16 @@ def deconvolve_kernel(
     because the estimated ACF can make T ill-conditioned; an explicit rank
     check raises ValueError before returning an unreliable answer.
 
-    `n_samples` is the number of (signs, dm) observations `b` and `acf`
-    were estimated from. This is REQUIRED, separately from the rank/
-    condition checks on the Toeplitz matrix, because those checks are blind
-    to estimation noise: a short sample can produce a well-conditioned
-    Toeplitz matrix (built from noisy but not-degenerate ACF values) whose
-    lstsq solution is still dominated by that noise rather than the true
-    kernel. Measured example (see task-1-report.md): n_samples=1_000,
-    L=300 (ratio 3.3) gives Toeplitz condition numbers in the range
-    ~40-500 across seeds (well within what "looks fine"), while the
-    recovered power-law exponent on synthetic long-memory data ranged
-    roughly 0.15..0.65 across a 20-seed sweep against a planted 0.35 --
-    i.e. even the rough magnitude is not reliably recovered. A floor of
-    n_samples / len(b) >= 100 is enforced by default; pass
-    allow_low_sample=True to bypass it (e.g. for deliberate small-sample
-    diagnostics) -- doing so does not make the result trustworthy, it only
-    silences this guard.
+    `n_samples` is the number of (signs, dm) observations `b` and `acf` were
+    estimated from. It is required because the rank/condition checks are blind
+    to estimation noise: a short sample can give a well-conditioned Toeplitz
+    matrix whose lstsq solution is still dominated by noise. With
+    n_samples=1_000 and L=300 (ratio 3.3), condition numbers were ~40-500
+    across seeds, while the exponent recovered from synthetic long-memory data
+    ranged roughly 0.15..0.65 over a 20-seed sweep against a planted 0.35. A
+    floor of n_samples / len(b) >= 100 is enforced by default;
+    allow_low_sample=True bypasses it for small-sample diagnostics but does
+    not make the result trustworthy.
     """
     if b.ndim != 1 or acf.ndim != 1:
         raise ValueError("b and acf must be 1-D arrays")

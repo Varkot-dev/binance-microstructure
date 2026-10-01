@@ -7,13 +7,12 @@ average price response R(l) = E[sign_t * (m_{t+l} - m_t)] is computed via
 `response_function` out to `max_lag` events. R(l) mixes the (decaying) bare
 impact kernel G with order-flow sign memory C: R(l) ~ G(l) + sum_{n<l}
 G(l-n)*C(n); with long-memory flow (Q1) the accumulation term can dominate G,
-so R(l) can RISE well past where G alone would have decayed -- exactly the
-rise-then-slow-decline shape Bouchaud's own equity data shows. Two candidate
+so R(l) can rise well past where G alone would have decayed, the
+rise-then-slow-decline shape in Bouchaud's equity data. Two candidate
 shapes are fit to whatever R(l) does over lags [10, 200]: a power law
 R(l) ~ l^(-gamma) (OLS on log R vs log l) and an exponential
 R(l) ~ A * exp(-l/tau) (OLS on log R vs l). The fit with lower residual sum
-of squares on the log scale wins; the comparison itself, not a preordained
-winner, is the finding. This analysis does not separate G from C -- that
+of squares on the log scale wins. This analysis does not separate G from C -- that
 needs propagator deconvolution, out of scope here.
 """
 from __future__ import annotations

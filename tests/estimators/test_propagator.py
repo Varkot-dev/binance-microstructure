@@ -1,20 +1,19 @@
-"""Tests for the propagator kernel deconvolution estimator (Phase 2, Task 1).
+"""Tests for the propagator kernel deconvolution estimator.
 
-Contract under test (see task-1-brief.md and the follow-up review fixes):
+Contract under test:
 1. White-noise signs: C = delta, so kappa recovered == b exactly (up to noise
    used to build the synthetic mids).
 2. Long-memory signs (fractional_signs d=0.35): plant a power-law kernel
    G0(l) = l^(-0.35), build mids by convolution, estimate b and the sign ACF
    from the DATA (not the theory), deconvolve, and recover beta close to
    0.35 via fit_power_law on the cumulative kernel, across multiple seeds.
-   This is the key test: it also shows that the naive response function (no
-   deconvolution) does NOT recover 0.35 as well as the deconvolved kernel
-   does, on the same data.
+   This is the key test: on the same data, the naive response function (no
+   deconvolution) recovers 0.35 less well than the deconvolved kernel.
 3. Guards: mismatched lengths, singular ACF, unnormalized ACF (acf[0] != 1),
    and too-few-samples-per-lag all raise ValueError.
 4. kernel_exponent_blocked reports a block-bootstrap uncertainty (block_sd)
-   that must be used instead of fit_power_law's OLS stderr, which is known
-   to badly understate beta_hat's true uncertainty.
+   to use instead of fit_power_law's OLS stderr, which badly understates
+   beta_hat's true uncertainty.
 """
 from __future__ import annotations
 
@@ -60,12 +59,12 @@ class TestSignPriceCrossCov:
             sign_price_cross_cov(np.ones(10), np.ones(9), max_lag=2)
 
     def test_mean_centering_matters_for_directional_flow(self):
-        """MEDIUM 1: both series must be mean-centered like sign_acf.
+        """Both series must be mean-centered like sign_acf.
 
-        With directional (non-zero-mean) signs and dm both held constant,
-        an uncentered cross-cov would equal mean(dm)*mean(signs); after
-        centering it must be (near) zero since there is no genuine
-        covariation once the means are removed.
+        With directional (non-zero-mean) signs and a non-zero-mean dm, an
+        uncentered cross-cov would equal mean(dm)*mean(signs); after centering
+        it must be near zero, since there is no real covariation once the means
+        are removed.
         """
         n = 5000
         rng = np.random.default_rng(42)
@@ -86,12 +85,11 @@ class TestDeconvolveWhiteNoise:
     def test_white_noise_signs_kappa_equals_b(self):
         """C = delta (identity Toeplitz) => kappa recovered == b.
 
-        Per the brief: dm is built directly by convolving signs with an
-        arbitrary decaying kappa0 (the MA coefficients themselves), i.e.
-        dm[t] = sum_n kappa0[n] * signs[t-n] + small noise. For iid signs
-        the sign ACF is a delta function, so the Toeplitz system is the
-        identity and the recovered kappa must equal b, which in turn must
-        equal kappa0 (up to the injected noise).
+        dm is built by convolving signs with an arbitrary decaying kappa0 (the
+        MA coefficients), i.e. dm[t] = sum_n kappa0[n] * signs[t-n] + small
+        noise. For iid signs the sign ACF is a delta function, so the Toeplitz
+        system is the identity and the recovered kappa must equal b, which in
+        turn equals kappa0 up to the injected noise.
         """
         n = 100_000
         signs = iid_signs(n, seed=10)
@@ -122,8 +120,8 @@ class TestDeconvolveLongMemory:
         d = 0.35
         signs = fractional_signs(n, d=d, seed=seed)
 
-        # Plant G0(l) = l^(-0.35) as the convolution kernel itself (mid_t
-        # construction from Phase 1), truncated at n_lags terms for speed.
+        # Plant G0(l) = l^(-0.35) as the convolution kernel, truncated at n_lags
+        # terms for speed.
         n_lags = 2000
         ell = np.arange(1, n_lags + 1, dtype=float)
         G0 = ell**-0.35
@@ -151,9 +149,9 @@ class TestDeconvolveLongMemory:
         return beta_hat, naive_exponent
 
     def test_recovers_power_law_kernel_and_beats_naive_response(self):
-        """KEY TEST: deconvolution recovers beta=0.35 kernel across seeds;
-        naive response does not, and the recovery is stable across seeds
-        (LOW 2: loop 3 seeds, check per-seed tolerance AND across-seed sd).
+        """Key test: deconvolution recovers the beta=0.35 kernel across seeds
+        while the naive response does not. Loops over 3 seeds and checks both the
+        per-seed tolerance and the across-seed sd.
         """
         target = 0.35
         seeds = [20, 21, 22]
@@ -203,7 +201,7 @@ class TestGuards:
             deconvolve_kernel(b, acf, n_samples=10_000)
 
     def test_unnormalized_acf_raises(self):
-        """MEDIUM 2: acf[0] must equal 1.0 (normalized ACF), else ValueError."""
+        """acf[0] must equal 1.0 (normalized ACF), else ValueError."""
         L = 10
         b = np.ones(L)
         acf = np.zeros(L)
@@ -212,10 +210,9 @@ class TestGuards:
             deconvolve_kernel(b, acf, n_samples=10_000)
 
     def test_low_sample_to_lag_ratio_raises(self):
-        """HIGH 1: n_samples/len(b) below the 100 floor must raise, even
-        though the Toeplitz matrix here is well-conditioned (an identity-
-        like near-diagonal ACF), demonstrating the rank/condition checks
-        alone cannot catch this failure mode.
+        """n_samples/len(b) below the 100 floor must raise even though the
+        Toeplitz matrix here is well-conditioned (a near-identity ACF), since the
+        rank/condition checks alone cannot catch this failure mode.
         """
         L = 300
         rng = np.random.default_rng(99)

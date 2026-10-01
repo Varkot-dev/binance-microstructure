@@ -55,9 +55,8 @@ def test_fractional_signs_recovers_theoretical_power_law_exponent():
     regression of ACF vs lag over lags 10..200 (restricted to lags where
     the empirical ACF is positive, since log is undefined otherwise).
 
-    This test fails against the old 2000-term MA truncation (measured
-    gamma_hat ~ 0.31, outside tolerance) and passes against the current
-    50_000-term FFT-based implementation (measured gamma_hat ~ 0.25).
+    A 2000-term MA truncation gives gamma_hat ~ 0.31 (outside tolerance); the
+    50_000-term FFT-based implementation gives ~ 0.25.
     """
     s = fractional_signs(400_000, d=0.4, seed=3)
     lags = np.arange(10, 201)

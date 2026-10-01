@@ -1,7 +1,6 @@
-"""Tests for Q8: regime comparator (Phase 4, Task 2).
+"""Tests for Q8: regime comparator.
 
-Contract under test (see docs/plans/2026-09-24-phase4-regimes.md,
-Task 2, and its binding elaboration):
+Contract under test:
 
 1. Three fake regime dirs with planted `q4_cross_section.json` (+ q6 for
    two of them): baseline "2023-06", regime A/B with a planted positive
@@ -15,7 +14,7 @@ Task 2, and its binding elaboration):
    - produce q8_regimes.{md,json,png}
 2. A regime cross-check mismatch (stored regression doesn't match what
    `run_q8` recomputes from records) must surface as a warning string in
-   the output json, not be silently ignored or crash the run.
+   the output json, without crashing the run.
 3. A regime dir with NO q6_endogeneity.json must be handled gracefully
    (q6-derived fields are None, no exception).
 """
@@ -76,7 +75,7 @@ def _write_q4_json(
         "p_flip_vs_activity": _ols(log_n, p_flip) if len(records) >= 3 else None,
     }
     if corrupt_regressions and regressions["p_flip_vs_activity"] is not None:
-        regressions["p_flip_vs_activity"]["slope"] += 5.0  # deliberately wrong
+        regressions["p_flip_vs_activity"]["slope"] += 5.0  # corrupt the stored slope
 
     payload = {
         "period": period,
@@ -138,14 +137,13 @@ def _write_q6_json(
 
 # ---------------------------------------------------------------------------
 # Planted fixture: 10 baseline symbols with n_events spanning several
-# decades of log10 so log-activity has real variance, and p_flip/gamma
-# constructed as an EXACT linear function of log10(n_events) so the
-# planted OLS slope is recoverable near-exactly and, crucially, the
-# per-symbol RANKS of p_flip/gamma are perfectly monotonic in n_events —
-# this lets regime A/B (same symbols, same monotonic order, different
-# noise/intercept) have a Spearman rho near +1.0 against baseline, and
-# regime C's SIGN-FLIPPED p_flip law invert that rank order, giving a
-# Spearman rho near -1.0 against baseline on the overlap.
+# decades of log10 so log-activity has real variance, and p_flip/gamma an
+# exact linear function of log10(n_events), so the planted OLS slope is
+# recovered near-exactly and the per-symbol ranks of p_flip/gamma are
+# perfectly monotonic in n_events. Regime A/B (same symbols and order,
+# different noise/intercept) then have a Spearman rho near +1.0 against
+# baseline, and regime C's sign-flipped p_flip law inverts the rank order,
+# giving rho near -1.0 on the overlap.
 # ---------------------------------------------------------------------------
 
 SYMBOLS = [f"SYM{i}USDT" for i in range(10)]
@@ -204,7 +202,7 @@ def three_regime_dirs(tmp_path: Path) -> dict:
 
     b_records = _regime_records(flip_slope=0.04, flip_intercept=0.32, symbols=SYMBOLS)
     _write_q4_json(b_dir, "2024-07", b_records)
-    # Regime B deliberately has NO q6 -> must be handled gracefully.
+    # Regime B has no q6 -> must be handled gracefully.
 
     # Regime C: sign-flipped slope (negative), half the symbols missing.
     # 5 survive, 5 do not: 2 explicitly skipped (below min_events), 3
@@ -474,7 +472,7 @@ def test_run_q8_single_regime_no_q6_either_side(tmp_path: Path):
 
 
 # ---------------------------------------------------------------------------
-# Native-universe regimes (Task 4b): overlap semantics, own-universe
+# Native-universe regimes: overlap semantics, own-universe
 # accounting, chronological ordering, and mismatch-without-flag warning.
 # ---------------------------------------------------------------------------
 
@@ -566,7 +564,7 @@ def test_run_q8_native_regime_law_stability_verdict_is_survivorship_free(tmp_pat
 
 
 def test_run_q8_non_native_regime_unaffected_by_native_flag_absence(three_regime_dirs: dict, tmp_path: Path):
-    """Existing (non-native) regimes keep exact prior behavior when native_regimes is empty."""
+    """Regimes behave as fixed-universe regimes when native_regimes is empty."""
     out_dir = tmp_path / "results"
     result = run_q8(
         out_dir,
@@ -588,7 +586,7 @@ def test_run_q8_universe_mismatch_without_native_flag_warns(tmp_path: Path):
     mismatched_dir = tmp_path / "mismatched"
     _write_q4_json(baseline_dir, "2023-06", _baseline_records())
     # Same overlap-style records as the native fixture (12 requested vs.
-    # baseline's 10) but WITHOUT passing native_regimes.
+    # baseline's 10) but without passing native_regimes.
     _write_q4_json(mismatched_dir, "2024-07", _native_regime_records(flip_slope=0.05, flip_intercept=0.3))
 
     out_dir = tmp_path / "results"
@@ -602,7 +600,7 @@ def test_run_q8_universe_mismatch_without_native_flag_warns(tmp_path: Path):
     ua = result["universe_accounting"]["2024-07"]
     assert ua["universe_mismatch_warning"] is not None
     assert "universe mismatch without native flag" in ua["universe_mismatch_warning"]
-    # Survivorship is still computed (non-native path unchanged) despite the warning.
+    # Survivorship is still computed (non-native path) despite the warning.
     assert "2024-07" in result["survivorship"]
 
 
@@ -622,7 +620,7 @@ def test_run_q8_regimes_rendered_in_chronological_order(tmp_path: Path):
     result = run_q8(
         out_dir,
         baseline_dir=baseline_dir,
-        # Deliberately out-of-order insertion: 2026, 2024, 2025.
+        # Out-of-order insertion: 2026, 2024, 2025.
         regime_dirs={"2026-07": dir_2026, "2024-07": dir_2024, "2025-07": dir_2025},
         baseline_label="2023-06",
     )

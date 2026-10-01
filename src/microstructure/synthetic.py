@@ -1,7 +1,7 @@
 """Series with KNOWN statistical properties, for validating estimators.
 
-Rule (spec section 5): no estimator touches real data until it recovers the
-known answers generated here within stated error bars.
+No estimator is applied to real data until it recovers the known answers
+generated here within stated error bars.
 """
 from __future__ import annotations
 
@@ -51,13 +51,11 @@ def fractional_signs(n: int, d: float, seed: int) -> np.ndarray:
     psi_k = Gamma(k + d) / (Gamma(k + 1) Gamma(d)), computed recursively:
     psi_0 = 1, psi_k = psi_{k-1} * (k - 1 + d) / k.
 
-    n_lags = 50_000 terms: the truncation must be large enough that the
+    n_lags = 50_000 terms: the truncation must be long enough that the
     discarded tail (~k^(d-1) decay) does not bias the sign-ACF power-law
-    exponent gamma = 1 - 2*d. At 2000 terms gamma is measurably biased
-    high (~0.30 vs theoretical 0.20 at d=0.4); at 50_000 terms it recovers
-    to ~0.202. FFT-based convolution (O((n+n_lags) log(...))) is used
-    instead of np.convolve (O(n*n_lags)) because n_lags=50_000 makes the
-    direct convolution too slow to be practical.
+    exponent gamma = 1 - 2*d. At 2000 terms gamma is biased high (~0.30 vs
+    theoretical 0.20 at d=0.4); at 50_000 it recovers ~0.202. The convolution
+    is FFT-based, since np.convolve (O(n*n_lags)) is too slow at that length.
     """
     if not 0.0 < d < 0.5:
         raise ValueError("d must be in (0, 0.5)")

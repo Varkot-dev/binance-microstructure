@@ -7,9 +7,8 @@ like if the `to_aggressor_events` step is skipped. AGGREGATED: `load_events`,
 the repo's normal path. Both sign series get the same FFT sign ACF and
 log-log power-law fit (lags [10, 500]) used by Q1, so the two numbers are
 directly comparable. The literature benchmark (Bouchaud et al. 2004,
-equities/futures gamma ~ 0.3-0.7) is checked against BOTH series to show
-whether skipping aggregation is invisible from inside the "does it match the
-literature" check alone.
+equities/futures gamma ~ 0.3-0.7) is checked against both series, to show
+whether skipping aggregation is invisible to a literature-match check alone.
 """
 from __future__ import annotations
 
@@ -24,7 +23,7 @@ from microstructure.data.catalog import parquet_path
 from microstructure.estimators.acf import fit_power_law, sign_acf
 from microstructure.signals.load import load_events
 
-LIT_RANGE = (0.3, 0.7)  # equity/futures sign-ACF exponent range, docs/research/01+03
+LIT_RANGE = (0.3, 0.7)  # equity/futures sign-ACF exponent range (Lillo & Farmer 2004; Bouchaud et al. 2018)
 MAX_LAG = 1000
 FIT_LO, FIT_HI = 10, 500
 

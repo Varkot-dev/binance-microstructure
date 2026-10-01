@@ -1,58 +1,48 @@
-"""Q6: branching-ratio panel — the first Hawkes endogeneity cross-section on crypto.
+"""Q6: branching-ratio panel, a Hawkes endogeneity cross-section on crypto.
 
 Method: for each symbol, load one month of aggTrades (`load_events`),
 extract event timestamps as int64 epoch-ms, estimate the intraday rate
 profile (`intraday_rate_profile`, 48 bins) and rescale to business time
-(`rescale_to_business_time`) BEFORE any Hawkes fitting — this is not
-optional. Fitting a Hawkes MLE (or the model-free count-variance estimator)
-directly on clock time cannot distinguish genuine self-excitation from a
-merely time-varying (but non-self-exciting) baseline rate: a regime-
-switching Poisson process with NO self-excitation anywhere produces a
-spurious n̂ around 0.5-0.9 under both estimators (Filimonov & Sornette 2015;
-see `tests/estimators/test_hawkes.py::
-test_regime_switching_poisson_produces_spurious_endogeneity_trap`, which
-documents n_hat > 0.2 and fitted alpha > 0.5 on a process that is, by
-construction, not self-exciting at all — every crypto symbol has an intraday
-U-shape / funding-hour clustering pattern at least that strong). Business-
-time rescaling is the standard fix (docs/research/02-hawkes-processes.md §2:
-"remedies: time-varying mu(t), short quasi-stationary windows, volume-
-time"): under the deterministic time change tau(t) = integral_0^t
-rate(s) ds, a non-stationary-rate Poisson process becomes homogeneous in
-tau-time, so a Hawkes fit on tau(events) is no longer confounded by the
-daily cycle.
+(`rescale_to_business_time`) before any Hawkes fitting. Fitting a Hawkes MLE
+(or the count-variance estimator) on clock time cannot separate
+self-excitation from a time-varying, non-self-exciting baseline rate: a
+regime-switching Poisson process with no self-excitation produces a
+spurious n̂ around 0.5-0.9 under both estimators (Filimonov & Sornette
+2015; `tests/estimators/test_hawkes.py::
+test_regime_switching_poisson_produces_spurious_endogeneity_trap` shows
+n_hat > 0.2 and fitted alpha > 0.5 on such a process, and every crypto
+symbol has an intraday U-shape / funding-hour pattern at least that strong).
+The standard fix is the deterministic time change tau(t) = integral_0^t
+rate(s) ds, under which a non-stationary-rate Poisson process becomes
+homogeneous, so a Hawkes fit on tau(events) is not confounded by the daily
+cycle.
 
 Per symbol: the business-time series is split into K equal-width contiguous
-sub-windows (`--windows`, default 6). Each sub-window is fit independently
-via `fit_hawkes_exp` on (business_times - window_start) — RUNTIME CAP: if a
+sub-windows (`--windows`, default 6). Each is fit independently via
+`fit_hawkes_exp` on (business_times - window_start). Runtime cap: if a
 window holds more than `MAX_FIT_EVENTS` (250,000) events, the fit uses only
-the FIRST 250,000 of that window (documented below: bounds the O(N log N)
-MLE cost per fit; per this repo's synthetic tests, alpha estimates from a
-single 250k-event fit have sd ~0.004 across seeds, i.e. subsampling this
-large does not materially widen the sampling uncertainty on alpha_median
-computed across the 6 windows). alpha and convergence are recorded per
-window.
+the first 250,000, which bounds the O(N log N) MLE cost; in the synthetic
+tests, alpha from a single 250k-event fit has sd ~0.004 across seeds, so the
+subsampling does not materially widen the uncertainty on alpha_median across
+the 6 windows. alpha and convergence are recorded per window.
 
-Seasonality-bias measurement: in addition to the 6 business-time window
-fits, ONE extra fit is run on RAW clock time for the first sub-window only
-(same event range, same 250k cap, but times are NOT rescaled). raw_delta =
-alpha_raw - alpha_rescaled_window1 quantifies, per symbol, how much of a
-naive clock-time alpha estimate would have been seasonality bias rather
-than genuine endogeneity — the honest per-symbol size of the trap this
-whole module exists to avoid.
+Seasonality-bias measurement: one extra fit on raw clock time (not
+rescaled) for the first sub-window only, with the same event range and cap.
+raw_delta = alpha_raw - alpha_rescaled_window1 is the per-symbol size of the
+seasonality bias in a naive clock-time alpha.
 
-Count-variance n_hat: computed once per symbol on the FULL business-time
-series (not per-window) via `branching_count_variance`, using
-window_bt = COUNT_VARIANCE_WINDOW_BT (200 seconds of business time,
-documented below).
+Count-variance n_hat: computed once per symbol on the full business-time
+series (not per window) via `branching_count_variance`, with
+window_bt = COUNT_VARIANCE_WINDOW_BT (200 seconds of business time).
 
 Cross-section: OLS of alpha_median on log10(n_events) (`np.polyfit`, with
 intercept — no reason to expect alpha to vanish at zero activity); and
 MLE-vs-count-variance agreement stats (median |alpha_median - alpha_cv|,
 Pearson correlation) across the successful symbols.
 
-Symbols are processed one at a time; any per-symbol exception (missing
-parquet, insufficient events for the guards below, etc.) is caught and
-logged into `failures`, and never aborts the run for the remaining symbols.
+Symbols are processed one at a time; a per-symbol exception (missing
+parquet, insufficient events for the guards below, etc.) is logged into
+`failures` and does not abort the run.
 
 Outputs: q6_endogeneity.{json,md,parquet,png}. The PNG has two panels:
 alpha_median vs log10(n_events) with sub-window-IQR errorbars, and an
@@ -78,27 +68,20 @@ from microstructure.signals.load import load_events
 
 N_BINS = 48  # intraday_rate_profile bin count
 
-# Runtime cap on events per single Hawkes MLE fit: fit_hawkes_exp's O(N log N)
-# excitation recursion (5 Nelder-Mead multi-starts, ~500 iters each) becomes
-# the dominant per-symbol cost well before 250k events; per this repo's
-# synthetic multi-seed tests (test_mle_alpha_stable_across_seeds), fitted
-# alpha's cross-seed sd at similar sample sizes is ~0.004-0.02, so
-# subsampling a huge window down to its first 250k events trades a small,
-# already-small amount of sampling noise for a bounded, predictable fit
-# cost across a ~40+ symbol panel.
+# Runtime cap on events per Hawkes MLE fit: fit_hawkes_exp's O(N log N)
+# recursion (5 Nelder-Mead starts, ~500 iterations each) dominates per-symbol
+# cost well before 250k events. Fitted alpha's cross-seed sd at similar sample
+# sizes is ~0.004-0.02 (test_mle_alpha_stable_across_seeds), so truncating to
+# the first 250k events costs little sampling noise and bounds fit time.
 MAX_FIT_EVENTS = 250_000
 
-# Count-variance window: must be >> 1/beta (the exponential kernel's decay
-# timescale, typically ~0.1-2s in business-time seconds for liquid crypto
-# aggressor flow per this repo's earlier Hawkes fits) for the large-window
-# asymptotic var(N_W)/mean(N_W) -> 1/(1-n)^2 to hold — short windows bias
-# n_hat toward 0 by truncating the kernel's memory
-# (`branching_count_variance`'s docstring). 200 seconds of business time is
-# the simple, documented, binding choice; if a symbol's own median fitted
-# beta implies 200s is not >> 1/beta (i.e. 200 <= 20/median_beta), we widen
-# to 100/median_beta instead, so the window scales up automatically for any
-# symbol whose kernel decays unusually slowly rather than silently
-# understating that symbol's n_hat.
+# Count-variance window: must be >> 1/beta (the kernel decay timescale,
+# typically ~0.1-2s of business time for liquid crypto aggressor flow) for the
+# large-window asymptotic var(N_W)/mean(N_W) -> 1/(1-n)^2 to hold; short
+# windows bias n_hat toward 0 (see `branching_count_variance`). The default is
+# 200 business seconds. If a symbol's median fitted beta makes that too short
+# (200 <= 20/median_beta), the window widens to 100/median_beta so a slowly
+# decaying kernel does not silently understate n_hat.
 COUNT_VARIANCE_WINDOW_BT_DEFAULT = 200.0
 COUNT_VARIANCE_WINDOW_SAFETY_MULT = 20.0
 COUNT_VARIANCE_WINDOW_FALLBACK_MULT = 100.0
@@ -300,7 +283,7 @@ def run_q6(
             continue
         try:
             records.append(_symbol_record(root, symbol, month, windows))
-        except Exception as e:  # noqa: BLE001 - per-symbol robustness is the point
+        except Exception as e:  # noqa: BLE001 - a per-symbol failure is logged, not fatal
             failures.append({"symbol": symbol, "reason": f"{type(e).__name__}: {e}"})
 
     activity_regression = _activity_regression(records)

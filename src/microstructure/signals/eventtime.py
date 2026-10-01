@@ -1,32 +1,30 @@
 """Business-time rescaling: seasonality-robust event-time deseasonalization.
 
-Motivation (Filimonov & Sornette 2015; see the regime-switching trap test
-in tests/estimators/test_hawkes.py,
+Motivation (Filimonov & Sornette 2015; the regime-switching trap test in
+tests/estimators/test_hawkes.py,
 `test_regime_switching_poisson_produces_spurious_endogeneity_trap`): fitting
-a Hawkes model directly on clock-time event data cannot distinguish genuine
-self-excitation from a time-varying but non-self-exciting baseline rate
-mu(t) — e.g. the intraday U-shape / funding-hour clustering universally
-present in crypto/equity microstructure data. Both a likelihood fit and the
-model-free count-variance estimator report spurious positive endogeneity
-when the true process is just a non-stationary-rate Poisson process.
+a Hawkes model directly on clock-time event data cannot separate
+self-excitation from a time-varying, non-self-exciting baseline rate mu(t),
+such as the intraday U-shape or funding-hour clustering common in
+crypto/equity data. Both a likelihood fit and the count-variance estimator
+report spurious positive endogeneity on a non-stationary-rate Poisson
+process.
 
-This module implements the standard fix: a deterministic time change to
-"business time" (also called "theta time" / operational time in the market
-microstructure literature) that flattens the known intraday seasonality
-BEFORE any Hawkes fitting is attempted. Given a piecewise-constant estimate
-of the intraday rate profile rate(s) (period 24h, repeating across days,
-mean exactly 1 by construction), business time is
+The fix is a deterministic time change to "business time" (operational time)
+that flattens the known intraday seasonality before any Hawkes fit. Given a
+piecewise-constant intraday rate profile rate(s) (period 24h, repeating
+across days, mean 1), business time is
 
     tau(t) = integral_0^t rate(s) ds
 
 Under tau, a Poisson process with rate mu(t) = mu_bar * rate(time_of_day(t))
-becomes a HOMOGENEOUS Poisson process with rate mu_bar in tau-time (standard
-time-change / random time-change theorem for point processes), so a Hawkes
-fit performed on tau(events) is no longer confounded by the daily cycle.
+becomes homogeneous with rate mu_bar (random time-change theorem for point
+processes), so a Hawkes fit on tau(events) is not confounded by the daily
+cycle.
 
-Usage: estimate the profile from (ideally) a longer/representative sample
-via `intraday_rate_profile`, then rescale the event times you intend to fit
-via `rescale_to_business_time` before calling `fit_hawkes_exp` /
+Usage: estimate the profile from a longer or representative sample with
+`intraday_rate_profile`, then rescale the event times with
+`rescale_to_business_time` before calling `fit_hawkes_exp` /
 `branching_count_variance` from microstructure.estimators.hawkes.
 """
 from __future__ import annotations
@@ -45,26 +43,19 @@ def intraday_rate_profile(ts: np.ndarray, n_bins: int = 48) -> np.ndarray:
     converting first, e.g. `df["ts"].dt.epoch("ms").to_numpy()`.
 
     Each event is assigned to one of `n_bins` equal-width bins covering the
-    24h time-of-day-in-UTC cycle (bin width = 86_400_000 / n_bins ms), by
-    `(ts % MS_PER_DAY) // bin_width_ms`. The returned profile is the per-bin
-    event count divided by the mean per-bin count (total_events / n_bins),
-    so the profile has mean exactly 1 by construction — a value of 2.0 in a
-    bin means events are twice as frequent in that time-of-day window as the
-    all-day average.
+    24h UTC time-of-day cycle (bin width = 86_400_000 / n_bins ms), by
+    `(ts % MS_PER_DAY) // bin_width_ms`. The profile is the per-bin event
+    count divided by the mean per-bin count (total_events / n_bins), so it has
+    mean 1: a value of 2.0 means events are twice as frequent in that bin as
+    the all-day average.
 
-    Any bin with zero observed events is floored at `_EMPTY_BIN_FLOOR`
-    (0.01) rather than left at 0, to avoid division-by-zero / a permanently
-    frozen business clock in `rescale_to_business_time`'s integral. This
-    floor is a deliberate approximation: it assumes sparse bins are due to
-    sampling noise (short/data-starved windows), not a truly dead trading
-    period, and callers estimating a profile from very short or highly
-    intermittent samples should be aware the floor can distort empty hours.
-    The floor is applied BEFORE the mean-1 normalization (floor, then
-    renormalize by dividing by the floored array's own mean), so the
-    returned profile's mean is always exactly 1 — including when bins were
-    floored — which in turn keeps `rescale_to_business_time`'s "one full day
-    integrates to exactly 86400 seconds" property exact rather than
-    approximate.
+    Empty bins are floored at `_EMPTY_BIN_FLOOR` (0.01) so the business clock
+    in `rescale_to_business_time` never freezes. This assumes an empty bin is
+    sampling noise rather than a dead trading period, and can distort empty
+    hours when the profile is estimated from very short or intermittent
+    samples. The floor is applied before normalizing by the floored array's
+    own mean, so the profile mean is exactly 1 and one full day integrates to
+    exactly 86400 seconds in `rescale_to_business_time`.
 
     Raises ValueError if `ts` is empty or `n_bins` is not a positive
     integer.
@@ -98,28 +89,18 @@ def rescale_to_business_time(ts: np.ndarray, profile: np.ndarray) -> np.ndarray:
 
         tau(t) = integral_0^t rate(s) ds,  anchored so tau(ts[0]) == 0.
 
-    The integral is computed exactly for a piecewise-constant rate: for a
-    query time t, decompose t = n_full_days * 86400s + within_day_seconds.
-    Each full day contributes exactly `sum(profile) * bin_width_seconds`
-    (== 86400 seconds, since profile has mean 1 by construction) to tau.
-    The partial day contributes the cumulative integral of `profile` over
-    whole bins strictly before the query's bin, plus a linear partial-bin
-    term `profile[bin_idx] * (leftover time within the bin)`. This is
-    vectorized (no per-event Python loop): every event's decomposition is
-    computed with numpy array ops.
+    The integral is exact for a piecewise-constant rate: a query time t splits
+    into n_full_days * 86400s + within_day_seconds. Each full day contributes
+    `sum(profile) * bin_width_seconds` (86400 seconds, since the profile has
+    mean 1). The partial day contributes the cumulative integral over whole
+    bins before the query's bin plus `profile[bin_idx]` times the time elapsed
+    within that bin. Fully vectorized.
 
-    Determinism: identical input arrays always produce identical output
-    (no RNG, no data-dependent iteration order).
-
-    Raises ValueError if `ts` is empty, if `ts` has fewer than 2 events (a
-    single event has no informative inter-event structure so rescaling is
-    meaningless for downstream Hawkes fitting), if `ts` is not sorted in
-    non-decreasing order (the day/bin decomposition and the `tau - tau[0]`
-    anchor both assume `ts[0]` is the earliest event; an unsorted input
-    would silently produce a nonsensical or negative business-time axis
-    rather than erroring), or if `profile` has an invalid shape (empty,
-    non-1-D, containing non-finite values, or containing non-positive
-    values).
+    Raises ValueError if `ts` has fewer than 2 events (no inter-event
+    structure to rescale), if `ts` is not sorted in non-decreasing order (the
+    `tau - tau[0]` anchor assumes `ts[0]` is earliest, and an unsorted input
+    would give a nonsensical or negative business-time axis), or if `profile`
+    is empty, non-1-D, non-finite or non-positive.
     """
     ts = np.asarray(ts, dtype=np.int64)
     profile = np.asarray(profile, dtype=np.float64)
@@ -139,8 +120,7 @@ def rescale_to_business_time(ts: np.ndarray, profile: np.ndarray) -> np.ndarray:
     bin_width_ms = MS_PER_DAY / n_bins
     bin_width_s = bin_width_ms / 1000.0
 
-    # Cumulative integral of the profile over whole bins, in seconds:
-    # cum_profile[k] = integral of rate(s) ds over time-of-day bins [0, k).
+    # cum_profile_s[k] = integral of rate(s) ds over time-of-day bins [0, k).
     cum_profile_s = np.concatenate(([0.0], np.cumsum(profile))) * bin_width_s
     day_integral_s = cum_profile_s[-1]  # integral over one full 24h cycle
 

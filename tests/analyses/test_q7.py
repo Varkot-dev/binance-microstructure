@@ -1,19 +1,18 @@
-"""Tests for Q7: execution-cost schedule comparison (Phase 3, Task 4).
+"""Tests for Q7: execution-cost schedule comparison.
 
-Contract under test (see task-4-brief.md):
+Contract under test:
 1. Symbol selection: 6 symbols at ranks 1,4,7,10,13,16 of the panel's Q5
    n_events ordering (spanning the panel's activity range), chosen
-   programmatically from the kernels json — never hardcoded.
+   programmatically from the kernels json, never hardcoded.
 2. `run_q7` runs each symbol x day x side x parent_qty_events combination
    through TWAP / front-loaded / reactive, with reactive's (lookback,
-   pause_threshold) calibrated ONLY on days 1-3 and evaluated ONLY on days
+   pause_threshold) calibrated only on days 1-3 and evaluated only on days
    4-7. The chosen params are exactly the calibration-window argmax over
-   the grid {50,200}x{0.2,0.4} -- verified independently in this test by
-   recomputing the argmax from the same synthetic fixtures and asserting
-   equality with what's recorded in the output json. This is the
-   no-evaluation-leakage check the brief requires.
+   the grid {50,200}x{0.2,0.4}, verified here by recomputing the argmax from
+   the same synthetic fixtures and asserting equality with what is recorded
+   in the output json (the no-evaluation-leakage check).
 3. Output files (.md, .json, .png) exist; the json carries both a
-   "calibration" and an "evaluation" block, never conflating the two.
+   "calibration" and an "evaluation" block, kept separate.
 """
 from __future__ import annotations
 

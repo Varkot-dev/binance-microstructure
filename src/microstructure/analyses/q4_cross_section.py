@@ -1,35 +1,29 @@
 """Q4: trades-side cross-section — does order-flow memory scale with activity?
 
 Method: for each symbol in the universe, load one month of aggTrades,
-collapse to aggressor events (`load_events`), and compute five per-symbol
+collapse to aggressor events (`load_events`), and compute per-symbol
 statistics on the ±1 sign series: n_events (activity), gamma-hat (sign-ACF
 power-law exponent, lags [10, max_lag//2], same fit window as Q1), lag-1
 ACF, p_flip (P(sign_t+1 != sign_t)), zigzag amplitude (Q1b's definition:
 mean ACF at even lags 2,4,6,8,10 minus mean ACF at odd lags 1,3,5,7,9), and
 total traded quantity. Symbols with fewer than `min_events` events are
-skipped (not failed); any other per-symbol error (missing parquet, bad
-schema, etc.) is caught and logged as a failure. Neither skips nor
-failures abort the run. Frames are processed and released one symbol at a
-time to bound memory across the ~207-symbol universe (each symbol's
-events are loaded exactly once, not reloaded for the min_events check).
+skipped; any other per-symbol error (missing parquet, bad schema, etc.) is
+logged as a failure. Neither aborts the run. Frames are processed and
+released one symbol at a time to bound memory across the ~207-symbol
+universe, and each symbol's events are loaded once.
 
 Outputs: q4_cross_section.{json,md,parquet} plus two PNGs. The parquet
 table holds one row per successful symbol (columns: symbol, n_events,
 gamma, gamma_stderr, acf1, p_flip, zigzag_amplitude, total_qty).
 
-Two cross-sectional OLS regressions are then fit on the successful set:
-gamma-hat on log10(n_events), and p_flip on log10(n_events). Plain
-`np.polyfit` is used (not `ols_through_origin`, since these regressions
-are not through-origin — there is no reason to expect gamma or p_flip to
-vanish at zero activity, so an intercept term is required); this is
-documented in the md output. The regression stderr/R^2 the same OLS
-machinery as `estimators.acf.fit_power_law` produces is heteroskedastic
-across symbols: per-symbol gamma stderrs already understate uncertainty
-(same i.i.d.-residual caveat as Q1), and that understatement is not
-uniform across symbols with different n_events, so the cross-sectional
-regression's own OLS assumptions (homoskedastic residuals) are violated
-by construction. This is stated plainly in the md output rather than
-papered over with a false confidence interval.
+Two cross-sectional OLS regressions are fit on the successful set: gamma-hat
+on log10(n_events), and p_flip on log10(n_events). They use `np.polyfit`
+with an intercept, since neither gamma nor p_flip need vanish at zero
+activity. Per-symbol gamma stderrs already understate uncertainty (the
+i.i.d.-residual caveat of Q1) and not uniformly across symbols with
+different n_events, so the regression's own homoskedasticity assumption is
+violated by construction. The md output says so instead of reporting a
+confidence interval that implies otherwise.
 """
 from __future__ import annotations
 
@@ -160,7 +154,7 @@ def run_q4(
             stats = _symbol_stats(ev, symbol, max_lag)
             del ev
             records.append(stats)
-        except Exception as e:  # noqa: BLE001 - per-symbol robustness is the point
+        except Exception as e:  # noqa: BLE001 - a per-symbol failure is logged, not fatal
             failures.append({"symbol": symbol, "reason": f"{type(e).__name__}: {e}"})
 
     regressions = _cross_sectional_regressions(records)
@@ -232,7 +226,7 @@ def _plot_gamma_vs_activity(out_dir: Path, records: list[dict]) -> None:
         log_n = np.array([np.log10(r["n_events"]) for r in records])
         gamma = np.array([r["gamma"] for r in records])
         ax.scatter(log_n, gamma, s=24, alpha=0.75)
-        # Errorbars deliberately omitted: per-symbol OLS stderr on gamma-hat
+        # No errorbars: per-symbol OLS stderr on gamma-hat
         # understates true uncertainty (i.i.d.-residual assumption violated
         # by autocorrelated ACF values, same caveat as Q1) and is not
         # comparable across symbols with very different n_events, so

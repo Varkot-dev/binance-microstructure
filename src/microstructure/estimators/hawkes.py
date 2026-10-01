@@ -3,28 +3,23 @@
 Parameterization: intensity λ(t) = mu + Σ_{t_i < t} alpha*beta*exp(-beta*(t-t_i)).
 The kernel is φ(t) = alpha*beta*exp(-beta*t); its integral over [0, ∞) is
     ∫ alpha*beta*exp(-beta*t) dt = alpha*beta * (1/beta) = alpha,
-so **alpha IS the branching ratio n** (Hawkes & Oakes 1974 branching
-interpretation: docs/research/02-hawkes-processes.md §1 "Branching interpretation
-and criticality"). alpha in [0, 1) for a stationary process; alpha -> 1 is
-criticality; alpha >= 1 is explosive/non-stationary.
+so alpha is the branching ratio n (Hawkes & Oakes 1974; Bacry, Mastromatteo
+& Muzy 2015, "Hawkes processes in finance"). alpha in [0, 1) for a stationary
+process; alpha -> 1 is criticality; alpha >= 1 is explosive/non-stationary.
 
-Three independent estimators are provided so they can cross-check each
-other, as the literature insists on (docs/research/02 §4 "Non-negotiables:
-... report n̂ sensitivity to window and kernel family"):
+Three estimators cross-check each other, and n̂ should be reported with its
+sensitivity to window and kernel family:
   - simulate_hawkes_exp: ground truth via Ogata (1978) thinning.
   - fit_hawkes_exp: parametric MLE using the O(N) exponential-kernel
     recursion, optimized with a hand-rolled multi-start Nelder-Mead
     (numpy only, no scipy).
   - branching_count_variance: Hardiman & Bouchaud (2014) model-free
-    estimator from count mean/variance alone — no kernel shape assumed.
+    estimator from count mean/variance alone, with no kernel shape assumed.
 
-The Poisson-refutation / regime-switching trap tests in
-tests/estimators/test_hawkes.py document a critical failure mode: on a
-non-stationary-rate (but NOT self-exciting) process, both a Hawkes MLE and
-the count-variance estimator report spurious positive endogeneity
-(Filimonov & Sornette 2015, docs/research/02 §"The calibration counterattack").
-This motivates deseasonalizing mu(t) before ever trusting an n̂ on real
-data.
+On a non-stationary-rate (but not self-exciting) process, both a Hawkes MLE
+and the count-variance estimator report spurious positive endogeneity
+(Filimonov & Sornette 2015; tests/estimators/test_hawkes.py reproduces it).
+mu(t) therefore has to be deseasonalized before an n̂ on real data is trusted.
 """
 from __future__ import annotations
 
@@ -51,21 +46,18 @@ def simulate_hawkes_exp(mu: float, alpha: float, beta: float, t_end: float, seed
         >>> bool(abs(kernel_integral - alpha) < 1e-3)
         True
 
-    Algorithm (Ogata thinning, exploiting the exponential kernel's Markov
-    property so no per-candidate rebuild of the full excitation sum is
-    needed): maintain the running excitation
+    Algorithm (Ogata thinning): the exponential kernel is Markov, so keep the
+    running excitation
         E(t) = Σ_{t_i < t} alpha*beta*exp(-beta*(t - t_i)),
-    which decays smoothly between events and jumps by +alpha*beta at each
-    accepted event. Immediately after an event at time t_i, the intensity
-    is at its local maximum for the segment until the next accepted event
-    (since the kernel is monotonically decaying), so
+    which decays between events and jumps by +alpha*beta at each accepted
+    event. Just after an event the intensity is at its local maximum until
+    the next accepted event, so
         lambda_bar = mu + E(t_i^+) = mu + E(t_i^-) + alpha*beta
-    is a valid upper bound for λ(t) on [t_i, next accepted event]. Draw
-    candidate arrival times from a homogeneous Poisson process at rate
-    lambda_bar; accept a candidate at time t_c with probability
-    λ(t_c)/lambda_bar. On rejection, the bound is still valid going
-    forward (intensity only decays between events) so we simply continue
-    thinning from t_c without recomputing lambda_bar.
+    bounds λ(t) on [t_i, next accepted event]. Draw candidates from a
+    homogeneous Poisson process at rate lambda_bar and accept a candidate at
+    t_c with probability λ(t_c)/lambda_bar. After a rejection the bound is
+    still valid (intensity only decays between events), so thinning continues
+    from t_c with the same lambda_bar.
     """
     if beta <= 0.0:
         raise ValueError("beta must be positive")
@@ -93,10 +85,7 @@ def simulate_hawkes_exp(mu: float, alpha: float, beta: float, t_end: float, seed
         if t >= t_end:
             break
 
-        # Decay excitation from the last processed point to the candidate time.
-        # (excitation tracked at the time of the last event/candidate, "dt" is
-        # the gap since then.)
-        # We recompute excitation at t directly below via the last event time.
+        # Decay the excitation from the last accepted event to the candidate time.
         if events:
             dt_last = t - events[-1]
             excitation_at_t = excitation * np.exp(-beta * dt_last)
@@ -109,8 +98,7 @@ def simulate_hawkes_exp(mu: float, alpha: float, beta: float, t_end: float, seed
             events.append(t)
             excitation = excitation_at_t + alpha * beta
             lambda_bar = mu + excitation + alpha * beta
-        # else rejected: lambda_bar remains valid (intensity only decays
-        # between accepted events), continue thinning from t.
+        # else rejected: lambda_bar remains valid; continue thinning from t.
 
     return np.asarray(events, dtype=np.float64)
 
@@ -122,25 +110,17 @@ def simulate_hawkes_multiexp(
 
     λ(t) = mu + Σ_{t_i < t} φ(t - t_i), φ(t) = Σ_k alpha_k*beta_k*exp(-beta_k*t).
 
-    Branching ratio (total kernel integral) is n = Σ_k alpha_k, exactly as in
-    the single-exponential case (each component integrates to alpha_k). This
-    is the standard "sum of exponentials spanning decades of timescales" fix
-    for kernel misspecification noted in docs/research/02-hawkes-processes.md
-    §4 pitfall 3 ("Exponential fits to power-law data underestimate n; power-
-    law fits are sensitive to short-time regularization. Fit sums of
-    exponentials spanning decades of timescales; check n̂ stability.") — a
-    single exponential decays too fast to capture a long-memory/power-law-like
-    kernel's mass at long lags, so a K=1 MLE fit systematically underestimates
-    n on such data; a mixture of exponentials at well-separated timescales
-    approximates the long-memory shape and recovers more of that mass.
+    Branching ratio (total kernel integral) is n = Σ_k alpha_k, as each
+    component integrates to alpha_k. A sum of exponentials spanning decades of
+    timescales is the standard fix for kernel misspecification: a single
+    exponential decays too fast to capture a long-memory kernel's mass at long
+    lags, so a K=1 fit underestimates n on such data (Bacry, Mastromatteo &
+    Muzy 2015).
 
-    Reuses the same structure as `simulate_hawkes_exp`: each component's
-    excitation E_k(t) = Σ_{t_i<t} alpha_k*beta_k*exp(-beta_k*(t-t_i)) decays
-    smoothly between events and jumps by +alpha_k*beta_k at each accepted
-    event, so immediately after an event the total intensity
-    mu + Σ_k E_k(t_i^+) is the local maximum until the next accepted event
-    (sum of monotonically-decaying components is itself monotonically
-    decaying), giving a valid Ogata thinning upper bound.
+    Same thinning scheme as `simulate_hawkes_exp`: each component E_k(t)
+    decays between events and jumps by +alpha_k*beta_k at each accepted
+    event, so mu + Σ_k E_k(t_i^+) is the local maximum until the next accepted
+    event and a valid thinning bound.
     """
     if t_end <= 0.0:
         raise ValueError("t_end must be positive")
@@ -193,8 +173,7 @@ def simulate_hawkes_multiexp(
             events.append(t)
             excitation = excitation_at_t + peak_jump
             lambda_bar = mu + excitation.sum() + peak_jump.sum()
-        # else rejected: lambda_bar remains valid (each component only
-        # decays between accepted events), continue thinning from t.
+        # else rejected: lambda_bar remains valid; continue thinning from t.
 
     return np.asarray(events, dtype=np.float64)
 
@@ -206,43 +185,30 @@ def simulate_seasonal_hawkes_exp(
 
     λ(t) = mu_bar*shape(tod(t)) + Σ_{t_i < t} alpha*beta*exp(-beta*(t - t_i))
 
-    where `shape` is an `n_bins`-length array (mean 1 by construction, as
-    returned by `microstructure.signals.eventtime.intraday_rate_profile`)
-    giving the baseline-rate multiplier for each equal-width time-of-day bin
-    over a 24h period (period = 86400 SECONDS here, since this module works
-    in float seconds, not the eventtime module's epoch-ms; the caller is
-    responsible for keeping units consistent, e.g. by choosing `shape` to
-    represent one bin per 86400/n_bins seconds and treating `t=0` as the
-    start of a day). `tod(t)` is `t mod 86400`.
+    where `shape` is an `n_bins`-length array (mean 1, as returned by
+    `microstructure.signals.eventtime.intraday_rate_profile`) giving the
+    baseline-rate multiplier for each equal-width time-of-day bin. The period
+    is 86400 seconds (this module works in float seconds, not epoch-ms),
+    `tod(t)` is `t mod 86400`, and `t=0` is the start of a day.
 
-    This is the honest generative model this module was missing: unlike
-    thinning an already-simulated homogeneous-mu Hawkes process by a
-    time-of-day mask (an approximation used in
-    tests/signals/test_eventtime.py's `_thin_by_daily_profile` secondary
-    control test — see that test's docstring), this simulator makes the
-    baseline rate itself seasonal from the start, so it does not also
-    discard already-realized self-excited "child" events the way
-    post-hoc thinning does. It is the correct tool for testing that
-    business-time rescaling recovers the true branching ratio from a
-    seasonality-confounded Hawkes fit.
+    The baseline is seasonal from the start, so unlike thinning an
+    already-simulated homogeneous Hawkes process by a time-of-day mask
+    (tests/signals/test_eventtime.py's `_thin_by_daily_profile`), it does not
+    discard self-excited child events. It is the right generator for testing
+    that business-time rescaling recovers the true branching ratio from a
+    seasonality-confounded fit.
 
-    Algorithm: same Ogata (1978) thinning / exponential-kernel excitation
-    tracking as `simulate_hawkes_exp`, except the constant `mu` is replaced
-    by `mu_bar*shape[bin_idx(t)]` and the thinning upper bound
-    `lambda_bar = mu_bar*max(shape) + excitation + alpha*beta` uses the
-    seasonal peak (`max(shape)`) instead of a constant baseline, since the
-    baseline term is no longer constant between accepted events (only the
-    excitation term's monotonic decay is exploited for the bound, same as
-    the unseasonal simulator; the baseline swap point (bin boundary) is a
-    negligible/zero-measure event under continuous-time thinning so no
-    special-casing across bin boundaries is required for correctness).
+    Algorithm: the thinning of `simulate_hawkes_exp` with `mu` replaced by
+    `mu_bar*shape[bin_idx(t)]`, and the bound
+    `lambda_bar = mu_bar*max(shape) + excitation + alpha*beta` using the
+    seasonal peak, since the baseline is no longer constant between accepted
+    events. Bin boundaries need no special-casing in continuous-time thinning.
 
-    Sanity property: with `shape` identically 1 everywhere, this reduces
-    statistically to `simulate_hawkes_exp(mu_bar, alpha, beta, t_end, seed)`
-    (same distribution, not necessarily the same realized event times,
-    since the acceptance draws differ once `lambda_bar` differs — verified
-    in tests/estimators/test_hawkes.py via matched event-count and fitted-
-    parameter statistics, not exact event-time equality).
+    With `shape` identically 1 this has the same distribution as
+    `simulate_hawkes_exp(mu_bar, alpha, beta, t_end, seed)`, though not the
+    same realized event times (the acceptance draws differ once `lambda_bar`
+    differs). tests/estimators/test_hawkes.py checks this through matched
+    event counts and fitted parameters.
     """
     if beta <= 0.0:
         raise ValueError("beta must be positive")
@@ -273,9 +239,7 @@ def simulate_seasonal_hawkes_exp(
 
     t = 0.0
     excitation = 0.0  # E(t) just after the most recent processed point
-    # Upper bound on the baseline is mu_bar*shape_max (seasonal peak); the
-    # excitation term contributes its own post-event peak as in the
-    # unseasonal simulator.
+    # Baseline bound is the seasonal peak mu_bar*shape_max.
     lambda_bar = mu_bar * shape_max + excitation + alpha * beta
 
     while t < t_end:
@@ -298,9 +262,7 @@ def simulate_seasonal_hawkes_exp(
             events.append(t)
             excitation = excitation_at_t + alpha * beta
             lambda_bar = mu_bar * shape_max + excitation + alpha * beta
-        # else rejected: lambda_bar remains a valid upper bound (baseline is
-        # capped at mu_bar*shape_max, excitation only decays between
-        # accepted events), continue thinning from t.
+        # else rejected: lambda_bar remains a valid upper bound; continue thinning from t.
 
     return np.asarray(events, dtype=np.float64)
 
@@ -322,18 +284,13 @@ class HawkesFit:
 def _excitation_recursion(decay: np.ndarray) -> np.ndarray:
     """Vectorized R_i recursion: R_0=0, R_i = decay[i-1]*(R_{i-1}+1).
 
-    This is an affine linear recurrence x_i = a_i*x_{i-1} + b_i with
-    a_i = b_i = decay[i-1]. A naive Python for-loop over N events is the
-    bottleneck in MLE fitting (called ~1000x by Nelder-Mead multi-start,
-    on up to ~10^5 events per call) — the loop's per-element Python
-    overhead dominates runtime. This computes the same recursion with a
-    Hillis-Steele parallel prefix scan: O(N log N) numpy vector ops
-    instead of O(N) Python-level iterations, measured ~5x faster in
-    practice (whole-fit wall clock, ~16.4s -> ~3.2s on an 83k-event fit)
-    for N ~ 10^4-10^5 despite the extra log-factor work, because every
-    step here is a vectorized numpy op rather than a scalar Python one.
-    Each scan step combines affine maps (a1,b1) then (a2,b2) via
-    a = a2*a1, b = a2*b1 + b2 (composition x -> a2*(a1*x+b1)+b2).
+    This is an affine recurrence x_i = a_i*x_{i-1} + b_i with a_i = b_i =
+    decay[i-1]. A Python loop over N events dominates MLE runtime (the
+    likelihood is called ~1000x by the multi-start Nelder-Mead on up to ~10^5
+    events), so it is computed with a Hillis-Steele parallel prefix scan:
+    O(N log N) vectorized numpy operations, about 5x faster on a whole fit
+    (~16.4s -> ~3.2s on 83k events). Each scan step composes affine maps
+    (a1,b1) then (a2,b2) as a = a2*a1, b = a2*b1 + b2.
     """
     n = decay.size
     if n == 0:
@@ -362,12 +319,11 @@ def hawkes_loglik(times: np.ndarray, t_end: float, mu: float, alpha: float, beta
 
     loglik = Σ_i log(mu + alpha*beta*R_i) - mu*T - alpha*Σ_i (1 - exp(-beta*(T-t_i)))
 
-    with R_1 = 0, R_{i+1} = exp(-beta*(t_{i+1}-t_i)) * (R_i + 1)  (docs/research/02
-    §4.1). R_i represents Σ_{j<i} exp(-beta*(t_i - t_j)), so
-    mu + alpha*beta*R_i is exactly λ(t_i^-). The second term is the
-    compensator ∫_0^T λ(t) dt, split into the baseline mu*T plus, for each
-    event, the integral of its own decaying kernel contribution truncated
-    at T: ∫_{t_i}^{T} alpha*beta*exp(-beta*(t-t_i)) dt = alpha*(1-exp(-beta*(T-t_i))).
+    with R_1 = 0, R_{i+1} = exp(-beta*(t_{i+1}-t_i)) * (R_i + 1). R_i is
+    Σ_{j<i} exp(-beta*(t_i - t_j)), so mu + alpha*beta*R_i is exactly
+    λ(t_i^-). The remaining terms are the compensator ∫_0^T λ(t) dt: the
+    baseline mu*T plus, per event, its kernel truncated at T:
+    ∫_{t_i}^{T} alpha*beta*exp(-beta*(t-t_i)) dt = alpha*(1-exp(-beta*(T-t_i))).
     """
     n = times.size
     if n == 0:
@@ -413,13 +369,8 @@ def _nelder_mead(
     """Minimal Nelder-Mead simplex minimizer (numpy only, no scipy).
 
     Standard reflection/expansion/contraction/shrink algorithm (Nelder &
-    Mead 1965), including the outside-vs-inside contraction distinction:
-    when the reflected point beats the worst point but not the
-    second-worst, contract toward whichever of {reflected, worst} is
-    better (outside contraction toward reflected if it improved on worst,
-    inside contraction toward worst otherwise). Convergence criterion:
-    the spread of function values across the simplex (max - min) falls
-    below `tol`.
+    Mead 1965). Converged when the spread of function values across the
+    simplex (max - min) falls below `tol`.
     """
     dim = x0.size
     alpha_r, gamma_e, rho_c, sigma_s = 1.0, 2.0, 0.5, 0.5  # standard coefficients
@@ -468,11 +419,9 @@ def _nelder_mead(
                 values[-1] = reflected_val
             continue
 
-        # Contraction (reflected_val >= values[-2]): outside vs inside per
-        # the standard algorithm. If the reflected point beat the worst
-        # point, contract toward the reflected point (outside contraction);
-        # otherwise contract toward the original worst point (inside
-        # contraction) since reflection didn't even improve on worst.
+        # Contraction (reflected_val >= values[-2]): outside (toward the
+        # reflected point) if it beat the worst point, inside (toward the
+        # worst point) otherwise.
         if reflected_val < worst_val:
             contracted = centroid + rho_c * (reflected - centroid)
         else:
@@ -500,30 +449,19 @@ def _nelder_mead(
 def fit_hawkes_exp(times: np.ndarray, t_end: float) -> HawkesFit:
     """MLE of (mu, alpha, beta) for an exponential-kernel Hawkes process.
 
-    Optimizes over unconstrained params (log mu, logit alpha, log beta) so
-    the simplex search never has to respect boundary constraints; alpha is
-    mapped through a logistic transform into (0, 1) (per the brief: "alpha
-    constrained to (0,1) via logistic transform"). Runs 5 multi-starts from
-    spread initial points (mitigates the near-unidentifiability at n≈1
-    documented in docs/research/02 §4 pitfall 5) and returns the best-loglik
-    result. `converged` is True iff the winning start's simplex satisfies
-    the Nelder-Mead spread-in-loglik convergence criterion (tol=1e-6).
+    Optimizes over unconstrained params (log mu, logit alpha, log beta), so
+    alpha stays in (0, 1) without boundary handling. Runs 5 multi-starts from
+    spread initial points (mitigating the weak identification near n≈1) and
+    returns the best-loglik result. `converged` is True iff the winning
+    start's simplex satisfies the Nelder-Mead spread criterion (tol=1e-6).
 
-    CAVEAT on `converged`: this reflects ONLY that the simplex's
-    function values stopped spreading out — i.e. the optimizer found a
-    local optimum of the likelihood surface it could no longer improve
-    on with small moves. It does NOT mean the parameters themselves are
-    well identified. Near n≈1 the likelihood surface can have a long,
-    shallow ridge along which mu and alpha trade off (a small-mu/high-n
-    combination looks locally like a big-mu/low-n one — docs/research/02 §4
-    pitfall 5), so a fit can report `converged=True` while sitting
-    anywhere along that ridge; the reported point estimate is then much
-    less trustworthy than `converged=True` alone would suggest. Multi-
-    start helps but does not eliminate this — treat `converged=True`
-    near the boundary of alpha as a weaker signal than the same flag
-    away from it, and prefer profile-likelihood or multi-seed spread
-    checks (as in test_mle_alpha_stable_across_seeds) over trusting a
-    single fit's convergence flag in that regime.
+    Caveat: `converged` says only that the simplex stopped improving locally,
+    not that the parameters are well identified. Near n≈1 the likelihood has a
+    long shallow ridge along which mu and alpha trade off (small-mu/high-n
+    looks locally like big-mu/low-n), so a fit can report `converged=True`
+    anywhere along it. Multi-start helps but does not remove this; near the
+    boundary of alpha prefer multi-seed spread checks (as in
+    test_mle_alpha_stable_across_seeds) over the single-fit flag.
     """
     if times.size < 2:
         raise ValueError("need at least 2 events to fit")
@@ -568,9 +506,8 @@ def fit_hawkes_exp(times: np.ndarray, t_end: float) -> HawkesFit:
 
 # ---------------------------------------------------------------------------
 # Sum-of-exponentials MLE: K parallel recursions + the same Nelder-Mead,
-# extended to dimension 1+2K. See docs/research/02-hawkes-processes.md §4
-# pitfall 3: "Fit sums of exponentials spanning decades of timescales; check
-# n̂ stability" — the point of this section is to make that check possible.
+# extended to dimension 1+2K. Fitting sums of exponentials spanning decades
+# of timescales makes it possible to check n̂ stability across kernel families.
 # ---------------------------------------------------------------------------
 
 
@@ -578,17 +515,14 @@ def fit_hawkes_exp(times: np.ndarray, t_end: float) -> HawkesFit:
 class MultiExpFit:
     """Result of `fit_hawkes_multiexp`.
 
-    `converged` mirrors `HawkesFit.converged`'s caveat: it is True iff the
-    winning multi-start's Nelder-Mead simplex satisfied the tol=1e-6
-    f-spread stopping criterion, which says only that the optimizer stopped
-    improving locally -- NOT that `alphas`/`betas` are well identified. This
-    is a weaker guarantee at K>=2 than at K=1: a K=3 fit can (and, on this
-    module's own planted-kernel test data, does) report `converged=True`
-    while two components sit on a flat ridge with near-duplicate betas
-    (e.g. betas=(0.194, 4.890, 4.890) splitting one true component's mass
-    across a degenerate pair). `n = sum(alphas)` is generally far better
-    identified than the individual components at high K; see
-    `fit_hawkes_multiexp`'s docstring for the full discussion.
+    `converged` carries the caveat of `HawkesFit.converged`: it says only that
+    the winning start's simplex met the tol=1e-6 spread criterion, not that
+    `alphas`/`betas` are well identified. The guarantee is weaker at K>=2: a
+    K=3 fit can (and on the planted-kernel test data does) report
+    `converged=True` with two components on a flat ridge at near-duplicate
+    betas (e.g. betas=(0.194, 4.890, 4.890), splitting one true component's
+    mass across a degenerate pair). `n = sum(alphas)` is generally far better
+    identified than the individual components at high K.
     """
 
     mu: float
@@ -647,15 +581,12 @@ def hawkes_multiexp_loglik(
 def _alphas_from_logits(alpha_logits: np.ndarray) -> np.ndarray:
     """Map K unconstrained logits to K alphas with guaranteed Σalpha_k < 1.
 
-    Softmax-with-a-slack-slot: append an implicit 0-logit "non-branching"
-    slot to the K free logits, softmax over all K+1 slots, then drop the
-    slack slot's probability. This gives K non-negative numbers that sum to
-    strictly less than 1 (the slack slot always retains positive mass since
-    exp(0)=1 > 0 in the softmax denominator), for any finite logits — so the
-    optimizer can never wander into the explosive/non-stationary n>=1
-    region, without a boundary penalty. Equivalent in spirit to the
-    single-exponential case's logistic-into-(0,1) transform, generalized to
-    K components sharing one probability budget.
+    Softmax with a slack slot: append an implicit 0-logit "non-branching" slot
+    to the K free logits, softmax over K+1 slots, and drop the slack slot. The
+    K outputs are non-negative and sum to strictly less than 1 for any finite
+    logits, so the optimizer cannot reach the explosive n>=1 region and no
+    boundary penalty is needed. For K=1 it reduces to the logistic map used by
+    `fit_hawkes_exp`.
     """
     padded = np.concatenate([alpha_logits, [0.0]])
     shifted = padded - np.max(padded)  # numerical stability
@@ -687,116 +618,68 @@ def fit_hawkes_multiexp(
 ) -> MultiExpFit:
     """MLE of (mu, alphas, betas) for a K-component sum-of-exponentials Hawkes kernel.
 
-    Optimizes over 1+2K unconstrained parameters (log mu, K alpha-logits
-    mapped through `_alphas_from_logits` so Σalpha_k < 1 always holds, K
-    log-betas) using the same hand-rolled Nelder-Mead as `fit_hawkes_exp`,
-    multi-started from `betas_init` (default: log-spaced across decades —
-    0.1, 1, 10, ... per unit time, extended/truncated to K values — so the
-    mixture is initialized to actually span timescales rather than
-    collapsing to K copies of the same decay rate) combined with a few
+    Optimizes over 1+2K unconstrained parameters (log mu, K alpha-logits mapped
+    through `_alphas_from_logits` so Σalpha_k < 1, K log-betas) with the same
+    Nelder-Mead as `fit_hawkes_exp`. Multi-started from `betas_init` (default:
+    log-spaced across decades, 0.1, 1, 10, ... per unit time, so the mixture
+    spans timescales instead of collapsing to K copies of one rate) with a few
     perturbed alpha/mu starting points.
 
-    For K=1 this must (and, per `test_multiexp_k1_matches_fit_hawkes_exp`,
-    does) reproduce `fit_hawkes_exp` on the same data: with one component the
-    alpha-logit softmax-with-slack-slot reduces exactly to a logistic map
-    into (0,1), i.e. the same reparameterization `fit_hawkes_exp` uses, and
-    the log-likelihoods (`hawkes_multiexp_loglik` vs `hawkes_loglik`) are the
-    same expression with one term, so both optimizers search the identical
-    surface. In practice two independent Nelder-Mead runs (different simplex
-    paths, including different multi-start beta seeds) land within ~1e-7 of
-    each other in log-likelihood and mu/alpha, and ~1e-5 in beta (the
-    flattest direction near the optimum) — see
-    `test_multiexp_k1_matches_fit_hawkes_exp`'s measured diffs and asserted
-    tolerances (loglik/mu/alpha at 1e-5, beta at 1e-4). This is the floor
-    set by each optimizer's own tol=1e-6 f-spread stopping criterion, not a
-    discrepancy between the two code paths.
+    For K=1 this reproduces `fit_hawkes_exp` on the same data: the softmax
+    reduces to the same logistic map and the log-likelihoods are the same
+    expression, so both optimizers search the same surface. Two independent
+    runs agree to ~1e-7 in log-likelihood and mu/alpha and ~1e-5 in beta (the
+    flattest direction), the floor set by each optimizer's tol=1e-6 stopping
+    criterion (see `test_multiexp_k1_matches_fit_hawkes_exp`, tolerances
+    1e-5 for loglik/mu/alpha and 1e-4 for beta).
 
-    THE POINT OF THIS FUNCTION (docs/research/02-hawkes-processes.md §4
-    pitfall 3): a single exponential is too short-memoried to represent a
-    long-memory/power-law-like true kernel, so a K=1 fit systematically
-    underestimates n = Σalpha_k. Increasing K lets the mixture spread mass
-    across widely-separated timescales and recover more of the long-lag
-    kernel weight, pulling n̂ up toward the true value. Re-fitting the same
-    data at K=1,2,3 and reporting how n̂ MOVES across K (see
-    `branching_ratio_sensitivity`) is therefore the intended diagnostic on
-    real data, not a nuisance to average away.
+    Why it exists: a single exponential is too short-memoried for a
+    long-memory kernel, so a K=1 fit underestimates n = Σalpha_k. Raising K
+    lets the mixture spread mass across well-separated timescales and
+    recover more long-lag weight. Re-fitting at K=1,2,3 and reporting how n̂
+    moves across K (see `branching_ratio_sensitivity`) is the intended
+    diagnostic on real data.
 
-    KNOWN IDENTIFIABILITY WEAKNESS AT LARGE K: once K exceeds the number of
-    timescales actually resolvable from the data's sample size and window,
-    components become interchangeable/degenerate (two components can trade
-    off alpha and beta against each other while barely changing the
-    likelihood, similar in spirit to the near-critical mu/alpha ridge
-    documented on `fit_hawkes_exp`). Individual `alphas`/`betas` at K=3 and
-    above should be treated as much less identified than their sum n; this
-    is why `branching_ratio_sensitivity`'s docs recommend reporting n̂(K),
-    not the per-component parameters, as the headline diagnostic.
+    Identifiability: once K exceeds the number of timescales the sample can
+    resolve, components become interchangeable (two can trade alpha and beta
+    while barely changing the likelihood, like the near-critical mu/alpha ridge
+    on `fit_hawkes_exp`). At K>=3 treat individual `alphas`/`betas` as much
+    less identified than their sum n, and report n̂(K) rather than the
+    per-component parameters.
 
-    `converged` HAS THE SAME CAVEAT AS `fit_hawkes_exp`'s: it reflects ONLY
-    that the winning start's Nelder-Mead simplex stopped spreading out in
-    log-likelihood (the tol=1e-6 f-spread criterion), NOT that the
-    parameters are well identified. This is *more* likely to bite at K>=2
-    than in the single-exponential case: a K=3 fit can report
-    `converged=True` while sitting on a degenerate ridge where two
-    components have nearly duplicate betas and one carries almost all the
-    weight -- e.g. `test_multiexp_k3_on_two_exp_data_does_not_blow_up`'s own
-    planted-data K=3 fit converges to alphas=(0.348, 0.007, 0.245) with
-    betas=(0.194, 4.890, 4.890), a duplicate-beta pair splitting what a
-    correctly-specified K=2 fit represents as one component. The SUM n is
-    still trustworthy there (it matches K=2 to three decimal places); the
-    individual per-component (alpha, beta) values are not, regardless of
-    what `converged` says.
+    `converged` has the caveat of `fit_hawkes_exp`: it says only that the
+    winning simplex stopped improving. A K=3 fit can report `converged=True`
+    on a degenerate ridge, e.g. `test_multiexp_k3_on_two_exp_data_does_not_blow_up`
+    converges to alphas=(0.348, 0.007, 0.245) with betas=(0.194, 4.890, 4.890),
+    a duplicate-beta pair splitting what a K=2 fit represents as one
+    component. The sum n is still trustworthy there (it matches K=2 to three
+    decimals); the per-component values are not.
 
-    CONFOUND WARNING — BASELINE NON-STATIONARITY CAN MIMIC LONG MEMORY: a
-    K=1 -> K=2 rise in n̂ together with a slow (small beta) second
-    component is the SAME numerical signature produced by two completely
-    different underlying causes, and n̂(K) alone cannot distinguish them:
-      1. Genuine long-memory kernel (the motivating case above): the extra
-         slow component recovers real, slowly-decaying self-excitation mass
-         a K=1 fit truncated.
-      2. Residual baseline non-stationarity (Filimonov & Sornette 2015,
-         also documented on `simulate_seasonal_hawkes_exp` /
-         `branching_count_variance`): if mu(t) is not actually constant
-         (imperfect deseasonalization, a regime change, a slow intraday
-         drift) but the model assumes constant mu, the misspecified
-         exponential-kernel MLE can "explain" the baseline's slow swings by
-         inventing a spurious slow self-exciting component instead -- the
-         mixture fits the drift, not real branching. This is the exact same
-         family of failure as the regime-switching trap already documented
-         on `branching_count_variance` and exercised in
-         `test_regime_switching_produces_spurious_endogeneity`, now shown to
-         also fool the MULTI-exponential MLE, not just the single-exponential
-         one or the count-variance estimator.
-         `test_seasonal_baseline_confound_mimics_long_memory` demonstrates
-         this concretely: a TRUE single-exponential Hawkes process (n=0.4,
-         beta=2.0, no long memory at all) with a piecewise-constant ±30%
-         baseline wobble produces n̂1=0.46 -> n̂2=0.83 with a spurious
-         beta≈0.02 "slow" component, the same qualitative signature as the
-         genuine-long-memory headline test.
+    Confound: baseline non-stationarity mimics long memory. A K=1 -> K=2 rise
+    in n̂ with a slow (small beta) second component has two possible causes,
+    and n̂(K) alone cannot separate them:
+      1. A real long-memory kernel: the slow component recovers
+         slowly-decaying self-excitation mass that K=1 truncated.
+      2. Residual baseline non-stationarity (Filimonov & Sornette 2015):
+         imperfect deseasonalization, a regime change or a slow intraday drift
+         with a constant-mu model lets the MLE fit the drift with a spurious
+         slow self-exciting component. This also fools the multi-exponential
+         MLE (see `test_regime_switching_poisson_produces_spurious_endogeneity_trap`).
+         `test_seasonal_baseline_confound_mimics_long_memory` shows it on a
+         true single-exponential process (n=0.4, beta=2.0) with a
+         piecewise-constant ±30% baseline wobble: n̂1=0.46 -> n̂2=0.83 with a
+         spurious beta≈0.02 slow component.
 
-    PER-SYMBOL OBSERVABLE TO REPORT (so this can be diagnosed on real data,
-    not just guessed at): for any slow component that appears when K
-    increases, report its timescale 1/beta_slow next to (a) the
-    deseasonalization bin width used to build mu(t) and (b) the fit-window
-    length. If 1/beta_slow is comparable to or larger than the
-    deseasonalization bin width, or is a large fraction of the fit-window
-    length, the "slow component" is a prime suspect for absorbed baseline
-    drift rather than real long-memory self-excitation -- a genuine
-    long-memory timescale should be well inside the fit window and
-    unrelated to the deseasonalization binning choice.
-
-    THE CONTROL: re-fit K=1 with a block-wise PIECEWISE-CONSTANT mu(t)
-    (one free mu per block, e.g. matching the deseasonalization bins or the
-    non-stationarity block length under suspicion) instead of a single
-    constant mu, then re-run the K=1 vs K=2 comparison. If the spurious slow
-    component VANISHES once the baseline is allowed to vary block-wise, the
-    original K=1->K=2 jump was baseline drift, not kernel misspecification.
-    If it persists even with a flexible block-wise baseline soaking up the
-    non-stationarity, that is evidence for genuine long memory. This module
-    does not yet implement a block-wise-mu variant of `fit_hawkes_multiexp`
-    (see `simulate_seasonal_hawkes_exp` for the seasonal SIMULATOR
-    counterpart) -- running this control is a prerequisite for trusting any
-    single-symbol K=1->K=2 jump as evidence of long memory, not an optional
-    nicety.
+    To diagnose a symbol, report the slow component's timescale 1/beta_slow
+    next to the deseasonalization bin width and the fit-window length. A
+    timescale comparable to the bin width or a large fraction of the window
+    points to absorbed drift; a real long-memory timescale sits well inside
+    the window and is unrelated to the binning. The control is to re-fit K=1
+    with a block-wise piecewise-constant mu(t)
+    (`fit_hawkes_exp_piecewise_mu`) and repeat the K=1 vs K=2 comparison. If
+    the slow component vanishes, the jump was baseline drift; if it persists,
+    that is evidence for real long memory. Run this control before trusting
+    any single-symbol K=1->K=2 jump.
     """
     if times.size < 2:
         raise ValueError("need at least 2 events to fit")
@@ -816,18 +699,11 @@ def fit_hawkes_multiexp(
     n_events = times.size
     mean_rate = n_events / t_end
 
-    # Multi-start: vary the total branching-ratio budget, mu scale, AND a
-    # multiplicative shift on betas_init (0.5x, 2x) so the two starts don't
-    # search from identical beta seeds -- different starts don't collapse
-    # onto identical local optima. Two starts (rather than fit_hawkes_exp's
-    # five) keep runtime bounded as K grows -- each start already costs O(K)
-    # recursions per Nelder-Mead evaluation over a 1+2K-dimensional simplex,
-    # and betas_init already does most of the work of spanning timescales,
-    # so the marginal value of extra starts is lower here than in the
-    # single-exponential case. max_iter=600 (vs fit_hawkes_exp's 500) gives
-    # the larger simplex (dim+1 = 2+2K vertices) enough iterations to
-    # actually reach the tol=1e-6 stopping criterion at K=3 rather than
-    # exhausting the iteration budget mid-search.
+    # Multi-start: vary the total branching-ratio budget, the mu scale and a
+    # multiplicative shift on betas_init (0.5x, 2x) so the starts do not share
+    # beta seeds. Two starts (fit_hawkes_exp uses five) keep runtime bounded
+    # as K grows, since betas_init already spans timescales. max_iter=600
+    # (vs 500) lets the larger simplex reach tol=1e-6 at K=3.
     total_n_starts = [0.5, 0.25]
     mu_fracs = [0.5, 0.7]
     beta_shifts = [0.5, 2.0]
@@ -839,12 +715,10 @@ def fit_hawkes_multiexp(
 
     for total_n0, mu_frac, beta_shift in zip(total_n_starts, mu_fracs, beta_shifts, strict=True):
         mu0 = mean_rate * mu_frac
-        # Split total_n0 equally across K components as the starting point;
-        # the alpha-logit softmax-with-slack-slot reaches this via equal
-        # logits summing (with the implicit 0 slack logit) to total_n0.
+        # Start with total_n0 split equally across K components: solve for a
+        # common logit z with K*exp(z) / (K*exp(z) + 1) = total_n0,
+        # i.e. z = log(total_n0 / (K*(1-total_n0))).
         equal_share = total_n0 / K
-        # Solve for a common logit z such that K*exp(z) / (K*exp(z) + 1) = total_n0
-        # => exp(z) = total_n0 / (K*(1-total_n0)) => z = log(...).
         common_logit = np.log(equal_share / (1.0 - total_n0))
         alpha_logits0 = np.full(K, common_logit, dtype=np.float64)
         betas0 = betas_init * beta_shift
@@ -887,40 +761,21 @@ def branching_ratio_sensitivity(
 ) -> dict[int, MultiExpFit]:
     """Fit the sum-of-exponentials kernel at each K in `Ks` and return all fits.
 
-    This is the panel-level diagnostic docs/research/02-hawkes-processes.md
-    §4 calls for: "Fit sums of exponentials spanning decades of timescales;
-    check n̂ stability." Rather than picking one K and reporting a single n̂,
-    the intended use is to inspect `{K: fit.n for K, fit in result.items()}`
-    and report the SPREAD across K, not just the K=3 (or whichever) point
-    estimate — a large jump from K=1 to K=2 that then stabilizes at K=3 is
-    itself the finding (evidence the single-exponential branching ratio was
-    biased low by kernel misspecification, per the project's headline
-    41/41-symbol disagreement between the exp-kernel MLE and the model-free
-    count-variance estimator). A n̂(K) that keeps climbing without
-    stabilizing, or that becomes unstable/non-converged at higher K, is
-    itself informative (see `fit_hawkes_multiexp`'s identifiability caveat)
-    and should be reported rather than papered over by picking the
-    best-converged K.
+    Inspect `{K: fit.n for K, fit in result.items()}` and report the spread
+    across K rather than a single n̂. A large K=1 -> K=2 jump that stabilizes
+    at K=3 indicates the single-exponential n̂ was biased low by kernel
+    misspecification. An n̂(K) that keeps climbing, or becomes unstable at
+    higher K, should be reported as such (see `fit_hawkes_multiexp` on
+    identifiability).
 
-    CONFOUND WARNING (see `fit_hawkes_multiexp`'s docstring for full detail):
-    a rising n̂(K) with a slow (small beta) component appearing at higher K
-    is NOT on its own evidence of long memory -- residual baseline
-    non-stationarity (imperfect deseasonalization, regime changes, slow
-    intraday drift) produces the identical signature, because a
-    misspecified constant-mu fit can "explain" slow baseline swings with a
-    spurious slow self-exciting component instead
-    (`test_seasonal_baseline_confound_mimics_long_memory` demonstrates this
-    on a TRUE single-exponential process with no long memory at all). Before
-    reporting a symbol's K=1->K=2 jump as evidence of long-memory
-    self-excitation:
-      1. Report the slow component's timescale 1/beta_slow next to the
-         deseasonalization bin width and the fit-window length -- a
-         timescale comparable to either is a red flag for absorbed drift
-         rather than genuine long memory.
-      2. Run the control: re-fit K=1 with a block-wise piecewise-constant
-         mu(t) instead of a single constant mu. If the spurious slow
-         component vanishes under that control, the jump was baseline
-         drift, not kernel misspecification.
+    A rising n̂(K) with a slow (small beta) component is not by itself evidence
+    of long memory: residual baseline non-stationarity produces the same
+    signature (`test_seasonal_baseline_confound_mimics_long_memory`, a true
+    single-exponential process). Before reading a K=1 -> K=2 jump as long-memory
+    self-excitation, compare 1/beta_slow with the deseasonalization bin width
+    and the fit window (comparable to either is a red flag), and re-fit K=1
+    with a block-wise piecewise-constant mu(t); if the slow component vanishes,
+    the jump was baseline drift. See `fit_hawkes_multiexp` for detail.
     """
     return {K: fit_hawkes_multiexp(times, t_end, K) for K in Ks}
 
@@ -928,61 +783,37 @@ def branching_ratio_sensitivity(
 def spurious_delta21_null(
     n_events_per_window: int, mu: float, alpha: float, beta: float, n_sims: int, seed: int
 ) -> np.ndarray:
-    """Null distribution of Delta21 = n_hat_2 - n_hat_1 under a TRUE single-exp kernel.
+    """Null distribution of Delta21 = n_hat_2 - n_hat_1 under a true single-exp kernel.
 
-    WHY THIS EXISTS: `fit_hawkes_multiexp` at K=2 has two more free parameters
-    than the K=1 fit and can never do worse in-sample log-likelihood -- on
-    FINITE data it will generally do strictly better, by using its extra
-    component to absorb ordinary sampling noise in the event-time gaps
-    rather than any real second timescale. Concretely (see the investigation
-    behind this function, reproduced against `tests/analyses/test_q6b.py`'s
-    ONEEXPUSDT fixture: mu=1.0, alpha=0.4, beta=2.0, seed=7, business-time
-    windows of ~16.6k events each), a K=2 fit on one such window converged to
-    betas=(0.021, 0.479) with a genuine log-likelihood improvement of
-    ~11 nats over K=1 for 2 extra parameters -- a real gain by naive
-    likelihood-ratio standards, yet the generative process has no second
-    timescale at all. The "slow" component is not a local-optimum fluke in
-    general (a wider `betas_init` search can still land on it); it is the
-    K=2 model's extra flexibility fitting sampling noise in a finite sample.
-    This means `n_hat_2` carries an intrinsic upward finite-sample bias
-    relative to `n_hat_1` even when K=1 is exactly correct, and Delta21 must
-    be judged against the SIZE of that bias at the relevant sample size, not
-    against a fixed tolerance chosen without reference to it.
+    A K=2 fit has two more free parameters than K=1 and on finite data will
+    generally do strictly better in-sample, using the extra component to
+    absorb sampling noise in the event-time gaps. For example, on
+    `tests/analyses/test_q6b.py`'s ONEEXPUSDT fixture (mu=1.0, alpha=0.4,
+    beta=2.0, seed=7, business-time windows of ~16.6k events) a K=2 fit
+    converged to betas=(0.021, 0.479) with a ~11 nat log-likelihood gain over
+    K=1 for 2 extra parameters, although the generative process has a single
+    timescale. So n_hat_2 carries an upward finite-sample bias relative to
+    n_hat_1 even when K=1 is exactly right, and Delta21 must be judged against
+    the size of that bias at the relevant sample size, not a fixed tolerance.
 
-    This function simulates `n_sims` independent single-exponential Hawkes
-    processes with the given (mu, alpha, beta), each sized (via `t_end`) to
-    land close to `n_events_per_window` events, fits both K=1 and K=2 via
-    `fit_hawkes_multiexp` on each, and returns the array of per-simulation
-    Delta21 = n_hat_2 - n_hat_1. This is the null distribution a real
-    symbol's observed Delta21 should be compared against: a real Delta21
-    that does not exceed (e.g.) this null's 90th percentile is "within
-    finite-sample null" -- i.e. no more than what a well-specified K=1
-    process of the same sample size would produce anyway -- rather than
-    evidence of genuine long-memory kernel structure.
+    Simulates `n_sims` single-exponential Hawkes processes at (mu, alpha, beta),
+    each sized via `t_end` to land near `n_events_per_window` events, fits K=1
+    and K=2 with `fit_hawkes_multiexp`, and returns the per-simulation
+    Delta21. A real Delta21 that does not exceed (e.g.) this null's 90th
+    percentile is within the finite-sample null: no more than a well-specified
+    K=1 process of the same size would produce.
 
-    THE BIAS SHRINKS WITH SAMPLE SIZE, AND MUST BE CALIBRATED AT THE PANEL'S
-    ACTUAL PER-WINDOW EVENT COUNT: more events per window pin down the K=1
-    fit's residual gaps more tightly, leaving less unexplained noise for a
-    second component to absorb, so the median null Delta21 falls as
-    `n_events_per_window` grows (measured: median null Delta21 ~0.003-0.02 at
-    ~10k events per window vs. a few times smaller at ~40k, over independent
-    seeds -- exact values are noisy with only a handful of simulations, which
-    is why `n_sims` should be large enough for a stable percentile in
-    production use). Since Q6b caps any single window's fit at
-    `MAX_FIT_EVENTS=250_000` events, the null must be simulated at the
-    PANEL's actual median per-window event count (post-cap), not at an
-    arbitrary or worst-case size -- calibrating at a smaller size than the
-    real windows overstates the null (too permissive would be the opposite
-    error: calibrating at a larger size understates it and makes genuine
-    long-memory harder to detect).
+    The bias shrinks with sample size, so calibrate at the panel's actual
+    per-window event count: median null Delta21 is ~0.003-0.02 at ~10k events
+    per window and a few times smaller at ~40k (noisy with few simulations, so
+    use a large `n_sims` in production). Q6b caps a window's fit at
+    `MAX_FIT_EVENTS=250_000`, so simulate at the panel's median per-window
+    count after the cap. A smaller size overstates the null; a larger one
+    understates it and makes real long memory harder to detect.
 
-    `t_end` per simulation is derived from `n_events_per_window` via the
-    exponential-kernel process's theoretical mean rate
-    `mu / (1 - alpha)` events per unit time (exact for a stationary Hawkes
-    process: each immigrant plus its full branching-process descendant tree
-    contributes `1/(1-alpha)` events in expectation), so the realized event
-    count lands close to (not exactly at, since simulation is stochastic)
-    the requested size.
+    `t_end` per simulation is `n_events_per_window * (1 - alpha) / mu`, from
+    the stationary mean rate `mu / (1 - alpha)`, so the realized count lands
+    near, not exactly at, the requested size.
     """
     if n_events_per_window <= 0:
         raise ValueError("n_events_per_window must be positive")
@@ -993,9 +824,7 @@ def spurious_delta21_null(
     t_end = n_events_per_window / mean_rate
 
     rng = np.random.default_rng(seed)
-    # Draw independent per-simulation seeds from this function's own seed so
-    # callers get reproducible, non-correlated draws without exposing an
-    # array of seeds in the signature.
+    # Independent per-simulation seeds derived from `seed`.
     sim_seeds = rng.integers(0, 2**32 - 1, size=n_sims)
 
     deltas = np.empty(n_sims, dtype=np.float64)
@@ -1018,20 +847,13 @@ class PiecewiseMuFit:
     """Result of `fit_hawkes_exp_piecewise_mu`.
 
     `mus` holds one baseline rate per equal-width time block (length
-    `n_blocks`); `alpha`/`beta` are the single-exponential kernel's
-    branching ratio and decay rate, shared across all blocks. `n` is an
-    alias for `alpha` (the branching ratio, matching `HawkesFit`/
-    `MultiExpFit`'s convention of exposing `n` alongside the raw kernel
-    parameter it equals for a single component).
+    `n_blocks`); `alpha`/`beta` are the single-exponential kernel's branching
+    ratio and decay rate, shared across blocks. `n` is an alias for `alpha`.
 
-    `converged` carries the SAME caveat as `HawkesFit.converged` and
-    `MultiExpFit.converged`: it reflects only that the winning multi-start's
-    Nelder-Mead simplex stopped spreading out in log-likelihood (tol=1e-6),
-    not that (mus, alpha, beta) are individually well identified. This is
-    *more* exposed to the near-critical mu/alpha ridge than the single-mu
-    case, since a block with few events can trade its own mu_b off against
-    alpha along a shallow direction; treat individual `mus` entries as
-    noisier than the shared `alpha`.
+    `converged` has the caveat of `HawkesFit.converged`. It is more exposed to
+    the near-critical mu/alpha ridge than the single-mu case, since a block
+    with few events can trade its mu_b against alpha; treat individual `mus`
+    as noisier than the shared `alpha`.
     """
 
     mus: np.ndarray
@@ -1067,12 +889,9 @@ def hawkes_piecewise_mu_loglik(
              - Σ_b mu_b*|block_b|
              - alpha*Σ_i (1 - exp(-beta*(T-t_i)))
 
-    The excitation recursion R_i and the excitation compensator term are
-    exactly `hawkes_loglik`'s (the kernel does not know about blocks at
-    all — only the baseline is block-wise). The baseline compensator
-    Σ_b mu_b*|block_b| replaces the single mu*T term: since blocks are
-    disjoint and cover [0, T] exactly, this is ∫_0^T mu(t) dt for the
-    piecewise-constant mu(t).
+    The excitation recursion R_i and excitation compensator are those of
+    `hawkes_loglik`; only the baseline is block-wise. Σ_b mu_b*|block_b| is
+    ∫_0^T mu(t) dt for the piecewise-constant mu(t).
     """
     n_events = times.size
     if mus.size != n_blocks:
@@ -1159,37 +978,34 @@ def fit_hawkes_exp_piecewise_mu(
     times: np.ndarray, t_end: float, n_blocks: int, fit_k1: HawkesFit | None = None
 ) -> PiecewiseMuFit:
     """MLE of (mu_1..mu_B, alpha, beta) for a single-exponential-kernel Hawkes
-    process with a block-wise constant baseline: the CONTROL described in
-    `fit_hawkes_multiexp`'s "THE CONTROL" section. It re-fits K=1 but lets the
-    baseline take one free value per equal-width time block of [0, t_end]
-    instead of a single constant mu. See `baseline_drift_control` for how it
-    is paired with the K=1 and K=2 fits.
+    process with a block-wise constant baseline.
 
-    Time-axis assumption: event times lie in [0, t_end]; block b covers
-    [b*t_end/B, (b+1)*t_end/B) (the last block is closed at t_end).
+    This is the control described in `fit_hawkes_multiexp`: it re-fits K=1 but
+    lets the baseline take one free value per equal-width time block of
+    [0, t_end] instead of a single mu. See `baseline_drift_control` for how
+    it is paired with the K=1 and K=2 fits.
 
-    Optimizes over B+2 unconstrained parameters (log mu_1..log mu_B, logit
-    alpha, log beta) with the module's hand-rolled Nelder-Mead. Two starts:
-      1. the constant-mu K=1 solution (`fit_hawkes_exp`; every mu_b = mu-hat,
-         alpha-hat, beta-hat). Because the constant-mu model is nested in
-         this one and Nelder-Mead never returns a point worse than its
-         starting vertex, `loglik >= fit_k1.loglik` (up to floating-point
-         noise), which is what the likelihood-ratio verdict in
-         `baseline_drift_control` relies on.
+    Event times lie in [0, t_end]; block b covers [b*t_end/B, (b+1)*t_end/B)
+    (the last block is closed at t_end).
+
+    Optimizes B+2 unconstrained parameters (log mu_1..log mu_B, logit alpha,
+    log beta) with the module's Nelder-Mead from two starts:
+      1. the constant-mu K=1 solution (every mu_b = mu-hat). The constant-mu
+         model is nested in this one and Nelder-Mead never returns a point
+         worse than its start, so `loglik >= fit_k1.loglik` up to
+         floating-point noise; the likelihood-ratio verdict in
+         `baseline_drift_control` relies on this.
       2. the empirical per-block event rates scaled by (1 - alpha-hat), with
-         the K=1 alpha-hat, beta-hat, so the baseline starts block-shaped.
-    The better of the two is returned. Pass `fit_k1` to reuse an existing
-    K=1 fit instead of recomputing it.
+         the K=1 alpha-hat and beta-hat.
+    The better of the two is returned. Pass `fit_k1` to reuse an existing K=1
+    fit.
 
-    `n_blocks` is capped at `MAX_PIECEWISE_BLOCKS` (12) because every block
-    adds a dimension to the simplex search and, at the sample sizes this
-    module targets, too many blocks leave too few events per block to
-    identify mu_b.
+    `n_blocks` is capped at `MAX_PIECEWISE_BLOCKS` (12): each block adds a
+    simplex dimension and, at these sample sizes, too many blocks leave too
+    few events per block to identify mu_b.
 
-    CAVEAT on `converged`: same as `HawkesFit.converged`; it says only that
-    the winning simplex stopped spreading in log-likelihood. It does not
-    certify that every mu_b is individually identified (a block with few
-    events has a nearly flat likelihood in its own mu_b), and with up to 14
+    `converged` has the caveat of `HawkesFit.converged`. A block with few
+    events has a nearly flat likelihood in its own mu_b, and with up to 14
     dimensions the optimizer may also stop at max_iter; treat per-block mus
     as noisier than the shared alpha.
     """
@@ -1208,8 +1024,7 @@ def fit_hawkes_exp_piecewise_mu(
     block_idx = _block_index(times, t_end, n_blocks)
     block_widths = _block_widths(t_end, n_blocks)
     block_counts = np.bincount(block_idx, minlength=n_blocks).astype(np.float64)
-    # Empirical per-block rate, floored well above zero so an empty block
-    # still gets a sane (small but positive) starting mu instead of log(0).
+    # Empty blocks start at 0.1x the global rate to avoid log(0).
     global_rate = times.size / t_end
     empirical_block_rates = np.where(
         block_counts > 0.0, block_counts / block_widths, 0.1 * global_rate
@@ -1297,37 +1112,32 @@ def baseline_drift_control(
 ) -> dict:
     """Compare constant-mu K=1, K=2, and block-wise-baseline K=1 fits to flag
     whether a K=1 -> K=2 branching-ratio rise looks like baseline drift or a
-    candidate for genuine long memory.
+    candidate for long memory.
 
-    Event times are assumed to lie in [0, t_end]. `fit_k1` / `fit_k2` may be
-    passed to reuse precomputed fits (they must be fits of the same `times`
-    and `t_end`).
+    Event times lie in [0, t_end]. `fit_k1` / `fit_k2` may be passed to reuse
+    precomputed fits of the same `times` and `t_end`.
 
     Returned keys: n_k1, n_k2, n_k1_piecewise, slow_beta_k2 (smaller beta of
     the K=2 fit), dll_pw = piecewise.loglik - fit_k1.loglik, dll_k2 =
     fit_k2.loglik - fit_k1.loglik, dll_threshold = chi2_0.95(n_blocks-1)/2,
-    and verdict (see `_drift_verdict` for the rule).
+    and verdict (rule in `_drift_verdict`).
 
-    The verdict is a HEURISTIC likelihood-ratio screen, not a formal test:
-    the K=2 and block-wise fits are found by Nelder-Mead and may not reach
-    the global optimum, the chi-square calibration assumes standard
-    likelihood-ratio asymptotics that Hawkes likelihoods only approximately
-    satisfy, and the "at least half of dll_k2" cut-off is a convention, not
-    derived. When the K=1 model is misspecified (genuine long memory), block
-    counts are more dispersed than K=1 predicts, which inflates dll_pw. That
-    inflation can push a genuinely long-memory process to "inconclusive"
-    rather than "long_memory_candidate", OR across the drift threshold into
-    "drift". A "drift" label therefore means only that the block baseline
+    The verdict is a heuristic likelihood-ratio screen, not a formal test: the
+    fits come from Nelder-Mead and may miss the global optimum, the chi-square
+    calibration assumes asymptotics that Hawkes likelihoods only approximately
+    satisfy, and the "at least half of dll_k2" cut-off is a convention. When
+    K=1 is misspecified (real long memory), block counts are more dispersed
+    than K=1 predicts, which inflates dll_pw. That can push a long-memory
+    process to "inconclusive" instead of "long_memory_candidate", or across the
+    threshold into "drift". A "drift" label means only that the block baseline
     recovers at least half of the K=2 gain; it does not exclude long memory.
 
-    RESOLUTION LIMIT: a block-wise constant baseline can absorb only drift
-    that is SLOWER than the block width t_end / n_blocks. Faster baseline
-    oscillations average out inside each block and look like stationary
-    noise, so they remain indistinguishable from long memory and will be
-    labelled 'long_memory_candidate'. The caller must choose n_blocks
-    (<= MAX_PIECEWISE_BLOCKS) so that the block width is below the suspected
-    drift timescale; a 'long_memory_candidate' verdict carries no meaning if
-    that condition fails.
+    Resolution limit: a block-wise constant baseline absorbs only drift slower
+    than the block width t_end / n_blocks. Faster oscillations average out
+    within a block and stay indistinguishable from long memory, so they are
+    labelled 'long_memory_candidate'. Choose n_blocks (<= MAX_PIECEWISE_BLOCKS)
+    so the block width is below the suspected drift timescale; otherwise that
+    verdict carries no meaning.
     """
     if t_end <= 0.0:
         raise ValueError("t_end must be positive")
@@ -1363,25 +1173,20 @@ def baseline_drift_control(
 def branching_count_variance(times: np.ndarray, window: float, t_end: float) -> float:
     """Model-free branching-ratio estimate from count mean/variance alone.
 
-    For a stationary Hawkes process, as the window W grows much larger
-    than the kernel timescale, var(N_W)/mean(N_W) -> 1/(1-n)^2, giving
+    For a stationary Hawkes process, as the window W grows much larger than
+    the kernel timescale, var(N_W)/mean(N_W) -> 1/(1-n)^2, giving
         n_hat = 1 - sqrt(mean(N_W) / var(N_W)).
 
-    This requires windows W much larger than the kernel timescale
-    (1/beta for the exponential kernel) — the large-window asymptotic is
-    what makes the estimator "see" the amplification from clustering
-    rather than just Poisson counting noise; too-small windows bias
-    n_hat toward 0 (docs/research/02 §4: "short windows truncate long-memory
-    kernels and bias n̂ down"). No kernel shape is assumed, which is the
-    estimator's advantage (and, per the regime-switching trap test in
-    tests/estimators/test_hawkes.py, also its weakness: it cannot
-    distinguish real self-excitation from non-stationary baseline rate).
+    W must be much larger than the kernel timescale (1/beta for the
+    exponential kernel); short windows truncate long-memory kernels and bias
+    n_hat toward 0 (Bacry, Mastromatteo & Muzy 2015). No kernel shape is
+    assumed, which is the estimator's advantage and, per the regime-switching
+    trap test in tests/estimators/test_hawkes.py, its weakness: it cannot
+    separate self-excitation from a non-stationary baseline rate.
 
     Raises ValueError if fewer than 20 non-overlapping windows fit in
-    [0, t_end], if window is so small it would require an unreasonable
-    number of bins (>10^9 — see max_windows derivation below), or if the
-    count variance is zero (degenerate/regular spacing), since none of
-    these leave the estimator statistically meaningful.
+    [0, t_end], if the window is so small it needs more than 10^9 bins (see
+    max_windows below), or if the count variance is zero (regular spacing).
     """
     if window <= 0.0:
         raise ValueError("window must be positive")
@@ -1392,17 +1197,10 @@ def branching_count_variance(times: np.ndarray, window: float, t_end: float) -> 
             f"need at least 20 non-overlapping windows, got {n_windows} "
             f"(t_end={t_end}, window={window})"
         )
-    # `edges = np.arange(n_windows + 1) * window` below allocates one
-    # int64 (8 bytes) per bin edge. At the cap, 1e9 edges * 8 bytes = 8GB
-    # — a large but single, bounded, non-swap-inducing allocation on a
-    # modern dev/CI machine. This still guards the genuine pathology (a
-    # window many orders of magnitude too small for t_end — e.g. window=
-    # 1e-9 with t_end=1e4 would ask for ~1e13 edges, ~80TB, the case that
-    # motivated this cap in the first place) while comfortably allowing
-    # legitimate sub-millisecond windows: 1e9 windows at window=1ms spans
-    # ~1e6s (~11.5 days) of t_end, more than enough for a multi-day
-    # trading-time analysis. Widen further only with an explicit reason —
-    # 8GB is already a lot to ask a laptop for from a single call.
+    # The edge array below holds one 8-byte value per window, so the cap allows
+    # up to 8GB in one call. It guards against a window orders of magnitude too
+    # small for t_end (window=1e-9 with t_end=1e4 would need ~80TB) while
+    # allowing 1ms windows over ~11.5 days.
     max_windows = 1_000_000_000
     if n_windows > max_windows:
         raise ValueError(

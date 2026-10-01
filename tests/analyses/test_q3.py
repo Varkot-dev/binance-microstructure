@@ -13,16 +13,15 @@ def _synthetic_book_ticker(
 ) -> pl.DataFrame:
     """Build an L1 update path where delta_mid == beta * ofi_events(...), exactly.
 
-    At every update i>=1, both bid and ask tick UP by the same amount
-    dp_i (spread held fixed), which under `ofi_events` makes the new-bid
-    term (+bid_q[i]) and old-ask term (+ask_q[i-1]) the only surviving
-    contributions: ofi_i = bid_q[i] + ask_q[i-1] (both non-negative by
-    construction, so dp_i is always >= 0 and the "always ticks up"
-    assumption is self-consistent). bid_q[i] is drawn as a random positive
-    magnitude; dp_i is then DEFINED as beta * ofi_i, so mid moves by
-    exactly beta * ofi_i on every single update -- and therefore by
-    beta * (bar's summed ofi) over any bar, with zero residual noise.
-    ask_q[i] (needed for the *next* update's ofi_i+1) is drawn independently.
+    At every update i>=1, both bid and ask tick UP by the same amount dp_i
+    (spread held fixed), so under `ofi_events` only the new-bid term
+    (+bid_q[i]) and old-ask term (+ask_q[i-1]) survive:
+    ofi_i = bid_q[i] + ask_q[i-1], non-negative by construction, so dp_i >= 0
+    and "always ticks up" is self-consistent. bid_q[i] is a random positive
+    magnitude and dp_i is defined as beta * ofi_i, so the mid moves by exactly
+    beta * ofi_i per update, and by beta * (the bar's summed ofi) over any bar,
+    with no residual noise. ask_q[i] (needed for the next update's ofi) is
+    drawn independently.
     """
     rng = np.random.default_rng(seed)
     spread = 0.02
@@ -60,16 +59,14 @@ def _synthetic_book_ticker_down(
 ) -> pl.DataFrame:
     """Mirror of `_synthetic_book_ticker` where bid/ask tick DOWN every update.
 
-    At every update i>=1, both bid and ask tick DOWN by the same amount
-    dp_i (spread held fixed), which under `ofi_events` makes the old-bid
-    term (`-bid_q[i-1]`, from `b_now <= b_prev`) and the new-ask term
-    (`-ask_q[i]`, from `a_now <= a_prev`) the only surviving contributions:
-    ofi_i = -(bid_q[i-1] + ask_q[i]), strictly negative for every i since
-    both quantities are positive magnitudes. bid_q[i] (needed for the
-    *next* update's ofi_i+1) is drawn independently. dp_i is then DEFINED
-    as beta * ofi_i (ofi_i < 0), so with beta > 0 the mid moves down on
-    every update, matching the "always ticks down" assumption
-    self-consistently -- the mirror image of the up-ticking fixture above.
+    At every update i>=1, both bid and ask tick DOWN by the same amount dp_i
+    (spread held fixed), so under `ofi_events` only the old-bid term
+    (`-bid_q[i-1]`, from `b_now <= b_prev`) and the new-ask term (`-ask_q[i]`,
+    from `a_now <= a_prev`) survive: ofi_i = -(bid_q[i-1] + ask_q[i]), strictly
+    negative. bid_q[i] (needed for the next update's ofi) is drawn
+    independently. dp_i is defined as beta * ofi_i (< 0), so with beta > 0 the
+    mid moves down on every update, the mirror image of the up-ticking fixture
+    above.
     """
     rng = np.random.default_rng(seed)
     spread = 0.02
@@ -126,15 +123,14 @@ def test_run_q3_recovers_known_ofi_slope(tmp_path: Path):
 def test_run_q3_recovers_known_ofi_slope_when_book_ticks_down(tmp_path: Path):
     """Negative-OFI counterpart of `test_run_q3_recovers_known_ofi_slope`.
 
-    The original fixture only ever produces OFI >= 0 (mid always ticks up),
-    which never exercises `ofi_events`' negative-contribution branches
-    (`b_now <= b_prev` old-bid subtraction, `a_now <= a_prev` new-ask
-    addition) through the real q3 pipeline. This fixture ticks bid/ask DOWN
-    every update instead, making every per-update OFI strictly negative (mid
-    moves down in lock-step with it, since delta_mid = beta * ofi_sum with
-    beta > 0), and asserts the recovered slope still lands within 15% of the
-    planted (positive) beta -- the fixture's negativity lives in the OFI
-    values and delta_mid, not in the recovered slope itself.
+    The up-tick fixture only produces OFI >= 0, so it never exercises
+    `ofi_events`' negative-contribution branches (`b_now <= b_prev` old-bid
+    subtraction, `a_now <= a_prev` new-ask addition) through the q3 pipeline.
+    This fixture ticks bid/ask DOWN every update, so every per-update OFI is
+    strictly negative and the mid moves down with it (delta_mid = beta * ofi_sum
+    with beta > 0). The recovered slope should still land within 15% of the
+    planted positive beta, since the negativity is in the OFI values and
+    delta_mid, not in the slope.
     """
     beta = 0.002
     df = _synthetic_book_ticker_down(n=60_000, beta=beta, base_mid=1800.0, seed=23)

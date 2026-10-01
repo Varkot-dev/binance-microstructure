@@ -1,32 +1,26 @@
 """Tests for Q6b: kernel-K sensitivity panel.
 
 Contract under test (see the q6b_kernel_sensitivity.py module docstring):
-1. A planted TWO-timescale-kernel symbol (alpha=(0.25,0.35), beta=(5,0.2),
+1. A planted two-timescale-kernel symbol (alpha=(0.25,0.35), beta=(5,0.2),
    true n=0.6) must show a large K=1->K=2 rise (Delta21 > 0.15) and n_hat_2
-   within +-0.1 of 0.6 -- the headline "K=1 underestimates a genuinely
-   long-memory kernel" finding.
-2. A planted SINGLE-exponential-kernel symbol (n=0.4, well-specified at
-   K=1) must show a small Delta21 (|Delta21| < 0.08) -- the negative
-   control: no spurious rise when the true kernel really is K=1.
-3. A missing symbol must land in `failures`, never abort the run.
+   within +-0.1 of 0.6: K=1 underestimates a long-memory kernel.
+2. A planted single-exponential-kernel symbol (n=0.4, well-specified at
+   K=1) must show a Delta21 within the finite-sample null floor, the negative control:
+   no spurious rise when the true kernel is K=1.
+3. A missing symbol must land in `failures` without aborting the run.
 4. Output files (.json/.md/.parquet/.png) must exist, and the parquet row
    count must equal the number of successful symbols.
 5. The drift-suspect flagging logic (1/beta_slow at K=2 vs. the
    deseasonalization bin width) is unit-tested directly against
    `_is_drift_suspect`, independent of a full pipeline run.
 
-Runtime: windows=2 and ks=(1,2) are used throughout (rather than the
-production defaults windows=6, ks=(1,2,3)) to keep this file's wall clock
-well under the ~90s synchronous budget -- fit_hawkes_multiexp's K=2 fit
-dominates cost (~1.5-2s per ~30k-event window measured locally), so cutting
-windows from 6 to 2 and dropping K=3 entirely is a ~6x-9x runtime reduction
-relative to full production settings, at the cost of using only 2
-(not 6) window-level samples for the per-symbol median -- acceptable here
-since these tests assert Delta21 direction/magnitude with generous
-tolerances, not exact production-panel point estimates. Each planted
-fixture is sized to land in the ~35-45k event range (see the per-fixture
-comments below), keeping each symbol's total fit cost (2 windows x 2 Ks)
-in the single-digit seconds.
+Runtime: windows=2 and ks=(1,2) are used instead of the production defaults
+windows=6, ks=(1,2,3). The K=2 fit dominates cost (~1.5-2s per ~30k-event
+window), so this cuts runtime ~6x-9x at the price of only 2 window-level
+samples per symbol median, which is fine since the tests assert Delta21
+direction and magnitude with generous tolerances. Each planted fixture is
+sized to ~35-45k events, keeping a symbol's fit cost (2 windows x 2 Ks) in
+the single-digit seconds.
 """
 from __future__ import annotations
 
@@ -67,42 +61,36 @@ KS = (1, 2)
 
 # Two-timescale planted kernel: true n = 0.25 + 0.35 = 0.6, timescales 25x
 # apart (beta=5 -> fast, beta=0.2 -> slow). t_end=24_000s lands ~30-40k
-# events at this (mu, alphas, betas) combination (measured via a one-off
-# probe at seed=42: ~30.5k events) -- large enough for 2 sub-windows to each
-# carry a statistically meaningful sample for both K=1 and K=2 fits, small
-# enough to keep the K=2 fit (the dominant per-window cost) in the
-# low-single-digit-seconds range per window.
+# events at this (mu, alphas, betas) (measured at seed=42: ~30.5k events):
+# enough for 2 sub-windows to each carry a meaningful sample for K=1 and K=2
+# fits, and small enough to keep the K=2 fit in the low-single-digit seconds
+# per window.
 TWOEXP_MU = 0.5
 TWOEXP_ALPHAS = np.array([0.25, 0.35])
 TWOEXP_BETAS = np.array([5.0, 0.2])
 TWOEXP_N_TRUE = float(TWOEXP_ALPHAS.sum())  # 0.6
 TWOEXP_T_END = 24_000.0
 
-# Single-exponential planted kernel: true n = 0.4, well-specified at K=1 --
-# the negative control. t_end tuned to land at ~60k events (mu=1.0, beta=2.0,
-# matching the scale test_hawkes.py and test_q6.py's own single-exponential
-# fixtures use), NOT the ~35-45k range the other planted fixtures use.
+# Single-exponential planted kernel: true n = 0.4, well-specified at K=1, the
+# negative control. t_end is tuned to ~60k events (mu=1.0, beta=2.0, the scale
+# of the single-exponential fixtures in test_hawkes.py and test_q6.py), larger
+# than the ~35-45k of the other planted fixtures.
 #
-# WHY 60k AND NOT A LOOSER TOLERANCE (see `spurious_delta21_null`'s docstring
-# in src/microstructure/estimators/hawkes.py for the full mechanism): the K=2
-# fit has two more free parameters than K=1 and can always fit finite sample
-# noise at least as well, so n_hat_2 carries an intrinsic upward finite-
-# sample bias over n_hat_1 even when the true kernel really is K=1 -- this is
-# NOT a local-optimum artifact of the multi-start search (measured directly:
-# widening `betas_init` away from the default did not remove it on the
-# window that showed the bias). The bias SHRINKS with sample size. At the
-# fixture's old size (t_end=20_000 -> ~33k events -> ~16.6k/window at
-# windows=2), Delta21 measured 0.107 at seed=7 -- above the old 0.08
-# tolerance not because the estimator is broken, but because ~16.6k
-# events/window is small enough for the K=2 fit's extra flexibility to
-# meaningfully overfit sampling noise (one window's K=2 fit converged to
-# betas=(0.021, 0.479) with a genuine ~11-nat log-likelihood improvement
-# over K=1, despite the generative process having no second timescale at
-# all). Raising to t_end=36_000 (-> ~59.5k events -> ~29.8k/window at
-# seed=7) measured Delta21=0.0079 -- both because the estimator is less
-# biased at this size (see the null below) and to give the fixture more
-# margin over a moving null floor. This is a FIDELITY fix (more data makes
-# the well-specified K=1 truth easier to recover), not a loosened tolerance.
+# Why 60k rather than a looser tolerance (mechanism in `spurious_delta21_null`,
+# src/microstructure/estimators/hawkes.py): the K=2 fit has two more free
+# parameters than K=1 and can always fit finite-sample noise at least as well,
+# so n_hat_2 carries an upward finite-sample bias over n_hat_1 even when the
+# true kernel is K=1. It is not a local-optimum artifact of the multi-start
+# search (widening `betas_init` did not remove it on the window that showed
+# it), and it shrinks with sample size. At t_end=20_000 (~33k events,
+# ~16.6k/window at windows=2), Delta21 measured 0.107 at seed=7, above a 0.08
+# tolerance: ~16.6k events/window is small enough for the K=2 fit to overfit
+# sampling noise (one window's K=2 fit converged to betas=(0.021, 0.479) with
+# a real ~11-nat log-likelihood improvement over K=1, though the generative
+# process has no second timescale). At t_end=36_000 (~59.5k events,
+# ~29.8k/window at seed=7), Delta21 measured 0.0079, since the estimator is
+# less biased at this size (see the null below) and the fixture has more
+# margin over the null floor.
 ONEEXP_MU, ONEEXP_BETA = 1.0, 2.0
 ONEEXP_ALPHA = 0.4
 ONEEXP_T_END = 36_000.0
@@ -112,19 +100,18 @@ N2_TOL_TWOEXP = 0.1  # n_hat_2 must land within this of the true n=0.6
 
 # Slack added on top of the null median when judging the single-exp negative
 # control's observed Delta21 (see test_run_q6b_single_exp_symbol_shows_small_delta21).
-# n_sims=2 here (vs. spurious_delta21_null's own unit test's n_sims=3) keeps
-# this inline null computation cheap -- it is recomputed on every test run,
-# not once -- while still giving a real (if noisy) estimate of the null
-# median at this fixture's actual per-window event count.
+# n_sims=2 (vs. 3 in spurious_delta21_null's own unit test) keeps this inline
+# null computation, redone on every test run, cheap while still giving a noisy
+# estimate of the null median at the fixture's per-window event count.
 DELTA21_NULL_SIMS = 2
 DELTA21_NULL_SLACK = 0.05
 
 
 # Drift-control fixtures. SEASONAL: the 4-level/day baseline used by the
 # estimator's own drift test (test_hawkes.py), pushed through the real Q6b
-# pipeline -- which first rescales to business time with a 48-bin intraday
+# pipeline, which first rescales to business time with a 48-bin intraday
 # profile. RAMP: a stationary n=0.4 Hawkes thinned by a slow multi-day ramp
-# (keep-probability 0.2 -> 1.0 over 3 days), i.e. APERIODIC drift the
+# (keep-probability 0.2 -> 1.0 over 3 days), i.e. aperiodic drift the
 # time-of-day profile cannot remove. Thinning a simulated Hawkes discards some
 # child events, so the ramp symbol's true n is below 0.4; only the verdict is
 # asserted, not n.
@@ -146,11 +133,10 @@ def _write_event_times_fixture(
 ) -> int:
     """Write a raw array of event times (float seconds from an arbitrary
     origin) as an aggTrades-schema parquet: int64 epoch-ms `ts`, alternating
-    +-1 aggressor sign via `is_buyer_maker`, positive `qty`. Same
-    dedup/nudge convention as test_q6.py's fixture writers (ms collisions
-    are nudged forward by 1ms so event COUNT is preserved rather than
-    merged away by `to_aggressor_events`). Returns the final event count
-    actually written (after dedup nudging).
+    +-1 aggressor sign via `is_buyer_maker`, positive `qty`. Uses the
+    dedup/nudge convention of test_q6.py's fixture writers (ms collisions are
+    nudged forward by 1ms so `to_aggressor_events` does not merge events away).
+    Returns the final event count actually written.
     """
     t0 = datetime(2023, 6, 1, 0, 0, 0, tzinfo=UTC)
     ts_ms = (times_s * 1000.0).astype(np.int64)
@@ -205,7 +191,7 @@ def planted_root(tmp_path_factory: pytest.TempPathFactory) -> Path:
         root, "SMALLUSDT", simulate_hawkes_exp(1.0, 0.4, 2.0, 1_500.0, seed=1)
     )
 
-    # MISSINGUSDT deliberately has no parquet on disk -> must land in failures.
+    # MISSINGUSDT has no parquet on disk -> must land in failures.
     return root
 
 
@@ -231,23 +217,19 @@ def test_run_q6b_two_timescale_symbol_shows_large_delta21(planted_root: Path):
 
 def test_run_q6b_single_exp_symbol_shows_small_delta21(planted_root: Path):
     """The negative control: a well-specified K=1 symbol's observed Delta21
-    must not exceed the finite-sample null (see `spurious_delta21_null`'s
-    docstring) computed at this run's own median per-window event count,
-    plus a fixed slack. This replaces a bare tolerance constant because the
-    K=2 fit has an intrinsic upward finite-sample bias over K=1 even when
-    K=1 is exactly correct (more free parameters can only help in-sample
-    likelihood) -- judging Delta21 against a fixed number chosen without
-    reference to sample size conflates "the estimator is biased at this
-    sample size" with "there is a genuine second timescale". The null is
-    recomputed inline (n_sims=2, ~10-15s) rather than hardcoded, since it
-    depends on this fixture's own (mu, alpha, beta) and event count.
+    must not exceed the finite-sample null (see `spurious_delta21_null`),
+    computed at this run's median per-window event count, plus a fixed slack.
+    A fixed tolerance would be wrong because the K=2 fit has an upward
+    finite-sample bias over K=1 even when K=1 is exactly correct (extra free
+    parameters only help in-sample likelihood), so a fixed number conflates
+    estimator bias at this sample size with a real second timescale. The null
+    is recomputed inline (n_sims=2, ~10-15s) since it depends on the fixture's
+    (mu, alpha, beta) and event count.
 
-    This test also exercises `run_q6b`'s own `null_floor_p90`/
-    `within_finite_sample_null` wiring (step 4 of the Q6b hardening: the
-    panel-level null floor reported in the JSON/md) via the SAME `run_q6b`
-    call (`null_sims=DELTA21_NULL_SIMS`), rather than a second dedicated
-    call, so this stays the only place in the suite paying for the run-level
-    null calibration on top of the fixture's own pipeline run.
+    The same `run_q6b` call (`null_sims=DELTA21_NULL_SIMS`) also exercises its
+    `null_floor_p90`/`within_finite_sample_null` wiring (the panel-level null
+    floor in the JSON/md), so this is the only test paying for that
+    calibration.
     """
     out_dir = planted_root / "results_one"
     result = run_q6b(
@@ -272,17 +254,13 @@ def test_run_q6b_single_exp_symbol_shows_small_delta21(planted_root: Path):
         f"(n_hat_1={rec['n_median_by_k'].get(1)}, n_hat_2={rec['n_median_by_k'].get(2)})"
     )
 
-    # run_q6b's own panel-level null floor (step 4): computed once at the
-    # panel's median per-window event count via _null_floor_p90, exposed in
-    # cross_section and used to label each record within_finite_sample_null.
-    # NOTE: only the wiring is asserted here, not a specific True/False value
-    # -- null_sims=DELTA21_NULL_SIMS (2) makes _null_floor_p90's own p90 a
-    # noisy quantity from run to run, so asserting a specific label would be
-    # exactly the kind of n_sims=2-noise-driven brittleness this test's
-    # primary assertion (Delta21 <= median(null) + slack, above) was written
-    # to avoid. The scientific claim ("this symbol's Delta21 is small") is
-    # already checked by that primary assertion; this block only checks the
-    # field is populated and well-typed.
+    # run_q6b's panel-level null floor: computed once at the panel's median
+    # per-window event count via _null_floor_p90, exposed in cross_section and
+    # used to label each record within_finite_sample_null. Only the wiring is
+    # asserted, not a True/False value: with null_sims=2 the p90 is noisy from
+    # run to run, so a specific label would be brittle. The primary assertion
+    # above checks that Delta21 is small; this block checks the field is
+    # populated and well-typed.
     null_floor_p90 = result["cross_section"]["null_floor_p90"]
     assert null_floor_p90 is not None
     assert null_floor_p90["n_sims"] == DELTA21_NULL_SIMS
@@ -435,15 +413,12 @@ def test_drift_suspect_flags_non_finite_timescale():
 
 # --- JSON serializability of the per-symbol record -------------------------
 
-# Every scalar value that can appear inside a `_symbol_record` return value
-# (directly or nested inside `n_median_by_k`/`n_converged_by_k`/`per_window`)
-# must be one of these Python-native types. numpy scalars (np.bool_,
-# np.float64, np.int64, ...) are NOT included here on purpose: this is the
-# regression this test guards against (json.dumps raises `TypeError: Object
-# of type bool/float64/... is not JSON serializable` on a numpy scalar, even
-# though `isinstance(np.bool_(True), bool)` etc. can be True/False depending
-# on the numpy version -- the type() check below is deliberately exact, not
-# isinstance-based, so a numpy subclass cannot slip through).
+# Every scalar in a `_symbol_record` return value (directly or nested inside
+# `n_median_by_k`/`n_converged_by_k`/`per_window`) must be one of these
+# Python-native types. numpy scalars (np.bool_, np.float64, np.int64, ...) are
+# excluded on purpose: json.dumps raises `TypeError: Object of type
+# bool/float64/... is not JSON serializable` on them. The type() check below
+# is exact, not isinstance-based, so a numpy subclass cannot slip through.
 _JSON_NATIVE_SCALAR_TYPES = (str, int, float, bool, type(None))
 
 
@@ -451,10 +426,10 @@ def _assert_only_native_scalars(value: object, path: str = "$") -> None:
     """Recursively assert every leaf in a JSON-able structure is a Python-
     native scalar (str/int/float/bool/None), not a numpy scalar subclass.
 
-    `type(value) in _JSON_NATIVE_SCALAR_TYPES` (not `isinstance`) is
-    intentional: `numpy.bool_`/`numpy.float64` register as subclasses of
-    `bool`/`float` on some numpy versions, which would let an isinstance
-    check silently pass on exactly the regression this test exists to catch.
+    `type(value) in _JSON_NATIVE_SCALAR_TYPES` is used instead of `isinstance`
+    because `numpy.bool_`/`numpy.float64` register as subclasses of
+    `bool`/`float` on some numpy versions, which would let an isinstance check
+    pass on exactly the regression being tested.
     """
     if isinstance(value, dict):
         for k, v in value.items():
@@ -478,12 +453,11 @@ def test_symbol_record_round_trips_through_json_dumps(planted_root: Path):
     (allow_nan=True, the default -- Delta21/ratios can be NaN when a K value
     is absent or a slow component's beta rounds to zero) without raising.
 
-    This directly targets the hotfix regression: `fit.converged` (from
-    `fit_hawkes_multiexp`) and the `_is_drift_suspect` comparison result can
-    both arrive as numpy scalar types rather than Python `bool`, and
-    `json.dumps` has no default encoder for those -- `TypeError: Object of
-    type bool is not JSON serializable` (the numpy bool's __class__.__name__
-    prints as "bool", which is what made this regression confusing).
+    This guards against `fit.converged` (from `fit_hawkes_multiexp`) and the
+    `_is_drift_suspect` result arriving as numpy scalars rather than Python
+    `bool`, which `json.dumps` cannot encode (`TypeError: Object of type bool
+    is not JSON serializable`; the numpy bool's __class__.__name__ prints as
+    "bool", which makes the failure confusing).
     """
     rec = _symbol_record(planted_root, "ONEEXPUSDT", "2023-06", WINDOWS, KS, drift_blocks=0)
 
@@ -543,11 +517,11 @@ def test_drift_control_planted_two_exp_symbol_is_not_drift(drift_panel: dict):
 def test_drift_control_business_time_rescaling_absorbs_profile_periodic_drift(
     drift_panel: dict,
 ):
-    """MEASURED on this fixture: the 4-level/day baseline is intraday
-    seasonality, which Q6b's 48-bin business-time rescaling already removes
-    (K=1 n_hat ~= 0.40, the true value; the estimator-level test on RAW time
-    reads 0.46). The control therefore correctly does NOT call it 'drift'. It
-    targets APERIODIC drift (see the ramp test), not profile-periodic drift."""
+    """On this fixture the 4-level/day baseline is intraday seasonality, which
+    Q6b's 48-bin business-time rescaling already removes (K=1 n_hat ~= 0.40,
+    the true value; the estimator-level test on raw time reads 0.46). The
+    control therefore does not call it 'drift'; it targets aperiodic drift (see
+    the ramp test), not profile-periodic drift."""
     rec = _drift_by_symbol(drift_panel)["SEASONALUSDT"]
     assert abs(rec["n_median_by_k"][1] - 0.4) < 0.08, rec["n_median_by_k"]
     assert rec["drift_verdict"] != "drift", rec

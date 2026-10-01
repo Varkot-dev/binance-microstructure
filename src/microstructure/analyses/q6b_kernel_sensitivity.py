@@ -1,60 +1,46 @@
 """Q6b: kernel-K sensitivity panel — does n̂ rise with K because of long memory or drift?
 
-Method: mirrors Q6's business-time pipeline exactly (load_events -> ts as
-int64 epoch-ms -> intraday_rate_profile (48 bins) -> rescale_to_business_time
--> K equal-width contiguous sub-windows), but instead of fitting ONE
-exponential-kernel Hawkes MLE per window, this module fits the
-sum-of-exponentials MLE (`fit_hawkes_multiexp`) at K in {1, 2, 3} for EVERY
-sub-window and records how the fitted branching ratio n̂_K moves across K.
+Method: mirrors Q6's business-time pipeline (load_events -> ts as int64
+epoch-ms -> intraday_rate_profile (48 bins) -> rescale_to_business_time -> K
+equal-width contiguous sub-windows), but fits the sum-of-exponentials MLE
+(`fit_hawkes_multiexp`) at K in {1, 2, 3} for every sub-window and records
+how the fitted branching ratio n̂_K moves across K.
 
-Why this matters (docs/research/02-hawkes-processes.md §4 pitfall 3): a
-single exponential kernel is too short-memoried to represent a true
-long-memory/power-law-like kernel, so a K=1 MLE systematically underestimates
-n = sum(alpha_k). Increasing K lets the mixture spread mass across widely
-separated timescales and recover more of the long-lag kernel weight, pulling
-n̂ up toward the true value — Q6's headline 41/41-symbol MLE-vs-count-variance
-disagreement is consistent with exactly this kind of kernel misspecification.
-Re-fitting the SAME data at K=1,2,3 and reporting the K=1->K=2 jump (Δ21) is
-therefore the diagnostic this module exists to compute.
+Why: a single exponential is too short-memoried for a long-memory kernel, so
+a K=1 MLE underestimates n = sum(alpha_k) (Bacry, Mastromatteo & Muzy 2015).
+Raising K lets the mixture spread mass across well-separated timescales and
+recover more long-lag weight. Q6's 41/41-symbol MLE-vs-count-variance
+disagreement is consistent with this kind of misspecification. The K=1->K=2
+jump (Δ21) is the diagnostic this module computes.
 
-THE CONFOUND (must be read before trusting a large Δ21 as "kernel
-misspecification confirmed"): a rising n̂(K) together with a slow-decaying
-component is ALSO exactly what residual baseline non-stationarity produces,
-even with a perfectly well-specified single-exponential TRUE kernel. Case A
-(this repo's own synthetic control, see test_q6b.py):  a true n=0.4
+Confound: a rising n̂(K) with a slow-decaying component is also what residual
+baseline non-stationarity produces, even when the true kernel is a single
+exponential. In the synthetic control in test_q6b.py, a true n=0.4
 single-exponential process with a ±30% baseline-rate wobble that survives
-imperfect deseasonalization fits at K=1 n̂≈0.46 and at K=2 n̂≈0.83 — a large,
-spurious Δ21 with NO long-memory kernel anywhere in the generative model. The
-mechanism is the same one `branching_count_variance`'s regime-switching trap
-documents for the model-free estimator (Filimonov & Sornette 2015): a
-non-stationary mu(t) masquerades as self-excitation, and a second exponential
-component with a very slow beta is a flexible enough shape to partially
-absorb a slow drift in the baseline rate, inflating K=2's alpha sum without
-any genuine long-range kernel mass being present.
+imperfect deseasonalization fits at K=1 n̂≈0.46 and at K=2 n̂≈0.83: a large
+spurious Δ21 with no long-memory kernel in the generative model. The
+mechanism is the regime-switching trap of `branching_count_variance`
+(Filimonov & Sornette 2015): a non-stationary mu(t) masquerades as
+self-excitation, and a very slow second exponential can absorb a slow
+baseline drift, inflating K=2's alpha sum without any long-range kernel mass.
 
-This module's response to the confound is NOT to claim it can tell the two
-apart from a single K-sweep — it explicitly cannot, with the tools built so
-far. Instead, per symbol, it reports 1/β_slow (the slower component's decay
-timescale, at K=2, converted to business-time SECONDS) against two
-independent physical scales: the deseasonalization bin width (86400/48
-seconds ≈ 1800s — a slow component decaying on a timescale comparable to or
-longer than a deseasonalization bin is exactly what a residual bin-scale
-drift would produce) and the sub-window length itself (a slow component
-whose timescale approaches the window length is barely distinguishable from
-a linear trend within that window). Symbols where 1/β_slow exceeds
-DRIFT_SUSPECT_MULTIPLIER (10x) the bin width are flagged "drift-suspect" in
-the per-symbol output — a large Δ21 on a drift-suspect symbol should be read
-as ambiguous between genuine long-memory and residual non-stationarity, not
-as confirmed endogeneity. The decisive control that WOULD separate the two
-explanations — refitting K=1 with a block-wise (time-varying) mu instead of
-a single constant mu — is run per symbol on the FIRST window only (to bound
-cost) via `baseline_drift_control` (see `--drift-blocks`, 0 disables). It is a
-heuristic likelihood-ratio screen whose block baseline can absorb only drift
-slower than the block width; see its docstring and the markdown section
-"Is the K=2 rise drift or memory?".
+A K-sweep alone cannot tell the two apart. Per symbol, the module reports
+1/β_slow (the slower component's decay timescale at K=2, in business-time
+seconds) against two scales: the deseasonalization bin width (86400/48
+seconds ≈ 1800s; a slow component at or beyond that is what residual
+bin-scale drift would produce) and the sub-window length (a timescale near
+the window length is barely distinguishable from a linear trend). Symbols
+where 1/β_slow exceeds DRIFT_SUSPECT_MULTIPLIER (10x) the bin width are
+flagged "drift-suspect"; a large Δ21 there is ambiguous between long memory
+and residual non-stationarity. The control that does separate them, refitting
+K=1 with a block-wise (time-varying) mu, runs per symbol on the first window
+only (to bound cost) via `baseline_drift_control` (`--drift-blocks`, 0
+disables). It is a heuristic likelihood-ratio screen whose block baseline can
+absorb only drift slower than the block width; see its docstring and the
+markdown section "Is the K=2 rise drift or memory?".
 
-Symbols are processed one at a time; any per-symbol exception is caught and
-logged into `failures`, and never aborts the run for the remaining symbols.
+Symbols are processed one at a time; a per-symbol exception is logged into
+`failures` and does not abort the run.
 
 Outputs: q6b_kernel_sensitivity.{json,md,parquet,png}.
 """
@@ -86,31 +72,23 @@ from microstructure.signals.load import load_events
 
 N_BINS = 48  # intraday_rate_profile bin count, matches Q6
 
-# Runtime cap on events per single sum-of-exponentials Hawkes MLE fit. Fitting
-# at K=1,2,3 is strictly more expensive per event than Q6's single K=1 fit
-# (K recursions per Nelder-Mead evaluation, dimension 1+2K instead of 3), so
-# the same 250k-event cap Q6 uses per window is kept here rather than raised;
-# see q6_endogeneity.py's MAX_FIT_EVENTS docstring for the sampling-noise
-# justification, which applies unchanged to the K=1 fit and is, if anything,
-# more conservative for K=2/K=3 since more parameters share the same sample.
+# Runtime cap on events per sum-of-exponentials Hawkes MLE fit. Fits at K=1,2,3
+# cost more per event than Q6's K=1 fit (K recursions per evaluation, dimension
+# 1+2K instead of 3), so Q6's 250k-event cap is kept (see MAX_FIT_EVENTS in
+# q6_endogeneity.py for the sampling-noise argument).
 MAX_FIT_EVENTS = 250_000
 
-# Deseasonalization bin width in business-time SECONDS: one day (86400s) of
-# business time, split into the same N_BINS=48 bins intraday_rate_profile
-# uses. A slow kernel component decaying on a timescale comparable to (or
-# longer than) this width is exactly the shape a residual bin-scale
-# seasonality artifact (imperfect deseasonalization) would produce, since the
-# profile cannot resolve structure finer than one bin.
+# Deseasonalization bin width in business-time seconds: one day (86400s) split
+# into the same N_BINS=48 bins as intraday_rate_profile. A slow kernel
+# component at or beyond this timescale is what residual bin-scale seasonality
+# would produce, since the profile cannot resolve structure finer than a bin.
 DESEASON_BIN_WIDTH_S = 86_400.0 / N_BINS
 
-# A symbol's median 1/beta_slow (at K=2) exceeding this multiple of the
+# A symbol whose median 1/beta_slow (at K=2) exceeds this multiple of the
 # deseasonalization bin width is flagged "drift-suspect": the slow component
-# is decaying on a timescale far longer than anything the deseasonalization
-# step could have resolved, so it is at least as consistent with residual
-# baseline drift leaking through deseasonalization as with a genuine
-# long-memory kernel component. This is a flag for caution, not a verdict —
-# seeing the module docstring's confound discussion for why a single K-sweep
-# cannot settle the question on its own.
+# decays far slower than deseasonalization could resolve, so it is as
+# consistent with residual baseline drift as with a long-memory kernel. A
+# flag for caution, not a verdict (see the module docstring).
 DRIFT_SUSPECT_MULTIPLIER = 10.0
 
 DEFAULT_KS: tuple[int, ...] = (1, 2, 3)
@@ -180,11 +158,8 @@ def _fit_capped_multiexp(times: np.ndarray, t_end: float, k: int) -> dict:
         "betas": [float(b) for b in fit.betas],
         "beta_slow": beta_slow,
         "inv_beta_slow": float(1.0 / beta_slow) if beta_slow > 0.0 else float("inf"),
-        # `fit.converged` is annotated `bool` but the Nelder-Mead simplex
-        # comparison it ultimately comes from operates on numpy arrays, so
-        # it can arrive as `numpy.bool_` rather than a Python bool. `bool()`
-        # coerces it to a JSON-serializable Python bool at the source, so no
-        # numpy scalar carrying `converged` propagates further downstream.
+        # `fit.converged` can arrive as `numpy.bool_` (it comes from a numpy
+        # comparison); coerce to a Python bool so it is JSON-serializable.
         "converged": bool(fit.converged),
     }
 
@@ -237,10 +212,8 @@ def _is_drift_suspect(median_inv_beta_slow_k2: float) -> bool:
     times the deseasonalization bin width. See module docstring."""
     if not np.isfinite(median_inv_beta_slow_k2):
         return True
-    # `median_inv_beta_slow_k2` is frequently a numpy float64 (it comes from
-    # np.median), so the comparison below yields numpy.bool_, not a Python
-    # bool, despite this function's `-> bool` annotation. Coerce at the
-    # source so callers (and json.dumps downstream) always see a Python bool.
+    # `median_inv_beta_slow_k2` is often a numpy float64 (from np.median), so
+    # the comparison yields numpy.bool_; coerce to a Python bool for json.dumps.
     return bool(median_inv_beta_slow_k2 > DRIFT_SUSPECT_MULTIPLIER * DESEASON_BIN_WIDTH_S)
 
 
@@ -375,10 +348,9 @@ def _symbol_record(
 def _load_q6_gap(q6_json: Path | None) -> dict[str, float]:
     """Load {symbol: alpha_cv - alpha_median} from a Q6 results JSON, if given.
 
-    Returns an empty dict if `q6_json` is None or the file doesn't exist —
-    the cross-section correlation with Δ21 is then simply skipped, not an
-    error (this diagnostic is optional supplementary context, not a
-    dependency Q6b requires to run).
+    Returns an empty dict if `q6_json` is None or the file doesn't exist; the
+    correlation with Δ21 is then skipped. It is optional context, not a
+    dependency of Q6b.
     """
     if q6_json is None or not q6_json.exists():
         return {}
@@ -396,26 +368,20 @@ def _load_q6_gap(q6_json: Path | None) -> dict[str, float]:
 
 def _null_floor_p90(records: list[dict], null_sims: int, seed: int = 20240601) -> dict | None:
     """Finite-sample Delta21 null floor, calibrated at the panel's own median
-    per-window event count (see `spurious_delta21_null`'s docstring for why
-    this must be calibrated at the run's actual event count, not a fixed
-    size). Representative single-exp parameters for the null simulation are
-    taken FROM the panel itself, not hardcoded: `alpha` is the panel's median
-    K=1 branching ratio (n_hat_k1) -- the panel's own typical "how much
-    branching does a K=1 fit see" answer -- and `beta=2.0`, the same
-    single-exponential decay rate this repo's own planted single-exp
-    fixtures use throughout (test_hawkes.py, test_q6.py, test_q6b.py's
-    ONEEXPUSDT), as a reasonable representative timescale absent any
-    panel-wide way to estimate a "typical" beta from K=1 fits alone (K=1
-    beta is only loosely identified per `fit_hawkes_exp`'s own docstring).
-    `mu` is not a free choice here: `spurious_delta21_null` derives its own
-    `t_end` from `n_events_per_window` and the stationary mean-rate identity
-    `mu/(1-alpha)`, so only `alpha` and `beta` need to be supplied.
+    per-window event count (see `spurious_delta21_null` for why it must be
+    calibrated at the run's actual event count).
 
-    Returns None if `null_sims <= 0` (an explicit opt-out for callers that
-    do not need this diagnostic and want to skip its runtime cost -- e.g.
-    tests exercising unrelated parts of the pipeline) or if no successful
-    records have both K=1 fits and a recorded per-window event count
-    (nothing to calibrate against).
+    The null's single-exponential parameters come from the panel: `alpha` is
+    the panel's median K=1 branching ratio (n_hat_k1), and `beta=2.0`, the
+    decay rate used by the planted single-exp fixtures in test_hawkes.py,
+    test_q6.py and test_q6b.py (ONEEXPUSDT), since K=1 beta is only loosely
+    identified (see `fit_hawkes_exp`). `mu` is not a free choice:
+    `spurious_delta21_null` derives `t_end` from `n_events_per_window` and the
+    stationary mean rate `mu/(1-alpha)`.
+
+    Returns None if `null_sims <= 0` (opt-out, e.g. for tests exercising
+    unrelated parts of the pipeline) or if no successful record has both K=1
+    fits and a per-window event count.
     """
     if null_sims <= 0:
         return None
@@ -431,10 +397,8 @@ def _null_floor_p90(records: list[dict], null_sims: int, seed: int = 20240601) -
     alpha = float(np.median(alphas_k1))
     beta = 2.0
 
-    # Guard the same alpha<1 stationarity constraint spurious_delta21_null's
-    # underlying simulator enforces -- a panel-wide median alpha at or above
-    # 1 would itself be a red flag (near-critical/explosive panel), and the
-    # null is not meaningful there.
+    # The simulator requires alpha<1; a panel median at or above 1 would itself
+    # be a red flag and the null is not meaningful there.
     if not (0.0 < alpha < 1.0) or n_events_per_window <= 0:
         return None
 
@@ -566,7 +530,7 @@ def run_q6b(
             continue
         try:
             records.append(_symbol_record(root, symbol, month, windows, ks, drift_blocks))
-        except Exception as e:  # noqa: BLE001 - per-symbol robustness is the point
+        except Exception as e:  # noqa: BLE001 - a per-symbol failure is logged, not fatal
             failures.append({"symbol": symbol, "reason": f"{type(e).__name__}: {e}"})
 
     q6_gaps = _load_q6_gap(q6_json)
@@ -576,12 +540,11 @@ def run_q6b(
     if null_floor_p90 is not None:
         p90 = null_floor_p90["p90"]
         for r in records:
-            # "within finite-sample null": this symbol's Delta21 does not
-            # exceed the panel's own null 90th percentile (see
-            # `_null_floor_p90`'s docstring) -- i.e. it is no more than what
-            # a well-specified K=1 process of the panel's typical per-window
-            # size would produce anyway, and should not be read as evidence
-            # of genuine long-memory kernel structure on its own.
+            # "within finite-sample null": this symbol's Delta21 does not exceed
+            # the panel's null 90th percentile (see `_null_floor_p90`), so it is
+            # no more than a well-specified K=1 process of the panel's typical
+            # per-window size would produce and is not evidence of long memory
+            # on its own.
             r["within_finite_sample_null"] = bool(
                 np.isfinite(r["delta21"]) and r["delta21"] <= p90
             )
