@@ -1,0 +1,1509 @@
+{
+  "period": "2024-07",
+  "min_events": 1000000,
+  "max_lag": 1000,
+  "n_symbols_requested": 207,
+  "n_symbols_successful": 95,
+  "n_symbols_skipped": 80,
+  "n_symbols_failed": 32,
+  "symbols": [
+    {
+      "symbol": "BTCUSDT",
+      "n_events": 19778926,
+      "gamma": 0.4906283665862601,
+      "stderr": 0.0015642874931885316,
+      "acf1": -0.06435277529386314,
+      "p_flip": 0.5321762937065588,
+      "zigzag_amplitude": 0.0785541707492637,
+      "total_qty": 8346286.884000001
+    },
+    {
+      "symbol": "ETHUSDT",
+      "n_events": 16822580,
+      "gamma": 0.4273548517092668,
+      "stderr": 0.004469657701538281,
+      "acf1": 0.08258679051274156,
+      "p_flip": 0.458637168534028,
+      "zigzag_amplitude": 0.028169215550510995,
+      "total_qty": 74400185.047
+    },
+    {
+      "symbol": "1000PEPEUSDT",
+      "n_events": 16506240,
+      "gamma": 0.5642465304159036,
+      "stderr": 0.011256344292800284,
+      "acf1": 0.2429021622210649,
+      "p_flip": 0.3784785861879257,
+      "zigzag_amplitude": -0.018443469217644615,
+      "total_qty": 3135527168084.0
+    },
+    {
+      "symbol": "BCHUSDT",
+      "n_events": 4708401,
+      "gamma": 0.27280519297869577,
+      "stderr": 0.007216985767332374,
+      "acf1": 0.2959554833125954,
+      "p_flip": 0.351981989635545,
+      "zigzag_amplitude": -0.02863995551245531,
+      "total_qty": 14908621.897
+    },
+    {
+      "symbol": "MTLUSDT",
+      "n_events": 1110311,
+      "gamma": 0.21017414518911123,
+      "stderr": 0.005169828261507629,
+      "acf1": 0.3371903378444096,
+      "p_flip": 0.3313200817789626,
+      "zigzag_amplitude": -0.04078405167010446,
+      "total_qty": 372271016.0
+    },
+    {
+      "symbol": "SOLUSDT",
+      "n_events": 11732154,
+      "gamma": 0.6149306652215283,
+      "stderr": 0.0065288199786670475,
+      "acf1": 0.18166007762600986,
+      "p_flip": 0.40914076043842934,
+      "zigzag_amplitude": -0.006936966282947543,
+      "total_qty": 505496444.0
+    },
+    {
+      "symbol": "RNDRUSDT",
+      "n_events": 2482363,
+      "gamma": 0.21090888477792824,
+      "stderr": 0.005951867906263911,
+      "acf1": 0.33726440356146054,
+      "p_flip": 0.33127319867126553,
+      "zigzag_amplitude": -0.036932853257571174,
+      "total_qty": 231306274.39999998
+    },
+    {
+      "symbol": "XRPUSDT",
+      "n_events": 7169683,
+      "gamma": 0.10133133113780819,
+      "stderr": 0.0009630770842769805,
+      "acf1": -0.020491996691817064,
+      "p_flip": 0.5102404820743793,
+      "zigzag_amplitude": 0.03756540689455155,
+      "total_qty": 43227934612.5
+    },
+    {
+      "symbol": "SUIUSDT",
+      "n_events": 2465133,
+      "gamma": 0.24213806676626728,
+      "stderr": 0.0034111923797241566,
+      "acf1": 0.15497094689906676,
+      "p_flip": 0.42247108876928297,
+      "zigzag_amplitude": -0.01409893595083301,
+      "total_qty": 3094774259.2999997
+    },
+    {
+      "symbol": "BNBUSDT",
+      "n_events": 5855297,
+      "gamma": 0.1656090029727131,
+      "stderr": 0.001852500840365941,
+      "acf1": 0.20123712095439958,
+      "p_flip": 0.3993360882182557,
+      "zigzag_amplitude": -0.011495127098501187,
+      "total_qty": 20060253.29
+    },
+    {
+      "symbol": "OPUSDT",
+      "n_events": 4068054,
+      "gamma": 0.1822780517542965,
+      "stderr": 0.0068978316863416034,
+      "acf1": 0.28798913097931794,
+      "p_flip": 0.35599536190900166,
+      "zigzag_amplitude": -0.03157259506860012,
+      "total_qty": 2237149836.9
+    },
+    {
+      "symbol": "LTCUSDT",
+      "n_events": 2029268,
+      "gamma": 0.2675989836123229,
+      "stderr": 0.0020895598559555664,
+      "acf1": 0.14707020706687385,
+      "p_flip": 0.42646039185577844,
+      "zigzag_amplitude": -0.009018596136400811,
+      "total_qty": 53176423.203999996
+    },
+    {
+      "symbol": "MATICUSDT",
+      "n_events": 2472575,
+      "gamma": 0.19509698255197558,
+      "stderr": 0.0018203515693032731,
+      "acf1": 0.06910518668394859,
+      "p_flip": 0.46544208585870434,
+      "zigzag_amplitude": 0.0028374975084400206,
+      "total_qty": 7771468474.0
+    },
+    {
+      "symbol": "1000LUNCUSDT",
+      "n_events": 1735389,
+      "gamma": 0.4374284222539313,
+      "stderr": 0.009883932566571779,
+      "acf1": 0.20326797064184343,
+      "p_flip": 0.3983368560805998,
+      "zigzag_amplitude": -0.025135909656888056,
+      "total_qty": 13448815218.0
+    },
+    {
+      "symbol": "INJUSDT",
+      "n_events": 4320486,
+      "gamma": 0.21830890143700146,
+      "stderr": 0.009701248130825662,
+      "acf1": 0.31425099527945144,
+      "p_flip": 0.34284368537328563,
+      "zigzag_amplitude": -0.03504813938933303,
+      "total_qty": 137380212.7
+    },
+    {
+      "symbol": "ARBUSDT",
+      "n_events": 2845513,
+      "gamma": 0.19312221603219168,
+      "stderr": 0.0029804034080872462,
+      "acf1": 0.11903728208563835,
+      "p_flip": 0.44031372912853645,
+      "zigzag_amplitude": -0.0082710952452094,
+      "total_qty": 5438677779.8
+    },
+    {
+      "symbol": "LDOUSDT",
+      "n_events": 4340832,
+      "gamma": 0.20647189993116077,
+      "stderr": 0.005157862621510014,
+      "acf1": 0.2931235277779044,
+      "p_flip": 0.3533099998594739,
+      "zigzag_amplitude": -0.031475656807713526,
+      "total_qty": 1773251558.0
+    },
+    {
+      "symbol": "STXUSDT",
+      "n_events": 3587265,
+      "gamma": 0.136055108511903,
+      "stderr": 0.006552461675385398,
+      "acf1": 0.32484285832902093,
+      "p_flip": 0.3375396959911509,
+      "zigzag_amplitude": -0.037347904325171224,
+      "total_qty": 1681332857.0
+    },
+    {
+      "symbol": "ETCUSDT",
+      "n_events": 2736088,
+      "gamma": 0.17374366951207862,
+      "stderr": 0.00482274193404011,
+      "acf1": 0.27655248589794845,
+      "p_flip": 0.3617129133686173,
+      "zigzag_amplitude": -0.031130558017695542,
+      "total_qty": 136673457.13
+    },
+    {
+      "symbol": "ADAUSDT",
+      "n_events": 3150409,
+      "gamma": 0.10475508659862173,
+      "stderr": 0.0008057417993469019,
+      "acf1": 0.061325019642702525,
+      "p_flip": 0.46839488726539547,
+      "zigzag_amplitude": 0.009264213170470742,
+      "total_qty": 14256682775.0
+    },
+    {
+      "symbol": "DOGEUSDT",
+      "n_events": 7228607,
+      "gamma": 0.15901555662101793,
+      "stderr": 0.0008222870002012251,
+      "acf1": 0.10781783552855724,
+      "p_flip": 0.4460763250895124,
+      "zigzag_amplitude": 0.004549557484500158,
+      "total_qty": 119988930361.0
+    },
+    {
+      "symbol": "APTUSDT",
+      "n_events": 1906979,
+      "gamma": 0.17476318051789216,
+      "stderr": 0.003404875350005343,
+      "acf1": 0.18335939980261032,
+      "p_flip": 0.4083093774548002,
+      "zigzag_amplitude": -0.018550137327337908,
+      "total_qty": 256635888.8
+    },
+    {
+      "symbol": "COMPUSDT",
+      "n_events": 1016100,
+      "gamma": 0.33515393359683243,
+      "stderr": 0.0052359397534206655,
+      "acf1": 0.12997991626640498,
+      "p_flip": 0.4349832053766414,
+      "zigzag_amplitude": -0.012183974714271809,
+      "total_qty": 11287354.754999999
+    },
+    {
+      "symbol": "EDUUSDT",
+      "n_events": 1689691,
+      "gamma": 0.2768690658814266,
+      "stderr": 0.0032999023843458828,
+      "acf1": 0.2318162227007755,
+      "p_flip": 0.38395326953464837,
+      "zigzag_amplitude": -0.02369157113022534,
+      "total_qty": 1256786403.0
+    },
+    {
+      "symbol": "1000SHIBUSDT",
+      "n_events": 5251131,
+      "gamma": 0.13674720840807697,
+      "stderr": 0.0031954366994951097,
+      "acf1": 0.22645275781599652,
+      "p_flip": 0.38675865956470323,
+      "zigzag_amplitude": -0.021956611345497187,
+      "total_qty": 417110511888.0
+    },
+    {
+      "symbol": "CFXUSDT",
+      "n_events": 2515259,
+      "gamma": 0.24277937428436813,
+      "stderr": 0.00494806675136349,
+      "acf1": 0.3239239966730471,
+      "p_flip": 0.3380364956596898,
+      "zigzag_amplitude": -0.037940833295456944,
+      "total_qty": 7583292280.0
+    },
+    {
+      "symbol": "APEUSDT",
+      "n_events": 2004938,
+      "gamma": 0.16110604130272466,
+      "stderr": 0.005261731342159113,
+      "acf1": 0.212278033660608,
+      "p_flip": 0.39383332244354813,
+      "zigzag_amplitude": -0.025419926545335814,
+      "total_qty": 1576637113.0
+    },
+    {
+      "symbol": "GRTUSDT",
+      "n_events": 1909056,
+      "gamma": 0.18965565125131903,
+      "stderr": 0.006674253267881057,
+      "acf1": 0.35263794731645576,
+      "p_flip": 0.3236805644677602,
+      "zigzag_amplitude": -0.04284836433806781,
+      "total_qty": 4124837054.0
+    },
+    {
+      "symbol": "SANDUSDT",
+      "n_events": 1089634,
+      "gamma": 0.22088315546098755,
+      "stderr": 0.0030679376981831985,
+      "acf1": 0.1039155863733817,
+      "p_flip": 0.4479856979368283,
+      "zigzag_amplitude": -0.0066546151005830445,
+      "total_qty": 3134710756.0
+    },
+    {
+      "symbol": "LINKUSDT",
+      "n_events": 3461497,
+      "gamma": 0.15123912949438922,
+      "stderr": 0.0021648313892297594,
+      "acf1": 0.2212820288590894,
+      "p_flip": 0.3890592391266666,
+      "zigzag_amplitude": -0.020477134848392795,
+      "total_qty": 382950726.36
+    },
+    {
+      "symbol": "ATOMUSDT",
+      "n_events": 1567380,
+      "gamma": 0.19575336767261836,
+      "stderr": 0.0026316544311036933,
+      "acf1": 0.13698422296062246,
+      "p_flip": 0.43146679903201457,
+      "zigzag_amplitude": -0.011227559077200258,
+      "total_qty": 258907191.72000003
+    },
+    {
+      "symbol": "AVAXUSDT",
+      "n_events": 5370146,
+      "gamma": 0.28063395452907464,
+      "stderr": 0.007821620974223143,
+      "acf1": 0.2623863277507291,
+      "p_flip": 0.3687522403957435,
+      "zigzag_amplitude": -0.02494151773078951,
+      "total_qty": 291159883.0
+    },
+    {
+      "symbol": "CHZUSDT",
+      "n_events": 1538636,
+      "gamma": 0.20084964707458533,
+      "stderr": 0.00808960989152866,
+      "acf1": 0.20493790861608152,
+      "p_flip": 0.3975114305862014,
+      "zigzag_amplitude": -0.025337323614336146,
+      "total_qty": 8986732969.0
+    },
+    {
+      "symbol": "AAVEUSDT",
+      "n_events": 2504614,
+      "gamma": 0.2518320302781102,
+      "stderr": 0.004139368090386555,
+      "acf1": 0.2004833957216914,
+      "p_flip": 0.39975517175707387,
+      "zigzag_amplitude": -0.021076863267577933,
+      "total_qty": 20788226.3
+    },
+    {
+      "symbol": "TRUUSDT",
+      "n_events": 2235062,
+      "gamma": 0.31093518117744673,
+      "stderr": 0.006676642394133767,
+      "acf1": 0.33453662375245585,
+      "p_flip": 0.3327032237598884,
+      "zigzag_amplitude": -0.039681311358147855,
+      "total_qty": 6993334263.0
+    },
+    {
+      "symbol": "TRXUSDT",
+      "n_events": 1805887,
+      "gamma": 0.28813903402007884,
+      "stderr": 0.0015506348325316347,
+      "acf1": 0.17018846521183326,
+      "p_flip": 0.41471111687005713,
+      "zigzag_amplitude": -0.006756030229660731,
+      "total_qty": 13996289034.0
+    },
+    {
+      "symbol": "BANDUSDT",
+      "n_events": 1174813,
+      "gamma": 0.22598551103227127,
+      "stderr": 0.00422559564696973,
+      "acf1": 0.31935807420121526,
+      "p_flip": 0.3403191319121698,
+      "zigzag_amplitude": -0.03700607978463133,
+      "total_qty": 282519173.20000005
+    },
+    {
+      "symbol": "AMBUSDT",
+      "n_events": 1153456,
+      "gamma": 0.34168657038892863,
+      "stderr": 0.005241865199239474,
+      "acf1": 0.2410270058010169,
+      "p_flip": 0.37942789272229954,
+      "zigzag_amplitude": -0.025222175686197057,
+      "total_qty": 66148943791.0
+    },
+    {
+      "symbol": "IDUSDT",
+      "n_events": 1535068,
+      "gamma": 0.12096029660705795,
+      "stderr": 0.006327054579056625,
+      "acf1": 0.37640563556433043,
+      "p_flip": 0.31179681408042775,
+      "zigzag_amplitude": -0.04335356823133098,
+      "total_qty": 940957132.0
+    },
+    {
+      "symbol": "XLMUSDT",
+      "n_events": 1647861,
+      "gamma": 0.28872569485402044,
+      "stderr": 0.004510191169676743,
+      "acf1": 0.2268108206744008,
+      "p_flip": 0.38658502542691736,
+      "zigzag_amplitude": -0.025021047293283104,
+      "total_qty": 12209367497.0
+    },
+    {
+      "symbol": "FILUSDT",
+      "n_events": 2796921,
+      "gamma": 0.11749423453740954,
+      "stderr": 0.0011558622307060531,
+      "acf1": 0.08830748762340589,
+      "p_flip": 0.4553083391730904,
+      "zigzag_amplitude": 0.001862623355891907,
+      "total_qty": 1252729158.4
+    },
+    {
+      "symbol": "DOTUSDT",
+      "n_events": 2823305,
+      "gamma": 0.1418393869332358,
+      "stderr": 0.0010788440553318734,
+      "acf1": 0.10413678552026835,
+      "p_flip": 0.44719945142287193,
+      "zigzag_amplitude": -0.0009258769666113525,
+      "total_qty": 723052969.2
+    },
+    {
+      "symbol": "GALAUSDT",
+      "n_events": 1652583,
+      "gamma": 0.2733852339616476,
+      "stderr": 0.003390763881268856,
+      "acf1": 0.02789940771961108,
+      "p_flip": 0.4860224787635349,
+      "zigzag_amplitude": 0.006561643088520648,
+      "total_qty": 86923151397.0
+    },
+    {
+      "symbol": "FTMUSDT",
+      "n_events": 2793874,
+      "gamma": 0.2061144158789898,
+      "stderr": 0.0030349903714719296,
+      "acf1": 0.08592223948617798,
+      "p_flip": 0.4570386699753353,
+      "zigzag_amplitude": -0.0032945565374855462,
+      "total_qty": 7154430469.0
+    },
+    {
+      "symbol": "AXSUSDT",
+      "n_events": 1289059,
+      "gamma": 0.13195952783752785,
+      "stderr": 0.002347965496662531,
+      "acf1": 0.18755189132755815,
+      "p_flip": 0.40579011960672057,
+      "zigzag_amplitude": -0.019806901346873365,
+      "total_qty": 127826999.0
+    },
+    {
+      "symbol": "STORJUSDT",
+      "n_events": 1909098,
+      "gamma": 0.1410121712609313,
+      "stderr": 0.0019665880966072405,
+      "acf1": 0.052941831598475014,
+      "p_flip": 0.47345420374134994,
+      "zigzag_amplitude": 0.005061114173076274,
+      "total_qty": 3408805015.0
+    },
+    {
+      "symbol": "NEOUSDT",
+      "n_events": 1213532,
+      "gamma": 0.14699379223675285,
+      "stderr": 0.003039414865145886,
+      "acf1": 0.2854582061270955,
+      "p_flip": 0.3572558096991342,
+      "zigzag_amplitude": -0.03254323046249935,
+      "total_qty": 53570896.129999995
+    },
+    {
+      "symbol": "IMXUSDT",
+      "n_events": 1916267,
+      "gamma": 0.2132329851875556,
+      "stderr": 0.005105721668231524,
+      "acf1": 0.367439654152562,
+      "p_flip": 0.31625828564510355,
+      "zigzag_amplitude": -0.042429693402344815,
+      "total_qty": 481721885.0
+    },
+    {
+      "symbol": "DUSKUSDT",
+      "n_events": 1205154,
+      "gamma": 0.38015736400774647,
+      "stderr": 0.007308769193479275,
+      "acf1": 0.41581828432638673,
+      "p_flip": 0.2920508848254122,
+      "zigzag_amplitude": -0.047720423358386485,
+      "total_qty": 1016936249.0
+    },
+    {
+      "symbol": "MKRUSDT",
+      "n_events": 2945785,
+      "gamma": 0.24030866793216552,
+      "stderr": 0.00354411002524453,
+      "acf1": 0.2792575738949488,
+      "p_flip": 0.36036145216349874,
+      "zigzag_amplitude": -0.030076798348224063,
+      "total_qty": 869399.682
+    },
+    {
+      "symbol": "DYDXUSDT",
+      "n_events": 1073717,
+      "gamma": 0.2196813911788379,
+      "stderr": 0.0020567418045664178,
+      "acf1": 0.09300048786505175,
+      "p_flip": 0.45326604055448555,
+      "zigzag_amplitude": 0.002830765427739551,
+      "total_qty": 994129879.0
+    },
+    {
+      "symbol": "NEARUSDT",
+      "n_events": 3243681,
+      "gamma": 0.2596663931051182,
+      "stderr": 0.0034903986480817025,
+      "acf1": 0.07072018772672148,
+      "p_flip": 0.46462937157796086,
+      "zigzag_amplitude": -0.0010020226562438977,
+      "total_qty": 911078727.0
+    },
+    {
+      "symbol": "UNIUSDT",
+      "n_events": 2406200,
+      "gamma": 0.2868096345689556,
+      "stderr": 0.004495653517857563,
+      "acf1": 0.17144668657557385,
+      "p_flip": 0.41427662466820075,
+      "zigzag_amplitude": -0.017562211316745784,
+      "total_qty": 299477330.0
+    },
+    {
+      "symbol": "JASMYUSDT",
+      "n_events": 4691823,
+      "gamma": 0.24794671661986561,
+      "stderr": 0.007192258227672038,
+      "acf1": 0.32598258959872606,
+      "p_flip": 0.3369933897748039,
+      "zigzag_amplitude": -0.03658151476195377,
+      "total_qty": 110689229266.0
+    },
+    {
+      "symbol": "SUSHIUSDT",
+      "n_events": 1160441,
+      "gamma": 0.21216350022380406,
+      "stderr": 0.0054305125661225995,
+      "acf1": 0.267774230524835,
+      "p_flip": 0.36611285374513114,
+      "zigzag_amplitude": -0.031130408060898215,
+      "total_qty": 609526747.0
+    },
+    {
+      "symbol": "PHBUSDT",
+      "n_events": 1140987,
+      "gamma": 0.3858950986272101,
+      "stderr": 0.010679555485503995,
+      "acf1": 0.36345154573003674,
+      "p_flip": 0.3181739302673302,
+      "zigzag_amplitude": -0.044644044065168795,
+      "total_qty": 193085126.0
+    },
+    {
+      "symbol": "EOSUSDT",
+      "n_events": 1032832,
+      "gamma": 0.23954149537997954,
+      "stderr": 0.0023814451814866294,
+      "acf1": 0.12874936988066712,
+      "p_flip": 0.43550009633715486,
+      "zigzag_amplitude": -0.005438419510539208,
+      "total_qty": 4872640687.2
+    },
+    {
+      "symbol": "RDNTUSDT",
+      "n_events": 1269419,
+      "gamma": 0.2910503209642468,
+      "stderr": 0.0065308107339480444,
+      "acf1": 0.2897297805489316,
+      "p_flip": 0.35512258373522354,
+      "zigzag_amplitude": -0.031208281226234674,
+      "total_qty": 5051493522.0
+    },
+    {
+      "symbol": "HIGHUSDT",
+      "n_events": 2634564,
+      "gamma": 0.2385563882985723,
+      "stderr": 0.012601481203998606,
+      "acf1": 0.2918639111714885,
+      "p_flip": 0.35397749076412294,
+      "zigzag_amplitude": -0.035070342305462576,
+      "total_qty": 924018991.0
+    },
+    {
+      "symbol": "FETUSDT",
+      "n_events": 4558543,
+      "gamma": 0.2153658184698443,
+      "stderr": 0.003012253759666075,
+      "acf1": 0.26984473963784217,
+      "p_flip": 0.3649796360327491,
+      "zigzag_amplitude": -0.030086766850203187,
+      "total_qty": 2382351680.0
+    },
+    {
+      "symbol": "THETAUSDT",
+      "n_events": 1722017,
+      "gamma": 0.11924220535430213,
+      "stderr": 0.006896423070452378,
+      "acf1": 0.3588884169495225,
+      "p_flip": 0.3205556742794492,
+      "zigzag_amplitude": -0.04302572793661724,
+      "total_qty": 540233111.1
+    },
+    {
+      "symbol": "CRVUSDT",
+      "n_events": 1611596,
+      "gamma": 0.3877780468693509,
+      "stderr": 0.002685571576271293,
+      "acf1": 0.1756490963788552,
+      "p_flip": 0.41208181956384826,
+      "zigzag_amplitude": -0.006135268354217641,
+      "total_qty": 12601931974.6
+    },
+    {
+      "symbol": "ZENUSDT",
+      "n_events": 4404780,
+      "gamma": 0.2711320075137285,
+      "stderr": 0.005006580306182723,
+      "acf1": 0.18669147031085245,
+      "p_flip": 0.40656069237525877,
+      "zigzag_amplitude": -0.015530380737224153,
+      "total_qty": 340411429.9
+    },
+    {
+      "symbol": "ROSEUSDT",
+      "n_events": 1147767,
+      "gamma": 0.3866319797046355,
+      "stderr": 0.010937579400915238,
+      "acf1": 0.31017808081712533,
+      "p_flip": 0.34491089647192896,
+      "zigzag_amplitude": -0.038060174540781644,
+      "total_qty": 5919615091.0
+    },
+    {
+      "symbol": "ACHUSDT",
+      "n_events": 1285309,
+      "gamma": 0.3872472383436953,
+      "stderr": 0.01195848819030593,
+      "acf1": 0.37896317491882514,
+      "p_flip": 0.3103606295144821,
+      "zigzag_amplitude": -0.04409195053094264,
+      "total_qty": 19161236043.0
+    },
+    {
+      "symbol": "GMTUSDT",
+      "n_events": 1560218,
+      "gamma": 0.06290235069915537,
+      "stderr": 0.003097984960734743,
+      "acf1": 0.34247323061187096,
+      "p_flip": 0.3287331185341526,
+      "zigzag_amplitude": -0.04167275857789558,
+      "total_qty": 4610555357.0
+    },
+    {
+      "symbol": "ICPUSDT",
+      "n_events": 2451593,
+      "gamma": 0.22938312251675347,
+      "stderr": 0.004815092364643071,
+      "acf1": 0.230226564836784,
+      "p_flip": 0.3848797026585174,
+      "zigzag_amplitude": -0.026173580168359883,
+      "total_qty": 191789927.0
+    },
+    {
+      "symbol": "BNXUSDT",
+      "n_events": 6361080,
+      "gamma": 0.14283735691024615,
+      "stderr": 0.002008526212268433,
+      "acf1": 0.16837549706324634,
+      "p_flip": 0.4155202285649966,
+      "zigzag_amplitude": -0.012684207350711837,
+      "total_qty": 3977662661.3
+    },
+    {
+      "symbol": "HBARUSDT",
+      "n_events": 1298768,
+      "gamma": 0.4016676285625494,
+      "stderr": 0.0167183927096873,
+      "acf1": 0.2198879895175373,
+      "p_flip": 0.39005071733421004,
+      "zigzag_amplitude": -0.029979748423009794,
+      "total_qty": 10110569622.0
+    },
+    {
+      "symbol": "1000FLOKIUSDT",
+      "n_events": 5950573,
+      "gamma": 0.23834862816075467,
+      "stderr": 0.008531946784521544,
+      "acf1": 0.30530487244079485,
+      "p_flip": 0.34730577161321635,
+      "zigzag_amplitude": -0.0347526666659993,
+      "total_qty": 33215502787.0
+    },
+    {
+      "symbol": "COTIUSDT",
+      "n_events": 1829977,
+      "gamma": 0.36621713749284884,
+      "stderr": 0.009223315732949768,
+      "acf1": 0.32672955405527604,
+      "p_flip": 0.3366137042234434,
+      "zigzag_amplitude": -0.03821658184110745,
+      "total_qty": 7015450763.0
+    },
+    {
+      "symbol": "VETUSDT",
+      "n_events": 1696332,
+      "gamma": 0.19881664471573623,
+      "stderr": 0.004580576585867142,
+      "acf1": 0.33735814857400487,
+      "p_flip": 0.33130090766483666,
+      "zigzag_amplitude": -0.0397223427805716,
+      "total_qty": 21825765304.0
+    },
+    {
+      "symbol": "LPTUSDT",
+      "n_events": 1997413,
+      "gamma": 0.25907419318975516,
+      "stderr": 0.009597360850250373,
+      "acf1": 0.356710462423765,
+      "p_flip": 0.32162668493029983,
+      "zigzag_amplitude": -0.04330815280641541,
+      "total_qty": 48257027.8
+    },
+    {
+      "symbol": "ENSUSDT",
+      "n_events": 7465103,
+      "gamma": 0.17968250593367552,
+      "stderr": 0.005534977711546719,
+      "acf1": 0.27581771578036607,
+      "p_flip": 0.3620872159549863,
+      "zigzag_amplitude": -0.026633406849503063,
+      "total_qty": 235825026.79999998
+    },
+    {
+      "symbol": "BLZUSDT",
+      "n_events": 1720493,
+      "gamma": 0.2358535353165071,
+      "stderr": 0.007078191332714667,
+      "acf1": 0.3023982039292327,
+      "p_flip": 0.348763609479149,
+      "zigzag_amplitude": -0.03473061722034142,
+      "total_qty": 3452300688.0
+    },
+    {
+      "symbol": "PEOPLEUSDT",
+      "n_events": 8152037,
+      "gamma": 0.11156196003837586,
+      "stderr": 0.0013667409381535134,
+      "acf1": 0.054774646393887565,
+      "p_flip": 0.4726102779722759,
+      "zigzag_amplitude": 0.005533448426689097,
+      "total_qty": 158300249695.0
+    },
+    {
+      "symbol": "ZECUSDT",
+      "n_events": 1400922,
+      "gamma": 0.2937030626199599,
+      "stderr": 0.00253278251381033,
+      "acf1": 0.10696458156493749,
+      "p_flip": 0.4464241738113712,
+      "zigzag_amplitude": -0.00373758214666383,
+      "total_qty": 46082982.895
+    },
+    {
+      "symbol": "UNFIUSDT",
+      "n_events": 1468641,
+      "gamma": 0.2738266337250461,
+      "stderr": 0.0040672713545384116,
+      "acf1": 0.14863826455523524,
+      "p_flip": 0.42563596252315067,
+      "zigzag_amplitude": -0.014734751075641185,
+      "total_qty": 233167701.40000004
+    },
+    {
+      "symbol": "LEVERUSDT",
+      "n_events": 1429951,
+      "gamma": 0.4497693605893563,
+      "stderr": 0.014249347540079364,
+      "acf1": 0.3944062951837139,
+      "p_flip": 0.3027413545928179,
+      "zigzag_amplitude": -0.047386406393243735,
+      "total_qty": 199277020454.0
+    },
+    {
+      "symbol": "SSVUSDT",
+      "n_events": 1892771,
+      "gamma": 0.30511125309652026,
+      "stderr": 0.00575057713455624,
+      "acf1": 0.3771490497925459,
+      "p_flip": 0.3113188607173613,
+      "zigzag_amplitude": -0.04380696795170852,
+      "total_qty": 18330569.380000003
+    },
+    {
+      "symbol": "RSRUSDT",
+      "n_events": 1093642,
+      "gamma": 0.1773681826679451,
+      "stderr": 0.003665993343366091,
+      "acf1": 0.23601418131626659,
+      "p_flip": 0.3819251472832493,
+      "zigzag_amplitude": -0.02838744684779325,
+      "total_qty": 85544252875.0
+    },
+    {
+      "symbol": "ARUSDT",
+      "n_events": 3527279,
+      "gamma": 0.22500107343864992,
+      "stderr": 0.00905316522472886,
+      "acf1": 0.32838575740879944,
+      "p_flip": 0.3357844207346288,
+      "zigzag_amplitude": -0.03681131173598129,
+      "total_qty": 64749184.599999994
+    },
+    {
+      "symbol": "ENJUSDT",
+      "n_events": 1126657,
+      "gamma": 0.19392863718331174,
+      "stderr": 0.004525577350979799,
+      "acf1": 0.34379571994959307,
+      "p_flip": 0.32807352022267666,
+      "zigzag_amplitude": -0.04050619752201215,
+      "total_qty": 1289837012.0
+    },
+    {
+      "symbol": "ASTRUSDT",
+      "n_events": 1038753,
+      "gamma": 0.37913963995218325,
+      "stderr": 0.011918349625101722,
+      "acf1": 0.296089426313715,
+      "p_flip": 0.3519531129663288,
+      "zigzag_amplitude": -0.036377506974785985,
+      "total_qty": 6179446756.0
+    },
+    {
+      "symbol": "GMXUSDT",
+      "n_events": 1075861,
+      "gamma": 0.4409303037727049,
+      "stderr": 0.009510594712065248,
+      "acf1": 0.32967792411353514,
+      "p_flip": 0.3351281765285446,
+      "zigzag_amplitude": -0.03802814667645678,
+      "total_qty": 10877893.79
+    },
+    {
+      "symbol": "EGLDUSDT",
+      "n_events": 1772555,
+      "gamma": 0.2642430780637343,
+      "stderr": 0.004968364001417727,
+      "acf1": 0.34923823345972943,
+      "p_flip": 0.3253796499288597,
+      "zigzag_amplitude": -0.041081984444146236,
+      "total_qty": 19477518.900000002
+    },
+    {
+      "symbol": "CKBUSDT",
+      "n_events": 1779915,
+      "gamma": 0.26890047109124765,
+      "stderr": 0.009710806808203715,
+      "acf1": 0.3322096424505906,
+      "p_flip": 0.3338655687859076,
+      "zigzag_amplitude": -0.039711593865722886,
+      "total_qty": 56459010131.0
+    },
+    {
+      "symbol": "CHRUSDT",
+      "n_events": 1385066,
+      "gamma": 0.28256099563659065,
+      "stderr": 0.004453070845254439,
+      "acf1": 0.09102619571378753,
+      "p_flip": 0.4544819196211008,
+      "zigzag_amplitude": -0.0041391786183151286,
+      "total_qty": 3816762738.0
+    },
+    {
+      "symbol": "BAKEUSDT",
+      "n_events": 1638295,
+      "gamma": 0.2689677813859595,
+      "stderr": 0.003958406164820278,
+      "acf1": 0.05525920001284466,
+      "p_flip": 0.4723669866336567,
+      "zigzag_amplitude": -0.00033460337623165276,
+      "total_qty": 5274407681.0
+    },
+    {
+      "symbol": "STMXUSDT",
+      "n_events": 2460171,
+      "gamma": 0.22181721385585734,
+      "stderr": 0.0021498281002322026,
+      "acf1": -0.05638927242857388,
+      "p_flip": 0.5276667872545393,
+      "zigzag_amplitude": 0.04589339249400632,
+      "total_qty": 556943907776.0
+    },
+    {
+      "symbol": "RUNEUSDT",
+      "n_events": 1703117,
+      "gamma": 0.2559702387569269,
+      "stderr": 0.0037852715466596457,
+      "acf1": 0.11820633278982873,
+      "p_flip": 0.4408936326122237,
+      "zigzag_amplitude": -0.01045066776711178,
+      "total_qty": 324964656.0
+    },
+    {
+      "symbol": "DARUSDT",
+      "n_events": 2047211,
+      "gamma": 0.14856145497383785,
+      "stderr": 0.0011900235679147722,
+      "acf1": -0.02546503432085631,
+      "p_flip": 0.5076338040552753,
+      "zigzag_amplitude": 0.029141320564169404,
+      "total_qty": 12137427524.5
+    },
+    {
+      "symbol": "TRBUSDT",
+      "n_events": 4346560,
+      "gamma": 0.2557917197215034,
+      "stderr": 0.009245162503479041,
+      "acf1": 0.3266586123857637,
+      "p_flip": 0.3364783498855071,
+      "zigzag_amplitude": -0.03538339752494603,
+      "total_qty": 39669089.1
+    },
+    {
+      "symbol": "UMAUSDT",
+      "n_events": 1095783,
+      "gamma": 0.3368935863459066,
+      "stderr": 0.004695254724439447,
+      "acf1": 0.02308840536437561,
+      "p_flip": 0.4884484322611614,
+      "zigzag_amplitude": 0.007237535174558593,
+      "total_qty": 352863311.0
+    },
+    {
+      "symbol": "API3USDT",
+      "n_events": 1216306,
+      "gamma": 0.4473922091195834,
+      "stderr": 0.011431596350062787,
+      "acf1": 0.3692767739651125,
+      "p_flip": 0.31533620267942664,
+      "zigzag_amplitude": -0.043824246497828345,
+      "total_qty": 196717834.4
+    }
+  ],
+  "skips": [
+    {
+      "symbol": "LINAUSDT",
+      "reason": "below min_events",
+      "n_events": 467389
+    },
+    {
+      "symbol": "ALPHAUSDT",
+      "reason": "below min_events",
+      "n_events": 721547
+    },
+    {
+      "symbol": "KAVAUSDT",
+      "reason": "below min_events",
+      "n_events": 627946
+    },
+    {
+      "symbol": "ARPAUSDT",
+      "reason": "below min_events",
+      "n_events": 700331
+    },
+    {
+      "symbol": "KEYUSDT",
+      "reason": "below min_events",
+      "n_events": 641600
+    },
+    {
+      "symbol": "WOOUSDT",
+      "reason": "below min_events",
+      "n_events": 989604
+    },
+    {
+      "symbol": "RENUSDT",
+      "reason": "below min_events",
+      "n_events": 720502
+    },
+    {
+      "symbol": "NKNUSDT",
+      "reason": "below min_events",
+      "n_events": 673877
+    },
+    {
+      "symbol": "MAGICUSDT",
+      "reason": "below min_events",
+      "n_events": 845442
+    },
+    {
+      "symbol": "OMGUSDT",
+      "reason": "below min_events",
+      "n_events": 595144
+    },
+    {
+      "symbol": "COMBOUSDT",
+      "reason": "below min_events",
+      "n_events": 569402
+    },
+    {
+      "symbol": "BLURUSDT",
+      "reason": "below min_events",
+      "n_events": 998191
+    },
+    {
+      "symbol": "SFPUSDT",
+      "reason": "below min_events",
+      "n_events": 810036
+    },
+    {
+      "symbol": "MASKUSDT",
+      "reason": "below min_events",
+      "n_events": 907354
+    },
+    {
+      "symbol": "SXPUSDT",
+      "reason": "below min_events",
+      "n_events": 539925
+    },
+    {
+      "symbol": "XMRUSDT",
+      "reason": "below min_events",
+      "n_events": 990189
+    },
+    {
+      "symbol": "LUNA2USDT",
+      "reason": "below min_events",
+      "n_events": 799836
+    },
+    {
+      "symbol": "GALUSDT",
+      "reason": "below min_events",
+      "n_events": 728492
+    },
+    {
+      "symbol": "BELUSDT",
+      "reason": "below min_events",
+      "n_events": 692307
+    },
+    {
+      "symbol": "RLCUSDT",
+      "reason": "below min_events",
+      "n_events": 831637
+    },
+    {
+      "symbol": "LQTYUSDT",
+      "reason": "below min_events",
+      "n_events": 854451
+    },
+    {
+      "symbol": "FLMUSDT",
+      "reason": "below min_events",
+      "n_events": 994612
+    },
+    {
+      "symbol": "JOEUSDT",
+      "reason": "below min_events",
+      "n_events": 649055
+    },
+    {
+      "symbol": "MANAUSDT",
+      "reason": "below min_events",
+      "n_events": 901355
+    },
+    {
+      "symbol": "1000XECUSDT",
+      "reason": "below min_events",
+      "n_events": 876001
+    },
+    {
+      "symbol": "QNTUSDT",
+      "reason": "below min_events",
+      "n_events": 671580
+    },
+    {
+      "symbol": "FXSUSDT",
+      "reason": "below min_events",
+      "n_events": 901620
+    },
+    {
+      "symbol": "KNCUSDT",
+      "reason": "below min_events",
+      "n_events": 646659
+    },
+    {
+      "symbol": "TUSDT",
+      "reason": "below min_events",
+      "n_events": 529551
+    },
+    {
+      "symbol": "MINAUSDT",
+      "reason": "below min_events",
+      "n_events": 977396
+    },
+    {
+      "symbol": "SNXUSDT",
+      "reason": "below min_events",
+      "n_events": 579750
+    },
+    {
+      "symbol": "STGUSDT",
+      "reason": "below min_events",
+      "n_events": 692043
+    },
+    {
+      "symbol": "ANKRUSDT",
+      "reason": "below min_events",
+      "n_events": 711127
+    },
+    {
+      "symbol": "DASHUSDT",
+      "reason": "below min_events",
+      "n_events": 549604
+    },
+    {
+      "symbol": "YFIUSDT",
+      "reason": "below min_events",
+      "n_events": 784627
+    },
+    {
+      "symbol": "1INCHUSDT",
+      "reason": "below min_events",
+      "n_events": 797836
+    },
+    {
+      "symbol": "CTSIUSDT",
+      "reason": "below min_events",
+      "n_events": 459433
+    },
+    {
+      "symbol": "ZILUSDT",
+      "reason": "below min_events",
+      "n_events": 537277
+    },
+    {
+      "symbol": "IOSTUSDT",
+      "reason": "below min_events",
+      "n_events": 779668
+    },
+    {
+      "symbol": "SPELLUSDT",
+      "reason": "below min_events",
+      "n_events": 823302
+    },
+    {
+      "symbol": "ONTUSDT",
+      "reason": "below min_events",
+      "n_events": 515600
+    },
+    {
+      "symbol": "ALGOUSDT",
+      "reason": "below min_events",
+      "n_events": 643427
+    },
+    {
+      "symbol": "HOOKUSDT",
+      "reason": "below min_events",
+      "n_events": 950740
+    },
+    {
+      "symbol": "SKLUSDT",
+      "reason": "below min_events",
+      "n_events": 853581
+    },
+    {
+      "symbol": "ICXUSDT",
+      "reason": "below min_events",
+      "n_events": 441242
+    },
+    {
+      "symbol": "FLOWUSDT",
+      "reason": "below min_events",
+      "n_events": 480095
+    },
+    {
+      "symbol": "RVNUSDT",
+      "reason": "below min_events",
+      "n_events": 416687
+    },
+    {
+      "symbol": "CELRUSDT",
+      "reason": "below min_events",
+      "n_events": 484157
+    },
+    {
+      "symbol": "BALUSDT",
+      "reason": "below min_events",
+      "n_events": 650185
+    },
+    {
+      "symbol": "IOTAUSDT",
+      "reason": "below min_events",
+      "n_events": 423210
+    },
+    {
+      "symbol": "C98USDT",
+      "reason": "below min_events",
+      "n_events": 439797
+    },
+    {
+      "symbol": "LRCUSDT",
+      "reason": "below min_events",
+      "n_events": 966358
+    },
+    {
+      "symbol": "QTUMUSDT",
+      "reason": "below min_events",
+      "n_events": 521253
+    },
+    {
+      "symbol": "ONEUSDT",
+      "reason": "below min_events",
+      "n_events": 483442
+    },
+    {
+      "symbol": "HFTUSDT",
+      "reason": "below min_events",
+      "n_events": 508604
+    },
+    {
+      "symbol": "KSMUSDT",
+      "reason": "below min_events",
+      "n_events": 836642
+    },
+    {
+      "symbol": "XTZUSDT",
+      "reason": "below min_events",
+      "n_events": 417398
+    },
+    {
+      "symbol": "CELOUSDT",
+      "reason": "below min_events",
+      "n_events": 313069
+    },
+    {
+      "symbol": "ZRXUSDT",
+      "reason": "below min_events",
+      "n_events": 773625
+    },
+    {
+      "symbol": "PERPUSDT",
+      "reason": "below min_events",
+      "n_events": 674748
+    },
+    {
+      "symbol": "XEMUSDT",
+      "reason": "below min_events",
+      "n_events": 575494
+    },
+    {
+      "symbol": "LITUSDT",
+      "reason": "below min_events",
+      "n_events": 381248
+    },
+    {
+      "symbol": "REEFUSDT",
+      "reason": "below min_events",
+      "n_events": 470606
+    },
+    {
+      "symbol": "HOTUSDT",
+      "reason": "below min_events",
+      "n_events": 446510
+    },
+    {
+      "symbol": "IOTXUSDT",
+      "reason": "below min_events",
+      "n_events": 804144
+    },
+    {
+      "symbol": "DENTUSDT",
+      "reason": "below min_events",
+      "n_events": 400593
+    },
+    {
+      "symbol": "XVSUSDT",
+      "reason": "below min_events",
+      "n_events": 631284
+    },
+    {
+      "symbol": "KLAYUSDT",
+      "reason": "below min_events",
+      "n_events": 379670
+    },
+    {
+      "symbol": "BATUSDT",
+      "reason": "below min_events",
+      "n_events": 445385
+    },
+    {
+      "symbol": "GTCUSDT",
+      "reason": "below min_events",
+      "n_events": 511747
+    },
+    {
+      "symbol": "ALICEUSDT",
+      "reason": "below min_events",
+      "n_events": 964225
+    },
+    {
+      "symbol": "USDCUSDT",
+      "reason": "below min_events",
+      "n_events": 291782
+    },
+    {
+      "symbol": "OGNUSDT",
+      "reason": "below min_events",
+      "n_events": 424564
+    },
+    {
+      "symbol": "BTCDOMUSDT",
+      "reason": "below min_events",
+      "n_events": 321076
+    },
+    {
+      "symbol": "TLMUSDT",
+      "reason": "below min_events",
+      "n_events": 972120
+    },
+    {
+      "symbol": "ATAUSDT",
+      "reason": "below min_events",
+      "n_events": 407318
+    },
+    {
+      "symbol": "MAVUSDT",
+      "reason": "below min_events",
+      "n_events": 740719
+    },
+    {
+      "symbol": "DEFIUSDT",
+      "reason": "below min_events",
+      "n_events": 310024
+    },
+    {
+      "symbol": "ETHBTC",
+      "reason": "below min_events",
+      "n_events": 562097
+    },
+    {
+      "symbol": "NMRUSDT",
+      "reason": "below min_events",
+      "n_events": 965741
+    }
+  ],
+  "failures": [
+    {
+      "symbol": "TOMOUSDT",
+      "reason": "parquet not found: data/parquet/aggTrades/TOMOUSDT/2024-07.parquet"
+    },
+    {
+      "symbol": "WAVESUSDT",
+      "reason": "parquet not found: data/parquet/aggTrades/WAVESUSDT/2024-07.parquet"
+    },
+    {
+      "symbol": "BTCBUSD",
+      "reason": "parquet not found: data/parquet/aggTrades/BTCBUSD/2024-07.parquet"
+    },
+    {
+      "symbol": "ETHBUSD",
+      "reason": "parquet not found: data/parquet/aggTrades/ETHBUSD/2024-07.parquet"
+    },
+    {
+      "symbol": "OCEANUSDT",
+      "reason": "parquet not found: data/parquet/aggTrades/OCEANUSDT/2024-07.parquet"
+    },
+    {
+      "symbol": "ANTUSDT",
+      "reason": "parquet not found: data/parquet/aggTrades/ANTUSDT/2024-07.parquet"
+    },
+    {
+      "symbol": "SOLBUSD",
+      "reason": "parquet not found: data/parquet/aggTrades/SOLBUSD/2024-07.parquet"
+    },
+    {
+      "symbol": "AGIXUSDT",
+      "reason": "parquet not found: data/parquet/aggTrades/AGIXUSDT/2024-07.parquet"
+    },
+    {
+      "symbol": "LDOBUSD",
+      "reason": "parquet not found: data/parquet/aggTrades/LDOBUSD/2024-07.parquet"
+    },
+    {
+      "symbol": "GALABUSD",
+      "reason": "parquet not found: data/parquet/aggTrades/GALABUSD/2024-07.parquet"
+    },
+    {
+      "symbol": "BNBBUSD",
+      "reason": "parquet not found: data/parquet/aggTrades/BNBBUSD/2024-07.parquet"
+    },
+    {
+      "symbol": "RADUSDT",
+      "reason": "parquet not found: data/parquet/aggTrades/RADUSDT/2024-07.parquet"
+    },
+    {
+      "symbol": "IDEXUSDT",
+      "reason": "parquet not found: data/parquet/aggTrades/IDEXUSDT/2024-07.parquet"
+    },
+    {
+      "symbol": "XRPBUSD",
+      "reason": "parquet not found: data/parquet/aggTrades/XRPBUSD/2024-07.parquet"
+    },
+    {
+      "symbol": "FOOTBALLUSDT",
+      "reason": "parquet not found: data/parquet/aggTrades/FOOTBALLUSDT/2024-07.parquet"
+    },
+    {
+      "symbol": "APTBUSD",
+      "reason": "parquet not found: data/parquet/aggTrades/APTBUSD/2024-07.parquet"
+    },
+    {
+      "symbol": "AUDIOUSDT",
+      "reason": "parquet not found: data/parquet/aggTrades/AUDIOUSDT/2024-07.parquet"
+    },
+    {
+      "symbol": "MATICBUSD",
+      "reason": "parquet not found: data/parquet/aggTrades/MATICBUSD/2024-07.parquet"
+    },
+    {
+      "symbol": "BTCUSDT_230630",
+      "reason": "parquet not found: data/parquet/aggTrades/BTCUSDT_230630/2024-07.parquet"
+    },
+    {
+      "symbol": "LTCBUSD",
+      "reason": "parquet not found: data/parquet/aggTrades/LTCBUSD/2024-07.parquet"
+    },
+    {
+      "symbol": "AGIXBUSD",
+      "reason": "parquet not found: data/parquet/aggTrades/AGIXBUSD/2024-07.parquet"
+    },
+    {
+      "symbol": "TRXBUSD",
+      "reason": "parquet not found: data/parquet/aggTrades/TRXBUSD/2024-07.parquet"
+    },
+    {
+      "symbol": "CTKUSDT",
+      "reason": "parquet not found: data/parquet/aggTrades/CTKUSDT/2024-07.parquet"
+    },
+    {
+      "symbol": "DOGEBUSD",
+      "reason": "parquet not found: data/parquet/aggTrades/DOGEBUSD/2024-07.parquet"
+    },
+    {
+      "symbol": "ETHUSDT_230630",
+      "reason": "parquet not found: data/parquet/aggTrades/ETHUSDT_230630/2024-07.parquet"
+    },
+    {
+      "symbol": "ADABUSD",
+      "reason": "parquet not found: data/parquet/aggTrades/ADABUSD/2024-07.parquet"
+    },
+    {
+      "symbol": "CVXUSDT",
+      "reason": "parquet not found: data/parquet/aggTrades/CVXUSDT/2024-07.parquet"
+    },
+    {
+      "symbol": "FTMBUSD",
+      "reason": "parquet not found: data/parquet/aggTrades/FTMBUSD/2024-07.parquet"
+    },
+    {
+      "symbol": "DGBUSDT",
+      "reason": "parquet not found: data/parquet/aggTrades/DGBUSDT/2024-07.parquet"
+    },
+    {
+      "symbol": "BLUEBIRDUSDT",
+      "reason": "parquet not found: data/parquet/aggTrades/BLUEBIRDUSDT/2024-07.parquet"
+    },
+    {
+      "symbol": "1000LUNCBUSD",
+      "reason": "parquet not found: data/parquet/aggTrades/1000LUNCBUSD/2024-07.parquet"
+    },
+    {
+      "symbol": "DODOBUSD",
+      "reason": "parquet not found: data/parquet/aggTrades/DODOBUSD/2024-07.parquet"
+    }
+  ],
+  "regressions": {
+    "gamma_vs_activity": {
+      "slope": 0.012646142293008335,
+      "intercept": 0.17235470462054775,
+      "stderr": 0.03633346789495879,
+      "r2": 0.0013009305776123803,
+      "n": 95
+    },
+    "p_flip_vs_activity": {
+      "slope": 0.04484640535772241,
+      "intercept": 0.10339928781182801,
+      "stderr": 0.019864876244269948,
+      "r2": 0.051955249854550356,
+      "n": 95
+    }
+  }
+}
