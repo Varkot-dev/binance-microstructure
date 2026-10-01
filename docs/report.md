@@ -124,7 +124,7 @@ The seasonality correction is measured on the real panel. On a regime-switching 
 
 ![Kernel sensitivity](../results/q6b_kernel_sensitivity.png)
 
-I refit the same 41 symbols and six sub-windows with sums of K = 1, 2 and 3 exponentials. The median branching ratio goes **0.707 → 0.854 → 0.879**. The K=1 → K=2 jump (Δ21) has median **+0.142** and exceeds a finite-sample null floor on **41 of 41** symbols (the 90th percentile of Δ21 across 5 simulations of single-exponential data at the panel's event count is 0.009). Against the count-variance estimator, the median gap falls from **0.240 at K=1 to 0.103 at K=2**, so K=2 closes a median **54%** of it. Across symbols, the K=2 estimate and count-variance n̂ correlate at **0.45**.
+I refit the same 41 symbols and six sub-windows with sums of K = 1, 2 and 3 exponentials. The median branching ratio goes **0.707 → 0.854 → 0.879**. The K=1 → K=2 jump (Δ21) has median **+0.142** and exceeds a finite-sample null floor on **39 of 41** symbols. The floor is the 90th percentile of Δ21 across 50 simulations of single-exponential data at the 250,000 events per window the fits use: 0.0215. LTCUSDT (0.0202) and MATICUSDT (0.0215) fall within it. Against the count-variance estimator, the median gap falls from **0.240 at K=1 to 0.103 at K=2**, so K=2 closes a median **54%** of it. Across symbols, the K=2 estimate and count-variance n̂ correlate at **0.45**.
 
 The added component is fast: its decay time 1/β_slow has a median of **7.0 business-time seconds** (90th percentile 10.5 s), against a 30-minute deseasonalization bin. That rules out leftover intraday seasonality as the source of the extra excitation.
 

@@ -33,8 +33,9 @@ months through July 2026 to see which results hold over time.
 - **About 70% of trades are reactions to other trades.** The median Hawkes branching ratio is
   0.7070 from the exponential-kernel MLE (a lower bound) and 0.959 from the model-free
   count-variance estimator, which reads higher on 41 of 41 symbols. Adding a second kernel
-  timescale raises the MLE median to 0.854 and closes a median 54% of that gap; the extra
-  component decays in about 7 seconds. [q6](results/q6_endogeneity.md),
+  timescale raises the MLE median to 0.854 (beyond simulation noise on 39 of 41 symbols) and
+  closes a median 54% of that gap; the extra component decays in about 7 seconds.
+  [q6](results/q6_endogeneity.md),
   [q6b](results/q6b_kernel_sensitivity.md)
 - **Front-loading an order trades a stochastic cost for a deterministic one.** On replayed flow
   for 6 symbols, front-loading costs more on average (2.11 vs 0.55 bps of arrival mid for TWAP)

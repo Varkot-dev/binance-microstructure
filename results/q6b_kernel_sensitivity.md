@@ -36,9 +36,9 @@ Requested: 41. Successful: 41. Failed: 0.
 | WAVESUSDT | 6,269,680 | 0.5762 | 0.8423 | 0.8736 | +0.2661 | 10.37 | 0.01x | 0.00x | no | NO | inconclusive |
 | BNBUSDT | 6,122,425 | 0.7542 | 0.8487 | 0.8885 | +0.0945 | 5.15 | 0.00x | 0.00x | no | NO | inconclusive |
 | SUIUSDT | 6,074,349 | 0.6570 | 0.8415 | 0.8779 | +0.1845 | 5.35 | 0.00x | 0.00x | no | NO | inconclusive |
-| LTCUSDT | 5,400,099 | 0.8456 | 0.8659 | 0.9256 | +0.0202 | 5.87 | 0.00x | 0.00x | no | NO | inconclusive |
+| LTCUSDT | 5,400,099 | 0.8456 | 0.8659 | 0.9256 | +0.0202 | 5.87 | 0.00x | 0.00x | no | yes | inconclusive |
 | OPUSDT | 5,208,936 | 0.4571 | 0.8485 | 0.8758 | +0.3914 | 5.21 | 0.00x | 0.00x | no | NO | inconclusive |
-| MATICUSDT | 5,163,143 | 0.8476 | 0.8690 | 0.8985 | +0.0215 | 5.46 | 0.00x | 0.00x | no | NO | inconclusive |
+| MATICUSDT | 5,163,143 | 0.8476 | 0.8690 | 0.8985 | +0.0215 | 5.46 | 0.00x | 0.00x | no | yes | inconclusive |
 | RNDRUSDT | 5,054,960 | 0.3925 | 0.8343 | 0.8735 | +0.4418 | 4.26 | 0.00x | 0.00x | no | NO | inconclusive |
 | ALPHAUSDT | 4,736,244 | 0.4161 | 0.8698 | 0.8899 | +0.4537 | 8.65 | 0.00x | 0.00x | no | NO | inconclusive |
 | INJUSDT | 4,557,308 | 0.6102 | 0.8417 | 0.9007 | +0.2315 | 5.70 | 0.00x | 0.00x | no | NO | inconclusive |
@@ -72,7 +72,7 @@ Requested: 41. Successful: 41. Failed: 0.
 
 **Δ21 distribution** across 41 symbols: median = **0.1422**, mean = 0.1824, sd = 0.1454, range = [0.0202, 0.4894].
 
-**Null floor for Δ21**, computed at 699,462 events per window from 5 simulated well-specified K=1 processes with alpha=0.7070 (this panel's median n̂_1) and beta=2.0 (see `spurious_delta21_null`). The null's 90th percentile is **0.0093** (median 0.0073). Symbols whose Δ21 does not exceed it are labeled **"within finite-sample null"** in the panel table (0/41 symbols). No symbol's Δ21 falls at or below it, so sampling noise in a well-specified K=1 process of this size does not account for any symbol's rise. The fits are capped at 250,000 events per window, so this null was calibrated at a larger size than the fits used. Rerunning recalibrates it at the capped size.
+**Null floor for Δ21**, computed at 250,000 events per window (the panel's median per-window count, capped at the 250,000-event fit cap) from 50 simulated well-specified K=1 processes with alpha=0.7070 (this panel's median n̂_1) and beta=2.0 (see `spurious_delta21_null`). The null's 90th percentile is **0.0215** (median 0.0072). Symbols whose Δ21 does not exceed it are labeled **"within finite-sample null"** in the panel table (2/41 symbols). For the symbols within it, Δ21 is no larger than a well-specified, non-long-memory K=1 process of this size would produce from sampling noise alone, so it is not evidence of long-memory kernel structure on its own.
 
 **Fraction of symbols with n̂_2 ≥ 0.9** (near-critical at K=2): **4.9%**.
 
