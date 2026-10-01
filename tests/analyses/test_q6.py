@@ -25,7 +25,7 @@ import numpy as np
 import polars as pl
 import pytest
 
-from microstructure.analyses.q6_endogeneity import run_q6
+from microstructure.analyses.q6_endogeneity import _parse_args, _write_results_md, run_q6
 from microstructure.data.catalog import parquet_path
 from microstructure.estimators.hawkes import simulate_hawkes_exp, simulate_seasonal_hawkes_exp
 
@@ -142,7 +142,7 @@ def test_run_q6_recovers_planted_alphas_and_reports_missing(planted_root: Path):
     result = run_q6(
         planted_root, out_dir,
         symbols=["LOWUSDT", "HIGHUSDT", "MISSINGUSDT"],
-        month="2023-06", windows=6, top_n=40,
+        month="2023-06", windows=6,
     )
 
     by_symbol = {r["symbol"]: r for r in result["records"]}
@@ -203,7 +203,7 @@ def test_run_q6_recovers_planted_alphas_and_reports_missing(planted_root: Path):
 def test_run_q6_never_aborts_on_all_failures(tmp_path: Path):
     out_dir = tmp_path / "results"
     result = run_q6(
-        tmp_path, out_dir, symbols=["GHOSTUSDT"], month="2023-06", windows=6, top_n=40,
+        tmp_path, out_dir, symbols=["GHOSTUSDT"], month="2023-06", windows=6,
     )
     assert result["records"] == []
     assert len(result["failures"]) == 1
@@ -220,7 +220,7 @@ def test_run_q6_records_raw_vs_rescaled_delta(planted_root: Path):
     their difference (the seasonality-bias measurement itself)."""
     out_dir = planted_root / "results"
     result = run_q6(
-        planted_root, out_dir, symbols=["LOWUSDT"], month="2023-06", windows=6, top_n=40,
+        planted_root, out_dir, symbols=["LOWUSDT"], month="2023-06", windows=6,
     )
     rec = result["records"][0]
     assert isinstance(rec["raw_delta"], float)
@@ -266,7 +266,7 @@ def test_run_q6_regime_switching_fixture_flags_inflated_raw_alpha_via_delta(tmp_
 
     out_dir = tmp_path / "results"
     result = run_q6(
-        tmp_path, out_dir, symbols=["SEASONUSDT"], month="2023-06", windows=6, top_n=40,
+        tmp_path, out_dir, symbols=["SEASONUSDT"], month="2023-06", windows=6,
     )
 
     by_symbol = {r["symbol"]: r for r in result["records"]}
@@ -300,3 +300,39 @@ def test_run_q6_regime_switching_fixture_flags_inflated_raw_alpha_via_delta(tmp_
         f"expected business-time-corrected alpha_median near true_alpha=0, "
         f"got {rec['alpha_median']}"
     )
+
+
+def _md_result(slope: float, stderr: float) -> dict:
+    record = {
+        "symbol": "AAAUSDT", "n_events": 2_000_000, "alpha_median": 0.6, "alpha_iqr": 0.02,
+        "n_converged": 6, "alphas": [0.6] * 6, "alpha_cv": 0.9, "raw_delta": 0.01,
+        "median_beta": 5.0, "median_mu": 0.1,
+    }
+    return {
+        "month": "2023-06", "windows": 6, "n_symbols_requested": 1, "n_symbols_successful": 1,
+        "n_symbols_failed": 0, "records": [record], "failures": [],
+        "activity_regression": {"slope": slope, "intercept": 0.0, "stderr": stderr, "r2": 0.01, "n": 41},
+        "agreement": {"median_abs_diff": 0.3, "correlation": 0.2, "n": 1},
+    }
+
+
+def test_endogeneity_direction_is_gated_on_two_stderr(tmp_path: Path):
+    _write_results_md(tmp_path, _md_result(0.0286, 0.1094))
+    md = (tmp_path / "q6_endogeneity.md").read_text()
+    assert "Endogeneity increases" not in md
+    assert "indistinguishable from no relationship with activity" in md
+    assert "|t| = 0.3" in md
+    _write_results_md(tmp_path, _md_result(0.3, 0.1))
+    md = (tmp_path / "q6_endogeneity.md").read_text()
+    assert "Endogeneity increases with log-activity" in md
+    _write_results_md(tmp_path, _md_result(-0.3, 0.1))
+    assert "Endogeneity decreases with log-activity" in (tmp_path / "q6_endogeneity.md").read_text()
+
+
+def test_top_n_option_is_gone_and_md_describes_the_symbols_file(tmp_path: Path):
+    with pytest.raises(SystemExit):
+        _parse_args(["--symbols-file", "x.txt", "--top-n", "40"])
+    _write_results_md(tmp_path, _md_result(0.3, 0.1))
+    md = (tmp_path / "q6_endogeneity.md").read_text()
+    assert "--top-n" not in md
+    assert "`--symbols-file`" in md

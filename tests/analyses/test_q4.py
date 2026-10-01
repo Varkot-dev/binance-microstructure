@@ -4,7 +4,7 @@ from pathlib import Path
 import numpy as np
 import polars as pl
 
-from microstructure.analyses.q4_cross_section import run_q4
+from microstructure.analyses.q4_cross_section import _write_results_md, run_q4
 from microstructure.data.catalog import parquet_path
 from microstructure.synthetic import markov_signs
 
@@ -143,3 +143,44 @@ def test_run_q4_never_aborts_on_all_failures(tmp_path: Path):
         "symbol", "n_events", "gamma", "gamma_stderr", "acf1", "p_flip",
         "zigzag_amplitude", "total_qty",
     }
+
+
+def _reg(slope: float, stderr: float) -> dict:
+    return {"slope": slope, "intercept": 0.0, "stderr": stderr, "r2": 0.01, "n": 50}
+
+
+def _findings(tmp_path: Path, gamma_reg: dict, flip_reg: dict) -> str:
+    record = {
+        "symbol": "AAAUSDT", "n_events": 2_000_000, "gamma": 0.3, "stderr": 0.01, "acf1": 0.1,
+        "p_flip": 0.45, "zigzag_amplitude": 0.0, "total_qty": 1.0,
+    }
+    result = {
+        "period": "2023-06", "min_events": 1_000_000, "max_lag": 1000,
+        "n_symbols_requested": 1, "n_symbols_successful": 1, "n_symbols_skipped": 0,
+        "n_symbols_failed": 0, "symbols": [record], "skips": [], "failures": [],
+        "regressions": {"gamma_vs_activity": gamma_reg, "p_flip_vs_activity": flip_reg},
+    }
+    _write_results_md(tmp_path, result)
+    md = (tmp_path / "q4_cross_section.md").read_text()
+    return md.split("## Findings")[1].split("\n## ")[0]
+
+
+def test_findings_say_indistinguishable_when_slope_is_within_two_stderr(tmp_path: Path):
+    text = _findings(tmp_path, _reg(-0.0112, 0.0547), _reg(0.11, 0.017))
+    assert "indistinguishable from no relationship" in text.split("p_flip")[0]
+    assert "decreases" not in text and "weaker" not in text
+    assert "|t| = 0.2" in text
+    # the p_flip slope is 6.5 stderr from zero, so it keeps its direction language
+    assert "p_flip increases with log-activity" in text
+
+
+def test_findings_gamma_direction_is_phrased_in_gamma_not_in_memory_strength_confusion(tmp_path: Path):
+    pos = _findings(tmp_path, _reg(0.16, 0.03), _reg(0.0, 0.01))
+    assert "γ̂ increases with log-activity" in pos
+    assert "larger γ̂ (faster sign-ACF decay, shorter memory)" in pos
+    neg = _findings(tmp_path, _reg(-0.16, 0.03), _reg(-0.1, 0.01))
+    assert "γ̂ decreases with log-activity" in neg
+    assert "smaller γ̂ (slower sign-ACF decay, longer memory)" in neg
+    assert "p_flip decreases with log-activity" in neg
+    assert "persistence strengthens" in neg
+    assert "decreases log-activity" not in neg

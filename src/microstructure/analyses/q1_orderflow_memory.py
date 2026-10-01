@@ -42,12 +42,14 @@ def run_q1(root: Path, out_dir: Path, symbols: list[str], periods: list[str],
     plt.close(fig)
     _write_results_md(out_dir, results, periods)
     (out_dir / "q1_results.json").write_text(json.dumps(
-        {k: {kk: vv for kk, vv in v.items() if kk != "acf"} for k, v in results.items()}, indent=2))
+        {k: {kk: vv for kk, vv in v.items() if kk != "acf"} for k, v in results.items()}, indent=2,
+        allow_nan=False))
     return results
 
 
 def _write_results_md(out_dir: Path, results: dict, periods: list[str]) -> None:
     lo, hi = LIT_RANGE
+    n_months = len(periods)
     lines: list[str] = []
     lines.append("# Q1: Order-flow memory")
     lines.append("")
@@ -101,8 +103,9 @@ def _write_results_md(out_dir: Path, results: dict, periods: list[str]) -> None:
         "aggressor decisions, not raw prints."
     )
     lines.append(
-        "- The sample is 2 months of one market regime per symbol, so γ̂ may not carry "
-        "over to other periods, volatility regimes, or symbols."
+        f"- The sample is {n_months} {'month' if n_months == 1 else 'months'} of one market "
+        "regime per symbol, so γ̂ may not carry over to other periods, volatility regimes, "
+        "or symbols."
     )
     lines.append("")
     (out_dir / "q1_results.md").write_text("\n".join(lines))

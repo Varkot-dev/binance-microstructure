@@ -177,7 +177,7 @@ def tick_sizes_from_exchange_info(raw: dict) -> dict[str, float]:
 def cache_exchange_info(raw: dict, out_dir: Path) -> Path:
     out_dir.mkdir(parents=True, exist_ok=True)
     p = out_dir / "exchangeinfo_snapshot.json"
-    p.write_text(json.dumps(raw, indent=2))
+    p.write_text(json.dumps(raw, indent=2, allow_nan=False))
     return p
 
 
@@ -207,6 +207,14 @@ def mean_trade_price(root: Path, symbol: str, period: str = "2023-06") -> float 
 def _load_q4_symbols(q4_json_path: Path) -> list[dict]:
     data = json.loads(q4_json_path.read_text())
     return data["symbols"]
+
+
+def _load_q4_flip_regression(q4_json_path: Path) -> dict | None:
+    """Q4's p_flip ~ log10(n_events) regression record, or None if it is not in the file."""
+    reg = json.loads(q4_json_path.read_text()).get("regressions", {}).get("p_flip_vs_activity")
+    if not reg or not all(k in reg for k in ("slope", "r2", "n")):
+        return None
+    return reg
 
 
 def _assemble_records(
@@ -271,6 +279,7 @@ def run_q4b(
     """
     out_dir.mkdir(parents=True, exist_ok=True)
     q4_symbols = _load_q4_symbols(q4_json_path)
+    q4_reg = _load_q4_flip_regression(q4_json_path)
 
     raw_exchange_info = fetch_exchange_info(client=client, url=source_url)
     cache_exchange_info(raw_exchange_info, out_dir)
@@ -297,8 +306,8 @@ def run_q4b(
             "reg_joint": None,
             "corr_log_n_log_rel_tick": None,
         }
-        _write_results_md(out_dir, result)
-        (out_dir / "q4b_tick_confound.json").write_text(json.dumps(result, indent=2))
+        _write_results_md(out_dir, result, q4_reg)
+        (out_dir / "q4b_tick_confound.json").write_text(json.dumps(result, indent=2, allow_nan=False))
         return result
 
     log_n = np.array([np.log10(r["n_events"]) for r in records])
@@ -319,8 +328,8 @@ def run_q4b(
     }
 
     _plot_flip_vs_rel_tick(out_dir, records)
-    _write_results_md(out_dir, result)
-    (out_dir / "q4b_tick_confound.json").write_text(json.dumps(result, indent=2))
+    _write_results_md(out_dir, result, q4_reg)
+    (out_dir / "q4b_tick_confound.json").write_text(json.dumps(result, indent=2, allow_nan=False))
     return result
 
 
@@ -370,16 +379,29 @@ def _fmt_regression(reg: dict | None) -> str:
     return ", ".join(parts) + f", R² = {reg['r2']:.4f}, n = {reg['n']}"
 
 
-def _write_results_md(out_dir: Path, result: dict) -> None:
+def _question_lead(q4_reg: dict | None) -> str:
+    if q4_reg is None:
+        return (
+            "Q4 found `p_flip ~ log10(n_events)`: more actively traded symbols flip sign "
+            "more often."
+        )
+    return (
+        f"Q4 found `p_flip ~ log10(n_events)` with slope {q4_reg['slope']:+.4f} "
+        f"(R² = {q4_reg['r2']:.4f}, n = {q4_reg['n']}): more actively traded symbols flip "
+        "sign more often."
+    )
+
+
+def _write_results_md(out_dir: Path, result: dict, q4_reg: dict | None = None) -> None:
     regs = result["regressions"]
+    n_q4 = result["n_q4_symbols"]
     lines: list[str] = []
     lines.append("# Q4b: tick-size confound")
     lines.append("")
     lines.append("## Question")
     lines.append("")
     lines.append(
-        "Q4 found `p_flip ~ log10(n_events)` with slope +0.1114 (R² = 0.2632, n = 121): "
-        "more actively traded symbols flip sign more often. One alternative is relative "
+        f"{_question_lead(q4_reg)} One alternative is relative "
         "tick size (`tickSize / price`), a mechanical driver of bid-ask bounce that "
         "plausibly correlates with activity. If it is the real driver, \"activity\" in "
         "Q4's regression is a proxy and the competitive-response reading is an artifact of "
@@ -399,7 +421,7 @@ def _write_results_md(out_dir: Path, result: dict) -> None:
         lines.append("")
         lines.append("   The endpoint used differs from the default; see Caveats.")
     lines.append(
-        "2. **Mean price**: for each of Q4's 121 successful symbols, the mean aggTrades "
+        f"2. **Mean price**: for each of Q4's {n_q4} successful symbols, the mean aggTrades "
         f"price over {result['period']}, from a lazy Polars scan of the parquet Q4 used. "
         "`rel_tick = tickSize / mean_price`."
     )
@@ -415,7 +437,7 @@ def _write_results_md(out_dir: Path, result: dict) -> None:
     lines.append(
         "**t-ratios** are the coefficient over its classical-OLS stderr, which assumes "
         "i.i.d. homoskedastic residuals. That is unverified and likely violated in a "
-        "heterogeneous cross-section of 121 assets with no correction for cross-sectional "
+        f"heterogeneous cross-section of {n_q4} assets with no correction for cross-sectional "
         "dependence or heteroskedasticity (the same caveat as Q4). Read them as coefficient "
         "size relative to noise, not as a test with a valid p-value."
     )
@@ -448,7 +470,7 @@ def _write_results_md(out_dir: Path, result: dict) -> None:
 
     lines.append("## Verdict")
     lines.append("")
-    lines.append(_verdict_paragraph(regs))
+    lines.append(_verdict_paragraph(regs, result.get("exchange_info_url", "")))
     lines.append("")
 
     if result["skipped"]:
@@ -473,7 +495,7 @@ def _write_results_md(out_dir: Path, result: dict) -> None:
         "window. This error is probably small for most symbols and is not corrected."
     )
     lines.append(
-        "- 121-symbol sample, reduced to the usable subset above. Symbols missing from the "
+        f"- {n_q4}-symbol sample, reduced to the usable subset above. Symbols missing from the "
         "snapshot (e.g. delisted or renamed since June 2023) are dropped, not imputed."
     )
     lines.append(
@@ -492,7 +514,20 @@ def _write_results_md(out_dir: Path, result: dict) -> None:
     (out_dir / "q4b_tick_confound.md").write_text("\n".join(lines))
 
 
-def _verdict_paragraph(regs: dict) -> str:
+BORDERLINE_T = (2.0, 2.5)  # |t| in [lo, hi) is too close to the cutoff to call either way
+
+
+def _t_state(t_ratio: float) -> str:
+    """'yes' if |t| >= BORDERLINE_T[1], 'borderline' if in [lo, hi), else 'no'."""
+    t = abs(t_ratio)
+    if t >= BORDERLINE_T[1]:
+        return "yes"
+    if t >= BORDERLINE_T[0]:
+        return "borderline"
+    return "no"
+
+
+def _verdict_paragraph(regs: dict, source_url: str = "") -> str:
     if regs.get("note"):
         return f"Not estimable: {regs['note']}."
 
@@ -502,14 +537,28 @@ def _verdict_paragraph(regs: dict) -> str:
     tick_coef = coefs["log10_rel_tick"]
     corr = regs["corr_log_n_log_rel_tick"]
 
-    n_survives = abs(n_coef["t_ratio"]) >= 2.0
-    tick_survives = abs(tick_coef["t_ratio"]) >= 2.0
+    n_state, tick_state = _t_state(n_coef["t_ratio"]), _t_state(tick_coef["t_ratio"])
+    n_survives = n_state == "yes"
+    tick_survives = tick_state == "yes"
 
     reg_activity_r2 = regs["reg_activity"]["r2"]
     reg_tick_r2 = regs["reg_tick"]["r2"]
     joint_r2 = reg_joint["r2"]
 
-    if n_survives and not tick_survives:
+    if "borderline" in (n_state, tick_state):
+        lo_t, hi_t = BORDERLINE_T
+        tick_source = "testnet tick sizes" if "testnet" in source_url else "tick sizes from today's exchangeInfo"
+        verdict = (
+            "**Borderline, and inconclusive.** In the joint regression (c), "
+            f"log10(n_events) has coefficient {n_coef['value']:.4f} (t≈{n_coef['t_ratio']:.2f}) "
+            f"and log10(rel_tick) has {tick_coef['value']:.4f} (t≈{tick_coef['t_ratio']:.2f}) "
+            f"(collinearity corr = {corr:.4f}). At least one |t| falls between {lo_t:.1f} and "
+            f"{hi_t:.1f}, too close to the {lo_t:.1f} cutoff to call it distinguishable from zero "
+            f"or not. The inputs are {tick_source}, not the tick sizes in force when the trade "
+            "data were recorded, and the t-ratio is not a valid test here (see Method), so I do "
+            "not conclude that the tick-size confound is present or absent."
+        )
+    elif n_survives and not tick_survives:
         verdict = (
             f"**Activity survives, relative tick size does not.** In the joint regression (c), "
             f"log10(n_events) has coefficient {n_coef['value']:.4f} (t≈{n_coef['t_ratio']:.2f}) "

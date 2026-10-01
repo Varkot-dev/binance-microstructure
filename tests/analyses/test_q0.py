@@ -1,10 +1,12 @@
+import zlib
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 import numpy as np
 import polars as pl
+import pytest
 
-from microstructure.analyses.q0_aggregation_effect import run_q0
+from microstructure.analyses.q0_aggregation_effect import _write_results_md, run_q0
 from microstructure.data.catalog import parquet_path
 from microstructure.synthetic import markov_signs
 
@@ -73,7 +75,7 @@ def test_run_q0_shows_raw_gamma_inflated_relative_to_aggregated(tmp_path: Path):
 def test_run_q0_multiple_symbols_and_periods_all_present(tmp_path: Path):
     for sym in ("AAAUSDT", "BBBUSDT"):
         for period in ("2023-06", "2023-07"):
-            _write_sweep_fixture(tmp_path, sym, period, 5_000, 2, seed=hash((sym, period)) % 1000)
+            _write_sweep_fixture(tmp_path, sym, period, 5_000, 2, seed=zlib.crc32(f"{sym}_{period}".encode()) % 1000)
 
     out = tmp_path / "results"
     res = run_q0(tmp_path, out, symbols=["AAAUSDT", "BBBUSDT"], periods=["2023-06", "2023-07"])
@@ -84,3 +86,52 @@ def test_run_q0_multiple_symbols_and_periods_all_present(tmp_path: Path):
     for cell in res.values():
         assert cell["raw"]["n"] == 10_000
         assert cell["aggregated"]["n"] == 5_000
+
+
+def _cell(sym: str, period: str, raw_gamma: float, agg_gamma: float) -> dict:
+    return {
+        "symbol": sym,
+        "period": period,
+        "raw": {"n": 200, "acf1": 0.3, "gamma": raw_gamma, "gamma_stderr": 0.01},
+        "aggregated": {"n": 100, "acf1": 0.0, "gamma": agg_gamma, "gamma_stderr": 0.01},
+        "prints_per_event": 2.0,
+        "gamma_inflation": raw_gamma - agg_gamma,
+    }
+
+
+def test_summary_range_counts_come_from_the_table(tmp_path: Path):
+    # raw in range in 1 of 4, aggregated in 2 of 4, never both (the committed table's pattern)
+    results = {
+        "a": _cell("A", "p1", 0.96, 0.46),
+        "b": _cell("B", "p1", 0.79, 0.33),
+        "c": _cell("C", "p1", 0.71, 0.29),
+        "d": _cell("D", "p1", 0.50, 0.21),
+    }
+    _write_results_md(tmp_path, results)
+    md = (tmp_path / "q0_aggregation_effect.md").read_text()
+    summary = md.split("## Method")[0]
+    assert "in 1 of 4 cells and aggregated" in summary
+    assert "γ̂ in 2 of 4" in summary
+    assert "Both pass in 0 of 4" in summary
+    assert "half the cells" not in md
+    assert "more often looks like a clean" not in md
+
+
+def test_summary_counts_when_both_pass(tmp_path: Path):
+    results = {"a": _cell("A", "p1", 0.6, 0.4), "b": _cell("B", "p1", 0.9, 0.2)}
+    _write_results_md(tmp_path, results)
+    summary = (tmp_path / "q0_aggregation_effect.md").read_text().split("## Method")[0]
+    assert "in 1 of 2 cells and aggregated γ̂ in 1 of 2" in summary
+    assert "Both pass in 1 of 2" in summary
+
+
+def test_run_q0_raises_on_nan_rather_than_writing_invalid_json(tmp_path: Path, monkeypatch):
+    _write_sweep_fixture(tmp_path, "TESTUSDT", "2023-06", 2_000, 2, seed=1)
+    import microstructure.analyses.q0_aggregation_effect as q0
+
+    real_stats = q0._stats
+    monkeypatch.setattr(q0, "_stats", lambda s: {**real_stats(s), "gamma": float("nan")})
+    out = tmp_path / "results"
+    with pytest.raises(ValueError, match="Out of range float"):
+        run_q0(tmp_path, out, symbols=["TESTUSDT"], periods=["2023-06"])
+    assert not (out / "q0_aggregation_effect.json").exists()

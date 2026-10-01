@@ -26,8 +26,14 @@ from pathlib import Path
 import numpy as np
 import pytest
 
+from microstructure.analyses import q8_regimes as q8
+from microstructure.analyses.q4_cross_section import SLOPE_MIN_SE
 from microstructure.analyses.q8_regimes import (
+    FLIP_SLOPE_MIN_SE,
     _average_ranks,
+    _loo_r2_sentence,
+    _loo_slope_sentence,
+    _parse_label_path_args,
     _reg_mismatch,
     run_q8,
     spearman_corr,
@@ -776,3 +782,78 @@ def test_native_regime_splits_laws_by_cohort(tmp_path: Path) -> None:
     report = (out_dir / "q8_regimes.md").read_text()
     assert "Cohort split" in report
     assert "cannot and does not speak to new listings" not in report
+
+
+def _influence(**over: object) -> dict:
+    base = {
+        "full_slope": 0.16, "full_r2": 0.25, "n": 94,
+        "loo_r2_min": 0.19, "loo_r2_min_symbol": "AAAUSDT",
+        "loo_r2_max": 0.47, "loo_r2_max_symbol": "BBBUSDT",
+        "loo_slope_min": 0.14, "loo_slope_min_symbol": "AAAUSDT",
+        "loo_slope_max": 0.18, "loo_slope_max_symbol": "BBBUSDT",
+    }
+    return {**base, **over}
+
+
+def test_drop_one_out_slope_consequence_is_conditional():
+    assert "stays positive under every single-symbol removal" in _loo_slope_sentence(_influence())
+    assert "does not depend on any one symbol" in _loo_slope_sentence(_influence())
+    neg = _influence(full_slope=-0.16, loo_slope_min=-0.18, loo_slope_max=-0.14)
+    assert "stays negative" in _loo_slope_sentence(neg)
+
+    flips = _loo_slope_sentence(_influence(loo_slope_min=-0.02, loo_slope_min_symbol="CCCUSDT"))
+    assert "does **not** keep one sign" in flips
+    assert "dropping CCCUSDT" in flips
+    assert "does not depend on any one symbol" not in flips
+    assert "direction of the break depends on individual symbols" in flips
+
+
+def test_drop_one_out_r2_clause_follows_the_actual_range():
+    large = _loo_r2_sentence(_influence())  # (0.47 - 0.19) / 0.25 = 112%
+    assert "R² spans 112% of its full-sample value" in large
+    assert "outlier-sensitive" in large
+    assert "at or above 25%" in large
+    small = _loo_r2_sentence(_influence(loo_r2_min=0.24, loo_r2_max=0.27))  # 12%
+    assert "R² spans 12%" in small
+    assert "outlier-sensitive" not in small
+    assert "no single symbol moves the strength" in small
+
+
+def test_native_label_must_be_among_regime_labels(tmp_path: Path):
+    baseline_dir, regime_dir = tmp_path / "baseline", tmp_path / "regime"
+    _write_q4_json(baseline_dir, "2023-06", _baseline_records())
+    _write_q4_json(regime_dir, "2023-07", _regime_records(0.05, 0.3, SYMBOLS))
+    with pytest.raises(ValueError, match="native regime label"):
+        run_q8(
+            tmp_path / "results", baseline_dir=baseline_dir, regime_dirs={"2023-07": regime_dir},
+            baseline_label="2023-06", native_regimes={"2026-07"},
+        )
+    assert not (tmp_path / "results" / "q8_regimes.json").exists()
+
+
+def test_duplicate_label_arguments_raise():
+    with pytest.raises(ValueError, match="more than once"):
+        _parse_label_path_args(["2023-07=a", "2023-07=b"], "--regime")
+    assert _parse_label_path_args(["2023-07=a", "2024-07=b"], "--regime") == {
+        "2023-07": Path("a"), "2024-07": Path("b"),
+    }
+
+
+def test_scatter_panel_uses_the_chronologically_first_regime(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
+    seen: list[str] = []
+
+    def fake_overlap(baseline_q4: dict, regime_q4: dict) -> tuple[list, list]:
+        seen.append(regime_q4["tag"])
+        return [], []
+
+    monkeypatch.setattr(q8, "_overlap_records", fake_overlap)
+    q4 = lambda tag: {"symbols": [], "tag": tag}
+    q8._plot(tmp_path, "2023-06", q4("base"), {"2026-07": q4("late"), "2024-07": q4("early")})
+    assert seen == ["early"]
+
+
+def test_flip_slope_threshold_matches_q4_and_native_default_is_frozenset():
+    import inspect
+
+    assert FLIP_SLOPE_MIN_SE == SLOPE_MIN_SE
+    assert "frozenset" in str(inspect.signature(run_q8).parameters["native_regimes"].annotation)

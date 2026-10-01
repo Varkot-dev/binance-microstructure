@@ -44,11 +44,21 @@ N_ZIGZAG_LAGS = 10
 EVEN_LAGS = [2, 4, 6, 8, 10]
 ODD_LAGS = [1, 3, 5, 7, 9]
 RNG_SEED = 0
+# A perturbed variant "survives" if its zigzag amplitude keeps the baseline's sign and
+# moves by at most this fraction of the baseline amplitude.
+SURVIVAL_MAX_REL_CHANGE = 0.25
 
 
 def zigzag_amplitude(acf: np.ndarray) -> float:
     """mean(acf at even lags 2,4,6,8,10) - mean(acf at odd lags 1,3,5,7,9)."""
     return float(acf[EVEN_LAGS].mean() - acf[ODD_LAGS].mean())
+
+
+def _survives(amp_base: float, amp_variant: float) -> bool:
+    """True if the variant keeps the baseline's sign and is within SURVIVAL_MAX_REL_CHANGE of it."""
+    if amp_base == 0.0 or amp_base * amp_variant <= 0.0:
+        return False
+    return abs(amp_variant - amp_base) / abs(amp_base) <= SURVIVAL_MAX_REL_CHANGE
 
 
 def _same_ts_group_info(ts: np.ndarray) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
@@ -145,7 +155,7 @@ def run_q1b(root: Path, out_dir: Path, symbol: str, period: str) -> dict:
 
     _plot(out_dir, acf_a, acf_b, acf_c, symbol, period)
     _write_results_md(out_dir, result)
-    (out_dir / "q1b_zigzag.json").write_text(json.dumps(result, indent=2))
+    (out_dir / "q1b_zigzag.json").write_text(json.dumps(result, indent=2, allow_nan=False))
     return result
 
 
@@ -170,6 +180,9 @@ def _write_results_md(out_dir: Path, result: dict) -> None:
     amp_a, amp_b, amp_c = a["zigzag_amplitude"], b["zigzag_amplitude"], c["zigzag_amplitude"]
     rel_change_b = abs(amp_b - amp_a) / abs(amp_a) if amp_a else float("nan")
     rel_change_c = abs(amp_c - amp_a) / abs(amp_a) if amp_a else float("nan")
+    survives_b, survives_c = _survives(amp_a, amp_b), _survives(amp_a, amp_c)
+    survives_both = survives_b and survives_c
+    threshold = f"{SURVIVAL_MAX_REL_CHANGE:.0%}"
 
     lines: list[str] = []
     lines.append("# Q1b: short-lag ACF zigzag and the tie-break")
@@ -239,16 +252,33 @@ def _write_results_md(out_dir: Path, result: dict) -> None:
     lines.append("")
     lines.append("## Verdict")
     lines.append("")
-    lines.append(
-        f"**The zigzag survives both perturbations, so it is not a tie-break artifact.** "
-        f"The amplitude barely moves under the randomized tie-break ({amp_a:.6f} -> "
-        f"{amp_b:.6f}, a {rel_change_b:.2%} change) and stays large under netting "
-        f"({amp_c:.6f}, a {rel_change_c:.2%} change). Only "
-        f"{result['frac_consecutive_pairs_same_ts']:.2%} of consecutive event pairs share a "
-        "timestamp, so the tie-break touches too few adjacent pairs to produce an "
-        "alternation this size. The most likely explanation is market structure, such as "
-        "bid-ask bounce or interleaved liquidity-taking reversals."
-    )
+    if survives_both:
+        lines.append(
+            f"**The zigzag survives both perturbations, so it is not a tie-break artifact.** "
+            f"I count a variant as surviving if its amplitude keeps the baseline's sign and "
+            f"moves by at most {threshold}. The amplitude barely moves under the randomized "
+            f"tie-break ({amp_a:.6f} -> {amp_b:.6f}, a {rel_change_b:.2%} change) and stays "
+            f"large under netting ({amp_c:.6f}, a {rel_change_c:.2%} change). Only "
+            f"{result['frac_consecutive_pairs_same_ts']:.2%} of consecutive event pairs share a "
+            "timestamp, so the tie-break touches too few adjacent pairs to produce an "
+            "alternation this size. The most likely explanation is market structure, such as "
+            "bid-ask bounce or interleaved liquidity-taking reversals."
+        )
+    else:
+        failed = [
+            f"{name} ({amp:.6f}, a {rel:.2%} change)"
+            for name, amp, rel, ok in (
+                ("the randomized tie-break", amp_b, rel_change_b, survives_b),
+                ("netting", amp_c, rel_change_c, survives_c),
+            )
+            if not ok
+        ]
+        lines.append(
+            f"**The zigzag does not survive every perturbation, so a tie-break contribution "
+            f"cannot be ruled out.** I count a variant as surviving if its amplitude keeps the "
+            f"baseline's sign and moves by at most {threshold}. Baseline amplitude is "
+            f"{amp_a:.6f}; it fails that test under {' and '.join(failed)}."
+        )
     lines.append("")
     lines.append(
         "This suggests Q1's gamma fits are unaffected, but I did not measure that. Q1's "
@@ -274,10 +304,15 @@ def _write_results_md(out_dir: Path, result: dict) -> None:
         "- `sign_acf` uses the unbiased normalization (divide by n-lag). At lags <=10 with "
         "n in the tens of millions the difference is negligible."
     )
+    persist = (
+        " The dominant odd/even pattern (negative ACF(1), large positive ACF(2)) persists "
+        "through both perturbations."
+        if survives_both
+        else ""
+    )
     lines.append(
         "- Netting (C) dampens the zigzag amplitude relative to baseline, so same-ts "
-        "buy/sell pairs contribute some of it. The dominant odd/even pattern (negative "
-        "ACF(1), large positive ACF(2)) persists through both perturbations."
+        f"buy/sell pairs contribute some of it.{persist}"
     )
     lines.append(
         "- Timestamps have millisecond resolution and finer ordering is unrecoverable. "

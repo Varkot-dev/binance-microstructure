@@ -2,7 +2,7 @@
 
 ## Method
 
-**Symbol selection**: the 41-symbol union of (a) the fixed 16-symbol panel (`results/panel_2023-06.txt`) and (b) the top `--top-n` (default 40) symbols by June-2023 `n_events` within the 207-symbol universe (`results/universe_2023-06.txt`), ranked with the activity column in `results/q4_cross_section.parquet`. The union is deduplicated (`results/q6_symbols_2023-06.txt`). The panel was chosen to be liquid, so the two sets overlap 15/16 and the union has 41 symbols, not the ~50-56 a naive 16+40 sum suggests.
+**Symbol selection**: the 41 symbols listed in the file passed as `--symbols-file`. The committed list, `results/q6_symbols_2023-06.txt`, is the deduplicated union of (a) the fixed 16-symbol panel (`results/panel_2023-06.txt`) and (b) the 40 most active symbols by June-2023 `n_events` within the 207-symbol universe (`results/universe_2023-06.txt`), ranked with the activity column in `results/q4_cross_section.parquet`. The panel was chosen to be liquid, so the two sets overlap 15/16 and the union has 41 symbols, not the ~50-56 a naive 16+40 sum suggests.
 
 For each symbol I load one month (2026-07) of aggTrades and collapse it to aggressor-level events (`load_events`). A per-symbol exception (missing parquet, too few events for the window/guard requirements) is logged in `failures` and does not abort the run.
 
@@ -108,7 +108,7 @@ Across the 32 successful symbols, the median endogeneity level (median of per-sy
 
 **Comparison to the literature**: Mark, Sila & Weber (2022, *European Journal of Finance*) find BTC's endogeneity level, fit with power-law kernels, comparable to fiat FX markets, so crypto is not structurally different from mature, near-critical asset classes in that study. This panel's exponential-kernel median of 0.5766 is well below a near-critical regime at face value. Given the exponential-kernel caveat below, it is a lower bound on the true (power-law) endogeneity level and not directly comparable to that literature's power-law fits.
 
-Endogeneity decreases with log-activity across the panel (slope -0.0012, R² 0.0000, n=32).
+The slope of α̂_median on log-activity across the panel (slope -0.0012, stderr 0.0913, |t| = 0.0, R² 0.0000, n=32) is within 2 standard errors of zero, so it is indistinguishable from no relationship with activity.
 
 **The two branching-ratio estimators disagree substantially.** The median absolute difference is 0.2977 (Pearson correlation 0.2166, weak positive, not a strong cross-check), and the gap is one-directional: count-variance reads higher than the MLE for 32/32 symbols (100%), not just on average (median n̂_CV ≈ 0.8903 vs. median α̂_median ≈ 0.5766). Two explanations, not mutually exclusive. (1) Exponential-kernel misspecification: if the true kernel is a slowly decaying power law, the exponential MLE truncates long-range excitation and understates alpha, while `branching_count_variance` assumes no kernel shape. A gap in this direction fits that, but not uniquely. (2) Window sensitivity: n̂_CV uses one fixed 200s window per symbol, and its large-window asymptotic is approximate at any finite window (see the `branching_count_variance` docstring). The data here cannot separate the two. A power-law-kernel MLE refit and a window sweep on alpha_cv would, and I did not run either.
 

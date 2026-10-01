@@ -4,7 +4,7 @@ from pathlib import Path
 import numpy as np
 import polars as pl
 
-from microstructure.analyses.q2_response import run_q2
+from microstructure.analyses.q2_response import _write_results_md, run_q2
 from microstructure.data.catalog import parquet_path
 from microstructure.synthetic import iid_signs
 
@@ -144,3 +144,52 @@ def test_run_q2_raises_on_excessive_drop_rate(tmp_path: Path):
 
     with pytest.raises(ValueError):
         run_q2(tmp_path, out, symbol=symbol, periods=["2023-06-01"], max_lag=50)
+
+
+def _result(power_exp: float, exp_rate: float, r500: float) -> dict:
+    response = [0.0] * 501
+    response[1] = 0.01
+    response[500] = r500
+    return {
+        "response": response, "response_exponent": power_exp, "response_stderr": 0.01,
+        "n_events": 1000, "n_dropped": 0, "drop_fraction": 0.0, "power_law_rss": 1.0,
+        "exponential_rate": exp_rate, "exponential_stderr": 0.001, "exponential_rss": 2.0,
+        "better_fit": "power_law",
+    }
+
+
+def _md(tmp_path: Path, result: dict, q1_gamma: float | None = None) -> str:
+    _write_results_md(tmp_path, result, "ETHUSDT", ["2023-06-01"], "2023-06", q1_gamma=q1_gamma)
+    return (tmp_path / "q2_results.md").read_text()
+
+
+def test_both_negative_claim_requires_both_parameters_negative(tmp_path: Path):
+    both = _md(tmp_path, _result(-0.08, -0.0009, 0.05))
+    assert "Both fitted parameters are negative" in both
+    only_power = _md(tmp_path, _result(-0.08, 0.002, 0.05))
+    assert "Both fitted parameters are negative" not in only_power
+    assert "the two fits disagree" in only_power
+    only_exp = _md(tmp_path, _result(0.08, -0.002, 0.05))
+    assert "Both fitted parameters are negative" not in only_exp
+    assert "the two fits disagree" in only_exp
+    neither = _md(tmp_path, _result(0.3, 0.002, 0.005))
+    assert "disagree" not in neither and "Both fitted" not in neither
+
+
+def test_band_sentence_is_computed_from_the_measured_ratio(tmp_path: Path):
+    inside = _md(tmp_path, _result(-0.08, -0.0009, 0.05))  # ratio 5.0
+    assert "the measured 5.00x falls inside it" in inside
+    above = _md(tmp_path, _result(-0.08, -0.0009, 0.10))  # ratio 10.0
+    assert "falls inside it" not in above
+    assert "the measured 10.00x falls outside it, above the band" in above
+    below = _md(tmp_path, _result(-0.08, -0.0009, 0.02))  # ratio 2.0
+    assert "the measured 2.00x falls outside it, below the band" in below
+
+
+def test_q1_gamma_is_read_not_hardcoded(tmp_path: Path):
+    md = _md(tmp_path, _result(-0.08, -0.0009, 0.05), q1_gamma=0.38)
+    assert "γ̂=0.38 for ETHUSDT" in md
+    assert "differs from Q1's" in md
+    md = _md(tmp_path, _result(-0.08, -0.0009, 0.05), q1_gamma=None)
+    assert "for ETH," not in md
+    assert "With long-memory order flow (Q1)" in md

@@ -2,7 +2,7 @@
 
 ## Summary
 
-If the pipeline skips aggressor aggregation, it can look like a successful replication. In every symbol-month tested, raw-print gamma is inflated by roughly +0.29 to +0.50 relative to the aggregated gamma from the same data. That puts it inside the equities/futures range (0.3-0.7, Bouchaud et al. 2004) in half the cells below and past it in the other half, while the aggregated gamma moves lower or further out of range in every cell. A check that gamma falls in the literature range cannot tell the two pipelines apart: both can pass, on different numbers, and the broken one more often looks like a clean replication.
+If the pipeline skips aggressor aggregation, raw-print γ̂ minus aggregated γ̂ is +0.29 to +0.50 in every symbol-month tested. Raw γ̂ lies inside the equities/futures range (0.3-0.7, Bouchaud et al. 2004) in 1 of 4 cells and aggregated γ̂ in 2 of 4. Both pass in 0 of 4. The raw series is above 0.7 in 3 of 4 cells. Which pipeline lands in range changes from cell to cell, so an in-range check alone does not show whether aggregation was applied.
 
 ## Method
 
@@ -28,7 +28,7 @@ Equities/futures sign-ACF exponent range (Bouchaud et al. 2004): γ ≈ 0.3–0.
 | ETHUSDT | 2023-06 | 0.7077 | no | 0.2858 | no |
 | ETHUSDT | 2023-07 | 0.4983 | yes | 0.2055 | no |
 
-The direction is the same in every cell. Raw-print gamma exceeds aggregated gamma by roughly +0.29 to +0.50, and raw lag-1 ACF is strongly positive (about 0.28-0.43) because the matching engine walks the book within a single aggressor decision. Whether the raw γ̂ lands inside [0.3, 0.7] or overshoots 0.7 varies by symbol-month, so the table is the reference.
+The direction is the same in every cell. Raw-print gamma exceeds aggregated gamma by +0.29 to +0.50, and raw lag-1 ACF is positive (about 0.28-0.43) because the matching engine walks the book within a single aggressor decision. Whether the raw γ̂ lands inside [0.3, 0.7] or overshoots 0.7 varies by symbol-month, so the table is the reference.
 
 BTC shows a second effect: aggregation flips its lag-1 ACF from positive to negative, while ETH's aggregated lag-1 ACF stays small and positive.
 

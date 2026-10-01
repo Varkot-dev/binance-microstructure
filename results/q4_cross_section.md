@@ -59,9 +59,9 @@ Requested: 207. Successful: 121. Skipped (below min_events): 86. Failed: 0.
 
 ## Findings
 
-γ̂ decreases log-activity across the 121-symbol successful set (slope -0.0112, R² 0.0003). More actively traded symbols in this sample show weaker long-memory decay than less actively traded ones.
+The slope of γ̂ on log-activity across the 121-symbol successful set (slope -0.0112, stderr 0.0547, |t| = 0.2, R² 0.0003) is within 2 standard errors of zero, so it is indistinguishable from no relationship with activity.
 
-p_flip increases log-activity (slope 0.1114, R² 0.2632). Since p_flip = 0.5 means no persistence, persistence weakens as activity increases.
+p_flip increases with log-activity (slope 0.1114, R² 0.2632). Since p_flip = 0.5 means no persistence, persistence weakens as activity increases.
 
 ## Skipped (below min_events)
 

@@ -35,17 +35,23 @@ import pytest
 from microstructure.analyses import q6b_kernel_sensitivity as q6b
 from microstructure.analyses.q6b_kernel_sensitivity import (
     _DRIFT_KEYS,
+    BOUNDARY_N_HAT,
     DEFAULT_DRIFT_BLOCKS,
+    DEFAULT_NULL_SIMS,
     DESEASON_BIN_WIDTH_S,
     DRIFT_SUSPECT_MULTIPLIER,
     DRIFT_VERDICTS,
     INCONCLUSIVE_REASONS,
     MAX_FIT_EVENTS,
     _drift_headline,
+    _fit_capped_multiexp,
     _inconclusive_reason,
     _is_drift_suspect,
+    _json_float,
+    _null_floor_p90,
     _parse_args,
     _symbol_record,
+    _write_results_md,
     run_q6b,
 )
 from microstructure.data.catalog import parquet_path
@@ -461,7 +467,7 @@ def _assert_only_native_scalars(value: object, path: str = "$") -> None:
 def test_symbol_record_round_trips_through_json_dumps(planted_root: Path):
     """The per-symbol record dict `_symbol_record` returns must contain only
     Python-native scalar types and must round-trip through `json.dumps`
-    (allow_nan=True, the default -- Delta21/ratios can be NaN when a K value
+    (strict, allow_nan=False -- Delta21/ratios are None when a K value
     is absent or a slow component's beta rounds to zero) without raising.
 
     This guards against `fit.converged` (from `fit_hawkes_multiexp`) and the
@@ -472,7 +478,7 @@ def test_symbol_record_round_trips_through_json_dumps(planted_root: Path):
     """
     rec = _symbol_record(planted_root, "ONEEXPUSDT", "2023-06", WINDOWS, KS, drift_blocks=0)
 
-    encoded = json.dumps(rec)  # must not raise; allow_nan=True is the default
+    encoded = json.dumps(rec, allow_nan=False)  # strict JSON: NaN/inf must already be None
     decoded = json.loads(encoded)
     assert decoded["symbol"] == "ONEEXPUSDT"
 
@@ -667,10 +673,11 @@ def test_drift_headline_long_memory_candidate_majority_names_block_width():
 def test_drift_headline_no_rise_majority_says_nothing_to_explain():
     h = _drift_headline(_headline_counts(1, 0, 4), _reasons(no_rise=3, mixed=1), 1.0, 6)
     assert (
-        "Most symbols show no material K=1→K=2 rise in this window — there is no apparent "
-        "near-criticality for the control to explain"
+        "On the first window, the one the drift control uses, most symbols show no "
+        "material K=1→K=2 rise, so the control has no rise to explain there"
     ) in h
     assert "(5 of 6 requested symbols assessed" in h
+    assert "Across all" not in h  # no across-window summary supplied
 
 
 def test_drift_headline_unresolved_names_inconclusive_count_and_largest_reason():
@@ -727,3 +734,162 @@ def test_drift_control_exception_keeps_k_sweep_record_and_is_reported(
     assert "errored = 1" in md
     df = pl.read_parquet(tmp_path / "out" / "q6b_kernel_sensitivity.parquet")
     assert df["drift_error"].to_list() == ["RuntimeError: synthetic control failure"]
+
+
+# --- review fixes: null calibration, strict JSON, first-window labelling ----
+
+
+def test_null_floor_is_calibrated_at_the_fit_cap(monkeypatch: pytest.MonkeyPatch):
+    seen: dict[str, int] = {}
+
+    def fake_null(n_events: int, **kwargs: object) -> np.ndarray:
+        seen["n_events"] = n_events
+        return np.array([0.01, 0.02, 0.03])
+
+    monkeypatch.setattr(q6b, "spurious_delta21_null", fake_null)
+    records = [{"n_events_per_window": 699_462, "n_median_by_k": {1: 0.7}}]
+    floor = _null_floor_p90(records, null_sims=3)
+    assert seen["n_events"] == MAX_FIT_EVENTS
+    assert floor["n_events_per_window"] == MAX_FIT_EVENTS
+    assert floor["n_events_per_window_uncapped"] == 699_462
+
+    small = [{"n_events_per_window": 40_000, "n_median_by_k": {1: 0.7}}]
+    assert _null_floor_p90(small, null_sims=3)["n_events_per_window"] == 40_000
+    assert seen["n_events"] == 40_000
+
+
+def test_null_sims_default_is_50_everywhere(tmp_path: Path):
+    import inspect
+
+    assert DEFAULT_NULL_SIMS == 50
+    assert inspect.signature(run_q6b).parameters["null_sims"].default == 50
+    symbols = tmp_path / "s.txt"
+    symbols.write_text("AAAUSDT\n")
+    assert _parse_args(["--symbols-file", str(symbols)]).null_sims == 50
+
+
+def test_json_float_maps_non_finite_to_none():
+    assert _json_float(float("nan")) is None
+    assert _json_float(float("inf")) is None
+    assert _json_float(None) is None
+    assert _json_float(0.25) == 0.25
+
+
+def test_record_is_strict_json_when_beta_is_non_positive(planted_root: Path, monkeypatch: pytest.MonkeyPatch):
+    from types import SimpleNamespace
+
+    def fake_fit(times: np.ndarray, t_end: float, K: int) -> SimpleNamespace:
+        return SimpleNamespace(n=0.5, alphas=np.array([0.5]), betas=np.array([0.0]), converged=True)
+
+    monkeypatch.setattr(q6b, "fit_hawkes_multiexp", fake_fit)
+    # the unbounded timescale is carried internally and flagged drift-suspect ...
+    assert _fit_capped_multiexp(np.array([0.0, 1.0, 2.0]), 2.0, 2)["inv_beta_slow"] == float("inf")
+    rec = _symbol_record(planted_root, "SMALLUSDT", "2023-06", WINDOWS, KS, drift_blocks=0)
+    assert rec["drift_suspect"] is True
+    # ... but never reaches the JSON as inf/NaN
+    assert rec["median_inv_beta_slow_k2_s"] is None
+    assert rec["ratio_inv_beta_slow_to_bin_width"] is None
+    assert rec["ratio_inv_beta_slow_to_window_length"] is None
+    assert all(w["inv_beta_slow_by_k"][2] is None for w in rec["per_window"])
+    json.dumps(rec, allow_nan=False)
+
+
+def test_record_delta21_is_none_when_k2_is_not_fit(planted_root: Path):
+    rec = _symbol_record(planted_root, "SMALLUSDT", "2023-06", WINDOWS, (1,), drift_blocks=0)
+    assert rec["delta21"] is None
+    assert rec["median_inv_beta_slow_k2_s"] is None
+    json.dumps(rec, allow_nan=False)
+
+
+def _record(symbol: str, delta21: float | None, **over: object) -> dict:
+    rec = {
+        "symbol": symbol, "n_events": 1_000_000, "n_events_per_window": 166_666, "windows": 6,
+        "ks": [1, 2, 3], "n_median_by_k": {"1": 0.7, "2": 0.8, "3": 0.85},
+        "n_converged_by_k": {"1": 6, "2": 6, "3": 6}, "delta21": delta21,
+        "median_inv_beta_slow_k2_s": 5.0 if delta21 is not None else None,
+        "window_length_s": 1000.0, "bin_width_s": 1800.0,
+        "ratio_inv_beta_slow_to_bin_width": 0.01 if delta21 is not None else None,
+        "ratio_inv_beta_slow_to_window_length": 0.005 if delta21 is not None else None,
+        "drift_suspect": False, "within_finite_sample_null": False,
+        "drift_verdict": "inconclusive", "drift_inconclusive_reason": "no_rise",
+        "dll_pw": 1.0, "dll_k2": 0.5, "dll_threshold": 9.8, "drift_n_k1": 0.7, "drift_n_k2": 0.72,
+        "n_k1_piecewise": 0.7, "drift_block_width_s": 3600.0, "drift_error": None,
+        "per_window": [
+            {"n_by_k": {"1": 0.7, "2": 0.8, "3": 0.85},
+             "converged_by_k": {"1": True, "2": True, "3": True},
+             "inv_beta_slow_by_k": {"1": 1.0, "2": 5.0, "3": 9.0}}
+        ],
+    }
+    rec.update(over)
+    return rec
+
+
+def _result(records: list[dict], null_floor: dict | None) -> dict:
+    n = len(records)
+    return {
+        "month": "2023-06", "windows": 6, "ks": [1, 2, 3], "drift_blocks": 12,
+        "n_symbols_requested": n, "n_symbols_successful": n, "n_symbols_failed": 0,
+        "records": records, "failures": [], "q6_json_used": None,
+        "cross_section": {
+            "delta21_distribution": {"median": 0.14, "mean": 0.14, "std": 0.1, "min": 0.0, "max": 0.3, "n": n},
+            "frac_n2_at_least_0_9": 0.0, "cv_comparison": None, "null_floor_p90": null_floor,
+            "drift_verdict_counts": {"drift": 0, "long_memory_candidate": 0, "inconclusive": n,
+                                      "not_run": 0, "errored": 0},
+            "drift_inconclusive_reason_counts": {"no_rise": n, "k2_insignificant": 0, "mixed": 0},
+        },
+    }
+
+
+def _null_floor(n_events: int = 250_000) -> dict:
+    return {"n_events_per_window": n_events, "n_events_per_window_uncapped": 699_462,
+            "alpha_used": 0.7, "beta_used": 2.0, "n_sims": 50, "p90": 0.01, "median": 0.007}
+
+
+def _md(tmp_path: Path, result: dict) -> str:
+    _write_results_md(tmp_path, result)
+    return (tmp_path / "q6b_kernel_sensitivity.md").read_text()
+
+
+def test_headline_labels_first_window_and_reports_across_window_delta21(tmp_path: Path):
+    recs = [_record("A", 0.30), _record("B", 0.20), _record("C", 0.05)]
+    md = _md(tmp_path, _result(recs, None))
+    assert "On the first window, the one the drift control uses" in md
+    assert "Across all 6 windows, the median-across-windows Δ21 exceeds 0.1 for 2 of 3 symbols" in md
+    assert "Most symbols show no material K=1→K=2 rise in this window" not in md
+
+
+def test_null_paragraph_is_conditional_on_how_many_symbols_are_within_it(tmp_path: Path):
+    none_within = _md(tmp_path, _result([_record("A", 0.3), _record("B", 0.2)], _null_floor()))
+    assert "(0/2 symbols)" in none_within
+    assert "Their Δ21 is no larger" not in none_within
+    assert "No symbol's Δ21 falls at or below it" in none_within
+
+    some = [_record("A", 0.005, within_finite_sample_null=True), _record("B", 0.2)]
+    md = _md(tmp_path, _result(some, _null_floor()))
+    assert "(1/2 symbols)" in md
+    assert "For the symbols within it, Δ21 is no larger than a well-specified" in md
+
+
+def test_null_paragraph_flags_a_null_calibrated_above_the_fit_cap(tmp_path: Path):
+    md = _md(tmp_path, _result([_record("A", 0.3)], _null_floor(699_462)))
+    assert "calibrated at a larger size than the fits used" in md
+    md = _md(tmp_path, _result([_record("A", 0.3)], _null_floor(250_000)))
+    assert "calibrated at a larger size" not in md
+    assert "capped at the 250,000-event fit cap" in md
+
+
+def test_boundary_fits_are_flagged_in_the_drift_table_and_notes(tmp_path: Path):
+    boundary = _record("A", 0.3, drift_n_k2=0.9999999999999999)
+    boundary["per_window"][0]["n_by_k"]["3"] = 0.9999999999999999
+    md = _md(tmp_path, _result([boundary, _record("B", 0.2)], None))
+    assert "| 0.7000 | 0.7200 |" in md  # unflagged row unchanged
+    assert "1.0000† |" in md
+    assert f"† n̂ ≥ {BOUNDARY_N_HAT:g}: the fit sits on the stationarity boundary" in md
+    assert "1 of 6 sit on the stationarity boundary" in md
+
+
+def test_none_delta21_renders_as_na(tmp_path: Path):
+    md = _md(tmp_path, _result([_record("A", None), _record("B", 0.2)], None))
+    row = next(line for line in md.splitlines() if line.startswith("| A |") and "n/a" in line)
+    assert "+nan" not in md and "nan" not in md.lower().replace("finance", "")
+    assert row.count("n/a") >= 3

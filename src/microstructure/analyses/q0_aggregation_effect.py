@@ -79,13 +79,63 @@ def run_q0(root: Path, out_dir: Path, symbols: list[str], periods: list[str]) ->
             }
 
     _write_results_md(out_dir, results)
-    (out_dir / "q0_aggregation_effect.json").write_text(json.dumps(results, indent=2))
+    (out_dir / "q0_aggregation_effect.json").write_text(json.dumps(results, indent=2, allow_nan=False))
     return results
 
 
 def _in_range(gamma: float) -> bool:
     lo, hi = LIT_RANGE
     return lo <= gamma <= hi
+
+
+def _range_counts(results: dict) -> dict[str, int]:
+    """Cell counts for the literature-range check, computed from the table data."""
+    cells = list(results.values())
+    raw_in = [_in_range(c["raw"]["gamma"]) for c in cells]
+    agg_in = [_in_range(c["aggregated"]["gamma"]) for c in cells]
+    return {
+        "n": len(cells),
+        "raw_in": sum(raw_in),
+        "agg_in": sum(agg_in),
+        "both_in": sum(r and a for r, a in zip(raw_in, agg_in, strict=True)),
+        "raw_above": sum(c["raw"]["gamma"] > LIT_RANGE[1] for c in cells),
+    }
+
+
+def _inflation_phrase(results: dict) -> str:
+    infl = [c["gamma_inflation"] for c in results.values()]
+    lo, hi = min(infl), max(infl)
+    where = "in every symbol-month tested" if lo > 0 else "across the cells below"
+    return f"raw-print γ̂ minus aggregated γ̂ is {lo:+.2f} to {hi:+.2f} {where}"
+
+
+def _summary_sentence(results: dict) -> str:
+    lo, hi = LIT_RANGE
+    k = _range_counts(results)
+    n = k["n"]
+    return (
+        f"If the pipeline skips aggressor aggregation, {_inflation_phrase(results)}. "
+        f"Raw γ̂ lies inside the equities/futures range ({lo:.1f}-{hi:.1f}, Bouchaud et al. "
+        f"2004) in {k['raw_in']} of {n} cells and aggregated γ̂ in {k['agg_in']} of {n}. "
+        f"Both pass in {k['both_in']} of {n}. The raw series is above {hi:.1f} in "
+        f"{k['raw_above']} of {n} cells. Which pipeline lands in range changes from cell to "
+        "cell, so an in-range check alone does not show whether aggregation was applied."
+    )
+
+
+def _direction_paragraph(results: dict) -> str:
+    lo, hi = LIT_RANGE
+    cells = list(results.values())
+    infl = [c["gamma_inflation"] for c in cells]
+    acf = [c["raw"]["acf1"] for c in cells]
+    same_dir = "The direction is the same in every cell. " if min(infl) > 0 else ""
+    return (
+        f"{same_dir}Raw-print gamma exceeds aggregated gamma by {min(infl):+.2f} to "
+        f"{max(infl):+.2f}, and raw lag-1 ACF is positive (about {min(acf):.2f}-{max(acf):.2f}) "
+        "because the matching engine walks the book within a single aggressor decision. "
+        f"Whether the raw γ̂ lands inside [{lo:.1f}, {hi:.1f}] or overshoots {hi:.1f} varies by "
+        "symbol-month, so the table is the reference."
+    )
 
 
 def _write_results_md(out_dir: Path, results: dict) -> None:
@@ -95,17 +145,7 @@ def _write_results_md(out_dir: Path, results: dict) -> None:
     lines.append("")
     lines.append("## Summary")
     lines.append("")
-    lines.append(
-        f"If the pipeline skips aggressor aggregation, it can look like a successful "
-        f"replication. In every symbol-month tested, raw-print gamma is inflated by "
-        f"roughly +0.29 to +0.50 relative to the aggregated gamma from the same data. "
-        f"That puts it inside the equities/futures range ({lo:.1f}-{hi:.1f}, Bouchaud et "
-        "al. 2004) in half the cells below and past it in the other half, while the "
-        "aggregated gamma moves lower or further out of range in every cell. A check that "
-        "gamma falls in the literature range cannot tell the two pipelines apart: both can "
-        "pass, on different numbers, and the broken one more often looks like a clean "
-        "replication."
-    )
+    lines.append(_summary_sentence(results))
     lines.append("")
     lines.append("## Method")
     lines.append("")
@@ -149,13 +189,7 @@ def _write_results_md(out_dir: Path, results: dict) -> None:
             f"{'yes' if _in_range(agg['gamma']) else 'no'} |"
         )
     lines.append("")
-    lines.append(
-        "The direction is the same in every cell. Raw-print gamma exceeds aggregated gamma "
-        "by roughly +0.29 to +0.50, and raw lag-1 ACF is strongly positive (about "
-        "0.28-0.43) because the matching engine walks the book within a single aggressor "
-        "decision. Whether the raw γ̂ lands inside [0.3, 0.7] or overshoots 0.7 varies by "
-        "symbol-month, so the table is the reference."
-    )
+    lines.append(_direction_paragraph(results))
     lines.append("")
     lines.append(
         "BTC shows a second effect: aggregation flips its lag-1 ACF from positive to "

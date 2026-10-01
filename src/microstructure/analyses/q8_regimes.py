@@ -71,6 +71,11 @@ FLIP_SLOPE_MIN_SE = 2.0
 FAST_MODE_BETA = 10.0
 FAST_MODE_SHIFT_FLAG = 0.2
 
+# Drop-one-out: the spread of R² across single-symbol removals, as a fraction of
+# the full-sample R², at or above which the break's strength is called
+# outlier-sensitive.
+LOO_R2_SWING_LARGE = 0.25
+
 
 def _chrono_key(label: str) -> tuple:
     """Sort key for a regime label: (YYYY, MM) parsed from a leading YYYY-MM
@@ -786,16 +791,18 @@ def _plot(
     ax_flip.set_xlabel("log10(n_events)")
     ax_flip.set_ylabel(r"$p_{flip}$")
     ax_flip.set_title("Flip law across regimes")
-    ax_flip.legend(fontsize=8)
+    if ax_flip.get_legend_handles_labels()[0]:
+        ax_flip.legend(fontsize=8)
 
     ax_gamma.set_xlabel("log10(n_events)")
     ax_gamma.set_ylabel(r"$\hat{\gamma}$")
     ax_gamma.set_title(r"$\gamma$ vs. activity across regimes")
-    ax_gamma.legend(fontsize=8)
+    if ax_gamma.get_legend_handles_labels()[0]:
+        ax_gamma.legend(fontsize=8)
 
-    # Symbol-level scatter: baseline p_flip vs. the first regime's p_flip.
+    # Symbol-level scatter: baseline p_flip vs. the chronologically first regime's p_flip.
     if regime_q4_by_label:
-        first_label = next(iter(regime_q4_by_label))
+        first_label = min(regime_q4_by_label, key=_chrono_key)
         base_records, regime_records = _overlap_records(baseline_q4, regime_q4_by_label[first_label])
         if base_records:
             base_p_flip = np.array([r["p_flip"] for r in base_records])
@@ -832,6 +839,48 @@ def _fmt_reg(reg: dict | None) -> str:
 
 def _fmt_corr(rho: float | None) -> str:
     return "n/a" if rho is None else f"{rho:.4f}"
+
+
+def _loo_slope_sentence(influence: dict) -> str:
+    """Consequence of the drop-one-out slope range, computed from the range itself."""
+    lo, hi = influence["loo_slope_min"], influence["loo_slope_max"]
+    if lo > 0.0:
+        return (
+            "The slope **stays positive under every single-symbol removal**, so the "
+            "direction of the break does not depend on any one symbol."
+        )
+    if hi < 0.0:
+        return (
+            "The slope **stays negative under every single-symbol removal**, so the "
+            "direction of the break does not depend on any one symbol."
+        )
+    if influence["full_slope"] > 0.0:
+        flippers = [influence["loo_slope_min_symbol"]]
+    elif influence["full_slope"] < 0.0:
+        flippers = [influence["loo_slope_max_symbol"]]
+    else:
+        flippers = [influence["loo_slope_min_symbol"], influence["loo_slope_max_symbol"]]
+    return (
+        "The slope does **not** keep one sign under every single-symbol removal (it "
+        f"reaches zero or flips when dropping {' and '.join(flippers)}), so the "
+        "direction of the break depends on individual symbols."
+    )
+
+
+def _loo_r2_sentence(influence: dict) -> str:
+    """Consequence of the drop-one-out R² range, computed from the range itself."""
+    full = influence["full_r2"]
+    swing = (influence["loo_r2_max"] - influence["loo_r2_min"]) / full if full > 0.0 else float("inf")
+    if swing >= LOO_R2_SWING_LARGE:
+        return (
+            f"R² spans {swing:.0%} of its full-sample value across the drops (at or above "
+            f"{LOO_R2_SWING_LARGE:.0%}), so the strength of the break is outlier-sensitive."
+        )
+    return (
+        f"R² spans {swing:.0%} of its full-sample value across the drops (below "
+        f"{LOO_R2_SWING_LARGE:.0%}), so no single symbol moves the strength of the break "
+        "much."
+    )
 
 
 def _write_md(
@@ -1098,7 +1147,6 @@ def _write_md(
             top_desc = "; ".join(
                 f"{t['symbol']} (Cook's D={t['cooks_d']:.3f}, leverage={t['leverage']:.3f})" for t in top
             )
-            stays_positive = influence["slope_stays_positive_every_drop"]
             lines.append(
                 f"For **{display}** (n={influence['n']}, full-sample slope="
                 f"{influence['full_slope']:.4f}, R²={influence['full_r2']:.4f}), refitting γ "
@@ -1108,11 +1156,8 @@ def _write_md(
                 f"and a **slope range of [{influence['loo_slope_min']:.4f} (dropping "
                 f"{influence['loo_slope_min_symbol']}), {influence['loo_slope_max']:.4f} "
                 f"(dropping {influence['loo_slope_max_symbol']})]**. The highest-influence "
-                f"points by Cook's distance are {top_desc}. The slope "
-                + ("**stays positive under every single-symbol removal**" if stays_positive else "does **not** stay positive under every single-symbol removal")
-                + ", so the direction of the break does not depend on any one symbol. R² "
-                "swings by a large relative amount depending on which point is dropped, so "
-                "the strength of the break is outlier-sensitive."
+                f"points by Cook's distance are {top_desc}. "
+                f"{_loo_slope_sentence(influence)} {_loo_r2_sentence(influence)}"
             )
             lines.append("")
 
@@ -1268,7 +1313,7 @@ def run_q8(
     regime_dirs: dict[str, Path],
     baseline_label: str = "2023-06",
     download_missing_paths: dict[str, Path] | None = None,
-    native_regimes: set[str] = frozenset(),
+    native_regimes: frozenset[str] | set[str] = frozenset(),
 ) -> dict:
     """Compare the Q4/Q6 cross-sectional laws between a baseline period and one or more regimes.
 
@@ -1298,6 +1343,12 @@ def run_q8(
     regimes = {label: _load_regime(path) for label, path in regime_dirs.items()}
     download_missing_paths = download_missing_paths or {}
     native_regimes = set(native_regimes)
+    unknown_native = sorted(native_regimes - set(regime_dirs))
+    if unknown_native:
+        raise ValueError(
+            f"native regime label(s) {unknown_native} not among the regime labels "
+            f"{sorted(regime_dirs)}"
+        )
     baseline_n_requested = baseline["q4"].get("n_symbols_requested")
 
     ordered_regime_labels = sorted(regime_dirs.keys(), key=_chrono_key)
@@ -1369,7 +1420,7 @@ def run_q8(
         ordered_regime_labels,
         native_regimes,
     )
-    (out_dir / "q8_regimes.json").write_text(json.dumps(result, indent=2))
+    (out_dir / "q8_regimes.json").write_text(json.dumps(result, indent=2, allow_nan=False))
     return result
 
 
@@ -1414,6 +1465,8 @@ def _parse_label_path_args(entries: list[str], flag_name: str) -> dict[str, Path
         if "=" not in entry:
             raise ValueError(f"{flag_name} must be LABEL=PATH, got: {entry!r}")
         label, _, path_str = entry.partition("=")
+        if label in parsed:
+            raise ValueError(f"{flag_name} label {label!r} given more than once")
         parsed[label] = Path(path_str)
     return parsed
 

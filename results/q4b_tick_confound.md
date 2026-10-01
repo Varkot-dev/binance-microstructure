@@ -30,7 +30,7 @@ corr(log10(n_events), log10(rel_tick)) = -0.2113, the collinearity between activ
 
 ## Verdict
 
-**Both variables survive jointly.** In regression (c), log10(n_events) (coef 0.1130, t≈7.14) and log10(rel_tick) (coef 0.0192, t≈2.09) both remain distinguishable from zero despite their collinearity (corr = -0.2113). Each carries at least partly independent information about p_flip in this cross-section, so the tick-size confound is present but does not fully explain away the activity effect. Univariate R² is 0.2945 for activity alone and 0.0022 for relative tick size alone, versus 0.3220 jointly.
+**Borderline, and inconclusive.** In the joint regression (c), log10(n_events) has coefficient 0.1130 (t≈7.14) and log10(rel_tick) has 0.0192 (t≈2.09) (collinearity corr = -0.2113). At least one |t| falls between 2.0 and 2.5, too close to the 2.0 cutoff to call it distinguishable from zero or not. The inputs are testnet tick sizes, not the tick sizes in force when the trade data were recorded, and the t-ratio is not a valid test here (see Method), so I do not conclude that the tick-size confound is present or absent. Univariate R² is 0.2945 for activity alone and 0.0022 for relative tick size alone, versus 0.3220 jointly.
 
 ## Skipped symbols
 

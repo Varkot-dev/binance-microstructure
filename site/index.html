@@ -270,7 +270,9 @@
         <p>
           Three schedules run against replayed order flow under one cost model, with each symbol's
           own measured kernel supplying its impact term. The flow-reactive schedule's parameters
-          are chosen on days 1–3 and frozen. Every number below comes from the disjoint days 4–7.
+          are chosen on days 1–3 and frozen; every number below comes from days 4–7. The impact
+          kernels were estimated on the same week, so they are in-sample. Costs are in basis
+          points of the arrival mid.
         </p>
         <p class="prose-note">
           This is a cost-model comparison and not a backtest or a trading recommendation. It
@@ -281,7 +283,7 @@
 
     <div class="plot-frame reveal">
       <div class="plot-bar">
-        <span class="plot-bar-label">Mean shortfall per unit, with dispersion · evaluation window</span>
+        <span class="plot-bar-label">Mean shortfall in bps, with dispersion · evaluation window</span>
       </div>
       <div class="plot-canvas" id="x-plot"><p class="loading">Loading schedules…</p></div>
       <p class="plot-note" id="x-note"></p>

@@ -37,9 +37,9 @@ months through July 2026 to see which results hold over time.
   component decays in about 7 seconds. [q6](results/q6_endogeneity.md),
   [q6b](results/q6b_kernel_sensitivity.md)
 - **Front-loading an order trades a stochastic cost for a deterministic one.** On replayed flow
-  for 6 symbols, front-loading has a higher mean shortfall (+0.1306 vs +0.0161 for TWAP) but a
-  standard deviation of 0.3404 against about 5.2 for TWAP and a reactive schedule, 15× lower.
-  This is a cost model, not a backtest.
+  for 6 symbols, front-loading costs more on average (2.11 vs 0.55 bps of arrival mid for TWAP)
+  but its standard deviation is 1.75 bps against 29.3 for TWAP, about 17× lower, and lower on
+  every symbol. This is a cost model, not a backtest.
   [q7](results/q7_execution.md)
 - **The sign-flip law fades by 2026.** The slope of flip probability on log-activity is +0.1114
   (R² 0.2632) in June 2023 and +0.0006 (stderr 0.0126, n = 231) on the July 2026 market's own
@@ -101,11 +101,11 @@ Stack: Python 3.12, Polars, NumPy, Matplotlib, pytest, ruff, uv, GitHub Actions.
 | Q2 | Response function R(ℓ) | [rises 5.39×, inside the predicted 3.5–6.9×](results/q2_results.md) |
 | Q3 | Price change vs order-flow imbalance | [linear, R² 0.40 vs 65–70% in equities](results/q3_results.md) |
 | Q4 | 121-symbol cross-section, 2023-06 | [γ̂ flat in activity (R² 0.0003), flip probability not (R² 0.2632)](results/q4_cross_section.md) |
-| Q4b | Tick-size confound for flip probability | [activity dominates, tick size minor](results/q4b_tick_confound.md) |
+| Q4b | Tick-size confound for flip probability | [activity dominates; tick size borderline (t 2.09)](results/q4b_tick_confound.md) |
 | Q5 | Deconvolved impact kernel, 16 symbols | [critical balance holds for 12 of 16](results/q5_kernel_panel.md) |
 | Q6 | Hawkes branching ratio, 41 symbols | [median 0.7070, MLE lower bound](results/q6_endogeneity.md) |
 | Q6b | Two- and three-timescale Hawkes kernels | [K=2 lifts n̂ 0.707 → 0.854, closes 54% of the estimator gap](results/q6b_kernel_sensitivity.md) |
-| Q7 | Execution schedules on replayed flow | [front-loaded: higher mean, 15× lower sd](results/q7_execution.md) |
+| Q7 | Execution schedules on replayed flow | [front-loaded: higher mean, 17× lower sd](results/q7_execution.md) |
 | Q8 | Six regimes, 2023-06 to 2026-07 | [flip law gone by 2026; γ̂ break within the 2023 cohort](results/q8_regimes.md) |
 
 ## Method notes
@@ -183,7 +183,8 @@ site/            static results site; build_data.py derives site/data/*.json
   about half of the MLE vs count-variance gap; the rest is unattributed. A likelihood-ratio test
   meant to tell slow baseline drift from long memory was inconclusive on all 41 symbols.
 - Q7 has no queue, latency or partial fills, and replayed flow cannot react to the simulated
-  order.
+  order. The impact kernels it uses were estimated on the same week it evaluates; only the
+  reactive schedule's parameters are held out.
 - The cross-section only includes symbols above one million aggressor events a month, and the
   2026 universe differs in composition from 2023 (tokenized-equity perpetuals, USDC-margined
   pairs). The shared cohort is 39 contracts.

@@ -93,6 +93,15 @@ DRIFT_SUSPECT_MULTIPLIER = 10.0
 
 DEFAULT_KS: tuple[int, ...] = (1, 2, 3)
 
+# Default simulation count for the finite-sample Delta21 null floor. The null's
+# 90th percentile is itself a sampling statistic, so a handful of draws is too noisy.
+DEFAULT_NULL_SIMS = 50
+
+# A fitted n-hat at or above this sits on the stationarity boundary (n = 1), where
+# mu and alpha are only weakly identified (`fit_hawkes_exp` docstring). Such values
+# are flagged in the tables.
+BOUNDARY_N_HAT = 0.9999
+
 # Default number of equal-width business-time blocks for the drift-vs-memory
 # control (`baseline_drift_control`). 12 is the estimator's own cap
 # (MAX_PIECEWISE_BLOCKS); 0 disables the control.
@@ -125,6 +134,15 @@ def _inconclusive_reason(n_k1: float, n_k2: float, dll_k2: float) -> str:
     if dll_k2 < K2_GAIN_MIN_DLL:
         return "k2_insignificant"
     return "mixed"
+
+
+def _is_finite_number(value: float | None) -> bool:
+    return value is not None and bool(np.isfinite(value))
+
+
+def _json_float(value: float | None) -> float | None:
+    """Python float for finite values, None for NaN/inf (strict JSON has no encoding for them)."""
+    return float(value) if _is_finite_number(value) else None
 
 
 def _cap_events(times: np.ndarray, t_end: float) -> tuple[np.ndarray, float]:
@@ -296,6 +314,9 @@ def _symbol_record(
     n_median_by_k = {k: float(np.median(n_hat_by_k[k])) for k in ks}
     n_converged_by_k = {k: int(sum(converged_by_k[k])) for k in ks}
 
+    # Computed with inf/NaN allowed (a window with beta_slow <= 0 has an unbounded
+    # timescale, which still counts toward drift-suspect), then converted to None
+    # at the record boundary below.
     median_inv_beta_slow_k2 = (
         float(np.median(inv_beta_slow_by_k[2])) if 2 in inv_beta_slow_by_k else float("nan")
     )
@@ -326,19 +347,19 @@ def _symbol_record(
         "ks": list(ks),
         "n_median_by_k": n_median_by_k,
         "n_converged_by_k": n_converged_by_k,
-        "delta21": delta21,
-        "median_inv_beta_slow_k2_s": median_inv_beta_slow_k2,
+        "delta21": _json_float(delta21),
+        "median_inv_beta_slow_k2_s": _json_float(median_inv_beta_slow_k2),
         "window_length_s": window_length_s,
         "bin_width_s": DESEASON_BIN_WIDTH_S,
-        "ratio_inv_beta_slow_to_bin_width": ratio_bin_width,
-        "ratio_inv_beta_slow_to_window_length": ratio_window_length,
+        "ratio_inv_beta_slow_to_bin_width": _json_float(ratio_bin_width),
+        "ratio_inv_beta_slow_to_window_length": _json_float(ratio_window_length),
         "drift_suspect": drift_suspect,
         **drift_fields,
         "per_window": [
             {
                 "n_by_k": {k: w["per_k"][k]["n"] for k in ks},
                 "converged_by_k": {k: w["per_k"][k]["converged"] for k in ks},
-                "inv_beta_slow_by_k": {k: w["per_k"][k]["inv_beta_slow"] for k in ks},
+                "inv_beta_slow_by_k": {k: _json_float(w["per_k"][k]["inv_beta_slow"]) for k in ks},
             }
             for w in window_fits
         ],
@@ -365,9 +386,10 @@ def _load_q6_cv(q6_json: Path | None) -> dict[str, float]:
 
 
 def _null_floor_p90(records: list[dict], null_sims: int, seed: int = 20240601) -> dict | None:
-    """Finite-sample Delta21 null floor, calibrated at the panel's own median
-    per-window event count (see `spurious_delta21_null` for why it must be
-    calibrated at the run's actual event count).
+    """Finite-sample Delta21 null floor, calibrated at the event count the fits
+    actually use: the panel's median per-window count, capped at MAX_FIT_EVENTS
+    (see `spurious_delta21_null` for why it must be calibrated at the run's
+    actual event count).
 
     The null's single-exponential parameters come from the panel: `alpha` is
     the panel's median K=1 branching ratio (n_hat_k1), and `beta=2.0`, the
@@ -391,7 +413,10 @@ def _null_floor_p90(records: list[dict], null_sims: int, seed: int = 20240601) -
     if not per_window_counts or not alphas_k1:
         return None
 
-    n_events_per_window = int(np.median(per_window_counts))
+    # Fits are capped at MAX_FIT_EVENTS, so the null must be calibrated at the event
+    # count the fits actually used, not the uncapped per-window count.
+    n_events_per_window_uncapped = int(np.median(per_window_counts))
+    n_events_per_window = min(n_events_per_window_uncapped, MAX_FIT_EVENTS)
     alpha = float(np.median(alphas_k1))
     beta = 2.0
 
@@ -405,6 +430,7 @@ def _null_floor_p90(records: list[dict], null_sims: int, seed: int = 20240601) -
     )
     return {
         "n_events_per_window": n_events_per_window,
+        "n_events_per_window_uncapped": n_events_per_window_uncapped,
         "alpha_used": alpha,
         "beta_used": beta,
         "n_sims": null_sims,
@@ -453,8 +479,8 @@ def _cv_comparison(records: list[dict], q6_cv: dict[str, float]) -> dict | None:
         if r["symbol"] in q6_cv
         and 1 in r["n_median_by_k"]
         and 2 in r["n_median_by_k"]
-        and np.isfinite(r["n_median_by_k"][1])
-        and np.isfinite(r["n_median_by_k"][2])
+        and _is_finite_number(r["n_median_by_k"][1])
+        and _is_finite_number(r["n_median_by_k"][2])
     ]
     if not rows:
         return None
@@ -480,7 +506,7 @@ def _cv_comparison(records: list[dict], q6_cv: dict[str, float]) -> dict | None:
 
 
 def _cross_section(
-    records: list[dict], q6_cv: dict[str, float], null_sims: int = 5
+    records: list[dict], q6_cv: dict[str, float], null_sims: int = DEFAULT_NULL_SIMS
 ) -> dict:
     if not records:
         return {
@@ -492,7 +518,7 @@ def _cross_section(
             "drift_inconclusive_reason_counts": _inconclusive_reason_counts([]),
         }
 
-    delta21s = np.array([r["delta21"] for r in records if np.isfinite(r["delta21"])])
+    delta21s = np.array([r["delta21"] for r in records if _is_finite_number(r["delta21"])])
     delta21_distribution = (
         {
             "median": float(np.median(delta21s)),
@@ -531,7 +557,7 @@ def run_q6b(
     windows: int = 6,
     ks: tuple[int, ...] = DEFAULT_KS,
     q6_json: Path | None = None,
-    null_sims: int = 5,
+    null_sims: int = DEFAULT_NULL_SIMS,
     drift_blocks: int = DEFAULT_DRIFT_BLOCKS,
 ) -> dict:
     if drift_blocks != 0 and not 2 <= drift_blocks <= MAX_PIECEWISE_BLOCKS:
@@ -565,7 +591,7 @@ def run_q6b(
             # per-window size would produce and is not evidence of long memory
             # on its own.
             r["within_finite_sample_null"] = bool(
-                np.isfinite(r["delta21"]) and r["delta21"] <= p90
+                _is_finite_number(r["delta21"]) and r["delta21"] <= p90
             )
     else:
         for r in records:
@@ -588,7 +614,7 @@ def run_q6b(
     _plot(out_dir, records, cross_section)
     _write_results_parquet(out_dir, records)
     _write_results_md(out_dir, result)
-    (out_dir / "q6b_kernel_sensitivity.json").write_text(json.dumps(result, indent=2))
+    (out_dir / "q6b_kernel_sensitivity.json").write_text(json.dumps(result, indent=2, allow_nan=False))
     return result
 
 
@@ -636,7 +662,7 @@ def _plot(out_dir: Path, records: list[dict], cross_section: dict) -> None:
     fig, (ax_delta, ax_slow) = plt.subplots(1, 2, figsize=(13, 5))
 
     if records:
-        delta21s = np.array([r["delta21"] for r in records if np.isfinite(r["delta21"])])
+        delta21s = np.array([r["delta21"] for r in records if _is_finite_number(r["delta21"])])
         if delta21s.size > 0:
             ax_delta.hist(delta21s, bins=min(20, max(5, delta21s.size // 2)), color="steelblue", alpha=0.85)
             ax_delta.axvline(0.15, color="red", linestyle="--", linewidth=1.0, label="Δ21 = 0.15")
@@ -646,8 +672,10 @@ def _plot(out_dir: Path, records: list[dict], cross_section: dict) -> None:
         ax_delta.set_title("Distribution of K=1→K=2 branching-ratio jump")
 
         drift_suspect = np.array([r["drift_suspect"] for r in records])
-        ratios = np.array([r["ratio_inv_beta_slow_to_bin_width"] for r in records])
-        deltas = np.array([r["delta21"] for r in records])
+        ratios = np.array(
+            [_nan_if_none(r["ratio_inv_beta_slow_to_bin_width"]) for r in records], dtype=float
+        )
+        deltas = np.array([_nan_if_none(r["delta21"]) for r in records], dtype=float)
         colors = np.where(drift_suspect, "crimson", "steelblue")
         finite = np.isfinite(ratios) & np.isfinite(deltas)
         ax_slow.scatter(ratios[finite], deltas[finite], c=colors[finite], s=36, alpha=0.8)
@@ -670,10 +698,52 @@ def _plot(out_dir: Path, records: list[dict], cross_section: dict) -> None:
     plt.close(fig)
 
 
-def _fmt_ratio(ratio: float) -> str:
-    if not np.isfinite(ratio):
+def _nan_if_none(value: float | None) -> float:
+    return float("nan") if value is None else float(value)
+
+
+def _fmt_ratio(ratio: float | None) -> str:
+    if not _is_finite_number(ratio):
         return "n/a"
     return f"{ratio:.2f}x"
+
+
+def _fmt_n(n_hat: float | None) -> str:
+    """n-hat to 4 dp; a boundary fit (n-hat >= BOUNDARY_N_HAT) gets a dagger."""
+    if n_hat is None:
+        return "n/a"
+    return f"{n_hat:.4f}" + ("†" if n_hat >= BOUNDARY_N_HAT else "")
+
+
+def _fmt_signed(value: float | None, fmt: str) -> str:
+    return "n/a" if value is None else format(value, fmt)
+
+
+def _boundary_fit_counts(records: list[dict]) -> tuple[int, int]:
+    """(per-window fits with n-hat >= BOUNDARY_N_HAT, total per-window fits), all K."""
+    values = [v for r in records for w in r["per_window"] for v in w["n_by_k"].values()]
+    return sum(1 for v in values if v >= BOUNDARY_N_HAT), len(values)
+
+
+def _normalize_result(result: dict) -> dict:
+    """Copy of `result` with int keys for n_median_by_k / n_converged_by_k.
+
+    JSON round trips turn those keys into strings; the writers index them by int K.
+    """
+    def int_keys(d: dict) -> dict:
+        return {int(k): v for k, v in d.items()}
+
+    records = []
+    for r in result["records"]:
+        rec = dict(r)
+        rec["n_median_by_k"] = int_keys(r["n_median_by_k"])
+        rec["n_converged_by_k"] = int_keys(r["n_converged_by_k"])
+        rec["per_window"] = [
+            {**w, **{key: int_keys(w[key]) for key in ("n_by_k", "converged_by_k", "inv_beta_slow_by_k")}}
+            for w in r["per_window"]
+        ]
+        records.append(rec)
+    return {**result, "records": records}
 
 
 def _drift_headline(
@@ -681,11 +751,15 @@ def _drift_headline(
     reason_counts: dict[str, int],
     width_hours: float | None,
     n_requested: int,
+    across_windows: dict | None = None,
 ) -> str:
     """One-sentence headline from verdict counts (majority of ASSESSED symbols).
 
     The denominator is stated: assessed symbols are those with a verdict;
-    failed, errored and not-run symbols are excluded.
+    failed, errored and not-run symbols are excluded. The verdicts come from the
+    first window only. `across_windows` ({n_above, n, median, windows}) adds the
+    median-across-windows Delta21 count so the first-window result is not read as
+    a panel-wide one.
     """
     assessed = sum(counts[v] for v in DRIFT_VERDICTS)
     denominator = (
@@ -696,8 +770,8 @@ def _drift_headline(
         return f"**No symbol was assessed, so nothing can be said about drift versus memory {denominator}.**"
     if reason_counts["no_rise"] * 2 > assessed:
         sentence = (
-            "Most symbols show no material K=1→K=2 rise in this window — there is no "
-            "apparent near-criticality for the control to explain"
+            "On the first window, the one the drift control uses, most symbols show no "
+            "material K=1→K=2 rise, so the control has no rise to explain there"
         )
     elif counts["drift"] * 2 > assessed:
         sentence = (
@@ -721,7 +795,26 @@ def _drift_headline(
             )
         else:
             sentence = "No verdict holds a majority; drift and long-memory-candidate verdicts split the assessed symbols"
-    return f"**{sentence} {denominator}.**"
+    headline = f"**{sentence} {denominator}.**"
+    if across_windows is not None and across_windows["n"] > 0:
+        a = across_windows
+        headline += (
+            f" Across all {a['windows']} windows, the median-across-windows Δ21 exceeds "
+            f"{DRIFT_K2_RISE_MIN:g} for {a['n_above']} of {a['n']} symbols (median Δ21 "
+            f"{a['median']:+.3f}), so the first-window result is not a statement about "
+            "the panel's K=2 rise in the other windows."
+        )
+    return headline
+
+
+def _across_window_delta21(records: list[dict], windows: int) -> dict:
+    deltas = [r["delta21"] for r in records if _is_finite_number(r["delta21"])]
+    return {
+        "windows": windows,
+        "n": len(deltas),
+        "n_above": sum(1 for d in deltas if d > DRIFT_K2_RISE_MIN),
+        "median": float(np.median(deltas)) if deltas else float("nan"),
+    }
 
 
 def _drift_section_lines(result: dict) -> list[str]:
@@ -744,7 +837,12 @@ def _drift_section_lines(result: dict) -> list[str]:
     width_s = float(np.median(widths)) if widths else None
     width_hours = width_s / 3600.0 if width_s is not None else None
 
-    lines.append(_drift_headline(counts, reasons, width_hours, result["n_symbols_requested"]))
+    lines.append(
+        _drift_headline(
+            counts, reasons, width_hours, result["n_symbols_requested"],
+            _across_window_delta21(records, result["windows"]),
+        )
+    )
     lines.append("")
     lines.append(
         f"Verdict counts over {len(records)} symbols with results: drift = {counts['drift']}, "
@@ -809,12 +907,24 @@ def _drift_section_lines(result: dict) -> list[str]:
         for r in sorted(assessed, key=lambda r: r["n_events"], reverse=True):
             lines.append(
                 f"| {r['symbol']} | {r['drift_verdict']} | "
-                f"{r['drift_inconclusive_reason'] or '—'} | {r['drift_n_k1']:.4f} | "
-                f"{r['drift_n_k2']:.4f} | {r['n_k1_piecewise']:.4f} | {r['dll_pw']:.2f} | "
+                f"{r['drift_inconclusive_reason'] or '—'} | {_fmt_n(r['drift_n_k1'])} | "
+                f"{_fmt_n(r['drift_n_k2'])} | {_fmt_n(r['n_k1_piecewise'])} | {r['dll_pw']:.2f} | "
                 f"{r['dll_k2']:.2f} | {r['dll_threshold']:.2f} | "
                 f"{r['drift_block_width_s'] / 3600.0:.2f} |"
             )
         lines.append("")
+        boundary_cells = sum(
+            1 for r in assessed for key in ("drift_n_k1", "drift_n_k2", "n_k1_piecewise")
+            if r[key] >= BOUNDARY_N_HAT
+        )
+        if boundary_cells:
+            lines.append(
+                f"† n̂ ≥ {BOUNDARY_N_HAT:g}: the fit sits on the stationarity boundary (n̂ = 1), "
+                "where mu and alpha are only weakly identified, so that value is not a "
+                f"reliable estimate ({boundary_cells} such "
+                f"{'entry' if boundary_cells == 1 else 'entries'} in this table)."
+            )
+            lines.append("")
     errors = [r for r in records if r.get("drift_error")]
     for r in errors:
         lines.append(f"- {r['symbol']}: drift control errored ({r['drift_error']}).")
@@ -824,6 +934,7 @@ def _drift_section_lines(result: dict) -> list[str]:
 
 
 def _write_results_md(out_dir: Path, result: dict) -> None:
+    result = _normalize_result(result)
     records = result["records"]
     month = result["month"]
     windows = result["windows"]
@@ -922,20 +1033,28 @@ def _write_results_md(out_dir: Path, result: dict) -> None:
             n1 = r["n_median_by_k"].get(1)
             n2 = r["n_median_by_k"].get(2)
             n3 = r["n_median_by_k"].get(3)
-            n1s = f"{n1:.4f}" if n1 is not None else "n/a"
-            n2s = f"{n2:.4f}" if n2 is not None else "n/a"
-            n3s = f"{n3:.4f}" if n3 is not None else "n/a"
+            n1s, n2s, n3s = _fmt_n(n1), _fmt_n(n2), _fmt_n(n3)
             within_null = r.get("within_finite_sample_null")
             within_null_s = "yes" if within_null else ("NO" if within_null is False else "n/a")
             lines.append(
                 f"| {r['symbol']} | {r['n_events']:,} | {n1s} | {n2s} | {n3s} | "
-                f"{r['delta21']:+.4f} | {r['median_inv_beta_slow_k2_s']:.2f} | "
+                f"{_fmt_signed(r['delta21'], '+.4f')} | "
+                f"{_fmt_signed(r['median_inv_beta_slow_k2_s'], '.2f')} | "
                 f"{_fmt_ratio(r['ratio_inv_beta_slow_to_bin_width'])} | "
                 f"{_fmt_ratio(r['ratio_inv_beta_slow_to_window_length'])} | "
                 f"{'YES' if r['drift_suspect'] else 'no'} | {within_null_s} | "
                 f"{r.get('drift_verdict') or 'n/a'} |"
             )
         lines.append("")
+        n_boundary, n_fits = _boundary_fit_counts(records)
+        if n_boundary:
+            lines.append(
+                f"† n̂ ≥ {BOUNDARY_N_HAT:g}. Across all per-window fits, {n_boundary} of "
+                f"{n_fits} sit on the stationarity boundary (n̂ = 1), where mu and alpha are "
+                "only weakly identified. The per-symbol medians above are taken over those "
+                "fits too."
+            )
+            lines.append("")
     else:
         lines.append("No symbols produced usable results, so there is no table.")
         lines.append("")
@@ -956,18 +1075,42 @@ def _write_results_md(out_dir: Path, result: dict) -> None:
     null_floor = cross_section.get("null_floor_p90")
     if null_floor is not None:
         n_within = sum(1 for r in records if r.get("within_finite_sample_null"))
+        if n_within:
+            consequence = (
+                "For the symbols within it, Δ21 is no larger than a well-specified, "
+                "non-long-memory K=1 process of this size would produce from sampling "
+                "noise alone, so it is not evidence of long-memory kernel structure on "
+                "its own."
+            )
+        else:
+            consequence = (
+                "No symbol's Δ21 falls at or below it, so sampling noise in a "
+                "well-specified K=1 process of this size does not account for any "
+                "symbol's rise."
+            )
+        calibrated_above_cap = null_floor["n_events_per_window"] > MAX_FIT_EVENTS
+        stale = (
+            f" The fits are capped at {MAX_FIT_EVENTS:,} events per window, so this null was "
+            "calibrated at a larger size than the fits used. Rerunning recalibrates it at the "
+            "capped size."
+            if calibrated_above_cap
+            else ""
+        )
+        basis = (
+            ""
+            if calibrated_above_cap
+            else f" (the panel's median per-window count, capped at the {MAX_FIT_EVENTS:,}-event fit cap)"
+        )
         lines.append(
-            f"**Null floor for Δ21**, computed at the panel's per-window event count "
-            f"({null_floor['n_events_per_window']:,} events) from "
+            f"**Null floor for Δ21**, computed at {null_floor['n_events_per_window']:,} events "
+            f"per window{basis} from "
             f"{null_floor['n_sims']} simulated well-specified K=1 processes with "
             f"alpha={null_floor['alpha_used']:.4f} (this panel's median n̂_1) and "
             f"beta={null_floor['beta_used']:.1f} (see `spurious_delta21_null`). The null's "
             f"90th percentile is **{null_floor['p90']:.4f}** (median {null_floor['median']:.4f}). "
             f"Symbols whose Δ21 does not exceed it are labeled **\"within finite-sample "
-            f"null\"** in the panel table ({n_within}/{len(records)} symbols). Their Δ21 is "
-            "no larger than a well-specified, non-long-memory K=1 process of this size "
-            "would produce from sampling noise alone, so it is not evidence of "
-            "long-memory kernel structure on its own."
+            f"null\"** in the panel table ({n_within}/{len(records)} symbols). "
+            f"{consequence}{stale}"
         )
     else:
         lines.append(
@@ -1092,11 +1235,12 @@ def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         help="path to a Q6 results JSON, for the Δ21-vs-count-variance-gap correlation",
     )
     parser.add_argument(
-        "--null-sims", type=int, default=5,
+        "--null-sims", type=int, default=DEFAULT_NULL_SIMS,
         help=(
             "number of simulations for the finite-sample Delta21 null floor "
             "(spurious_delta21_null), calibrated at the panel's median per-window "
-            "event count; default 5, tests use fewer to stay inside their runtime budget"
+            f"event count capped at {MAX_FIT_EVENTS:,}; default {DEFAULT_NULL_SIMS}, tests use "
+            "fewer to stay inside their runtime budget"
         ),
     )
     parser.add_argument(

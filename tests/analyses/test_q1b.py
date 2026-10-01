@@ -4,7 +4,13 @@ from pathlib import Path
 import numpy as np
 import polars as pl
 
-from microstructure.analyses.q1b_zigzag import run_q1b, zigzag_amplitude
+from microstructure.analyses.q1b_zigzag import (
+    SURVIVAL_MAX_REL_CHANGE,
+    _survives,
+    _write_results_md,
+    run_q1b,
+    zigzag_amplitude,
+)
 from microstructure.data.catalog import parquet_path
 from microstructure.estimators.acf import sign_acf
 
@@ -113,3 +119,38 @@ def test_zigzag_amplitude_matches_sign_acf_direct_computation(tmp_path: Path):
     expected = [float(acf[lag]) for lag in range(1, 11)]
     for got, exp in zip(res["baseline"]["acf_1_to_10"], expected, strict=True):
         assert abs(got - exp) < 1e-9
+
+
+def _result(amp_a: float, amp_b: float, amp_c: float) -> dict:
+    acf = [0.1] * 10
+    return {
+        "symbol": "TESTUSDT", "period": "2023-06", "n_events": 1000,
+        "frac_consecutive_pairs_same_ts": 0.01,
+        "frac_opposite_sign_among_same_ts_adjacent_pairs": 1.0,
+        "n_same_ts_pairs": 10, "max_same_ts_group_size": 2,
+        "baseline": {"acf_1_to_10": acf, "zigzag_amplitude": amp_a},
+        "randomized_tiebreak": {"pairs_swapped": 5, "acf_1_to_10": acf, "zigzag_amplitude": amp_b},
+        "netted": {"n_netted_events": 990, "zero_net_groups_dropped": 1, "acf_1_to_10": acf,
+                   "zigzag_amplitude": amp_c},
+    }
+
+
+def test_survives_uses_the_stated_threshold():
+    assert _survives(0.10, 0.10 * (1 + SURVIVAL_MAX_REL_CHANGE - 0.01))
+    assert not _survives(0.10, 0.10 * (1 + SURVIVAL_MAX_REL_CHANGE + 0.01))
+    assert not _survives(0.10, -0.10)  # sign flip never survives
+    assert not _survives(0.0, 0.0)
+
+
+def test_verdict_survival_claim_is_computed(tmp_path: Path):
+    _write_results_md(tmp_path, _result(0.10, 0.099, 0.09))
+    md = (tmp_path / "q1b_zigzag.md").read_text()
+    assert "The zigzag survives both perturbations" in md
+    assert "at most 25%" in md
+
+    _write_results_md(tmp_path, _result(0.10, 0.099, 0.04))
+    md = (tmp_path / "q1b_zigzag.md").read_text()
+    assert "survives both perturbations" not in md
+    assert "does not survive every perturbation" in md
+    assert "fails that test under netting" in md
+    assert "persists through both perturbations" not in md

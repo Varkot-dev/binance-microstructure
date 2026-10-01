@@ -66,11 +66,13 @@ Requested: 41. Successful: 41. Failed: 0.
 | ATOMUSDT | 2,456,324 | 0.7510 | 0.8410 | 0.8950 | +0.0900 | 6.21 | 0.00x | 0.00x | no | NO | inconclusive |
 | IDUSDT | 2,144,610 | 0.7634 | 0.8461 | 0.8629 | +0.0828 | 11.23 | 0.01x | 0.00x | no | NO | inconclusive |
 
+† n̂ ≥ 0.9999. Across all per-window fits, 31 of 738 sit on the stationarity boundary (n̂ = 1), where mu and alpha are only weakly identified. The per-symbol medians above are taken over those fits too.
+
 ## Cross-section
 
 **Δ21 distribution** across 41 symbols: median = **0.1422**, mean = 0.1824, sd = 0.1454, range = [0.0202, 0.4894].
 
-**Null floor for Δ21**, computed at the panel's per-window event count (699,462 events) from 5 simulated well-specified K=1 processes with alpha=0.7070 (this panel's median n̂_1) and beta=2.0 (see `spurious_delta21_null`). The null's 90th percentile is **0.0093** (median 0.0073). Symbols whose Δ21 does not exceed it are labeled **"within finite-sample null"** in the panel table (0/41 symbols). Their Δ21 is no larger than a well-specified, non-long-memory K=1 process of this size would produce from sampling noise alone, so it is not evidence of long-memory kernel structure on its own.
+**Null floor for Δ21**, computed at 699,462 events per window from 5 simulated well-specified K=1 processes with alpha=0.7070 (this panel's median n̂_1) and beta=2.0 (see `spurious_delta21_null`). The null's 90th percentile is **0.0093** (median 0.0073). Symbols whose Δ21 does not exceed it are labeled **"within finite-sample null"** in the panel table (0/41 symbols). No symbol's Δ21 falls at or below it, so sampling noise in a well-specified K=1 process of this size does not account for any symbol's rise. The fits are capped at 250,000 events per window, so this null was calibrated at a larger size than the fits used. Rerunning recalibrates it at the capped size.
 
 **Fraction of symbols with n̂_2 ≥ 0.9** (near-critical at K=2): **4.9%**.
 
@@ -78,7 +80,7 @@ Requested: 41. Successful: 41. Failed: 0.
 
 ## Is the K=2 rise drift or memory?
 
-**Most symbols show no material K=1→K=2 rise in this window — there is no apparent near-criticality for the control to explain (41 of 41 requested symbols assessed; failed, errored and not-run excluded).**
+**On the first window, the one the drift control uses, most symbols show no material K=1→K=2 rise, so the control has no rise to explain there (41 of 41 requested symbols assessed; failed, errored and not-run excluded).** Across all 6 windows, the median-across-windows Δ21 exceeds 0.1 for 22 of 41 symbols (median Δ21 +0.142), so the first-window result is not a statement about the panel's K=2 rise in the other windows.
 
 Verdict counts over 41 symbols with results: drift = 0, long_memory_candidate = 0, inconclusive = 41 (no_rise = 25, k2_insignificant = 0, mixed = 16), not run = 0, errored = 0.
 
@@ -98,7 +100,7 @@ Per symbol, on the first business-time window only (to bound cost; that window i
 | 1000PEPEUSDT | inconclusive | mixed | 0.6831 | 0.8160 | 0.6065 | 1702.07 | 14913.48 | 9.84 | 1.91 |
 | BCHUSDT | inconclusive | no_rise | 0.8092 | 0.8603 | 0.7581 | 842.38 | 8106.02 | 9.84 | 10.00 |
 | TOMOUSDT | inconclusive | mixed | 0.3535 | 0.8010 | 0.3374 | 2677.32 | 29594.61 | 9.84 | 4.98 |
-| LINAUSDT | inconclusive | mixed | 0.8646 | 1.0000 | 0.8489 | 61.28 | 1754929.77 | 9.84 | 0.90 |
+| LINAUSDT | inconclusive | mixed | 0.8646 | 1.0000† | 0.8489 | 61.28 | 1754929.77 | 9.84 | 0.90 |
 | MTLUSDT | inconclusive | no_rise | 0.8734 | 0.9311 | 0.6576 | 3504.67 | 24987.43 | 9.84 | 5.97 |
 | XRPUSDT | inconclusive | no_rise | 0.8285 | 0.8911 | 0.7825 | 294.96 | 1430.02 | 9.84 | 3.19 |
 | SOLUSDT | inconclusive | mixed | 0.6201 | 0.8268 | 0.5071 | 1940.83 | 27768.12 | 9.84 | 4.68 |
@@ -134,6 +136,8 @@ Per symbol, on the first business-time window only (to bound cost; that window i
 | AVAXUSDT | inconclusive | no_rise | 0.7400 | 0.8127 | 0.7166 | 597.85 | 16385.40 | 9.84 | 9.26 |
 | ATOMUSDT | inconclusive | no_rise | 0.7904 | 0.8642 | 0.7694 | 400.49 | 6878.17 | 9.84 | 9.28 |
 | IDUSDT | inconclusive | no_rise | 0.8144 | 0.8822 | 0.7902 | 409.17 | 15339.96 | 9.84 | 9.52 |
+
+† n̂ ≥ 0.9999: the fit sits on the stationarity boundary (n̂ = 1), where mu and alpha are only weakly identified, so that value is not a reliable estimate (1 such entry in this table).
 
 ## Findings
 

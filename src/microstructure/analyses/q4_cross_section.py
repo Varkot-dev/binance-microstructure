@@ -177,7 +177,7 @@ def run_q4(
     _plot_flip_vs_activity(out_dir, records)
     _write_results_md(out_dir, result)
     _write_results_parquet(out_dir, records)
-    (out_dir / "q4_cross_section.json").write_text(json.dumps(result, indent=2))
+    (out_dir / "q4_cross_section.json").write_text(json.dumps(result, indent=2, allow_nan=False))
     return result
 
 
@@ -273,12 +273,26 @@ def _fmt_reg(reg: dict | None, note: str | None = None) -> str:
     )
 
 
-def _direction_word(slope: float) -> str:
-    if slope > 0:
-        return "increases"
-    if slope < 0:
-        return "decreases"
-    return "shows no relationship (slope ≈ 0) with"
+SLOPE_MIN_SE = 2.0  # a slope counts as distinguishable from zero at |slope / stderr| >= this
+
+
+def slope_t(reg: dict) -> float:
+    """|slope / stderr| for a regression record; infinite when stderr is zero and slope is not."""
+    se = reg["stderr"]
+    if se > 0.0:
+        return abs(reg["slope"]) / se
+    return 0.0 if reg["slope"] == 0.0 else float("inf")
+
+
+def slope_is_distinguishable(reg: dict) -> bool:
+    return slope_t(reg) >= SLOPE_MIN_SE
+
+
+def _indistinguishable_clause(reg: dict) -> str:
+    return (
+        f"slope {reg['slope']:.4f}, stderr {reg['stderr']:.4f}, |t| = {slope_t(reg):.1f}, "
+        f"R² {reg['r2']:.4f}"
+    )
 
 
 def _write_results_md(out_dir: Path, result: dict) -> None:
@@ -388,14 +402,23 @@ def _write_results_md(out_dir: Path, result: dict) -> None:
     lines.append("")
     gamma_reg = regs.get("gamma_vs_activity")
     flip_reg = regs.get("p_flip_vs_activity")
-    if gamma_reg is not None:
+    if gamma_reg is not None and slope_is_distinguishable(gamma_reg):
+        if gamma_reg["slope"] > 0:
+            direction = "increases"
+            meaning = "a larger γ̂ (faster sign-ACF decay, shorter memory)"
+        else:
+            direction = "decreases"
+            meaning = "a smaller γ̂ (slower sign-ACF decay, longer memory)"
         lines.append(
-            f"γ̂ {_direction_word(gamma_reg['slope'])} log-activity across the "
-            f"{gamma_reg['n']}-symbol successful set "
-            f"(slope {gamma_reg['slope']:.4f}, R² {gamma_reg['r2']:.4f}). More actively "
-            "traded symbols in this sample show "
-            f"{'stronger' if gamma_reg['slope'] > 0 else 'weaker' if gamma_reg['slope'] < 0 else 'no different'} "
-            "long-memory decay than less actively traded ones."
+            f"γ̂ {direction} with log-activity across the {gamma_reg['n']}-symbol successful "
+            f"set (slope {gamma_reg['slope']:.4f}, R² {gamma_reg['r2']:.4f}). More actively "
+            f"traded symbols in this sample show {meaning} than less actively traded ones."
+        )
+    elif gamma_reg is not None:
+        lines.append(
+            f"The slope of γ̂ on log-activity across the {gamma_reg['n']}-symbol successful "
+            f"set ({_indistinguishable_clause(gamma_reg)}) is within {SLOPE_MIN_SE:g} standard "
+            "errors of zero, so it is indistinguishable from no relationship with activity."
         )
     else:
         lines.append(
@@ -403,13 +426,20 @@ def _write_results_md(out_dir: Path, result: dict) -> None:
             "in this run."
         )
     lines.append("")
-    if flip_reg is not None:
+    if flip_reg is not None and slope_is_distinguishable(flip_reg):
+        flip_dir = "increases" if flip_reg["slope"] > 0 else "decreases"
+        persistence = "weakens" if flip_reg["slope"] > 0 else "strengthens"
         lines.append(
-            f"p_flip {_direction_word(flip_reg['slope'])} log-activity "
+            f"p_flip {flip_dir} with log-activity "
             f"(slope {flip_reg['slope']:.4f}, R² {flip_reg['r2']:.4f}). Since "
-            "p_flip = 0.5 means no persistence, persistence "
-            f"{'strengthens' if flip_reg['slope'] < 0 else 'weakens' if flip_reg['slope'] > 0 else 'is unrelated to activity level'} "
-            "as activity increases."
+            f"p_flip = 0.5 means no persistence, persistence {persistence} as activity "
+            "increases."
+        )
+    elif flip_reg is not None:
+        lines.append(
+            f"The slope of p_flip on log-activity ({_indistinguishable_clause(flip_reg)}) is "
+            f"within {SLOPE_MIN_SE:g} standard errors of zero, so it is indistinguishable from "
+            "no relationship with activity."
         )
     else:
         lines.append(

@@ -9,6 +9,8 @@ import pytest
 
 from microstructure.analyses.q4b_tick_confound import (
     _assemble_records,
+    _verdict_paragraph,
+    _write_results_md,
     fit_bivariate,
     fit_univariate,
     mean_trade_price,
@@ -333,3 +335,56 @@ def test_run_q4b_too_few_usable_symbols_reports_note_not_crash(tmp_path: Path):
     assert "fewer than 4" in result["regressions"]["note"]
     assert (out_dir / "q4b_tick_confound.md").exists()
     assert (out_dir / "q4b_tick_confound.json").exists()
+
+
+def _regs(t_n: float, t_tick: float) -> dict:
+    def coef(value: float, t: float) -> dict:
+        return {"value": value, "stderr": value / t, "t_ratio": t}
+
+    return {
+        "note": None,
+        "reg_activity": {"coefficients": {"log10_n_events": coef(0.11, t_n)}, "r2": 0.29, "n": 70},
+        "reg_tick": {"coefficients": {"log10_rel_tick": coef(0.019, t_tick)}, "r2": 0.002, "n": 70},
+        "reg_joint": {
+            "coefficients": {"log10_n_events": coef(0.11, t_n), "log10_rel_tick": coef(0.019, t_tick)},
+            "r2": 0.32,
+            "n": 70,
+        },
+        "corr_log_n_log_rel_tick": -0.21,
+    }
+
+
+def test_verdict_is_borderline_when_a_t_ratio_sits_near_the_cutoff():
+    text = _verdict_paragraph(_regs(7.14, 2.09), "https://testnet.binancefuture.com/fapi/v1/exchangeInfo")
+    assert "Borderline, and inconclusive" in text
+    assert "testnet tick sizes" in text
+    assert "Both variables survive" not in text
+    assert "is present but" not in text
+
+
+def test_verdict_keeps_clear_branches_outside_the_borderline_band():
+    assert "Both variables survive jointly" in _verdict_paragraph(_regs(7.0, 3.0))
+    assert "Activity survives, relative tick size does not" in _verdict_paragraph(_regs(7.0, 1.0))
+    assert "Neither variable clearly survives" in _verdict_paragraph(_regs(1.0, 1.0))
+
+
+def _minimal_result() -> dict:
+    return {
+        "period": "2023-06", "n_q4_symbols": 77, "n_usable": 70, "n_skipped": 7,
+        "symbols": [], "skipped": [], "exchange_info_url": "https://example.test/x",
+        "exchange_info_source_note": None, "regressions": _regs(7.0, 3.0),
+    }
+
+
+def test_question_numbers_come_from_q4_not_hardcoded(tmp_path: Path):
+    q4_reg = {"slope": 0.2222, "r2": 0.5, "n": 77}
+    _write_results_md(tmp_path, _minimal_result(), q4_reg)
+    md = (tmp_path / "q4b_tick_confound.md").read_text()
+    assert "slope +0.2222 (R² = 0.5000, n = 77)" in md
+    assert "0.1114" not in md and "n = 121" not in md and "121" not in md
+    assert "Q4's 77 successful symbols" in md
+
+    _write_results_md(tmp_path, _minimal_result(), None)
+    md = (tmp_path / "q4b_tick_confound.md").read_text()
+    assert "Q4 found `p_flip ~ log10(n_events)`: more actively traded" in md
+    assert "R² = " not in md.split("## Method")[0]

@@ -37,7 +37,7 @@ Fraction of consecutive event pairs sharing a millisecond timestamp: 1.1987% (26
 
 ## Verdict
 
-**The zigzag survives both perturbations, so it is not a tie-break artifact.** The amplitude barely moves under the randomized tie-break (0.138174 -> 0.137872, a 0.22% change) and stays large under netting (0.128335, a 7.12% change). Only 1.20% of consecutive event pairs share a timestamp, so the tie-break touches too few adjacent pairs to produce an alternation this size. The most likely explanation is market structure, such as bid-ask bounce or interleaved liquidity-taking reversals.
+**The zigzag survives both perturbations, so it is not a tie-break artifact.** I count a variant as surviving if its amplitude keeps the baseline's sign and moves by at most 25%. The amplitude barely moves under the randomized tie-break (0.138174 -> 0.137872, a 0.22% change) and stays large under netting (0.128335, a 7.12% change). Only 1.20% of consecutive event pairs share a timestamp, so the tie-break touches too few adjacent pairs to produce an alternation this size. The most likely explanation is market structure, such as bid-ask bounce or interleaved liquidity-taking reversals.
 
 This suggests Q1's gamma fits are unaffected, but I did not measure that. Q1's power-law fit window starts at lag 10 (`fit_power_law(..., lo=10, ...)`), and the zigzag here is measured over lags 1-10, at or before the start of the window. Whether the alternation persists past lag 10 is not established, because I only computed lags 1-10. Settling it needs the same three-way comparison at lags 11+.
 

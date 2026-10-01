@@ -39,7 +39,7 @@ BENCHMARK_NOTE = (
     "therefore not an exponentially forgotten single-event shock; it reflects long-range "
     "order-flow correlation. The measured response R(l) is a different object: it mixes "
     "G with order-flow memory C. Bouchaud's equity data shows R(l) rising to a maximum "
-    "around 10^2-10^3 trades before any slow decline, the same rise measured here."
+    "around 10^2-10^3 trades before any slow decline."
 )
 
 _FIT_LO = 10
@@ -61,6 +61,7 @@ _MAX_DROP_FRACTION = 0.01
 # to the MAGNITUDE of the rise, not its functional form (measured R(500)/R(100)=1.056x
 # vs 1.47x for a pure power law, so R has largely plateaued by l~100).
 _PREDICTED_RISE_BAND = (3.5, 6.9)
+_TOY_BAND_GAMMA = 0.24  # the gamma at which the toy band above was set
 
 
 @dataclass(frozen=True)
@@ -166,9 +167,18 @@ def run_q2(root: Path, out_dir: Path, symbol: str, periods: list[str], max_lag: 
     }
 
     _plot(out_dir, response, power_fit, exp_fit, max_lag, symbol, periods)
-    _write_results_md(out_dir, result, symbol, periods, month)
-    (out_dir / "q2_results.json").write_text(json.dumps(result, indent=2))
+    _write_results_md(out_dir, result, symbol, periods, month, q1_gamma=_q1_gamma(out_dir, symbol))
+    (out_dir / "q2_results.json").write_text(json.dumps(result, indent=2, allow_nan=False))
     return result
+
+
+def _q1_gamma(out_dir: Path, symbol: str) -> float | None:
+    """Q1's measured sign-ACF exponent for `symbol`, read from q1_results.json beside this output."""
+    path = out_dir / "q1_results.json"
+    if not path.exists():
+        return None
+    gamma = json.loads(path.read_text()).get(symbol, {}).get("gamma")
+    return float(gamma) if gamma is not None else None
 
 
 def _plot(
@@ -199,7 +209,14 @@ def _plot(
     plt.close(fig)
 
 
-def _write_results_md(out_dir: Path, result: dict, symbol: str, periods: list[str], month: str) -> None:
+def _write_results_md(
+    out_dir: Path,
+    result: dict,
+    symbol: str,
+    periods: list[str],
+    month: str,
+    q1_gamma: float | None = None,
+) -> None:
     lines: list[str] = []
     lines.append("# Q2: Response function")
     lines.append("")
@@ -225,8 +242,9 @@ def _write_results_md(out_dir: Path, result: dict, symbol: str, periods: list[st
     lines.append("")
     r1 = result["response"][1]
     r500 = result["response"][min(500, len(result["response"]) - 1)]
-    growing = result["response_exponent"] < 0 or result["exponential_rate"] < 0
-    if growing:
+    power_negative = result["response_exponent"] < 0
+    exp_negative = result["exponential_rate"] < 0
+    if power_negative and exp_negative:
         lines.append(
             f"Both fitted parameters are negative: R(ℓ) grows with lag over the fit "
             f"window instead of decaying. A negative γ̂ means "
@@ -235,6 +253,16 @@ def _write_results_md(out_dir: Path, result: dict, symbol: str, periods: list[st
             "before the magnitude. Growth is the expected shape under long-memory order "
             "flow (R ≈ G + Σ G·C, see Caveats)."
         )
+        lines.append("")
+    elif power_negative or exp_negative:
+        which = (
+            f"The power-law exponent γ̂ is negative (R(ℓ) ~ ℓ^{{{-result['response_exponent']:+.4f}}})"
+            f" and the exponential rate λ̂ is not ({result['exponential_rate']:+.4f})"
+            if power_negative
+            else f"The exponential rate λ̂ is negative (R(ℓ) ~ exp({-result['exponential_rate']:+.4f}·ℓ))"
+            f" and the power-law exponent γ̂ is not ({result['response_exponent']:+.4f})"
+        )
+        lines.append(f"{which}, so the two fits disagree on whether R(ℓ) grows or decays over the fit window.")
         lines.append("")
     lines.append("| quantity | value |")
     lines.append("|---|---|")
@@ -289,19 +317,35 @@ def _write_results_md(out_dir: Path, result: dict, symbol: str, periods: list[st
     if result["response_exponent"] < 0:
         band_lo, band_hi = _PREDICTED_RISE_BAND
         measured_ratio = r500 / r1
+        if band_lo <= measured_ratio <= band_hi:
+            band_verdict = f"the measured {measured_ratio:.2f}x falls inside it"
+        else:
+            side = "below" if measured_ratio < band_lo else "above"
+            band_verdict = f"the measured {measured_ratio:.2f}x falls outside it, {side} the band"
+        q1_clause = (
+            f"With Q1's sign-ACF exponent γ̂={q1_gamma:.2f} for {symbol}, "
+            if q1_gamma is not None
+            else "With long-memory order flow (Q1), "
+        )
+        stale = (
+            f" (the band was set at γ≈{_TOY_BAND_GAMMA:.2f}, which differs from Q1's "
+            f"γ̂={q1_gamma:.2f}, so it is not recomputed for this symbol)"
+            if q1_gamma is not None and abs(q1_gamma - _TOY_BAND_GAMMA) > 0.02
+            else ""
+        )
         lines.append(
             f"- A growing R(ℓ) over lags 1-{_FIT_HI} is the expected shape under "
             "long-memory order flow and is consistent with Bouchaud (2004). The measured "
             "response mixes the decaying bare kernel G with the sign autocorrelation C: "
-            "R(ℓ) ≈ G(ℓ) + Σ_{n<ℓ} G(ℓ-n)·C(n). With Q1's sign-ACF exponent γ≈0.24 for "
-            "ETH, the accumulation term Σ G·C dominates G, so R keeps climbing well past "
+            f"R(ℓ) ≈ G(ℓ) + Σ_{{n<ℓ}} G(ℓ-n)·C(n). {q1_clause}"
+            "the accumulation term Σ G·C dominates G, so R keeps climbing well past "
             "where G alone would have decayed. Bouchaud's equity response functions show "
             "the same rise-then-slow-decline shape, peaking around 10^2-10^3 trades. "
             f"R({min(500, len(result['response']) - 1)})/R(1) = {measured_ratio:.2f}x here. "
-            "A toy transient-impact calculation with γ≈0.24 and kernel exponent "
-            "β=(1-γ)/2≈0.38 predicts R(500)/R(1) in roughly "
-            f"{band_lo:.1f}-{band_hi:.1f}x (for lag-1 sign autocorrelation in 0.2-0.4), "
-            f"and the measured {measured_ratio:.2f}x falls inside it. What decays in the "
+            f"A toy transient-impact calculation with γ≈{_TOY_BAND_GAMMA:.2f} and kernel "
+            "exponent β=(1-γ)/2≈0.38 predicts R(500)/R(1) in roughly "
+            f"{band_lo:.1f}-{band_hi:.1f}x (for lag-1 sign autocorrelation in 0.2-0.4){stale}, "
+            f"and {band_verdict}. What decays in the "
             "literature is the kernel G(ℓ), not R(ℓ). This analysis measures R only; "
             "separating G from C needs propagator deconvolution, which I did not do."
         )

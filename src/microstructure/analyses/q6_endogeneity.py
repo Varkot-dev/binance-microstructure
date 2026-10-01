@@ -61,6 +61,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import polars as pl
 
+from microstructure.analyses.q4_cross_section import SLOPE_MIN_SE, slope_is_distinguishable, slope_t
 from microstructure.data.catalog import parquet_path
 from microstructure.estimators.hawkes import branching_count_variance, fit_hawkes_exp
 from microstructure.signals.eventtime import intraday_rate_profile, rescale_to_business_time
@@ -270,7 +271,6 @@ def run_q6(
     symbols: list[str],
     month: str = "2023-06",
     windows: int = 6,
-    top_n: int = 40,
 ) -> dict:
     out_dir.mkdir(parents=True, exist_ok=True)
     records: list[dict] = []
@@ -292,7 +292,6 @@ def run_q6(
     result = {
         "month": month,
         "windows": windows,
-        "top_n": top_n,
         "n_symbols_requested": len(symbols),
         "n_symbols_successful": len(records),
         "n_symbols_failed": len(failures),
@@ -305,7 +304,7 @@ def run_q6(
     _plot(out_dir, records, activity_regression)
     _write_results_parquet(out_dir, records)
     _write_results_md(out_dir, result)
-    (out_dir / "q6_endogeneity.json").write_text(json.dumps(result, indent=2))
+    (out_dir / "q6_endogeneity.json").write_text(json.dumps(result, indent=2, allow_nan=False))
     return result
 
 
@@ -389,12 +388,13 @@ def _write_results_md(out_dir: Path, result: dict) -> None:
     lines.append("## Method")
     lines.append("")
     lines.append(
-        f"**Symbol selection**: the {result['n_symbols_requested']}-symbol union of (a) the "
-        "fixed 16-symbol panel (`results/panel_2023-06.txt`) and (b) the top `--top-n` "
-        "(default 40) symbols by June-2023 `n_events` within the 207-symbol universe "
+        f"**Symbol selection**: the {result['n_symbols_requested']} symbols listed in the "
+        "file passed as `--symbols-file`. The committed list, "
+        "`results/q6_symbols_2023-06.txt`, is the deduplicated union of (a) the fixed "
+        "16-symbol panel (`results/panel_2023-06.txt`) and (b) the 40 most active symbols by "
+        "June-2023 `n_events` within the 207-symbol universe "
         "(`results/universe_2023-06.txt`), ranked with the activity column in "
-        "`results/q4_cross_section.parquet`. The union is deduplicated "
-        "(`results/q6_symbols_2023-06.txt`). The panel was chosen to be liquid, so the two "
+        "`results/q4_cross_section.parquet`. The panel was chosen to be liquid, so the two "
         f"sets overlap 15/16 and the union has {result['n_symbols_requested']} symbols, not "
         "the ~50-56 a naive 16+40 sum suggests."
     )
@@ -536,11 +536,18 @@ def _write_results_md(out_dir: Path, result: dict) -> None:
             "comparable to that literature's power-law fits."
         )
         lines.append("")
-        if reg is not None:
-            direction = "increases" if reg["slope"] > 0 else "decreases" if reg["slope"] < 0 else "shows no relationship with"
+        if reg is not None and slope_is_distinguishable(reg):
+            direction = "increases" if reg["slope"] > 0 else "decreases"
             lines.append(
                 f"Endogeneity {direction} with log-activity across the panel "
                 f"(slope {reg['slope']:.4f}, R² {reg['r2']:.4f}, n={reg['n']})."
+            )
+        elif reg is not None:
+            lines.append(
+                f"The slope of α̂_median on log-activity across the panel (slope "
+                f"{reg['slope']:.4f}, stderr {reg['stderr']:.4f}, |t| = {slope_t(reg):.1f}, "
+                f"R² {reg['r2']:.4f}, n={reg['n']}) is within {SLOPE_MIN_SE:g} standard errors "
+                "of zero, so it is indistinguishable from no relationship with activity."
             )
         else:
             lines.append("The activity regression is not estimable in this run.")
@@ -681,7 +688,6 @@ def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--symbols-file", type=Path, required=True,
                          help="one symbol per line")
     parser.add_argument("--month", type=str, default="2023-06")
-    parser.add_argument("--top-n", type=int, default=40)
     parser.add_argument("--windows", type=int, default=6)
     return parser.parse_args(argv)
 
@@ -696,5 +702,5 @@ if __name__ == "__main__":
     symbols = _read_symbols_file(args.symbols_file)
     run_q6(
         args.root, args.out, symbols=symbols, month=args.month,
-        windows=args.windows, top_n=args.top_n,
+        windows=args.windows,
     )

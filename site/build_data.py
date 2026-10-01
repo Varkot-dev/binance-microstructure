@@ -18,6 +18,7 @@ from __future__ import annotations
 
 import json
 import math
+import statistics
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
@@ -25,7 +26,10 @@ RESULTS = REPO_ROOT / "results"
 OUT = Path(__file__).resolve().parent / "data"
 
 # The 0.04 floor on the critical-balance band is the measured finite-L
-# deconvolution bias at L=300 (results/q5_kernel_panel.md, Methodology).
+# deconvolution bias at L=300 (results/q5_kernel_panel.md, Methodology). This
+# script is stdlib-only, so the value is duplicated from
+# microstructure.analyses.q5_kernel_panel.BALANCE_BIAS_FLOOR;
+# tests/analyses/test_build_data.py asserts the two stay equal.
 BALANCE_BAND_FLOOR = 0.04
 
 
@@ -37,9 +41,10 @@ def read_result(name: str) -> dict:
 def write_slice(name: str, payload: dict) -> None:
     OUT.mkdir(parents=True, exist_ok=True)
     path = OUT / name
+    # Serialize before opening the file so a NaN/inf raises without leaving a truncated slice.
+    text = json.dumps(payload, separators=(",", ":"), sort_keys=True, allow_nan=False)
     with path.open("w") as fh:
-        json.dump(payload, fh, separators=(",", ":"), sort_keys=True)
-        fh.write("\n")
+        fh.write(text + "\n")
     print(f"  {path.relative_to(REPO_ROOT)}  {path.stat().st_size:,} bytes")
 
 
@@ -157,11 +162,6 @@ def build_endogeneity() -> None:
     cvs = sorted(r["alpha_cv"] for r in records)
     raws = sorted(r["raw_delta"] for r in records)
 
-    def median(xs: list[float]) -> float:
-        n = len(xs)
-        mid = n // 2
-        return xs[mid] if n % 2 else (xs[mid - 1] + xs[mid]) / 2
-
     write_slice(
         "endogeneity.json",
         {
@@ -172,15 +172,15 @@ def build_endogeneity() -> None:
             "activity_regression": src["activity_regression"],
             "agreement": src["agreement"],
             "summary": {
-                "alpha_median_of_medians": median(alphas),
+                "alpha_median_of_medians": statistics.median(alphas),
                 "alpha_min": alphas[0],
                 "alpha_max": alphas[-1],
-                "cv_median": median(cvs),
+                "cv_median": statistics.median(cvs),
                 "n_cv_exceeds_mle": sum(1 for r in records if r["cv_exceeds_mle"]),
                 "n_total": len(records),
-                "raw_delta_median": median(raws),
+                "raw_delta_median": statistics.median(raws),
                 "raw_delta_max_abs": max(abs(r) for r in raws),
-                "distance_from_criticality": 1.0 - median(alphas),
+                "distance_from_criticality": 1.0 - statistics.median(alphas),
             },
         },
     )
@@ -210,18 +210,13 @@ def build_execution() -> None:
                 "summary": ev["summary"],
                 "per_symbol": ev["per_symbol"],
             },
+            "shortfall_unit": src["shortfall_unit"],
             "derived": {
-                # Stated in results/q7_execution.md Findings: the reactive-vs-twap
-                # mean gap is small relative to the shared across-cell dispersion.
-                "reactive_vs_twap_gap": (
-                    ev["summary"]["twap"]["mean_shortfall"]
-                    - ev["summary"]["reactive"]["mean_shortfall"]
-                ),
-                "mean_sd_twap_reactive": (
-                    ev["summary"]["twap"]["sd_shortfall"]
-                    + ev["summary"]["reactive"]["sd_shortfall"]
-                )
-                / 2,
+                # Same quantities as results/q7_execution.md Findings: the paired
+                # reactive-minus-twap difference and the dispersion ratio.
+                "reactive_minus_twap": ev["summary"]["reactive_minus_twap"],
+                "sd_ratio_frontloaded_vs_twap": ev["summary"]["sd_ratio_frontloaded_vs_twap"],
+                "z_cutoff": 2.0,
             },
         },
     )
@@ -283,8 +278,9 @@ def build_regimes() -> None:
             "n_no_data": acct["n_failed_no_data"] if acct else None,
             "n_overlap": rank["n_overlap"] if rank else None,
             "p_flip_spearman": rank["p_flip_spearman"] if rank else None,
-            # Drop-one-out γ-break sensitivity (only present for regimes above the
-            # γ-flat R² threshold); trimmed to what the site callout needs, not the
+            # Drop-one-out γ-break sensitivity, present for every regime with at
+            # least 4 symbols (the site callout shows it only for regimes above the
+            # γ-flat R² threshold); trimmed to what the callout needs, not the
             # full per-symbol array.
             "gamma_influence": (
                 {

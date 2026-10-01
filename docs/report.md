@@ -75,11 +75,11 @@ My reading is that long memory is roughly universal order-splitting behaviour an
 
 [Full results and caveats →](../results/q4_cross_section.md)
 
-### Tick size is a minor confound (Q4b)
+### Tick size: a borderline second factor (Q4b)
 
 ![p_flip vs relative tick size](../results/q4b_flip_vs_rel_tick.png)
 
-Q4's p_flip law regressed jointly on relative tick size (`tickSize / mean price`), using 111 of Q4's 121 symbols (10 dropped for missing current tick-size data, mostly delisted BUSD pairs). In `p_flip ~ log10(n_events) + log10(rel_tick)`, the **activity coefficient is +0.1130 (t≈7.14)** and the **tick-size coefficient is +0.0192 (t≈2.09)**. Both are distinguishable from noise by a rough t-ratio, activity by a wide margin. The collinearity was weaker than I expected (corr(log-activity, log-rel-tick) = **−0.21**). Univariate R² is 0.294 for activity alone, 0.002 for tick size alone, and 0.322 jointly. Activity is the dominant driver of the p_flip law, and relative tick size is a minor second contributor.
+Q4's p_flip law regressed jointly on relative tick size (`tickSize / mean price`), using 111 of Q4's 121 symbols (10 dropped for missing current tick-size data, mostly delisted BUSD pairs). In `p_flip ~ log10(n_events) + log10(rel_tick)`, the **activity coefficient is +0.1130 (t≈7.14)** and the **tick-size coefficient is +0.0192 (t≈2.09)**. Activity is clearly distinguishable from noise; tick size sits just above a rough 2.0 cutoff, which with testnet tick sizes I treat as borderline and inconclusive. The collinearity was weaker than I expected (corr(log-activity, log-rel-tick) = **−0.21**). Univariate R² is 0.294 for activity alone, 0.002 for tick size alone, and 0.322 jointly. Activity is the dominant driver of the p_flip law; whether relative tick size contributes at all is not settled by this data.
 
 Two caveats. Tick size is Binance's *current* `exchangeInfo`, not June 2023's. The mainnet endpoint returned HTTP 451 (geo-blocked) from the execution environment, so the numbers come from the futures **testnet** exchangeInfo mirror (schema-identical, spot-checked against BTCUSDT's known mainnet tick, not verified symbol by symbol).
 
@@ -138,9 +138,9 @@ I left one statistic out. Correlating Δ21 with the K=1 gap to count-variance gi
 
 ![Execution cost comparison](../results/q7_execution.png)
 
-Three execution schedules (TWAP, front-loaded, and a Hawkes-motivated flow-reactive one) are costed against replayed 2023-06 flow on 6 panel symbols under one shared model: adverse drift + half-spread + own-impact from each symbol's **own measured Q5 kernel**. The reactive schedule's two parameters are grid-searched on **days 1–3 only** and frozen for evaluation on the disjoint **days 4–7**, so no reported number contains calibration data.
+Three execution schedules (TWAP, front-loaded, and a Hawkes-motivated flow-reactive one) are costed against replayed 2023-06 flow on 6 panel symbols under one shared model: adverse drift + half-spread + own-impact from each symbol's **own measured Q5 kernel**. Shortfall is measured in basis points of the arrival mid, so symbols at different price levels pool on one scale. The reactive schedule's two parameters are grid-searched on **days 1–3 only** and frozen for evaluation on the disjoint **days 4–7**. The impact kernels are not held out: Q5 estimated them on days 1–7, so the own-impact term is in-sample.
 
-**Reactive has the lower mean (−0.0111 vs TWAP's +0.0161), but the difference is unresolved.** Both carry a standard deviation of ≈5.2 across the 96 evaluation cells, so a gap of 0.027 is roughly 1/190th of the noise. What is resolved is the variance: **front-loaded pays a higher mean cost (+0.1306) with a standard deviation of 0.3404 against ≈5.2, roughly a 15× dispersion reduction, holding for every symbol in the panel.** The mechanism is a trade of a deterministic cost for a stochastic one. Own-impact is charged predictably and front-loading incurs more of it. Adverse drift is the dominant noisy term and scales with how long you stay exposed. Which end of the frontier you want is a risk preference, and I take no position on it.
+**Reactive is cheaper than TWAP by 0.043 bps** (paired standard error 0.019 over 96 cells, about 2.2 SEs). That is detectable in this sample but negligible next to a cell-to-cell sd of 29 bps, and the cells share replayed days, so the SE is optimistic. What is clearly resolved is the dispersion: **front-loaded pays a higher mean cost (2.11 vs 0.55 bps) with a standard deviation of 1.75 bps against 29.3, about 17× lower, and lower on every symbol in the panel.** The mechanism is a trade of a deterministic cost for a stochastic one. Own-impact is charged predictably and front-loading incurs more of it. Adverse drift is the dominant noisy term and scales with how long you stay exposed. Which end of the frontier you want is a risk preference, and I take no position on it.
 
 This is a model-based cost comparison and not a backtest or a trading recommendation. It has no queue, no latency and no partial fills, and the replayed flow cannot react to the simulated order, which cuts hardest against the reactive schedule.
 
@@ -322,8 +322,8 @@ Q6 needs monthly 2023-06 `aggTrades` for its panel. It builds the 41-symbol unio
 ```bash
 # Q6: 41-symbol branching-ratio panel (16-symbol panel ∪ top-40 most active)
 uv run python -m microstructure.analyses.q6_endogeneity \
-    --root data --out results --symbols-file results/panel_2023-06.txt \
-    --month 2023-06 --top-n 40 --windows 6
+    --root data --out results --symbols-file results/q6_symbols_2023-06.txt \
+    --month 2023-06 --windows 6
 
 # Q7: execution-cost comparison, calibrate days 1-3, evaluate days 4-7
 uv run python -m microstructure.analyses.q7_execution \
@@ -337,7 +337,7 @@ uv run python -m microstructure.analyses.q7_execution \
 # Q6b: K = 1, 2, 3 kernel sensitivity on the Q6 panel, with the drift control
 uv run python -m microstructure.analyses.q6b_kernel_sensitivity \
     --root data --out results --symbols-file results/q6_symbols_2023-06.txt \
-    --month 2023-06 --windows 6 --ks 1,2,3 --q6-json results/q6_endogeneity.json --null-sims 5
+    --month 2023-06 --windows 6 --ks 1,2,3 --q6-json results/q6_endogeneity.json --null-sims 50
 ```
 
 Q6b is the slowest run in the repo, about 20 hours on one core. Q6 is the heaviest of the rest: 41 symbols × 6 Nelder-Mead multi-start MLE fits, plus one extra raw-clock-time fit per symbol to measure the seasonality bias. Each sub-window is capped at 250,000 events to bound the per-fit cost. Q7's calibration/evaluation split is hard-coded to the first three and remaining days of the requested range, so shifting `--start-day` / `--end-day` shifts both windows together.
@@ -357,7 +357,7 @@ for PERIOD in 2023-07 2024-07 2025-07 2026-07; do
   uv run python -m microstructure.analyses.q6_endogeneity \
       --root data --out "results/regimes/$PERIOD" \
       --symbols-file results/q6_symbols_2023-06.txt \
-      --month "$PERIOD" --top-n 40 --windows 6
+      --month "$PERIOD" --windows 6
 done
 
 # Native-universe run: Q4 only, on the 2026 market's own 371-symbol universe

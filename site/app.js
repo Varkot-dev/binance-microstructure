@@ -547,8 +547,8 @@ function initExecution(data) {
     },
     marker: { color: colors[k] },
     hovertemplate:
-      `<b>${labels[k]}</b><br>mean shortfall ${fmt(summary[k].mean_shortfall, 6)}<br>` +
-      `sd ${fmt(summary[k].sd_shortfall, 5)}<br>n ${summary[k].n}<extra></extra>`,
+      `<b>${labels[k]}</b><br>mean shortfall ${fmt(summary[k].mean_shortfall, 3)} bps<br>` +
+      `sd ${fmt(summary[k].sd_shortfall, 3)} bps<br>n ${summary[k].n}<extra></extra>`,
   }));
 
   Plotly.react(
@@ -556,7 +556,7 @@ function initExecution(data) {
     traces,
     baseLayout(t, {
       xaxis: axis(t, '', { type: 'category' }),
-      yaxis: axis(t, 'mean shortfall per unit (± sd)'),
+      yaxis: axis(t, 'mean shortfall, bps of arrival mid (± sd)'),
       shapes: [
         {
           type: 'line',
@@ -584,18 +584,28 @@ function initExecution(data) {
     `sizes. Error bars are the standard deviation across those cells, not a ` +
     `standard error of the mean.`;
 
+  const d = data.derived;
+  const p = d.reactive_minus_twap;
+  const resolved = Math.abs(p.mean) > d.z_cutoff * p.se;
+  const frontLower = data.evaluation.per_symbol.filter(
+    (r) => r.frontloaded.sd_shortfall < r.twap.sd_shortfall,
+  ).length;
   document.getElementById('x-callout').textContent =
-    `Flow-reactive shows the lowest mean shortfall (${fmt(summary.reactive.mean_shortfall, 6)}) ` +
-    `and front-loaded the highest (${fmt(summary.frontloaded.mean_shortfall, 6)}), but the ` +
-    `reactive-vs-TWAP gap of ${fmt(data.derived.reactive_vs_twap_gap, 5)} is tiny against ` +
-    `the dispersion both share (sd ≈ ${fmt(data.derived.mean_sd_twap_reactive, 2)}). This ` +
-    `sample does not statistically distinguish them; that apparent edge is consistent with ` +
-    `noise. The one clearly resolved effect is front-loaded's variance: sd ` +
-    `${fmt(summary.frontloaded.sd_shortfall, 4)} against roughly ` +
-    `${fmt(data.derived.mean_sd_twap_reactive, 2)} for the other two, and it holds for every ` +
-    `symbol in the panel. It trades deterministic own-impact cost for less exposure to noisy ` +
-    `drift. Which trade-off is better depends on a risk preference, and I take no position ` +
-    `on it.`;
+    `Flow-reactive minus TWAP, paired over the same ${p.n} cells: ` +
+    `${sign(p.mean, 3)} bps with a standard error of ${fmt(p.se, 3)} bps. ` +
+    (resolved
+      ? `That is more than ${d.z_cutoff} standard errors from zero, but it is small next to ` +
+        `a cell-to-cell sd of ${fmt(summary.twap.sd_shortfall, 1)} bps, and cells that share ` +
+        `a replayed day are not independent, so the edge is weak. `
+      : `That is within ${d.z_cutoff} standard errors of zero, so this sample does not ` +
+        `separate the two. `) +
+    `The clear effect is front-loaded's dispersion: sd ${fmt(summary.frontloaded.sd_shortfall, 2)} ` +
+    `bps against ${fmt(summary.twap.sd_shortfall, 1)} for TWAP ` +
+    `(${fmt(1 / d.sd_ratio_frontloaded_vs_twap, 0)}× lower), lower on ${frontLower} of ` +
+    `${data.evaluation.per_symbol.length} symbols, at a higher mean cost ` +
+    `(${fmt(summary.frontloaded.mean_shortfall, 2)} vs ${fmt(summary.twap.mean_shortfall, 2)} bps). ` +
+    `It trades deterministic own-impact cost for less exposure to noisy drift. Which is better ` +
+    `depends on a risk preference.`;
 }
 
 /* ============================================================
