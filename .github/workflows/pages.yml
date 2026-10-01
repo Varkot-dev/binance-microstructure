@@ -1,15 +1,21 @@
 name: Deploy site to GitHub Pages
 
-# The site is static and has no build step: build_data.py derives
-# site/data/*.json from results/*.json and those slices are committed, so
-# this workflow regenerates them only to prove the committed copies are
-# current, then uploads site/ as-is.
+# The site is static: build_data.py derives site/data/*.json from
+# results/*.json and those slices are committed. The verify job regenerates
+# them to prove the committed copies are current. The site is deployed only
+# from a public repo, since Pages is unavailable on a private one.
 
 on:
   push:
     branches: [main]
     paths:
       - 'site/**'
+      - 'results/**'
+      - '.github/workflows/pages.yml'
+  pull_request:
+    paths:
+      - 'site/**'
+      - 'results/**'
       - '.github/workflows/pages.yml'
   workflow_dispatch:
 
@@ -21,16 +27,16 @@ permissions:
 # One deployment at a time; let an in-flight run finish rather than
 # cancelling it, so a half-published site is never left behind.
 concurrency:
-  group: pages
+  group: pages-${{ github.ref }}
   cancel-in-progress: false
 
 jobs:
-  build:
+  verify:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: '3.12'
 
@@ -38,11 +44,18 @@ jobs:
         run: |
           python site/build_data.py
           if ! git diff --quiet -- site/data; then
-            echo "::error::site/data is stale — run 'python site/build_data.py' and commit the result."
+            echo "::error::site/data is stale. Run 'python site/build_data.py' and commit the result."
             git diff --stat -- site/data
             exit 1
           fi
           echo "site/data is current."
+
+  build:
+    needs: verify
+    if: github.event_name != 'pull_request' && github.event.repository.visibility == 'public'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
 
       - uses: actions/configure-pages@v5
 
