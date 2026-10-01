@@ -3,8 +3,8 @@
 sign_acf uses the FFT (Wiener-Khinchin): O(n log n) vs O(n*max_lag) naive.
 fit_power_law is OLS on log(y) vs log(lag) — standard in the order-flow
 memory literature; its stderr is the OLS slope standard error, which
-understates true uncertainty for autocorrelated data (documented caveat,
-addressed with block bootstrap at the analysis level if needed).
+understates the spread of the exponent for autocorrelated data (see
+`propagator.kernel_exponent_blocked` for a block-to-block spread).
 """
 from __future__ import annotations
 
@@ -14,11 +14,15 @@ import numpy as np
 
 
 def sign_acf(signs: np.ndarray, max_lag: int) -> np.ndarray:
-    """Normalized autocorrelation of a ±1 (or real) series, lags 0..max_lag."""
+    """Normalized autocorrelation of a ±1 (or real) series, lags 0..max_lag.
+
+    Raises ValueError for a constant series, whose variance is zero."""
     x = signs.astype(np.float64) - signs.mean()
     n = x.size
     if max_lag >= n:
         raise ValueError(f"max_lag {max_lag} must be < series length {n}")
+    if not np.any(x):
+        raise ValueError("series is constant, so its autocorrelation is undefined")
     nfft = 1 << (2 * n - 1).bit_length()
     f = np.fft.rfft(x, nfft)
     acov = np.fft.irfft(f * np.conj(f), nfft)[: max_lag + 1]
@@ -36,9 +40,11 @@ class PowerLawFit:
 
 
 def fit_power_law(y: np.ndarray, lo: int, hi: int) -> PowerLawFit:
-    """OLS fit of log y vs log lag over [lo, hi], skipping y <= 0 points."""
+    """OLS fit of log y vs log lag over [lo, hi], skipping y <= 0 points.
+
+    Lag 0 has no place on a log axis, so the window starts at max(lo, 1)."""
     lags = np.arange(len(y))
-    mask = (lags >= lo) & (lags <= hi) & (y > 0)
+    mask = (lags >= max(lo, 1)) & (lags <= hi) & (y > 0)
     if mask.sum() < 3:
         raise ValueError("fewer than 3 positive points in fit window")
     lx, ly = np.log(lags[mask]), np.log(y[mask])

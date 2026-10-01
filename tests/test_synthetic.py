@@ -55,8 +55,10 @@ def test_fractional_signs_recovers_theoretical_power_law_exponent():
     regression of ACF vs lag over lags 10..200 (restricted to lags where
     the empirical ACF is positive, since log is undefined otherwise).
 
-    A 2000-term MA truncation gives gamma_hat ~ 0.31 (outside tolerance); the
-    50_000-term FFT-based implementation gives ~ 0.25.
+    With these settings (400_000 signs, seed 3), a 2000-term MA truncation gives
+    gamma_hat ~ 0.31 (outside tolerance); the 50_000-term FFT-based
+    implementation gives ~ 0.25 (inside the 0.06 tolerance, with a margin of
+    about 0.01).
     """
     s = fractional_signs(400_000, d=0.4, seed=3)
     lags = np.arange(10, 201)
@@ -70,3 +72,9 @@ def test_fractional_signs_recovers_theoretical_power_law_exponent():
     assert abs(gamma_hat - theoretical_gamma) < 0.06, (
         f"gamma_hat={gamma_hat:.4f} outside tolerance of theory={theoretical_gamma:.2f}"
     )
+
+
+@pytest.mark.parametrize("n", [0, -3])
+def test_markov_signs_rejects_non_positive_length(n):
+    with pytest.raises(ValueError, match="n"):
+        markov_signs(n, p_repeat=0.7, seed=1)

@@ -37,13 +37,18 @@ def load_book_ticker(root: Path, symbol: str, periods: list[str]) -> pl.DataFram
 
 
 def events_with_prior_mid(
-    events: pl.DataFrame, bt: pl.DataFrame
+    events: pl.DataFrame, bt: pl.DataFrame, extra_cols: tuple[str, ...] = ()
 ) -> tuple[pl.DataFrame, int]:
     """Attach the mid prevailing STRICTLY before each event's ts.
 
     join_asof(backward) matches <=; shifting the event key back 1ms turns
     that into strict <, honoring the 'mid before the event' convention at
-    the data's ms resolution. Output is sorted by ts regardless of input order.
+    the data's ms resolution. Output is sorted by ts regardless of input order;
+    rows that share a timestamp keep their input order (stable sorts), so a
+    later quote at a tied ms prevails.
+
+    `extra_cols` names further bt columns (e.g. bid_price, ask_price) to carry
+    through the same asof join, so every quote field comes from one match.
 
     Raises ValueError if events or bt have ts precision other than ms-UTC.
     """
@@ -60,8 +65,12 @@ def events_with_prior_mid(
             f"bt ts must be Datetime('ms', 'UTC'), got {bt_ts_dtype}"
         )
 
-    ev = events.with_columns((pl.col("ts") - timedelta(milliseconds=1)).alias("_key")).sort("_key")
-    quotes = bt.select("ts", "mid").sort("ts").rename({"ts": "_key"})
+    ev = events.with_columns((pl.col("ts") - timedelta(milliseconds=1)).alias("_key")).sort(
+        "_key", maintain_order=True
+    )
+    quotes = (
+        bt.select("ts", "mid", *extra_cols).sort("ts", maintain_order=True).rename({"ts": "_key"})
+    )
     joined = ev.join_asof(quotes, on="_key", strategy="backward").drop("_key")
     n_dropped = int(joined["mid"].null_count())
     return joined.drop_nulls("mid"), n_dropped

@@ -18,6 +18,11 @@ schedules:
     signed flow opposes the parent side beyond a threshold
     (`simulator.reactive_schedule`).
 
+Shortfall is expressed in basis points of the arrival mid (the mid before the
+first replayed event) before any pooling, calibration scoring or summary, so
+symbols with very different price levels weigh equally. In raw price units a
+BTCUSDT cell (sd ~12.75) would swamp an XRPUSDT cell (sd ~0.0007).
+
 Every schedule pays the same own-impact cost model (own kernel G[1], linearly
 scaled by child size / typical_event_qty; see the `simulator.py` module
 docstring for the sqrt-law caveat) plus half-spread plus realized adverse
@@ -29,12 +34,16 @@ price impact beyond the symbol's own measured linear kernel. The generated
 Calibration/evaluation split (no leakage): the reactive schedule's
 (lookback, pause_threshold) are chosen by grid search over {50, 200} x
 {0.2, 0.4}, maximizing mean advantage vs. TWAP (mean(twap_shortfall -
-reactive_shortfall), pooled across all 6 symbols, both sides and both parent
-sizes) using only days 1-3 (2023-06-01..03). Those parameters are then fixed
+reactive_shortfall) in bps, pooled across all 6 symbols, both sides and both
+parent sizes) using only days 1-3 (2023-06-01..03). Those parameters are then fixed
 and evaluated only on days 4-7 (2023-06-04..07); the reported evaluation
 summary never includes calibration-window data. `_build_calibration_scorer`
 and `calibrate_reactive_params` are kept separate so the no-leakage property
 can be tested directly (see tests/analyses/test_q7.py).
+
+The G kernels come from Q5, which estimates them on 2023-06-01..07. That window
+contains the calibration days and the evaluation days, so the cost model is
+in-sample for the evaluation days (the reactive parameters are not).
 
 Outputs: q7_execution.{md,json,png}.
 """
@@ -54,6 +63,14 @@ import matplotlib.pyplot as plt
 import numpy as np
 import polars as pl
 
+from microstructure.data.jsonio import dumps_strict
+from microstructure.execution.cost_stats import (
+    SCHEDULE_NAMES,
+    paired_difference,
+    sd_ratio,
+    summarize,
+    summarize_per_symbol,
+)
 from microstructure.execution.simulator import (
     ReplayData,
     frontloaded_schedule,
@@ -71,7 +88,8 @@ REACTIVE_GRID: tuple[tuple[int, float], ...] = tuple(
     itertools.product((50, 200), (0.2, 0.4))
 )
 SIDES = (1, -1)
-SCHEDULE_NAMES = ("twap", "frontloaded", "reactive")
+BPS = 1e4
+Z_CUTOFF = 2.0  # |mean paired difference| beyond this many paired SEs counts as resolved
 
 
 # --------------------------------------------------------------------------
@@ -143,6 +161,29 @@ def _load_day_replay(
 
 
 # --------------------------------------------------------------------------
+# Units and kernel checks
+# --------------------------------------------------------------------------
+
+
+def _to_bps(shortfall_per_unit: float, rd: ReplayData) -> float:
+    """Shortfall per unit, in price units, as basis points of the arrival mid."""
+    arrival_mid = float(rd.prior_mids[0])
+    if not np.isfinite(arrival_mid) or arrival_mid <= 0.0:
+        raise ValueError(f"arrival mid {arrival_mid} must be positive and finite")
+    return shortfall_per_unit / arrival_mid * BPS
+
+
+def _kernel_problem(kernel_g: np.ndarray) -> str | None:
+    """Reason the kernel cannot supply a cost-model G[1], or None if it can."""
+    if kernel_g.size < 2:
+        return "kernel has fewer than 2 lags"
+    g1 = float(kernel_g[1])
+    if not np.isfinite(g1) or g1 < 0.0:
+        return f"kernel G[1] = {g1} is negative or non-finite, so own-impact would be a rebate"
+    return None
+
+
+# --------------------------------------------------------------------------
 # One symbol-day's schedule comparison
 # --------------------------------------------------------------------------
 
@@ -159,8 +200,8 @@ def _run_schedules_for_day(
 ) -> dict[str, float]:
     """Run all three schedules for one (symbol, day, side, parent_qty) cell.
 
-    Returns {schedule_name: shortfall_per_unit}. Raises if the replay is
-    shorter than horizon_events (caller catches and logs as a failure).
+    Returns {schedule_name: shortfall in bps of the arrival mid}. Raises if the
+    replay is shorter than horizon_events (caller catches and logs as a failure).
     """
     if rd.prior_mids.size <= horizon_events:
         raise ValueError(
@@ -170,23 +211,32 @@ def _run_schedules_for_day(
     out: dict[str, float] = {}
 
     t_times, t_sizes = twap_schedule(horizon_events, n_children)
-    out["twap"] = simulate_schedule(
-        rd, side, parent_qty_events, horizon_events, t_times, t_sizes, kernel_g, "twap"
-    ).shortfall_per_unit
+    out["twap"] = _to_bps(
+        simulate_schedule(
+            rd, side, parent_qty_events, horizon_events, t_times, t_sizes, kernel_g, "twap"
+        ).shortfall_per_unit,
+        rd,
+    )
 
     half_life = kernel_half_life_lag(kernel_g)
     decay = horizon_events / max(1, half_life)
     f_times, f_sizes = frontloaded_schedule(horizon_events, n_children, decay=decay)
-    out["frontloaded"] = simulate_schedule(
-        rd, side, parent_qty_events, horizon_events, f_times, f_sizes, kernel_g, "frontloaded"
-    ).shortfall_per_unit
+    out["frontloaded"] = _to_bps(
+        simulate_schedule(
+            rd, side, parent_qty_events, horizon_events, f_times, f_sizes, kernel_g, "frontloaded"
+        ).shortfall_per_unit,
+        rd,
+    )
 
     r_times, r_sizes, _n_deferrals = reactive_schedule(
         rd, side, horizon_events, n_children, reactive_lookback, reactive_pause_threshold
     )
-    out["reactive"] = simulate_schedule(
-        rd, side, parent_qty_events, horizon_events, r_times, r_sizes, kernel_g, "reactive"
-    ).shortfall_per_unit
+    out["reactive"] = _to_bps(
+        simulate_schedule(
+            rd, side, parent_qty_events, horizon_events, r_times, r_sizes, kernel_g, "reactive"
+        ).shortfall_per_unit,
+        rd,
+    )
 
     return out
 
@@ -205,32 +255,52 @@ def _build_calibration_scorer(
     horizon_events: int,
     n_children: int,
     parent_qty_events_list: list[float],
-) -> Callable[[int, float], float]:
+) -> tuple[Callable[[int, float], float], list[dict]]:
     """Build a `(lookback, pause_threshold) -> mean advantage` scorer.
 
-    Advantage = mean(twap_shortfall - reactive_shortfall) pooled across all
-    symbols x calibration days x sides x parent sizes; positive means
-    reactive beat TWAP on average. Replays and kernels are loaded ONCE
-    (calibration days only) and reused across every grid point, so the
-    scorer never touches evaluation-day data by construction.
+    Advantage = mean(twap_shortfall - reactive_shortfall), each in bps of the
+    arrival mid, pooled across all symbols x calibration days x sides x parent
+    sizes; positive means reactive beat TWAP on average. Replays and kernels
+    are loaded ONCE (calibration days only) and reused across every grid point,
+    so the scorer never touches evaluation-day data by construction.
+
+    Returns (scorer, failures). Every symbol or symbol-day dropped from
+    calibration is recorded in `failures` (stage "calibration") instead of
+    being skipped silently.
     """
     kernels = json.loads(kernels_path.read_text())
     kernel_by_symbol = {r["symbol"]: np.array(r["G"]) for r in kernels["records"]}
 
     replays: list[tuple[ReplayData, np.ndarray]] = []
+    failures: list[dict] = []
+
+    def fail(symbol: str, day: str | None, reason: str) -> None:
+        failures.append({"symbol": symbol, "day": day, "stage": "calibration", "reason": reason})
+
     for symbol in symbols:
         if symbol not in kernel_by_symbol:
+            fail(symbol, None, "no kernel in kernels json")
+            continue
+        problem = _kernel_problem(kernel_by_symbol[symbol])
+        if problem is not None:
+            fail(symbol, None, problem)
             continue
         try:
             month_events = _load_symbol_month_events(root, symbol, month)
-        except FileNotFoundError:
+        except FileNotFoundError as e:
+            fail(symbol, None, f"{type(e).__name__}: {e}")
             continue
         for day in calib_days:
             try:
                 rd = _load_day_replay(root, symbol, month_events, day)
-            except (FileNotFoundError, ValueError):
+            except (FileNotFoundError, ValueError) as e:
+                fail(symbol, day, f"{type(e).__name__}: {e}")
                 continue
             if rd.prior_mids.size <= horizon_events:
+                fail(
+                    symbol, day,
+                    f"replay length {rd.prior_mids.size} <= horizon_events {horizon_events}",
+                )
                 continue
             replays.append((rd, kernel_by_symbol[symbol]))
 
@@ -240,22 +310,29 @@ def _build_calibration_scorer(
             for side in SIDES:
                 for parent_qty in parent_qty_events_list:
                     t_times, t_sizes = twap_schedule(horizon_events, n_children)
-                    twap_sf = simulate_schedule(
-                        rd, side, parent_qty, horizon_events, t_times, t_sizes, kernel_g, "twap"
-                    ).shortfall_per_unit
+                    twap_sf = _to_bps(
+                        simulate_schedule(
+                            rd, side, parent_qty, horizon_events, t_times, t_sizes, kernel_g,
+                            "twap",
+                        ).shortfall_per_unit,
+                        rd,
+                    )
                     r_times, r_sizes, _ = reactive_schedule(
                         rd, side, horizon_events, n_children, lookback, pause_threshold
                     )
-                    reactive_sf = simulate_schedule(
-                        rd, side, parent_qty, horizon_events, r_times, r_sizes, kernel_g,
-                        "reactive",
-                    ).shortfall_per_unit
+                    reactive_sf = _to_bps(
+                        simulate_schedule(
+                            rd, side, parent_qty, horizon_events, r_times, r_sizes, kernel_g,
+                            "reactive",
+                        ).shortfall_per_unit,
+                        rd,
+                    )
                     advantages.append(twap_sf - reactive_sf)
         if not advantages:
             return float("-inf")
         return float(np.mean(advantages))
 
-    return scorer
+    return scorer, failures
 
 
 def calibrate_reactive_params(
@@ -265,6 +342,7 @@ def calibrate_reactive_params(
 
     Returns (best_lookback, best_pause_threshold, all_scores). Ties broken
     by grid order (first-seen wins), which keeps the choice deterministic.
+    Raises ValueError if no grid point has a finite score.
     """
     scores: dict[tuple[int, float], float] = {}
     best_key = None
@@ -275,7 +353,12 @@ def calibrate_reactive_params(
         if score > best_score:
             best_score = score
             best_key = (lookback, pause_threshold)
-    assert best_key is not None
+    if best_key is None:
+        raise ValueError(
+            "calibration produced no finite score for any grid point "
+            f"({len(scores)} points tried); the calibration window had no usable "
+            "symbol-days, see the failures list"
+        )
     return best_key[0], best_key[1], scores
 
 
@@ -308,7 +391,7 @@ def run_q7(
     kernel_by_symbol = {r["symbol"]: np.array(r["G"]) for r in kernels["records"]}
 
     # --- Calibration: days 1-3 only, grid argmax of mean advantage vs TWAP ---
-    scorer = _build_calibration_scorer(
+    scorer, calibration_failures = _build_calibration_scorer(
         root, symbols, kernels_path, month, calib_days,
         horizon_events, n_children, parent_qty_events_list,
     )
@@ -316,22 +399,30 @@ def run_q7(
 
     # --- Evaluation: days 4-7 only, using the FROZEN calibrated params ---
     rows: list[dict] = []
-    failures: list[dict] = []
+    failures: list[dict] = list(calibration_failures)
+
+    def fail(symbol: str, day: str | None, reason: str) -> None:
+        failures.append({"symbol": symbol, "day": day, "stage": "evaluation", "reason": reason})
+
     for symbol in symbols:
         if symbol not in kernel_by_symbol:
-            failures.append({"symbol": symbol, "day": None, "reason": "no kernel in kernels json"})
+            fail(symbol, None, "no kernel in kernels json")
             continue
         kernel_g = kernel_by_symbol[symbol]
+        problem = _kernel_problem(kernel_g)
+        if problem is not None:
+            fail(symbol, None, problem)
+            continue
         try:
             month_events = _load_symbol_month_events(root, symbol, month)
         except FileNotFoundError as e:
-            failures.append({"symbol": symbol, "day": None, "reason": f"{type(e).__name__}: {e}"})
+            fail(symbol, None, f"{type(e).__name__}: {e}")
             continue
         for day in eval_days:
             try:
                 rd = _load_day_replay(root, symbol, month_events, day)
             except (FileNotFoundError, ValueError) as e:
-                failures.append({"symbol": symbol, "day": day, "reason": f"{type(e).__name__}: {e}"})
+                fail(symbol, day, f"{type(e).__name__}: {e}")
                 continue
             for side in SIDES:
                 for parent_qty in parent_qty_events_list:
@@ -341,9 +432,7 @@ def run_q7(
                             best_lookback, best_pause_threshold,
                         )
                     except ValueError as e:
-                        failures.append(
-                            {"symbol": symbol, "day": day, "reason": f"{type(e).__name__}: {e}"}
-                        )
+                        fail(symbol, day, f"{type(e).__name__}: {e}")
                         continue
                     for schedule_name, shortfall in shortfalls.items():
                         rows.append(
@@ -353,12 +442,15 @@ def run_q7(
                                 "side": side,
                                 "parent_qty_events": parent_qty,
                                 "schedule": schedule_name,
-                                "shortfall_per_unit": shortfall,
+                                "shortfall_bps": shortfall,
                             }
                         )
 
-    eval_summary = _summarize(rows)
-    per_symbol = _summarize_per_symbol(rows, symbols)
+    eval_summary = summarize(rows)
+    eval_summary["reactive_minus_twap"] = paired_difference(rows, "reactive", "twap")
+    eval_summary["sd_ratio_frontloaded_vs_twap"] = sd_ratio(eval_summary)
+    per_symbol = summarize_per_symbol(rows, symbols)
+    kernel_window = {"start_day": kernels.get("start_day"), "end_day": kernels.get("end_day")}
 
     result = {
         "month": month,
@@ -366,6 +458,8 @@ def run_q7(
         "n_children": n_children,
         "parent_qty_events_list": parent_qty_events_list,
         "panel_symbols": symbols,
+        "shortfall_unit": "basis points of the arrival mid",
+        "kernel_window": kernel_window,
         "calibration": {
             "days": calib_days,
             "grid": [[lb, pt] for lb, pt in REACTIVE_GRID],
@@ -382,42 +476,8 @@ def run_q7(
 
     _plot(out_dir, per_symbol)
     _write_md(out_dir, result)
-    (out_dir / "q7_execution.json").write_text(json.dumps(result, indent=2))
+    (out_dir / "q7_execution.json").write_text(dumps_strict(result))
     return result
-
-
-def _summarize(rows: list[dict]) -> dict[str, dict[str, float]]:
-    out: dict[str, dict[str, float]] = {}
-    for schedule_name in SCHEDULE_NAMES:
-        vals = [r["shortfall_per_unit"] for r in rows if r["schedule"] == schedule_name]
-        if vals:
-            out[schedule_name] = {
-                "mean_shortfall": float(np.mean(vals)),
-                "sd_shortfall": float(np.std(vals)),
-                "n": len(vals),
-            }
-        else:
-            out[schedule_name] = {"mean_shortfall": float("nan"), "sd_shortfall": float("nan"), "n": 0}
-    return out
-
-
-def _summarize_per_symbol(rows: list[dict], symbols: list[str]) -> list[dict]:
-    out = []
-    for symbol in symbols:
-        sym_rows = [r for r in rows if r["symbol"] == symbol]
-        entry: dict = {"symbol": symbol}
-        for schedule_name in SCHEDULE_NAMES:
-            vals = [r["shortfall_per_unit"] for r in sym_rows if r["schedule"] == schedule_name]
-            if vals:
-                entry[schedule_name] = {
-                    "mean_shortfall": float(np.mean(vals)),
-                    "sd_shortfall": float(np.std(vals)),
-                    "n": len(vals),
-                }
-            else:
-                entry[schedule_name] = {"mean_shortfall": float("nan"), "sd_shortfall": float("nan"), "n": 0}
-        out.append(entry)
-    return out
 
 
 # --------------------------------------------------------------------------
@@ -426,13 +486,12 @@ def _summarize_per_symbol(rows: list[dict], symbols: list[str]) -> list[dict]:
 
 
 def _plot(out_dir: Path, per_symbol: list[dict]) -> None:
-    """Small multiples: one subplot per symbol, each with its OWN y-scale.
+    """Small multiples: one subplot per symbol, each with its own y-scale.
 
-    Absolute shortfall spans orders of magnitude across the panel (BTCUSDT
-    trades in the tens of thousands of price units, low-priced alts in
-    fractions of a cent), so a shared y-axis would flatten every symbol but
-    the highest-priced one. Cross-symbol magnitudes belong in the per-symbol
-    table, not this plot.
+    Shortfall is in basis points of the arrival mid, so levels are comparable
+    across symbols, but volatility and spread still differ enough that a shared
+    axis would flatten the quieter symbols. The per-symbol table carries the
+    cross-symbol magnitudes.
     """
     n_symbols = max(1, len(per_symbol))
     n_cols = min(3, n_symbols)
@@ -451,6 +510,7 @@ def _plot(out_dir: Path, per_symbol: list[dict]) -> None:
         ax.set_xticks(x)
         ax.set_xticklabels(SCHEDULE_NAMES, rotation=20, ha="right")
         ax.set_title(p["symbol"])
+        ax.set_ylabel("shortfall (bps of arrival mid)")
 
     # Blank out any unused grid cells.
     for idx in range(len(per_symbol), n_rows * n_cols):
@@ -458,8 +518,7 @@ def _plot(out_dir: Path, per_symbol: list[dict]) -> None:
 
     fig.suptitle(
         "Q7: mean shortfall ± sd by schedule per symbol, evaluation days 4-7 "
-        "(note: each subplot has its own y-scale — see per-symbol table for "
-        "cross-symbol magnitude)"
+        "(each subplot has its own y-scale)"
     )
     fig.tight_layout(rect=(0, 0, 1, 0.96))
     fig.savefig(out_dir / "q7_execution.png", dpi=150, bbox_inches="tight")
@@ -476,7 +535,8 @@ def _write_md(out_dir: Path, result: dict) -> None:
         "This is a model-based cost comparison, not a trading recommendation or a backtest "
         "of a tradable strategy. Own-impact comes from each symbol's measured Q5 kernel, "
         "linearly scaled (see Caveats). Queueing, order-book depth, latency, and other "
-        "participants' reaction are not modeled. Evaluation covers 4 calendar days "
+        "participants' reaction are not modeled. Shortfall is in basis points of the "
+        "arrival mid. Evaluation covers 4 calendar days "
         "(2023-06-04..07) of one symbol panel in one week, so the results describe how "
         "these schedules would have costed against this replayed flow under this cost "
         "model, and nothing broader."
@@ -502,8 +562,8 @@ def _write_md(out_dir: Path, result: dict) -> None:
     lines.append(
         f"The flow-reactive schedule's (lookback, pause_threshold) come from a grid search "
         f"over {{50, 200}} x {{0.2, 0.4}} that maximizes mean advantage vs. TWAP "
-        f"(mean(twap_shortfall - reactive_shortfall), pooled over symbols, sides, and "
-        f"parent sizes), using only days {calib['days']}. The chosen params are then "
+        f"(mean(twap_shortfall - reactive_shortfall) in bps, pooled over symbols, sides, "
+        f"and parent sizes), using only days {calib['days']}. The chosen params are then "
         f"frozen and evaluated on the disjoint window {result['evaluation']['days']}. "
         "The summary tables below use only that window."
     )
@@ -513,7 +573,7 @@ def _write_md(out_dir: Path, result: dict) -> None:
         f"pause_threshold={calib['chosen_params']['pause_threshold']}."
     )
     lines.append("")
-    lines.append("| lookback | pause_threshold | calibration-window mean advantage vs TWAP |")
+    lines.append("| lookback | pause_threshold | calibration-window mean advantage vs TWAP (bps) |")
     lines.append("|---|---|---|")
     for lb, pt in REACTIVE_GRID:
         score = calib["scores"].get(f"{lb}_{pt}", float("nan"))
@@ -524,7 +584,7 @@ def _write_md(out_dir: Path, result: dict) -> None:
     lines.append("## Evaluation-window results (days 4-7)")
     lines.append("")
     summary = result["evaluation"]["summary"]
-    lines.append("| schedule | mean shortfall | sd (across day/symbol/side/qty) | n |")
+    lines.append("| schedule | mean shortfall (bps) | sd (bps, across day/symbol/side/qty) | n |")
     lines.append("|---|---|---|---|")
     for schedule_name in SCHEDULE_NAMES:
         s = summary[schedule_name]
@@ -535,7 +595,7 @@ def _write_md(out_dir: Path, result: dict) -> None:
 
     lines.append("## Per-symbol table (evaluation window)")
     lines.append("")
-    lines.append("| symbol | twap mean±sd | frontloaded mean±sd | reactive mean±sd |")
+    lines.append("| symbol | twap mean±sd (bps) | frontloaded mean±sd (bps) | reactive mean±sd (bps) |")
     lines.append("|---|---|---|---|")
     for p in result["evaluation"]["per_symbol"]:
         cells = []
@@ -557,41 +617,14 @@ def _write_md(out_dir: Path, result: dict) -> None:
         worst = max(means, key=lambda k: means[k])
         lines.append(
             f"Over the evaluation window, **{best}** has the lowest mean shortfall per "
-            f"unit ({means[best]:.6g}) and **{worst}** the highest ({means[worst]:.6g}) "
-            f"among the three schedules under this cost model, pooled across symbols, "
+            f"unit ({means[best]:.4g} bps) and **{worst}** the highest ({means[worst]:.4g} "
+            f"bps) among the three schedules under this cost model, pooled across symbols, "
             f"sides, and parent sizes. The per-symbol table shows whether the ranking "
             f"holds across the panel or is driven by a subset of symbols."
         )
         lines.append("")
-        if "twap" in means and "reactive" in means:
-            gap = abs(means["twap"] - means["reactive"])
-            shared_sd = np.mean([sds["twap"], sds["reactive"]])
-            lines.append(
-                f"Read the reactive-vs-twap ranking cautiously. The mean gap ({gap:.4g}) "
-                f"is small relative to their shared across-cell dispersion (sd ≈ "
-                f"{shared_sd:.4g} for both), so this sample does not statistically "
-                "distinguish the two, and the apparent edge is consistent with noise. "
-                "Only frontloaded's variance reduction (below) is clearly resolved in "
-                "this data."
-            )
-            lines.append("")
-        if "frontloaded" in sds and ("twap" in sds or "reactive" in sds):
-            other_sd = np.mean([sds[s] for s in ("twap", "reactive") if s in sds])
-            if sds["frontloaded"] < other_sd:
-                lines.append(
-                    "A second pattern, independent of the means, shows in both the summary "
-                    "table and the per-symbol plot. **Frontloaded** pays a small but "
-                    "consistently positive mean shortfall with a much smaller standard "
-                    f"deviation ({sds['frontloaded']:.4g}) than twap or reactive "
-                    f"({other_sd:.4g} on average), for every symbol in the panel and not "
-                    "just in the pooled numbers. This fits front-loading paying more "
-                    "own-impact cost (which the model always charges, deterministically) "
-                    "for less exposure to adverse drift (the dominant, noisy term for "
-                    "twap and reactive, which spread execution over the full horizon). "
-                    "Which trade-off is better depends on a risk preference this analysis "
-                    "takes no position on."
-                )
-                lines.append("")
+        lines.extend(_reactive_vs_twap_lines(summary["reactive_minus_twap"]))
+        lines.extend(_frontloaded_lines(result["evaluation"]["per_symbol"], summary, sds))
     else:
         lines.append("No evaluation-window results were produced, so there is no finding.")
         lines.append("")
@@ -599,10 +632,12 @@ def _write_md(out_dir: Path, result: dict) -> None:
     if result["failures"]:
         lines.append("## Failures")
         lines.append("")
-        lines.append("| symbol | day | reason |")
-        lines.append("|---|---|---|")
+        lines.append("| stage | symbol | day | reason |")
+        lines.append("|---|---|---|---|")
         for f in result["failures"]:
-            lines.append(f"| {f['symbol']} | {f.get('day', '')} | {f['reason']} |")
+            lines.append(
+                f"| {f.get('stage', '')} | {f['symbol']} | {f.get('day') or ''} | {f['reason']} |"
+            )
         lines.append("")
 
     lines.append("## Caveats")
@@ -618,6 +653,17 @@ def _write_md(out_dir: Path, result: dict) -> None:
         "validated against real large-child impact data and should not be extrapolated to "
         "larger orders."
     )
+    kernel_window = result.get("kernel_window") or {}
+    overlap = _kernel_overlap_days(kernel_window, result["calibration"]["days"] + result["evaluation"]["days"])
+    if overlap:
+        lines.append(
+            f"- **Kernels are in-sample**: the G kernels come from Q5, estimated on "
+            f"{kernel_window['start_day']}..{kernel_window['end_day']}, which includes "
+            f"{len(overlap)} of the {len(result['calibration']['days']) + len(result['evaluation']['days'])} "
+            f"replayed days ({', '.join(overlap)}). The own-impact term is therefore fitted on "
+            "the same days it is evaluated on. Only the reactive parameters are held out "
+            "(calibrated on the first three days, evaluated on the rest)."
+        )
     lines.append(
         "- **No queueing or latency**: children execute instantaneously at the chosen "
         "event's prevailing mid + half-spread. Queue position, partial fills, and "
@@ -641,8 +687,64 @@ def _write_md(out_dir: Path, result: dict) -> None:
         "decays within its recorded lags, a fallback (`len(G)//4`) is used (see the "
         "`simulator.kernel_half_life_lag` docstring)."
     )
+    lines.append(
+        "- **Paired SE treats cells as independent**: the sides and parent sizes of one "
+        "symbol-day share a replay, so the paired standard error of reactive minus twap "
+        "understates the uncertainty."
+    )
     lines.append("")
     (out_dir / "q7_execution.md").write_text("\n".join(lines))
+
+
+def _kernel_overlap_days(kernel_window: dict, replayed_days: list[str]) -> list[str]:
+    """Replayed days that fall inside the window the Q5 kernels were estimated on."""
+    start, end = kernel_window.get("start_day"), kernel_window.get("end_day")
+    if not start or not end:
+        return []
+    return [d for d in replayed_days if start <= d <= end]
+
+
+def _reactive_vs_twap_lines(paired: dict) -> list[str]:
+    """Verdict on reactive vs twap, computed from the paired difference (reactive - twap)."""
+    if paired["mean"] is None or paired["se"] is None:
+        return ["Too few paired cells to compare reactive with twap.", ""]
+    mean, se, n = paired["mean"], paired["se"], paired["n"]
+    stats = f"mean paired difference {mean:+.4g} bps, paired SE {se:.4g} bps, n = {n} cells"
+    if se > 0.0 and abs(mean) > Z_CUTOFF * se:
+        direction = "cheaper" if mean < 0 else "more expensive"
+        text = (
+            f"Reactive minus twap: {stats}. The difference is more than {Z_CUTOFF:g} paired "
+            f"SEs from zero, so reactive is {direction} than twap in this sample."
+        )
+    else:
+        text = (
+            f"Reactive minus twap: {stats}. The difference is within {Z_CUTOFF:g} paired "
+            "SEs of zero, so this sample does not statistically distinguish the two."
+        )
+    return [text, ""]
+
+
+def _frontloaded_lines(per_symbol: list[dict], summary: dict, sds: dict[str, float]) -> list[str]:
+    """Front-loaded vs twap dispersion and mean, with per-symbol counts computed from the table."""
+    ratio = summary.get("sd_ratio_frontloaded_vs_twap")
+    if ratio is None or "twap" not in sds or "frontloaded" not in sds:
+        return []
+    scored = [p for p in per_symbol if p["frontloaded"]["n"] > 0 and p["twap"]["n"] > 0]
+    n_lower_sd = sum(1 for p in scored if p["frontloaded"]["sd_shortfall"] < p["twap"]["sd_shortfall"])
+    n_higher_mean = sum(
+        1 for p in scored if p["frontloaded"]["mean_shortfall"] > p["twap"]["mean_shortfall"]
+    )
+    text = (
+        f"Front-loaded shortfall has sd {sds['frontloaded']:.4g} bps against {sds['twap']:.4g} "
+        f"bps for twap (ratio {ratio:.2f}) and mean {summary['frontloaded']['mean_shortfall']:.4g} "
+        f"bps against {summary['twap']['mean_shortfall']:.4g} bps. Per symbol, its sd is below "
+        f"twap's in {n_lower_sd} of {len(scored)} symbols and its mean is above twap's in "
+        f"{n_higher_mean} of {len(scored)}. This is consistent with front-loading paying more "
+        "own-impact cost, which the model charges deterministically, for less exposure to "
+        "adverse drift. Which trade-off is better depends on a risk preference this analysis "
+        "takes no position on."
+    )
+    return [text, ""]
 
 
 # --------------------------------------------------------------------------

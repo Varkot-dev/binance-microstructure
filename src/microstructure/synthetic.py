@@ -19,6 +19,8 @@ def markov_signs(n: int, p_repeat: float, seed: int) -> np.ndarray:
 
     Theoretical ACF(k) = (2*p_repeat - 1)**k  (geometric, short memory).
     """
+    if n < 1:
+        raise ValueError(f"n must be >= 1; got {n}")
     if not 0.0 < p_repeat < 1.0:
         raise ValueError("p_repeat must be in (0, 1)")
     rng = np.random.default_rng(seed)
@@ -53,9 +55,11 @@ def fractional_signs(n: int, d: float, seed: int) -> np.ndarray:
 
     n_lags = 50_000 terms: the truncation must be long enough that the
     discarded tail (~k^(d-1) decay) does not bias the sign-ACF power-law
-    exponent gamma = 1 - 2*d. At 2000 terms gamma is biased high (~0.30 vs
-    theoretical 0.20 at d=0.4); at 50_000 it recovers ~0.202. The convolution
-    is FFT-based, since np.convolve (O(n*n_lags)) is too slow at that length.
+    exponent gamma = 1 - 2*d. For d=0.4 (theoretical gamma 0.20), 400_000
+    signs, seed 3 and a log-log fit of the sign ACF over lags 10..200, gamma_hat
+    is 0.31 with 2000 terms and 0.25 with 50_000. The remaining gap to 0.20
+    is why the tests use a tolerance of 0.06. The convolution is FFT-based,
+    since np.convolve (O(n*n_lags)) is too slow at that length.
     """
     if not 0.0 < d < 0.5:
         raise ValueError("d must be in (0, 0.5)")

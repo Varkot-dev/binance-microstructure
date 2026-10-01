@@ -451,3 +451,13 @@ def test_rescale_to_business_time_rejects_unsorted_ts():
     profile = np.ones(48)
     with pytest.raises(ValueError):
         rescale_to_business_time(ts, profile)
+
+
+def test_rescale_to_business_time_keeps_millisecond_precision_at_epoch_2024():
+    """Summing day_idx * 86400 first would put ~1.7e9 s in a float64 and lose
+    ~2e-7 s per timestamp, which is 1e-4 of a 1 ms gap. With a flat profile the
+    business-time gaps must equal the clock gaps to well under that."""
+    start_ms = 1_704_067_200_000 + 13 * 3_600_000 + 17  # 2024-01-01 13:00:00.017 UTC
+    ts = start_ms + np.arange(2000, dtype=np.int64)  # 1 ms spacing
+    tau = rescale_to_business_time(ts, np.ones(48))
+    np.testing.assert_allclose(np.diff(tau), 0.001, rtol=0, atol=1e-10)

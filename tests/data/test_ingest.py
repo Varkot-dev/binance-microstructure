@@ -116,3 +116,27 @@ def test_book_ticker_output_sorted_by_update_id_despite_shuffled_input(tmp_path:
     df = pl.read_parquet(ingest_book_ticker(z, tmp_path))
     assert df["update_id"].to_list() == [9001, 9002, 9003]
     assert df["ts"].is_sorted()
+
+
+def test_agg_trades_qty_integral_for_first_thousand_rows_then_fractional(tmp_path: Path):
+    """Schema inference over the first 1000 rows would call qty/price integers
+    and then fail on the fractional value; the schema must be explicit."""
+    rows = [f"{i},50000,5,{i},{i},{1687392000000 + i},true" for i in range(1, 1201)]
+    rows.append("1201,50000.5,0.25,1201,1201,1687392001201,false")
+    z = _zip_csv(tmp_path / "late_frac", "late_frac.csv", rows)
+    df = pl.read_parquet(ingest_agg_trades(z, tmp_path))
+    assert df.height == 1201
+    assert df.schema["qty"] == pl.Float64
+    assert df.schema["price"] == pl.Float64
+    assert df["qty"][-1] == 0.25
+    assert df["price"][-1] == 50000.5
+
+
+def test_book_ticker_integral_prices_and_quantities_stay_float(tmp_path: Path):
+    rows = [f"{i},100,3,101,4,{1687392000000 + i},{1687392000000 + i}" for i in range(1, 1100)]
+    rows.append("1100,100.5,3.5,101.5,4.5,1687392002000,1687392002000")
+    z = _zip_csv(tmp_path / "bt_late_frac", "bt_late_frac.csv", rows)
+    df = pl.read_parquet(ingest_book_ticker(z, tmp_path))
+    assert df.height == 1100
+    assert df["bid_price"][-1] == 100.5
+    assert df["ask_qty"][-1] == 4.5

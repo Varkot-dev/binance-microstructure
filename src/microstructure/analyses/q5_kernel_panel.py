@@ -9,7 +9,8 @@ and compute:
   (`fit_power_law(sign_acf(signs, 1000), 10, 500)`), Q1's order-flow-memory
   statistic.
 - beta (+ beta_block_sd): the DECONVOLVED impact-kernel exponent, via
-  `kernel_exponent_blocked` (propagator deconvolution). This
+  `kernel_exponent_blocked` (propagator deconvolution); beta_block_sd is the sd
+  of the 5 per-block estimates of beta. This
   separates the bare kernel from the confound of order-flow memory that a
   naive read of the response function R(l) would mix in.
 - R(l): the naive (non-deconvolved) response function, kept for reference and
@@ -25,10 +26,11 @@ response grows no faster than diffusively. balance_delta = beta - (1-gamma)/2
 measures the (signed) departure from that prediction for each symbol.
 
 Judgement rule: |balance_delta| <= 2*max(beta_block_sd, 0.04) => "consistent",
-else "violated". beta_block_sd is the block-bootstrap uncertainty on beta
+else "violated". beta_block_sd is the sd of the 5 block estimates of beta
 (`propagator.py` explains why fit_power_law's OLS stderr must not be used
-for this: it understates the true uncertainty by roughly 6.8x on synthetic
-long-memory data), and the 2x multiplier gives a two-sigma-style band. The
+for this: it understates the spread of beta_hat by roughly 6.8x on synthetic
+long-memory data). It does not measure the sampling error of the full-sample beta_hat, and
+the band is 2 x the sd of block estimates, not a confidence interval. The
 0.04 floor reflects a systematic finite-L bias of ~+0.03 to +0.04 in the
 recovered beta at L=300 (20-seed Monte Carlo, fractional_signs d=0.35), so
 even a perfectly balanced symbol's beta_hat typically reads ~0.03-0.04 high
@@ -48,7 +50,6 @@ log10(n_events) with a zero line and a +-0.04 bias-floor band.
 from __future__ import annotations
 
 import argparse
-import json
 from datetime import UTC, date, datetime, timedelta
 from pathlib import Path
 
@@ -58,6 +59,7 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
 
+from microstructure.data.jsonio import dumps_strict
 from microstructure.estimators.acf import fit_power_law, sign_acf
 from microstructure.estimators.propagator import (
     cumulative_kernel,
@@ -101,6 +103,12 @@ def _symbol_kernel(signs: np.ndarray, dm: np.ndarray, max_lag: int) -> np.ndarra
     acf = sign_acf(signs, max_lag=max_lag - 1)
     kappa = deconvolve_kernel(b, acf, n_samples=signs.size)
     return cumulative_kernel(kappa)
+
+
+def _delta_summary(records: list[dict]) -> tuple[int, int, float]:
+    """(number of negative balance deltas, number of records, median delta)."""
+    deltas = np.array([r["balance_delta"] for r in records], dtype=np.float64)
+    return int(np.sum(deltas < 0.0)), int(deltas.size), float(np.median(deltas))
 
 
 def _judge_balance(balance_delta: float, beta_block_sd: float) -> str:
@@ -205,7 +213,7 @@ def run_q5(
 
     _plot(out_dir, records)
     _write_results_md(out_dir, result)
-    (out_dir / "q5_kernel_panel.json").write_text(json.dumps(result, indent=2))
+    (out_dir / "q5_kernel_panel.json").write_text(dumps_strict(result))
     return result
 
 
@@ -273,9 +281,9 @@ def _write_results_md(out_dir: Path, result: dict) -> None:
         "**beta (deconvolved kernel exponent)**: `kernel_exponent_blocked` recovers the "
         "bare impact kernel by solving the Toeplitz system `sign_price_cross_cov = "
         "sign_ACF ⊛ kappa`, which separates the kernel from the order-flow memory that "
-        "R(ℓ) mixes in. For uncertainty I use `beta_block_sd` (block-bootstrap sd over 5 "
-        "contiguous blocks), not the fit's OLS stderr, which the `propagator.py` "
-        "docstring measures as understating the uncertainty by roughly 6.8x on synthetic "
+        "R(ℓ) mixes in. For the spread I use `beta_block_sd`, the sd of β̂ across 5 "
+        "contiguous blocks of the week, not the fit's OLS stderr, which the `propagator.py` "
+        "docstring measures as understating the spread of β̂ by roughly 6.8x on synthetic "
         "long-memory data."
     )
     lines.append(
@@ -288,7 +296,8 @@ def _write_results_md(out_dir: Path, result: dict) -> None:
     lines.append("")
     lines.append(
         "**Judgement rule**: |balance_delta| <= 2*max(beta_block_sd, 0.04) => "
-        "\"consistent\", else \"violated\". The 0.04 floor is the finite-L bias of roughly "
+        "\"consistent\", else \"violated\". The band is 2 × the sd of block estimates, "
+        "a screening threshold and not a confidence interval. The 0.04 floor is the finite-L bias of roughly "
         "+0.03 to +0.04 in the recovered beta at L=300 that the `kernel_exponent_blocked` "
         "docstring reports (20-seed Monte Carlo on `fractional_signs(d=0.35)`). Without "
         "the floor, a low-noise symbol with a truly zero balance_delta could be flagged "
@@ -355,6 +364,12 @@ def _write_results_md(out_dir: Path, result: dict) -> None:
                 f"such relation beyond the table, since {len(records)} points are too few "
                 "to fit a reliable trend."
             )
+        n_neg, n_rec, median_delta = _delta_summary(records)
+        lines.append("")
+        lines.append(
+            f"{n_neg} of {n_rec} β̂ − (1−γ̂)/2 deltas are negative (median "
+            f"{median_delta:+.2f})."
+        )
     else:
         lines.append("No successful symbols in this run, so there is no finding.")
     lines.append("")
@@ -396,9 +411,9 @@ def _write_results_md(out_dir: Path, result: dict) -> None:
         f"({result['max_lag']}) may differ."
     )
     lines.append(
-        "- **beta_block_sd** uses only 5 contiguous non-overlapping blocks per symbol. "
-        "With so few blocks it is a noisy uncertainty estimate and not a formal "
-        "confidence interval."
+        "- **beta_block_sd** is the sd of 5 estimates, each from one contiguous fifth of "
+        "the week. With so few blocks it is noisy, and it describes block-sized samples, "
+        "not the full-sample β̂, so the band built from it is a screening threshold."
     )
     lines.append("")
     (out_dir / "q5_kernel_panel.md").write_text("\n".join(lines))

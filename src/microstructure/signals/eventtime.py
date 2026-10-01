@@ -126,11 +126,15 @@ def rescale_to_business_time(ts: np.ndarray, profile: np.ndarray) -> np.ndarray:
 
     day_idx = ts // MS_PER_DAY
     time_of_day_ms = ts - day_idx * MS_PER_DAY
+    # Count whole days from the first event, not from the epoch. Multiplying an
+    # epoch day index (~2e4) by 86400 s puts ~1.7e9 in a float64, which has only
+    # ~2e-7 s resolution there and corrupts millisecond gaps.
+    day_offset = (day_idx - day_idx[0]).astype(np.float64)
     bin_idx = np.minimum((time_of_day_ms / bin_width_ms).astype(np.int64), n_bins - 1)
     within_bin_ms = time_of_day_ms - bin_idx * bin_width_ms
 
     tau = (
-        day_idx.astype(np.float64) * day_integral_s
+        day_offset * day_integral_s
         + cum_profile_s[bin_idx]
         + profile[bin_idx] * (within_bin_ms / 1000.0)
     )

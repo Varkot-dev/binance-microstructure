@@ -5,10 +5,10 @@
 For each symbol in the panel I load one week of aggTrades (2023-06-01..2023-06-07, from the monthly period `2023-06`) and join each event to the bookTicker mid strictly before it (`events_with_prior_mid`). A per-symbol failure (missing parquet, no events in range, or the n/L≥100 sample-sufficiency guard in `kernel_exponent_blocked`) is logged in `failures` and does not abort the run.
 
 **gamma_week**: the sign-ACF power-law exponent over the same week (`fit_power_law(sign_acf(signs, 1000), lo=10, hi=500)`), the Q1 statistic.
-**beta (deconvolved kernel exponent)**: `kernel_exponent_blocked` recovers the bare impact kernel by solving the Toeplitz system `sign_price_cross_cov = sign_ACF ⊛ kappa`, which separates the kernel from the order-flow memory that R(ℓ) mixes in. For uncertainty I use `beta_block_sd` (block-bootstrap sd over 5 contiguous blocks), not the fit's OLS stderr, which the `propagator.py` docstring measures as understating the uncertainty by roughly 6.8x on synthetic long-memory data.
+**beta (deconvolved kernel exponent)**: `kernel_exponent_blocked` recovers the bare impact kernel by solving the Toeplitz system `sign_price_cross_cov = sign_ACF ⊛ kappa`, which separates the kernel from the order-flow memory that R(ℓ) mixes in. For the spread I use `beta_block_sd`, the sd of β̂ across 5 contiguous blocks of the week, not the fit's OLS stderr, which the `propagator.py` docstring measures as understating the spread of β̂ by roughly 6.8x on synthetic long-memory data.
 **Critical balance**: the Bouchaud et al. (2004) propagator-diffusivity relation predicts beta = (1 - gamma_week) / 2 for a linear propagator whose accumulated response grows no faster than diffusively (dm[t] = sum_n kappa[n] * signs[t-n] + noise; see the `propagator.py` module docstring). balance_delta = beta - (1-gamma_week)/2 is the signed departure per symbol.
 
-**Judgement rule**: |balance_delta| <= 2*max(beta_block_sd, 0.04) => "consistent", else "violated". The 0.04 floor is the finite-L bias of roughly +0.03 to +0.04 in the recovered beta at L=300 that the `kernel_exponent_blocked` docstring reports (20-seed Monte Carlo on `fractional_signs(d=0.35)`). Without the floor, a low-noise symbol with a truly zero balance_delta could be flagged "violated" by that bias alone. Departures smaller than the bias cannot be distinguished from zero.
+**Judgement rule**: |balance_delta| <= 2*max(beta_block_sd, 0.04) => "consistent", else "violated". The band is 2 × the sd of block estimates, a screening threshold and not a confidence interval. The 0.04 floor is the finite-L bias of roughly +0.03 to +0.04 in the recovered beta at L=300 that the `kernel_exponent_blocked` docstring reports (20-seed Monte Carlo on `fractional_signs(d=0.35)`). Without the floor, a low-noise symbol with a truly zero balance_delta could be flagged "violated" by that bias alone. Departures smaller than the bias cannot be distinguished from zero.
 
 ## Run summary
 
@@ -39,10 +39,12 @@ Requested: 16. Successful: 16. Failed: 0. Of the successful symbols: **12 consis
 
 12 of 16 symbols (75%) land within the balance band and 4 do not, so critical balance holds for some but not all of the panel. Whether the split tracks activity (n_events) or other symbol characteristics is visible in the panel table. I assert no such relation beyond the table, since 16 points are too few to fit a reliable trend.
 
+11 of 16 β̂ − (1−γ̂)/2 deltas are negative (median -0.06).
+
 ## Caveats
 
 - **7-day window** (2023-06-01..2023-06-07): one week in one market regime. Order-flow memory statistics are regime-dependent (see Q8), so these results may not carry over to other weeks or volatility regimes.
 - **L1 mids only**: the mid is the best-bid/best-ask midpoint from bookTicker. No order-book depth is used, so impact through queue depletion or hidden liquidity is not captured.
 - **Linear-propagator assumption**: the deconvolved beta relies on the model dm[t] = sum_n kappa[n]*signs[t-n] + noise, in which each signed event's impact superposes additively and linearly. If real impact is nonlinear (saturating, or dependent on spread or depth), beta is an artifact of the linear model. The critical-balance relation beta = (1-gamma)/2 is also a linear/diffusive prediction (Bouchaud et al. 2004). A "violated" verdict fits both (a) nonlinear true impact and (b) a linear model whose beta-gamma relationship differs from the diffusivity constraint. This analysis cannot tell them apart.
 - **0.04 bias floor**: the measured finite-L deconvolution bias at L=300 from the synthetic validation. The bias at this panel's max_lag (300) may differ.
-- **beta_block_sd** uses only 5 contiguous non-overlapping blocks per symbol. With so few blocks it is a noisy uncertainty estimate and not a formal confidence interval.
+- **beta_block_sd** is the sd of 5 estimates, each from one contiguous fifth of the week. With so few blocks it is noisy, and it describes block-sized samples, not the full-sample β̂, so the band built from it is a screening threshold.

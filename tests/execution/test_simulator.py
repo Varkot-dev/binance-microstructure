@@ -14,12 +14,12 @@ Contract under test:
 3. Schedule generators are pure and satisfy invariants: child sizes sum to
    the parent qty, indices lie in [0, horizon_events), indices non-decreasing
    (children never reordered).
-4. Planted-advantage test: a replay where adverse flow clusters precede
-   price moves against the parent side -> the reactive schedule defers into
-   those windows and comes out ahead of TWAP. A shuffled/no-signal replay
-   (flow uncorrelated with future price) -> reactive and TWAP shortfalls
-   are statistically indistinguishable (their across-seed dispersions
-   overlap).
+4. Planted-advantage test: a replay where a burst of sell flow precedes a
+   price drop right after each TWAP slot (and buy bursts precede price jumps)
+   -> a buyer that defers behind opposing flow lands after the drop and comes
+   out ahead of TWAP. The same prices with the signs shuffled carry no signal:
+   there the reactive schedule has no systematic edge over TWAP and loses to
+   reactive-with-signal.
 
 Hand-computed 2-child shortfall (exact equality):
     side=+1, typical_event_qty=10, G=[0.0, 2.0], arrival_mid=100.0
@@ -32,6 +32,7 @@ Hand-computed 2-child shortfall (exact equality):
 """
 from __future__ import annotations
 
+from dataclasses import replace
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
@@ -188,7 +189,9 @@ def test_simulate_schedule_two_child_exact_shortfall():
 
 
 def test_simulate_schedule_sell_side_flips_sign_of_drift_and_impact():
-    """side=-1: drift and impact terms flip sign vs. the side=+1 hand-check."""
+    """side=-1: only the drift term flips sign vs. the side=+1 hand-check.
+
+    The spread and the impact stay costs for a seller too."""
     rd = _tiny_replay(n=5)
     kernel_g = np.array([0.0, 2.0, 2.0, 2.0])
 
@@ -276,23 +279,51 @@ def test_reactive_schedule_invariants():
     assert sizes.sum() == pytest.approx(1.0)
 
 
-def _make_flow_replay(n_events: int, seed: int, adverse_at: np.ndarray | None = None) -> ReplayData:
-    """Baseline i.i.d. random-sign replay with flat mids and spreads.
-
-    If `adverse_at` is given, those event indices carry a burst of signed
-    flow opposing the parent's assumed +1 side, followed immediately by a
-    price move in that same adverse direction — the "planted adverse
-    cluster" the reactive schedule should learn to avoid.
-    """
+def _make_flow_replay(n_events: int, seed: int) -> ReplayData:
+    """I.i.d. random-sign replay with flat mids and spreads."""
     rng = np.random.default_rng(seed)
     signs = rng.choice(np.array([-1, 1], dtype=np.int8), size=n_events)
-    mids = np.full(n_events, 100.0)
-    if adverse_at is not None:
-        for start in adverse_at:
-            burst = slice(start, start + 30)
-            signs[burst] = -1  # opposing flow (parent side assumed +1)
-            # price drops shortly after the burst -> adverse to a +1 parent
-            mids[start + 30 :] -= 0.5
+    return ReplayData(
+        ts=np.arange(n_events, dtype=np.int64) * 10,
+        signs=signs,
+        qtys=np.full(n_events, 10.0),
+        prior_mids=np.full(n_events, 100.0),
+        half_spreads=np.full(n_events, 0.05),
+        typical_event_qty=10.0,
+    )
+
+
+# --------------------------------------------------------------------------
+# Planted-advantage test, with a shuffled-signs control
+# --------------------------------------------------------------------------
+
+HORIZON = 2000
+N_CHILDREN = 20
+LOOKBACK = 50
+PAUSE_THRESHOLD = 0.2
+PLANTED_STEP = 0.5
+N_SEEDS = 30
+
+
+def _planted_replay(seed: int) -> ReplayData:
+    """Noisy mids with flow that leads price after each TWAP slot.
+
+    Before every TWAP slot t_k (k >= 1) a 30-event burst of one sign d_k fills
+    events [t_k-40, t_k-10). The mid steps by PLANTED_STEP * d_k at t_k + 20, so
+    a TWAP child at t_k trades before the step. Directions d_k are random, so
+    there is no net drift. A buyer that defers behind a sell burst (d_k = -1)
+    lands after the price drop, which is favorable for a buyer. After a buy
+    burst the reactive schedule does not defer, so it matches TWAP.
+    """
+    rng = np.random.default_rng(seed)
+    n_events = HORIZON + 200
+    signs = rng.choice(np.array([-1, 1], dtype=np.int8), size=n_events)
+    mids = 100.0 + np.cumsum(rng.normal(0.0, 0.01, size=n_events))
+    twap_times, _ = twap_schedule(HORIZON, N_CHILDREN)
+    for t in twap_times[1:]:
+        direction = int(rng.choice([-1, 1]))
+        signs[t - 40 : t - 10] = direction
+        mids[t + 20 :] += PLANTED_STEP * direction
     return ReplayData(
         ts=np.arange(n_events, dtype=np.int64) * 10,
         signs=signs,
@@ -303,99 +334,62 @@ def _make_flow_replay(n_events: int, seed: int, adverse_at: np.ndarray | None = 
     )
 
 
-# --------------------------------------------------------------------------
-# Planted-advantage test
-# --------------------------------------------------------------------------
+def _shuffled_signs(rd: ReplayData, seed: int) -> ReplayData:
+    """Same prices, signs permuted: flow no longer leads price."""
+    rng = np.random.default_rng(10_000 + seed)
+    return replace(rd, signs=rng.permutation(rd.signs))
 
 
-def test_reactive_schedule_beats_twap_when_adverse_flow_precedes_price_moves():
-    """Adverse flow clusters planted right before the child-slot times TWAP
-    would use -> reactive defers into the post-move (better) price and beats
-    TWAP's mean shortfall for a +1 (buy) parent."""
-    horizon, n_children = 2000, 20
+def _buyer_shortfalls(rd: ReplayData) -> tuple[float, float]:
+    """(TWAP, reactive) buy-side shortfall on one replay."""
     kernel_g = np.array([0.0] + [0.001] * 50)  # tiny impact so drift dominates
-
-    # TWAP child slots land at roughly horizon/n_children apart; plant an
-    # adverse burst immediately before several of them.
-    twap_times, _ = twap_schedule(horizon, n_children)
-    adverse_at = np.unique(np.clip(twap_times[2:18] - 35, 0, horizon - 40))
-
-    n_seeds = 12
-    twap_shortfalls = []
-    reactive_shortfalls = []
-    for seed in range(n_seeds):
-        rd = _make_flow_replay(n_events=horizon + 200, seed=seed, adverse_at=adverse_at)
-
-        t_times, t_sizes = twap_schedule(horizon, n_children)
-        twap_res = simulate_schedule(
-            rd, side=1, parent_qty_events=n_children * 1.0, horizon_events=horizon,
-            child_times=t_times, child_sizes=t_sizes, kernel_g=kernel_g,
-            schedule_name="twap",
-        )
-        twap_shortfalls.append(twap_res.shortfall_per_unit)
-
-        r_times, r_sizes, _ = reactive_schedule(
-            rd, side=1, horizon_events=horizon, n_children=n_children,
-            lookback=50, pause_threshold=0.2,
-        )
-        reactive_res = simulate_schedule(
-            rd, side=1, parent_qty_events=n_children * 1.0, horizon_events=horizon,
-            child_times=r_times, child_sizes=r_sizes, kernel_g=kernel_g,
-            schedule_name="reactive",
-        )
-        reactive_shortfalls.append(reactive_res.shortfall_per_unit)
-
-    mean_twap = float(np.mean(twap_shortfalls))
-    mean_reactive = float(np.mean(reactive_shortfalls))
-    assert mean_reactive < mean_twap, (
-        f"reactive ({mean_reactive}) should beat twap ({mean_twap}) "
-        "when adverse flow reliably precedes price moves against the parent"
+    kwargs = {
+        "side": 1, "parent_qty_events": N_CHILDREN * 1.0, "horizon_events": HORIZON,
+        "kernel_g": kernel_g,
+    }
+    t_times, t_sizes = twap_schedule(HORIZON, N_CHILDREN)
+    twap = simulate_schedule(rd, child_times=t_times, child_sizes=t_sizes, **kwargs)
+    r_times, r_sizes, _ = reactive_schedule(
+        rd, side=1, horizon_events=HORIZON, n_children=N_CHILDREN,
+        lookback=LOOKBACK, pause_threshold=PAUSE_THRESHOLD,
     )
+    reactive = simulate_schedule(rd, child_times=r_times, child_sizes=r_sizes, **kwargs)
+    return twap.shortfall_per_unit, reactive.shortfall_per_unit
 
 
-def test_reactive_and_twap_tie_when_no_signal():
-    """No relationship between flow and future price -> reactive's deferrals
-    are noise, not signal; across-seed dispersions of reactive and TWAP
-    shortfall should overlap (no reliable separation)."""
-    horizon, n_children = 2000, 20
-    kernel_g = np.array([0.0] + [0.001] * 50)
+def _paired_advantage(replays: list[ReplayData]) -> np.ndarray:
+    """TWAP minus reactive shortfall per replay; positive means reactive is cheaper."""
+    pairs = np.array([_buyer_shortfalls(rd) for rd in replays])
+    return pairs[:, 0] - pairs[:, 1]
 
-    n_seeds = 12
-    twap_shortfalls = []
-    reactive_shortfalls = []
-    for seed in range(n_seeds):
-        rd = _make_flow_replay(n_events=horizon + 200, seed=seed, adverse_at=None)
 
-        t_times, t_sizes = twap_schedule(horizon, n_children)
-        twap_res = simulate_schedule(
-            rd, side=1, parent_qty_events=n_children * 1.0, horizon_events=horizon,
-            child_times=t_times, child_sizes=t_sizes, kernel_g=kernel_g,
-            schedule_name="twap",
-        )
-        twap_shortfalls.append(twap_res.shortfall_per_unit)
+def test_reactive_schedule_beats_twap_when_flow_leads_price():
+    replays = [_planted_replay(seed) for seed in range(N_SEEDS)]
+    advantage = _paired_advantage(replays)
+    # About half the slots follow a sell burst and gain PLANTED_STEP; ~0.2 expected.
+    assert advantage.mean() > 0.1, advantage.mean()
+    assert np.mean(advantage > 0) > 0.9
 
-        r_times, r_sizes, _ = reactive_schedule(
-            rd, side=1, horizon_events=horizon, n_children=n_children,
-            lookback=50, pause_threshold=0.2,
-        )
-        reactive_res = simulate_schedule(
-            rd, side=1, parent_qty_events=n_children * 1.0, horizon_events=horizon,
-            child_times=r_times, child_sizes=r_sizes, kernel_g=kernel_g,
-            schedule_name="reactive",
-        )
-        reactive_shortfalls.append(reactive_res.shortfall_per_unit)
 
-    twap_arr = np.array(twap_shortfalls)
-    reactive_arr = np.array(reactive_shortfalls)
+def test_reactive_with_signal_beats_reactive_with_shuffled_signs():
+    replays = [_planted_replay(seed) for seed in range(N_SEEDS)]
+    shuffled = [_shuffled_signs(rd, seed) for seed, rd in enumerate(replays)]
+    reactive_signal = np.array([_buyer_shortfalls(rd)[1] for rd in replays])
+    reactive_shuffled = np.array([_buyer_shortfalls(rd)[1] for rd in shuffled])
+    assert (reactive_shuffled - reactive_signal).mean() > 0.1
 
-    # Overlap check: the two distributions' [mean-sd, mean+sd] ranges intersect.
-    t_lo, t_hi = twap_arr.mean() - twap_arr.std(), twap_arr.mean() + twap_arr.std()
-    r_lo, r_hi = reactive_arr.mean() - reactive_arr.std(), reactive_arr.mean() + reactive_arr.std()
-    overlap = max(t_lo, r_lo) <= min(t_hi, r_hi)
-    assert overlap, (
-        f"expected overlapping dispersions with no signal: twap=[{t_lo},{t_hi}] "
-        f"reactive=[{r_lo},{r_hi}]"
-    )
+
+def test_reactive_has_no_systematic_edge_over_twap_when_signs_are_shuffled():
+    """Control: prices as planted, but flow independent of them. The mean paired
+    advantage must be statistically indistinguishable from zero and a small
+    fraction of the planted advantage."""
+    replays = [_planted_replay(seed) for seed in range(N_SEEDS)]
+    planted = _paired_advantage(replays).mean()
+    shuffled = [_shuffled_signs(rd, seed) for seed, rd in enumerate(replays)]
+    advantage = _paired_advantage(shuffled)
+    standard_error = advantage.std(ddof=1) / np.sqrt(advantage.size)
+    assert abs(advantage.mean()) < 3 * standard_error, (advantage.mean(), standard_error)
+    assert abs(advantage.mean()) < 0.25 * planted
 
 
 # --------------------------------------------------------------------------
@@ -433,3 +427,51 @@ def test_reactive_schedule_defers_on_opposing_flow():
     assert r_times[1] > twap_times[1]
     assert np.all(r_times < horizon)
     assert np.all(np.diff(r_times) >= 0)
+
+
+# --------------------------------------------------------------------------
+# Input validation
+# --------------------------------------------------------------------------
+
+
+def _call_sim(**overrides):
+    rd = _tiny_replay(n=5)
+    args = {
+        "rd": rd, "side": 1, "parent_qty_events": 3.0, "horizon_events": 5,
+        "child_times": np.array([0, 1]), "child_sizes": np.array([0.5, 0.5]),
+        "kernel_g": np.array([0.0, 2.0, 2.0]),
+    }
+    args.update(overrides)
+    return simulate_schedule(**args)
+
+
+@pytest.mark.parametrize("side", [0, 2, -3])
+def test_simulate_schedule_rejects_side_other_than_plus_minus_one(side):
+    with pytest.raises(ValueError, match="side"):
+        _call_sim(side=side)
+
+
+def test_simulate_schedule_rejects_negative_child_times():
+    with pytest.raises(ValueError, match="child_times"):
+        _call_sim(child_times=np.array([-1, 1]))
+
+
+def test_simulate_schedule_rejects_mismatched_child_sizes():
+    with pytest.raises(ValueError, match="child_sizes"):
+        _call_sim(child_sizes=np.array([1.0]))
+
+
+def test_simulate_schedule_rejects_negative_lag_one_kernel():
+    with pytest.raises(ValueError, match="G\\[1\\]"):
+        _call_sim(kernel_g=np.array([0.0, -0.5, 1.0]))
+
+
+@pytest.mark.parametrize("n_children", [0, -1])
+def test_twap_schedule_rejects_non_positive_n_children(n_children):
+    with pytest.raises(ValueError, match="n_children"):
+        twap_schedule(100, n_children)
+
+
+def test_twap_schedule_rejects_non_positive_horizon():
+    with pytest.raises(ValueError, match="horizon_events"):
+        twap_schedule(0, 5)

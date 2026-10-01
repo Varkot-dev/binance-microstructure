@@ -47,3 +47,19 @@ def test_power_law_fit_skips_nonpositive_values():
     y[50] = -0.001  # one noisy negative point must not crash or poison the fit
     fit = fit_power_law(y, lo=10, hi=100)
     assert abs(fit.exponent - 0.3) < 0.02
+
+
+def test_power_law_fit_with_lo_zero_ignores_lag_zero():
+    y = np.zeros(101)
+    y[0] = 1.0  # the ACF at lag 0, which has no place on a log-lag axis
+    y[1:] = 2.0 * np.arange(1, 101, dtype=float) ** -0.4
+    fit = fit_power_law(y, lo=0, hi=100)
+    assert np.isfinite(fit.exponent)
+    assert abs(fit.exponent - 0.4) < 1e-9
+
+
+def test_sign_acf_rejects_constant_series():
+    import pytest
+
+    with pytest.raises(ValueError, match="constant"):
+        sign_acf(np.ones(100), max_lag=5)

@@ -18,6 +18,8 @@ def ofi_events(
 ) -> np.ndarray:
     if not (bid_p.shape == bid_q.shape == ask_p.shape == ask_q.shape):
         raise ValueError("all four L1 arrays must have identical shape")
+    if bid_p.size == 0:
+        raise ValueError("L1 arrays are empty; ofi_events needs at least one quote")
     e = np.zeros(bid_p.size - 1)
     b_now, b_prev = bid_p[1:], bid_p[:-1]
     a_now, a_prev = ask_p[1:], ask_p[:-1]
@@ -36,6 +38,18 @@ class OLSFit:
 
 
 def ols_through_origin(x: np.ndarray, y: np.ndarray) -> OLSFit:
+    """Regress y on x with no intercept.
+
+    `r2` is the centered R^2, 1 - SS_res / sum((y - mean(y))^2). A line through
+    the origin can fit worse than the mean of y, so r2 can be negative.
+    Raises ValueError for empty, non-1-D or mismatched-shape inputs.
+    """
+    if x.ndim != 1 or y.ndim != 1:
+        raise ValueError(f"x and y must be 1-D; got {x.shape} and {y.shape}")
+    if x.shape != y.shape:
+        raise ValueError(f"x shape {x.shape} and y shape {y.shape} must match")
+    if x.size == 0:
+        raise ValueError("x and y are empty")
     sxx = float(x @ x)
     if sxx == 0.0:
         raise ValueError("x has zero variance")

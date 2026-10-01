@@ -11,9 +11,11 @@ Contract under test:
    deconvolution) recovers 0.35 less well than the deconvolved kernel.
 3. Guards: mismatched lengths, singular ACF, unnormalized ACF (acf[0] != 1),
    and too-few-samples-per-lag all raise ValueError.
-4. kernel_exponent_blocked reports a block-bootstrap uncertainty (block_sd)
-   to use instead of fit_power_law's OLS stderr, which badly understates
-   beta_hat's true uncertainty.
+4. kernel_exponent_blocked reports block_sd, the sd of the per-block estimates,
+   to use instead of fit_power_law's OLS stderr, which badly understates the
+   spread of beta_hat.
+5. The cross-covariance is normalized by Var(signs), so a planted kernel is
+   recovered at any buy fraction (0.5 and 0.8 are tested).
 """
 from __future__ import annotations
 
@@ -256,3 +258,26 @@ class TestKernelExponentBlocked:
         assert result.block_sd > 0.0
         assert result.n_samples == signs_aligned.size
         assert abs(result.exponent - 0.35) < 0.07
+
+
+class TestDirectionalFlowKernelScale:
+    """b is a covariance with centered signs, so it carries a factor Var(s)."""
+
+    @pytest.mark.parametrize("p_plus", [0.5, 0.8])
+    def test_planted_kernel_is_recovered_at_any_buy_fraction(self, p_plus):
+        n = 400_000
+        rng = np.random.default_rng(7)
+        signs = np.where(rng.random(n) < p_plus, 1.0, -1.0)
+        length = 20
+        kappa0 = 0.3 * 0.8 ** np.arange(length)
+        dm = _fft_convolve_full(signs, kappa0)[:n] + 0.001 * rng.standard_normal(n)
+
+        b = sign_price_cross_cov(signs, dm, max_lag=length)
+        acf = sign_acf(signs, max_lag=length - 1)
+        kappa = deconvolve_kernel(b, acf, n_samples=n)
+
+        assert np.max(np.abs(kappa - kappa0)) < 0.02, (p_plus, kappa[:3], kappa0[:3])
+
+    def test_constant_signs_raise_instead_of_dividing_by_zero(self):
+        with pytest.raises(ValueError, match="variance"):
+            sign_price_cross_cov(np.ones(100), np.arange(100.0), max_lag=5)

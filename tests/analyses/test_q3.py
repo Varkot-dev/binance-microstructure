@@ -1,8 +1,10 @@
+import json
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 import numpy as np
 import polars as pl
+import pytest
 
 from microstructure.analyses.q3_ofi import run_q3
 from microstructure.data.catalog import parquet_path
@@ -119,6 +121,11 @@ def test_run_q3_recovers_known_ofi_slope(tmp_path: Path):
     assert res["n_windows"] > 0
     assert "depth_scaling_check" in res
 
+    def reject_constant(name):
+        raise AssertionError(f"non-strict JSON constant {name}")
+
+    json.loads((out / "q3_results.json").read_text(), parse_constant=reject_constant)
+
 
 def test_run_q3_recovers_known_ofi_slope_when_book_ticks_down(tmp_path: Path):
     """Negative-OFI counterpart of `test_run_q3_recovers_known_ofi_slope`.
@@ -149,3 +156,44 @@ def test_run_q3_recovers_known_ofi_slope_when_book_ticks_down(tmp_path: Path):
     assert res["r2"] > 0.8
     assert res["n_windows"] > 0
     assert "depth_scaling_check" in res
+
+
+def _unit_step_book(n_bars: int, updates_per_bar: int, seed: int) -> pl.DataFrame:
+    """Noiseless L1 book whose every update moves the mid by exactly 0.5 * OFI.
+
+    Quantities are fixed at 1.0. An update either lifts the bid by 1 (OFI +1,
+    mid +0.5) or lowers the ask by 1 (OFI -1, mid -0.5), so delta_mid = 0.5 * OFI
+    holds update by update and bar by bar. The spread starts wide enough to stay
+    positive. Updates sit 2 s apart, starting on a 10 s bar boundary.
+    """
+    rng = np.random.default_rng(seed)
+    n = n_bars * updates_per_bar
+    steps = rng.choice([1, -1], size=n)
+    bid = 1000.0 + np.cumsum(np.where(steps == 1, 1.0, 0.0))
+    ask = 5000.0 - np.cumsum(np.where(steps == -1, 1.0, 0.0))
+    t0 = datetime(2023, 6, 1, tzinfo=UTC)
+    return pl.DataFrame(
+        {
+            "bid_price": bid,
+            "bid_qty": np.ones(n),
+            "ask_price": ask,
+            "ask_qty": np.ones(n),
+            "mid": (bid + ask) / 2,
+            "ts": [t0 + timedelta(seconds=2 * i) for i in range(n)],
+        },
+        schema_overrides={"ts": pl.Datetime("ms", "UTC")},
+    )
+
+
+def test_bars_anchor_delta_mid_to_the_mid_before_the_bars_first_update():
+    """With 5 updates per bar, delta_mid measured from the bar's first post-update
+    mid drops one move in five and biases the slope to ~0.4 with R^2 ~ 0.8."""
+    from microstructure.analyses.q3_ofi import _bucket_bars
+    from microstructure.estimators.ofi import ols_through_origin
+
+    bars = _bucket_bars(_unit_step_book(n_bars=400, updates_per_bar=5, seed=3), "10s")
+    # Drop the first bar: it has 4 updates because the first row has no OFI.
+    bars = bars.filter(pl.col("n_updates") == 5)
+    fit = ols_through_origin(bars["ofi_sum"].to_numpy(), bars["delta_mid"].to_numpy())
+    assert fit.slope == pytest.approx(0.5, abs=1e-9)
+    assert fit.r2 == pytest.approx(1.0, abs=1e-9)

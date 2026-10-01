@@ -50,13 +50,16 @@ def simulate_hawkes_exp(mu: float, alpha: float, beta: float, t_end: float, seed
     running excitation
         E(t) = Σ_{t_i < t} alpha*beta*exp(-beta*(t - t_i)),
     which decays between events and jumps by +alpha*beta at each accepted
-    event. Just after an event the intensity is at its local maximum until
-    the next accepted event, so
-        lambda_bar = mu + E(t_i^+) = mu + E(t_i^-) + alpha*beta
-    bounds λ(t) on [t_i, next accepted event]. Draw candidates from a
-    homogeneous Poisson process at rate lambda_bar and accept a candidate at
-    t_c with probability λ(t_c)/lambda_bar. After a rejection the bound is
-    still valid (intensity only decays between events), so thinning continues
+    event. After an event at t_i the intensity mu + E(t_i^+) is its local
+    maximum until the next accepted event. The code uses the bound
+        lambda_bar = mu + E(t_i^+) + alpha*beta,
+    which is looser than that maximum by alpha*beta. It is still a valid upper
+    bound on λ(t) on [t_i, next accepted event], and the slack costs only
+    extra rejected candidates (the initial bound mu + alpha*beta has the same
+    slack). Draw candidates from a homogeneous Poisson process at rate
+    lambda_bar and accept a candidate at t_c with probability λ(t_c)/lambda_bar.
+    After a rejection the bound is still valid (intensity only decays between
+    events), so thinning continues
     from t_c with the same lambda_bar.
     """
     if beta <= 0.0:
@@ -272,6 +275,30 @@ def simulate_seasonal_hawkes_exp(
 # ---------------------------------------------------------------------------
 
 
+# Objective value returned for infeasible/non-finite likelihoods. A Nelder-Mead
+# run whose best value is this sentinel has found nothing, however flat its simplex.
+_PENALTY = 1e18
+
+
+def _validate_event_times(times: np.ndarray, t_end: float) -> None:
+    """Raise ValueError unless `times` is a 1-D, finite, non-decreasing array in
+    [0, t_end] and `t_end` is finite and positive. Empty input is allowed."""
+    if not np.isfinite(t_end) or t_end <= 0.0:
+        raise ValueError(f"t_end must be finite and > 0; got {t_end}")
+    if times.ndim != 1:
+        raise ValueError(f"times must be 1-D; got shape {times.shape}")
+    if times.size == 0:
+        return
+    if not np.all(np.isfinite(times)):
+        raise ValueError("times must be finite (found NaN or inf)")
+    if times[0] < 0.0:
+        raise ValueError(f"times[0] must be >= 0; got {times[0]}")
+    if np.any(np.diff(times) < 0.0):
+        raise ValueError("times must be sorted non-decreasing")
+    if times[-1] > t_end:
+        raise ValueError(f"t_end {t_end} must be >= the last event time {times[-1]}")
+
+
 @dataclass(frozen=True)
 class HawkesFit:
     mu: float
@@ -315,6 +342,16 @@ def _excitation_recursion(decay: np.ndarray) -> np.ndarray:
 
 
 def hawkes_loglik(times: np.ndarray, t_end: float, mu: float, alpha: float, beta: float) -> float:
+    """Validated entry point; see `_hawkes_loglik_raw` for the formula.
+
+    Raises ValueError for non-finite, unsorted or out-of-window times."""
+    _validate_event_times(times, t_end)
+    return _hawkes_loglik_raw(times, t_end, mu, alpha, beta)
+
+
+def _hawkes_loglik_raw(
+    times: np.ndarray, t_end: float, mu: float, alpha: float, beta: float
+) -> float:
     """Exact log-likelihood via the O(N) exponential-kernel recursion.
 
     loglik = Σ_i log(mu + alpha*beta*R_i) - mu*T - alpha*Σ_i (1 - exp(-beta*(T-t_i)))
@@ -353,9 +390,9 @@ def _neg_loglik_transformed(params: np.ndarray, times: np.ndarray, t_end: float)
     mu = float(np.exp(log_mu))
     alpha = float(1.0 / (1.0 + np.exp(-logit_alpha)))  # logistic -> (0, 1)
     beta = float(np.exp(log_beta))
-    ll = hawkes_loglik(times, t_end, mu, alpha, beta)
+    ll = _hawkes_loglik_raw(times, t_end, mu, alpha, beta)
     if not np.isfinite(ll):
-        return 1e18
+        return _PENALTY
     return -ll
 
 
@@ -443,6 +480,9 @@ def _nelder_mead(
     values = values[order]
     if not converged:
         converged = (values[-1] - values[0]) < tol
+    # A simplex stuck on the penalty sentinel has zero spread but found nothing.
+    if values[0] >= _PENALTY:
+        converged = False
     return simplex[0], float(values[0]), converged
 
 
@@ -463,6 +503,7 @@ def fit_hawkes_exp(times: np.ndarray, t_end: float) -> HawkesFit:
     boundary of alpha prefer multi-seed spread checks (as in
     test_mle_alpha_stable_across_seeds) over the single-fit flag.
     """
+    _validate_event_times(times, t_end)
     if times.size < 2:
         raise ValueError("need at least 2 events to fit")
 
@@ -496,6 +537,8 @@ def fit_hawkes_exp(times: np.ndarray, t_end: float) -> HawkesFit:
             best_converged = converged
 
     assert best_params is not None
+    if best_ll <= -_PENALTY:
+        best_ll, best_converged = -np.inf, False
     log_mu, logit_alpha, log_beta = best_params
     mu = float(np.exp(log_mu))
     alpha = float(1.0 / (1.0 + np.exp(-logit_alpha)))
@@ -535,6 +578,16 @@ class MultiExpFit:
 
 
 def hawkes_multiexp_loglik(
+    times: np.ndarray, t_end: float, mu: float, alphas: np.ndarray, betas: np.ndarray
+) -> float:
+    """Validated entry point; see `_hawkes_multiexp_loglik_raw` for the formula.
+
+    Raises ValueError for non-finite, unsorted or out-of-window times."""
+    _validate_event_times(times, t_end)
+    return _hawkes_multiexp_loglik_raw(times, t_end, mu, alphas, betas)
+
+
+def _hawkes_multiexp_loglik_raw(
     times: np.ndarray, t_end: float, mu: float, alphas: np.ndarray, betas: np.ndarray
 ) -> float:
     """Exact log-likelihood for the sum-of-exponentials kernel.
@@ -607,9 +660,9 @@ def _neg_multiexp_loglik_transformed(
     alphas = _alphas_from_logits(alpha_logits)
     betas = np.exp(log_betas)
 
-    ll = hawkes_multiexp_loglik(times, t_end, mu, alphas, betas)
+    ll = _hawkes_multiexp_loglik_raw(times, t_end, mu, alphas, betas)
     if not np.isfinite(ll):
-        return 1e18
+        return _PENALTY
     return -ll
 
 
@@ -681,6 +734,7 @@ def fit_hawkes_multiexp(
     that is evidence for real long memory. Run this control before trusting
     any single-symbol K=1->K=2 jump.
     """
+    _validate_event_times(times, t_end)
     if times.size < 2:
         raise ValueError("need at least 2 events to fit")
     if K < 1:
@@ -736,6 +790,8 @@ def fit_hawkes_multiexp(
             best_converged = converged
 
     assert best_params is not None
+    if best_ll <= -_PENALTY:
+        best_ll, best_converged = -np.inf, False
     log_mu = best_params[0]
     alpha_logits = best_params[1 : 1 + K]
     log_betas = best_params[1 + K : 1 + 2 * K]
@@ -881,6 +937,16 @@ def _block_widths(t_end: float, n_blocks: int) -> np.ndarray:
 def hawkes_piecewise_mu_loglik(
     times: np.ndarray, t_end: float, mus: np.ndarray, alpha: float, beta: float, n_blocks: int
 ) -> float:
+    """Validated entry point; see `_hawkes_piecewise_mu_loglik_raw` for the formula.
+
+    Raises ValueError for non-finite, unsorted or out-of-window times."""
+    _validate_event_times(times, t_end)
+    return _hawkes_piecewise_mu_loglik_raw(times, t_end, mus, alpha, beta, n_blocks)
+
+
+def _hawkes_piecewise_mu_loglik_raw(
+    times: np.ndarray, t_end: float, mus: np.ndarray, alpha: float, beta: float, n_blocks: int
+) -> float:
     """Exact log-likelihood for a single-exponential kernel with a block-wise
     constant baseline mu_b(t) = mus[b(t)], b(t) the index of t's equal-width
     time block.
@@ -936,9 +1002,9 @@ def _neg_piecewise_loglik_transformed(
     alpha = float(1.0 / (1.0 + np.exp(-logit_alpha)))
     beta = float(np.exp(log_beta))
 
-    ll = hawkes_piecewise_mu_loglik(times, t_end, mus, alpha, beta, n_blocks)
+    ll = _hawkes_piecewise_mu_loglik_raw(times, t_end, mus, alpha, beta, n_blocks)
     if not np.isfinite(ll):
-        return 1e18
+        return _PENALTY
     return -ll
 
 
@@ -1009,8 +1075,7 @@ def fit_hawkes_exp_piecewise_mu(
     dimensions the optimizer may also stop at max_iter; treat per-block mus
     as noisier than the shared alpha.
     """
-    if t_end <= 0.0:
-        raise ValueError("t_end must be positive")
+    _validate_event_times(times, t_end)
     if n_blocks < 1:
         raise ValueError(f"n_blocks must be >= 1; got {n_blocks}")
     if n_blocks > MAX_PIECEWISE_BLOCKS:
@@ -1054,6 +1119,8 @@ def fit_hawkes_exp_piecewise_mu(
             best_converged = converged
 
     assert best_params is not None
+    if best_ll <= -_PENALTY:
+        best_ll, best_converged = -np.inf, False
     mus = np.exp(best_params[:n_blocks])
     alpha = float(1.0 / (1.0 + np.exp(-best_params[n_blocks])))
     beta = float(np.exp(best_params[n_blocks + 1]))

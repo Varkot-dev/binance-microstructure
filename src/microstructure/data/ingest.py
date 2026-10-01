@@ -4,6 +4,9 @@ Binance dump quirks handled here so nothing downstream ever sees them:
 - some eras include a CSV header row, some don't (sniffed per file);
 - epoch timestamps are ms in some eras, µs in others (sniffed by magnitude);
 - booleans appear as true/false strings.
+
+Columns are read as text and cast to explicit dtypes (Float64 price/qty, Int64
+ids and epoch timestamps), so no column type depends on a prefix of the file.
 """
 from __future__ import annotations
 
@@ -30,7 +33,9 @@ def _read_zipped_csv(zip_path: Path, columns: list[str]) -> pl.DataFrame:
     # Strip quotes first so a quoted numeric first cell is not mistaken for a header
     first_cell_unquoted = first_cell.strip().strip(b'"').strip(b"'")
     has_header = not first_cell_unquoted.lstrip(b"-").isdigit()
-    df = pl.read_csv(io.BytesIO(raw), has_header=has_header, infer_schema_length=1000)
+    # Read every column as text and cast to the declared dtypes below. Inferring
+    # from a row prefix mistypes a column whose first rows look integral.
+    df = pl.read_csv(io.BytesIO(raw), has_header=has_header, infer_schema_length=0)
     if df.width < len(columns):
         raise ValueError(f"{zip_path.name}: expected >= {len(columns)} cols, got {df.width}")
     df = df.select(df.columns[: len(columns)])

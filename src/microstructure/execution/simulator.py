@@ -81,29 +81,13 @@ def replay_day(events: pl.DataFrame, bt: pl.DataFrame) -> ReplayData:
     """
     from microstructure.signals.load import events_with_prior_mid
 
-    joined, _n_dropped = events_with_prior_mid(events, bt)
-
-    from datetime import timedelta
-
-    ev_key = events.with_columns(
-        (pl.col("ts") - timedelta(milliseconds=1)).alias("_key")
-    ).sort("_key")
-    quotes = bt.select("ts", "bid_price", "ask_price").sort("ts").rename({"ts": "_key"})
-    spread_joined = ev_key.join_asof(quotes, on="_key", strategy="backward").drop("_key")
-    spread_joined = spread_joined.with_columns(
+    if "mid" not in bt.columns:
+        bt = bt.with_columns(((pl.col("bid_price") + pl.col("ask_price")) / 2).alias("mid"))
+    # One asof join supplies the mid and the quoted spread from the same quote.
+    merged, _n_dropped = events_with_prior_mid(events, bt, extra_cols=("bid_price", "ask_price"))
+    merged = merged.with_columns(
         ((pl.col("ask_price") - pl.col("bid_price")) / 2).alias("half_spread")
     )
-
-    # Align half-spread to `joined`'s row order with a join on ts+sign+qty
-    # (events are unique per (ts, sign) after aggressor merging), not row order.
-    merged = joined.join(
-        spread_joined.select("ts", "sign", "qty", "half_spread"),
-        on=["ts", "sign", "qty"],
-        how="left",
-    ).sort("ts")
-
-    if merged["half_spread"].null_count() > 0:
-        merged = merged.drop_nulls("half_spread")
 
     ts = merged["ts"].cast(pl.Int64).to_numpy()
     signs = merged["sign"].to_numpy().astype(np.int8)
@@ -148,15 +132,34 @@ def simulate_schedule(
     Arrival mid is `rd.prior_mids[0]`, the mid before the first event of the
     replay window, i.e. when the parent order arrives.
     """
+    if side not in (1, -1):
+        raise ValueError(f"side must be +1 or -1, got {side!r}")
     if horizon_events > rd.prior_mids.size:
         raise ValueError(
             f"horizon_events {horizon_events} exceeds replay length {rd.prior_mids.size}"
+        )
+    if child_sizes.shape != child_times.shape:
+        raise ValueError(
+            f"child_sizes shape {child_sizes.shape} must match child_times {child_times.shape}"
+        )
+    if child_times.size and child_times.min() < 0:
+        raise ValueError("child_times must be non-negative event indices")
+    if child_times.size and child_times.max() >= rd.prior_mids.size:
+        raise ValueError(
+            f"child_times has an index >= replay length {rd.prior_mids.size}"
+        )
+    if kernel_g.size < 2:
+        raise ValueError("kernel_g needs at least two lags to supply G[1]")
+    g1 = float(kernel_g[1])
+    if not np.isfinite(g1) or g1 < 0:
+        raise ValueError(
+            f"kernel_g[1] = {g1} must be finite and non-negative: the impact term is a cost, "
+            "and a negative G[1] would make own-impact a rebate"
         )
     if child_times.size == 0:
         return ScheduleResult(schedule_name, float("nan"), 0, False)
 
     arrival_mid = float(rd.prior_mids[0])
-    g1 = float(kernel_g[1])
 
     parent_qty_units = parent_qty_events * rd.typical_event_qty
     abs_sizes = child_sizes * parent_qty_units
@@ -190,6 +193,10 @@ def twap_schedule(horizon_events: int, n_children: int) -> tuple[np.ndarray, np.
     1.0. Times are the floor of evenly spaced offsets, clipped into range and
     guaranteed non-decreasing.
     """
+    if n_children < 1:
+        raise ValueError(f"n_children must be >= 1, got {n_children}")
+    if horizon_events < 1:
+        raise ValueError(f"horizon_events must be >= 1, got {horizon_events}")
     times = np.floor(np.linspace(0, horizon_events, n_children, endpoint=False)).astype(np.int64)
     times = np.clip(times, 0, horizon_events - 1)
     sizes = np.full(n_children, 1.0 / n_children)

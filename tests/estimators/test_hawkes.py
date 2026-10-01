@@ -24,6 +24,7 @@ from microstructure.estimators.hawkes import (
     fit_hawkes_exp_piecewise_mu,
     fit_hawkes_multiexp,
     hawkes_loglik,
+    hawkes_multiexp_loglik,
     hawkes_piecewise_mu_loglik,
     simulate_hawkes_exp,
     simulate_hawkes_multiexp,
@@ -823,3 +824,70 @@ def test_baseline_drift_control_on_two_exp_process_is_not_drift():
     # (true long memory) the block-level LR statistic is inflated, so
     # "inconclusive" is also possible here; on this fixture it is not called drift.
     assert result["dll_pw"] < 0.5 * result["dll_k2"], f"result={result}"
+
+
+# ---------------------------------------------------------------------------
+# Input validation and the non-finite penalty sentinel.
+# ---------------------------------------------------------------------------
+
+_GOOD_TIMES = np.array([1.0, 2.0, 3.5, 4.0, 6.0])
+
+_BAD_TIME_INPUTS = {
+    "nan_time": (np.array([1.0, np.nan, 3.0, 4.0]), 10.0),
+    "inf_time": (np.array([1.0, 2.0, np.inf, 4.0]), 10.0),
+    "unsorted": (np.array([1.0, 3.0, 2.0, 4.0]), 10.0),
+    "negative_first": (np.array([-0.5, 1.0, 2.0, 4.0]), 10.0),
+    "t_end_before_last": (np.array([1.0, 2.0, 3.0, 4.0]), 3.5),
+    "nan_t_end": (np.array([1.0, 2.0, 3.0, 4.0]), float("nan")),
+    "inf_t_end": (np.array([1.0, 2.0, 3.0, 4.0]), float("inf")),
+    "two_dimensional": (np.array([[1.0, 2.0], [3.0, 4.0]]), 10.0),
+}
+
+_CALLS = {
+    "hawkes_loglik": lambda t, te: hawkes_loglik(t, te, 0.5, 0.3, 2.0),
+    "hawkes_multiexp_loglik": lambda t, te: hawkes_multiexp_loglik(
+        t, te, 0.5, np.array([0.2, 0.1]), np.array([1.0, 5.0])
+    ),
+    "hawkes_piecewise_mu_loglik": lambda t, te: hawkes_piecewise_mu_loglik(
+        t, te, np.array([0.5, 0.5]), 0.3, 2.0, 2
+    ),
+    "fit_hawkes_exp": lambda t, te: fit_hawkes_exp(t, te),
+    "fit_hawkes_multiexp": lambda t, te: fit_hawkes_multiexp(t, te, K=1),
+    "fit_hawkes_exp_piecewise_mu": lambda t, te: fit_hawkes_exp_piecewise_mu(t, te, n_blocks=2),
+}
+
+
+@pytest.mark.parametrize("case", sorted(_BAD_TIME_INPUTS))
+@pytest.mark.parametrize("name", sorted(_CALLS))
+def test_hawkes_functions_reject_malformed_times(name, case):
+    times, t_end = _BAD_TIME_INPUTS[case]
+    with pytest.raises(ValueError):
+        _CALLS[name](times, t_end)
+
+
+@pytest.mark.parametrize("name", ["hawkes_loglik", "hawkes_multiexp_loglik"])
+def test_loglik_accepts_t_end_equal_to_last_event_and_empty_input(name):
+    assert np.isfinite(_CALLS[name](_GOOD_TIMES, float(_GOOD_TIMES[-1])))
+    assert np.isfinite(_CALLS[name](np.array([]), 5.0))
+
+
+def test_nelder_mead_never_reports_convergence_on_the_penalty_sentinel():
+    """A flat 1e18 objective has zero simplex spread, which is not convergence."""
+    _x, value, converged = _nelder_mead(lambda p: 1e18, np.array([0.0, 1.0]), max_iter=50)
+    assert value >= 1e18
+    assert converged is False
+
+
+def test_fits_report_not_converged_when_every_objective_value_is_the_sentinel(monkeypatch):
+    from microstructure.estimators import hawkes as hk
+
+    monkeypatch.setattr(hk, "_neg_loglik_transformed", lambda *a, **k: 1e18)
+    monkeypatch.setattr(hk, "_neg_multiexp_loglik_transformed", lambda *a, **k: 1e18)
+    monkeypatch.setattr(hk, "_neg_piecewise_loglik_transformed", lambda *a, **k: 1e18)
+    for fit in (
+        fit_hawkes_exp(_GOOD_TIMES, 10.0),
+        fit_hawkes_multiexp(_GOOD_TIMES, 10.0, K=1),
+        fit_hawkes_exp_piecewise_mu(_GOOD_TIMES, 10.0, n_blocks=2),
+    ):
+        assert fit.converged is False
+        assert fit.loglik == -np.inf

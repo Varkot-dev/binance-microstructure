@@ -10,7 +10,6 @@ that regression's slope to be approximately -1.
 from __future__ import annotations
 
 import argparse
-import json
 from pathlib import Path
 
 import matplotlib
@@ -20,6 +19,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import polars as pl
 
+from microstructure.data.jsonio import dumps_strict
 from microstructure.estimators.ofi import ofi_events, ols_through_origin
 from microstructure.signals.load import load_book_ticker
 
@@ -34,6 +34,12 @@ def _bucket_bars(bt: pl.DataFrame, window: str) -> pl.DataFrame:
     ofi_events returns n-1 values (one per consecutive update pair); each
     value is attached to the ts of the second (later) update in the pair,
     so the first row of the sorted frame carries no OFI contribution.
+
+    delta_mid is anchored to the mid before the bar's first update (the mid
+    after the previous bar's last update), so it spans exactly the pairs whose
+    OFI the bar sums. Measuring from the first update's own post-update mid
+    would drop that update's move while keeping its OFI, which biases the slope
+    and R² low when bars hold few updates.
     """
     bt = bt.sort("ts")
     bid_p = bt["bid_price"].to_numpy()
@@ -49,6 +55,7 @@ def _bucket_bars(bt: pl.DataFrame, window: str) -> pl.DataFrame:
             "ts": bt["ts"][1:],
             "ofi": ofi,
             "mid": bt["mid"][1:],
+            "mid_prev": bt["mid"][:-1],
             "depth": depth[1:],
         }
     ).sort("ts")
@@ -58,12 +65,12 @@ def _bucket_bars(bt: pl.DataFrame, window: str) -> pl.DataFrame:
         .agg(
             pl.len().alias("n_updates"),
             pl.col("ofi").sum().alias("ofi_sum"),
-            pl.col("mid").first().alias("mid_first"),
+            pl.col("mid_prev").first().alias("mid_before"),
             pl.col("mid").last().alias("mid_last"),
             pl.col("depth").mean().alias("mean_depth"),
         )
         .filter(pl.col("n_updates") >= 2)
-        .with_columns((pl.col("mid_last") - pl.col("mid_first")).alias("delta_mid"))
+        .with_columns((pl.col("mid_last") - pl.col("mid_before")).alias("delta_mid"))
     )
     return bars
 
@@ -136,7 +143,7 @@ def run_q3(root: Path, out_dir: Path, symbol: str, periods: list[str], window: s
 
     _plot_scatter(out_dir, x, y, fit.slope, symbol, window)
     _write_results_md(out_dir, result, symbol, periods, window)
-    (out_dir / "q3_results.json").write_text(json.dumps(result, indent=2))
+    (out_dir / "q3_results.json").write_text(dumps_strict(result))
     return result
 
 
@@ -181,7 +188,7 @@ def _write_results_md(out_dir: Path, result: dict, symbol: str, periods: list[st
         "from bid/ask price improvements and same-price size changes, stamped with the "
         f"later update's time. Updates are bucketed into fixed `{window}` bars via "
         "`pl.group_by_dynamic`. Within each bar, OFI is summed, delta_mid is the last mid "
-        "minus the first mid, and mean depth is the bar average of (bid_qty + ask_qty)/2. "
+        "minus the mid before the bar's first update, and mean depth is the bar average of (bid_qty + ask_qty)/2. "
         "Bars with fewer than 2 updates are dropped. The (summed OFI, delta_mid) pairs are "
         "regressed through the origin (`ols_through_origin`): delta_mid = beta * OFI_sum."
     )

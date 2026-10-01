@@ -19,6 +19,7 @@ Contract under test:
 """
 from __future__ import annotations
 
+import json
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
@@ -26,7 +27,7 @@ import numpy as np
 import polars as pl
 import pytest
 
-from microstructure.analyses.q5_kernel_panel import _judge_balance, run_q5
+from microstructure.analyses.q5_kernel_panel import _delta_summary, _judge_balance, run_q5
 from microstructure.data.catalog import parquet_path
 from microstructure.synthetic import fractional_signs
 
@@ -252,3 +253,30 @@ def test_run_q5_thin_symbol_fails_gracefully_not_crashes(tmp_path: Path):
     failures = {f["symbol"]: f for f in result["failures"]}
     assert "THINUSDT" in failures
     assert failures["THINUSDT"]["reason"]
+
+
+def test_delta_summary_counts_negatives_and_takes_the_median():
+    records = [{"balance_delta": d} for d in (-0.2, -0.1, -0.05, 0.03)]
+    n_negative, n_records, median = _delta_summary(records)
+    assert (n_negative, n_records) == (3, 4)
+    assert median == pytest.approx(-0.075)
+
+
+def test_run_q5_report_describes_block_sd_plainly_and_writes_strict_json(tmp_path: Path):
+    _write_synthetic_kernel_fixture(tmp_path, "AAAUSDT", N_EVENTS, seed=2)
+    out_dir = tmp_path / "results"
+    result = run_q5(
+        tmp_path, out_dir, symbols=["AAAUSDT"],
+        month="2023-06", start_day="2023-06-01", end_day="2023-06-07", max_lag=MAX_LAG,
+    )
+    md = (out_dir / "q5_kernel_panel.md").read_text()
+    assert "2 × the sd of block estimates" in md
+    for banned in ("standard error", "sigma", "bootstrap"):
+        assert banned not in md.lower(), banned
+    n_neg, n_rec, median = _delta_summary(result["records"])
+    assert f"{n_neg} of {n_rec} β̂ − (1−γ̂)/2 deltas are negative (median {median:+.2f})" in md
+
+    def reject_constant(name):
+        raise AssertionError(f"non-strict JSON constant {name}")
+
+    json.loads((out_dir / "q5_kernel_panel.json").read_text(), parse_constant=reject_constant)

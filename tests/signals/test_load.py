@@ -47,15 +47,33 @@ def test_events_with_prior_mid_strictly_before(tmp_path: Path):
          "price": [100.0, 100.0], "n_prints": [1, 1]},
         schema_overrides={"ts": pl.Datetime("ms", "UTC"), "sign": pl.Int8, "n_prints": pl.UInt32},
     )
+    # The ms-10 quote has mid 100.0; the ms-3 quote has mid 90.0. A look-ahead
+    # (non-strict) join would hand the ms-10 event the ms-10 mid of 100.0.
     bt = pl.DataFrame(
-        {"update_id": [1, 2], "bid_price": [99.0, 99.5], "bid_qty": [1.0, 1.0],
-         "ask_price": [101.0, 100.5], "ask_qty": [1.0, 1.0], "ts": [_ts(3), _ts(10)]},
+        {"update_id": [1, 2], "bid_price": [89.0, 99.0], "bid_qty": [1.0, 1.0],
+         "ask_price": [91.0, 101.0], "ask_qty": [1.0, 1.0], "ts": [_ts(3), _ts(10)]},
         schema_overrides={"ts": pl.Datetime("ms", "UTC")},
     ).with_columns(((pl.col("bid_price") + pl.col("ask_price")) / 2).alias("mid"))
     out, n_dropped = events_with_prior_mid(events, bt)
-    # event at ms 10 must NOT see the ms-10 quote (not strictly before) -> mid from ms 3
-    assert out["mid"].to_list() == [100.0, 100.0]
+    # Both events must see the ms-3 quote: ms 5 is after it, and ms 10 is the
+    # same instant as the second quote, which is not strictly before.
+    assert out["mid"].to_list() == [90.0, 90.0]
     assert n_dropped == 0
+
+
+def test_events_with_prior_mid_tied_quote_timestamps_use_input_order(tmp_path: Path):
+    events = pl.DataFrame(
+        {"ts": [_ts(10)], "sign": [1], "qty": [1.0], "price": [100.0], "n_prints": [1]},
+        schema_overrides={"ts": pl.Datetime("ms", "UTC"), "sign": pl.Int8, "n_prints": pl.UInt32},
+    )
+    # Two quotes share ms 5; the later one in input order (mid 102) prevails.
+    bt = pl.DataFrame(
+        {"update_id": [1, 2], "bid_price": [98.0, 101.0], "bid_qty": [1.0, 1.0],
+         "ask_price": [100.0, 103.0], "ask_qty": [1.0, 1.0], "ts": [_ts(5), _ts(5)]},
+        schema_overrides={"ts": pl.Datetime("ms", "UTC")},
+    ).with_columns(((pl.col("bid_price") + pl.col("ask_price")) / 2).alias("mid"))
+    out, _ = events_with_prior_mid(events, bt)
+    assert out["mid"].to_list() == [102.0]
 
 
 def test_events_with_prior_mid_drops_events_before_first_quote(tmp_path: Path):

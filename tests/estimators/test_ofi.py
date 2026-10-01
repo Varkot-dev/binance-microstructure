@@ -31,3 +31,36 @@ def test_ols_pure_noise_r2_near_zero():
     fit = ols_through_origin(rng.normal(size=10_000), rng.normal(size=10_000))
     assert abs(fit.slope) < 0.05
     assert fit.r2 < 0.01
+
+
+def test_ofi_events_empty_input_raises_clear_error():
+    import pytest
+
+    empty = np.array([])
+    with pytest.raises(ValueError, match="empty"):
+        ofi_events(empty, empty, empty, empty)
+
+
+def test_ofi_events_single_quote_has_no_updates():
+    one = np.array([1.0])
+    assert ofi_events(one, one, one, one).size == 0
+
+
+def test_ols_through_origin_rejects_bad_shapes():
+    import pytest
+
+    with pytest.raises(ValueError, match="shape"):
+        ols_through_origin(np.ones(5), np.ones(4))
+    with pytest.raises(ValueError, match="1-D"):
+        ols_through_origin(np.ones((3, 2)), np.ones((3, 2)))
+    with pytest.raises(ValueError, match="empty"):
+        ols_through_origin(np.array([]), np.array([]))
+
+
+def test_ols_through_origin_r2_is_centered_and_can_be_negative():
+    # y sits near 5 and x is balanced around 0, so a line through the origin
+    # explains less than the mean of y does: centered R^2 < 0.
+    x = np.array([1.0, -1.0, 1.0, -1.0])
+    y = np.array([5.0, 5.2, 4.8, 5.0])
+    fit = ols_through_origin(x, y)
+    assert fit.r2 < 0.0

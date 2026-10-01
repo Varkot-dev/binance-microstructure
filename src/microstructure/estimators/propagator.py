@@ -12,9 +12,9 @@ linearly. Cross-correlating both sides with signs[t-j] gives
     b[j] = E[dm[t] * signs[t-j]] = sum_n kappa[n] * C[|j-n|]
 
 where C is the (normalized) sign autocorrelation function. This identity
-relies on E[signs[t]^2] = 1, i.e. +-1 signs; if using signed volume instead
-of raw +-1 signs, the cross-covariance must be rescaled by the volume
-variance before this identity applies. This is a Toeplitz linear system in
+relies on dividing the centered cross-covariance by Var(signs), which
+`sign_price_cross_cov` does (1 for balanced +-1 signs, 0.64 at a buy
+fraction of 0.8); the same division applies if using signed volume. This is a Toeplitz linear system in
 kappa given b and C, and inverting it is exactly what separates the bare
 impact kernel from the confound of order-flow memory: naively reading kappa
 off of b (or off of the response function R(l), which is a partial sum of
@@ -33,8 +33,9 @@ observed across seeds while the recovered power-law exponent ranged
 roughly 0.15..0.65 over a 20-seed sweep, which rank and condition checks
 cannot detect. Hence deconvolve_kernel requires n_samples and enforces a
 minimum samples-per-lag ratio, and callers should use
-kernel_exponent_blocked's block_sd rather than fit_power_law's OLS stderr
-for the uncertainty on a recovered exponent.
+kernel_exponent_blocked's block_sd (the sd of the per-block estimates)
+rather than fit_power_law's OLS stderr for the spread of a recovered
+exponent.
 """
 from __future__ import annotations
 
@@ -48,7 +49,7 @@ MIN_SAMPLES_PER_LAG = 100
 
 
 def sign_price_cross_cov(signs: np.ndarray, dm: np.ndarray, max_lag: int) -> np.ndarray:
-    """b[j] = E[(dm_t - mean(dm)) * (signs_{t-j} - mean(signs))] for j = 0..max_lag-1.
+    """b[j] = Cov(dm_t, signs_{t-j}) / Var(signs) for j = 0..max_lag-1.
 
     `signs` and `dm` must be the same length and already aligned so that
     dm[t] is the price change caused at/after event t (dm[t] = m[t+1] -
@@ -60,6 +61,12 @@ def sign_price_cross_cov(signs: np.ndarray, dm: np.ndarray, max_lag: int) -> np.
     with sign_acf's centering convention. For near-zero-mean +-1 signs this
     changes nothing; for directional order flow (mean substantially away
     from zero) omitting the centering biases b by mean(dm)*mean(signs).
+
+    The centered covariance equals Var(signs) * sum_n kappa[n] * C[|j-n|], so
+    the result is divided by Var(signs) to match the identity that
+    `deconvolve_kernel` inverts (with a normalized C). At a buy fraction of
+    0.8 the variance is 0.64, and without the division the recovered kernel
+    would be 0.64 times too small. Raises ValueError if the signs are constant.
     """
     if signs.shape != dm.shape:
         raise ValueError(f"signs {signs.shape} and dm {dm.shape} must match")
@@ -68,13 +75,16 @@ def sign_price_cross_cov(signs: np.ndarray, dm: np.ndarray, max_lag: int) -> np.
         raise ValueError(f"max_lag {max_lag} must be <= series length {n}")
     s = signs.astype(np.float64) - signs.astype(np.float64).mean()
     x = dm.astype(np.float64) - dm.astype(np.float64).mean()
+    variance = float(np.mean(s * s))
+    if variance <= 0.0:
+        raise ValueError("signs have zero variance; the cross-covariance cannot be normalized")
     b = np.empty(max_lag)
     for j in range(max_lag):
         if j == 0:
             b[j] = np.mean(x * s)
         else:
             b[j] = np.mean(x[j:] * s[:-j])
-    return b
+    return b / variance
 
 
 def deconvolve_kernel(
@@ -161,7 +171,7 @@ def cumulative_kernel(kappa: np.ndarray) -> np.ndarray:
 class BlockedExponent:
     exponent: float  # full-sample beta_hat
     block_exponents: list[float]
-    block_sd: float
+    block_sd: float  # sd of the block estimates; not a standard error of `exponent`
     n_samples: int
 
 
@@ -184,28 +194,30 @@ def kernel_exponent_blocked(
     fit_lo: int = 5,
     fit_hi: int | None = None,
 ) -> BlockedExponent:
-    """Full-sample beta_hat plus a block-bootstrap uncertainty estimate.
+    """Full-sample beta_hat plus the spread of per-block estimates.
 
-    fit_power_law's OLS stderr is NOT a usable uncertainty on the
-    deconvolved power-law exponent beta_hat -- do not report it as such.
-    It is the standard error of a single log-log regression fit to one
-    already-noisy point estimate of the cumulative kernel; it does not
-    account for the sampling noise in b and the ACF that feeds into
-    deconvolve_kernel, nor for autocorrelation among the fitted points.
-    Measured on synthetic long-memory data (fractional_signs d=0.35,
-    n=300_000, L=300, 20 seeds): OLS stderr ~= 0.00136 while the actual
-    Monte-Carlo standard deviation of beta_hat across seeds was ~= 0.0092
-    (about 6.8x larger), and the mean recovered beta_hat was ~= 0.386
-    against a planted 0.35 -- a systematic finite-L bias of roughly +0.03
-    to +0.04 at L=300. Any downstream comparison of a recovered beta_hat
-    against a reference value (a "balance residual") must be judged against
-    block_sd from this function AND against that ~0.03-0.04 bias scale,
-    never against fit_power_law's stderr alone.
+    fit_power_law's OLS stderr is not a usable uncertainty on the
+    deconvolved power-law exponent beta_hat. It is the standard error of a
+    single log-log regression fit to one already-noisy point estimate of the
+    cumulative kernel; it does not account for the sampling noise in b and
+    the ACF that feeds into deconvolve_kernel, nor for autocorrelation among
+    the fitted points. Measured on synthetic long-memory data
+    (fractional_signs d=0.35, n=300_000, L=300, 20 seeds): OLS stderr ~=
+    0.00136 while the actual Monte-Carlo standard deviation of beta_hat
+    across seeds was ~= 0.0092 (about 6.8x larger), and the mean recovered
+    beta_hat was ~= 0.386 against a planted 0.35, a systematic finite-L bias
+    of roughly +0.03 to +0.04 at L=300. A comparison of a recovered beta_hat
+    against a reference value (a "balance residual") has to be judged against
+    block_sd and against that ~0.03-0.04 bias scale.
 
     Computes the full (cross-cov, deconvolve, cumulative, fit) pipeline on
     the full sample (-> exponent) and on n_blocks contiguous, non-
     overlapping blocks of (signs, dm) (-> block_exponents), then reports
-    block_sd = np.std(block_exponents, ddof=1) as the uncertainty estimate.
+    block_sd = np.std(block_exponents, ddof=1). That is the sd of n_blocks
+    estimates each made on 1/n_blocks of the data. It is not a standard error
+    of the full-sample fit: the full-sample estimator's sd is smaller by
+    roughly sqrt(n_blocks) if the blocks are independent, and the blocks of a
+    long-memory series are not.
     """
     if signs.shape != dm.shape:
         raise ValueError(f"signs {signs.shape} and dm {dm.shape} must match")
