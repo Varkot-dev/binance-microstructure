@@ -1,0 +1,494 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Order flow and impact on Binance: measured results</title>
+<meta name="description" content="Long-memory order flow, deconvolved impact kernels and Hawkes endogeneity on Binance perpetual futures: a 121-symbol cross-section from 100M+ raw trades, re-tested in later regimes including the 2026 market's own universe.">
+<meta name="color-scheme" content="light dark">
+
+<meta property="og:title" content="Order flow and impact on Binance: measured results">
+<meta property="og:description" content="A 121-symbol cross-section, 16 deconvolved impact kernels and a 41-symbol endogeneity panel, with the main caveat stated beside each number.">
+<meta property="og:type" content="website">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap">
+<link rel="stylesheet" href="styles.css">
+
+<script defer
+        src="https://cdnjs.cloudflare.com/ajax/libs/plotly.js/4.1.1/plotly-basic.min.js"
+        integrity="sha512-orZ6OgVLrRp8vSfEJ9XXGswEzLgmW4nqH1ja1cWJRPqwAkyU0GcrM42aDvIcJjrK9EmGWyVZ3tpMmHXbCrrIaA=="
+        crossorigin="anonymous"
+        referrerpolicy="no-referrer"></script>
+<script type="module" src="app.js"></script>
+</head>
+<body>
+
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="site-header">
+  <div class="shell">
+    <a class="wordmark" href="#top"><b>Binance</b> <span>microstructure</span></a>
+    <nav class="site-nav" aria-label="Sections">
+      <a href="#cross-section">Cross-section</a>
+      <a href="#kernels">Kernels</a>
+      <a href="#endogeneity">Endogeneity</a>
+      <a href="#execution">Execution</a>
+      <a href="#regimes">Over time</a>
+      <a href="#method">Verification</a>
+    </nav>
+  </div>
+</header>
+
+<main id="main">
+
+<!-- ============================================================
+     Landing
+     ============================================================ -->
+<section class="landing" id="top" aria-labelledby="landing-heading">
+  <div class="shell">
+    <div class="landing-head">
+      <div>
+        <p class="eyebrow">Empirical market microstructure · June 2023</p>
+        <h1 id="landing-heading">Order flow<br>remembers.<em>Impact does not.</em></h1>
+        <p class="landing-lede">
+          I re-measured three classical microstructure results on Binance's public tick dumps
+          and carried them to a cross-section wide enough to see which depend on how much a
+          symbol trades.
+        </p>
+      </div>
+
+      <dl class="ledger">
+        <div><dt>Raw aggTrades prints</dt><dd>105,147,096</dd></div>
+        <div><dt>L1 quote updates</dt><dd>114,231,299</dd></div>
+        <div><dt>Universe requested</dt><dd>207 symbols</dd></div>
+        <div><dt>Cross-section analyzed</dt><dd>121 symbols</dd></div>
+        <div><dt>Kernels deconvolved</dt><dd>16 symbols</dd></div>
+        <div><dt>Endogeneity panel</dt><dd>41 symbols</dd></div>
+        <div><dt>Regimes re-measured</dt><dd id="ledger-regimes">2023-06 → 2026-07</dd></div>
+        <div><dt>Estimator tests vs. synthetic truth</dt><dd>268</dd></div>
+      </dl>
+    </div>
+
+    <h2 class="visually-hidden" id="findings-heading">The three headline findings</h2>
+    <div class="findings" role="list" aria-labelledby="findings-heading">
+
+      <a class="finding reveal" href="#cross-section" role="listitem">
+        <p class="finding-index"><span>Finding 01 · Phase 2</span><em>Explore →</em></p>
+        <h3>Memory is liquidity-invariant. Flipping is not.</h3>
+        <p>
+          The long-memory exponent γ barely moves across 1.33 decades of activity: the fitted
+          trend explains 0.03% of the cross-sectional variance. The probability that the next
+          trade flips sign rises steadily with activity, and the two tails separate cleanly.
+        </p>
+        <div class="gauge">
+          <span class="gauge-figure"><span>R²&#8202;=&#8202;0.0003</span><small>γ vs. activity</small></span>
+          <div class="gauge-track" role="img" aria-label="Gamma's fit against activity explains almost none of the variance, against a fit that explains 26 percent for flip probability.">
+            <span class="gauge-band" style="left:0;width:100%"></span>
+            <span class="gauge-mark" style="left:0.3%"></span>
+          </div>
+          <span class="gauge-note">vs. R²=0.26 for p_flip · +0.111 per decade</span>
+        </div>
+      </a>
+
+      <a class="finding reveal" href="#kernels" role="listitem">
+        <p class="finding-index"><span>Finding 02 · Phase 2</span><em>Explore →</em></p>
+        <h3>Reading impact off the response function understates the kernel exponent.</h3>
+        <p>
+          The measured response mixes the bare kernel with flow memory. On synthetic data with a
+          planted exponent of 0.35, deconvolution recovers 0.377–0.397 and a naive fit to the
+          response returns 0.063–0.125. On real symbols, 12 of 16 land inside the
+          critical-balance band.
+        </p>
+        <div class="gauge">
+          <span class="gauge-figure"><span>12&#8202;/&#8202;16</span><small>inside the band</small></span>
+          <div class="gauge-track" role="img" aria-label="Twelve of sixteen symbols fall inside the balance band.">
+            <span class="gauge-band" style="left:0;width:75%"></span>
+            <span class="gauge-mark" style="left:75%"></span>
+          </div>
+          <span class="gauge-note">consistent · ±0.04 band floor · 11 of 16 deltas negative</span>
+        </div>
+      </a>
+
+      <a class="finding reveal" href="#endogeneity" role="listitem">
+        <p class="finding-index"><span>Finding 03 · Phase 3</span><em>Explore →</em></p>
+        <h3>Two branching-ratio estimators disagree on every symbol.</h3>
+        <p>
+          The exponential-kernel MLE puts the median branching ratio at 0.707. The model-free
+          count-variance estimator reads higher on 41 of 41 symbols, median 0.959. I report both
+          and do not average them.
+        </p>
+        <div class="gauge">
+          <span class="gauge-figure"><span>41&#8202;/&#8202;41</span><small>one-directional</small></span>
+          <div class="gauge-track" role="img" aria-label="The count-variance estimator exceeds the MLE on all forty-one symbols.">
+            <span class="gauge-band" style="left:0;width:100%"></span>
+            <span class="gauge-mark" data-flag="true" style="left:100%;margin-left:-2px"></span>
+          </div>
+          <span class="gauge-note">median |diff| 0.2395 · correlation 0.2597</span>
+        </div>
+      </a>
+
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     Cross-section
+     ============================================================ -->
+<section class="section" id="cross-section" aria-labelledby="cs-heading">
+  <div class="shell">
+    <div class="section-head">
+      <div>
+        <p class="eyebrow">Q4 · 121 symbols · 2023-06</p>
+        <h2 id="cs-heading">What varies with liquidity across 121 symbols</h2>
+      </div>
+      <div>
+        <p>
+          Every symbol in the 207-symbol universe clearing one million aggressor events gets the
+          same five statistics. Plotted against activity, γ sits flat across the whole range
+          while p_flip climbs. That suggests order flow's <em>memory</em> and its
+          <em>short-run alternation</em> have separate drivers.
+        </p>
+        <p class="prose-note">
+          Each symbol's γ standard error understates its true uncertainty, unevenly across the
+          cross-section. The fitted lines are descriptive summaries and carry no confidence
+          intervals.
+        </p>
+      </div>
+    </div>
+
+    <div class="plot-frame reveal">
+      <div class="plot-bar">
+        <span class="plot-bar-label" id="cs-axis-label">Vertical axis</span>
+        <div class="control-set" role="group" aria-labelledby="cs-axis-label" id="cs-controls"></div>
+        <div class="legend" id="cs-legend"></div>
+      </div>
+      <div class="plot-canvas" id="cs-plot"><p class="loading">Loading cross-section…</p></div>
+      <p class="plot-note" id="cs-note"></p>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     Kernels
+     ============================================================ -->
+<section class="section" id="kernels" aria-labelledby="k-heading">
+  <div class="shell">
+    <div class="section-head">
+      <div>
+        <p class="eyebrow">Q5 · 16 symbols · one week</p>
+        <h2 id="k-heading">The bare impact kernel, separated from flow memory</h2>
+      </div>
+      <div>
+        <p>
+          The response function R(ℓ) is impact plus every correlated trade that followed:
+          R(ℓ) ≈ G(ℓ) + Σ G(ℓ−n)·C(n). Because order flow has long memory, the accumulation term
+          dominates and R climbs where G decays. Recovering G means solving the Toeplitz system
+          back out.
+        </p>
+        <p class="prose-note">
+          Bouchaud's diffusivity argument predicts β = (1−γ)/2. The band below is
+          ±2×max(block sd, 0.04). The 0.04 floor is the deconvolution's own measured
+          finite-length bias, so smaller departures are not called violations.
+        </p>
+      </div>
+    </div>
+
+    <div class="plot-frame reveal">
+      <div class="plot-bar">
+        <span class="plot-bar-label">G(ℓ) · log–log · colored by activity</span>
+        <div class="legend" id="k-legend"></div>
+      </div>
+      <div class="plot-canvas" id="k-plot"><p class="loading">Loading kernels…</p></div>
+      <p class="plot-note" id="k-note"></p>
+    </div>
+
+    <h3 class="eyebrow" style="margin-top:var(--rhythm-tight)">Critical-balance departure · Δ = β − (1−γ)/2</h3>
+    <div class="strip" id="k-strip">
+      <div class="strip-head"><span>Symbol</span><span>Δ against its own band</span><span>Δ</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     Endogeneity
+     ============================================================ -->
+<section class="section" id="endogeneity" aria-labelledby="e-heading">
+  <div class="shell">
+    <div class="section-head">
+      <div>
+        <p class="eyebrow">Q6 · 41 symbols · Hawkes</p>
+        <h2 id="e-heading">How much of order flow is a reaction to order flow</h2>
+      </div>
+      <div>
+        <p>
+          The branching ratio is the fraction of events that are reactions and not arrivals from
+          outside. I rescale to business time before fitting. In a synthetic test, a
+          regime-switching Poisson process with no self-excitation at all produces spurious
+          near-criticality on clock time.
+        </p>
+        <p class="prose-note">
+          Error bars are the interquartile range across six independently fitted sub-windows,
+          not standard errors. An exponential kernel fitted to a true power law understates α,
+          so these are lower bounds.
+        </p>
+      </div>
+    </div>
+
+    <div class="two-col">
+      <div class="plot-frame reveal">
+        <div class="plot-bar"><span class="plot-bar-label">α median vs. activity · IQR bars</span></div>
+        <div class="plot-canvas" id="e-plot"><p class="loading">Loading panel…</p></div>
+        <p class="plot-note" id="e-note"></p>
+      </div>
+      <div class="plot-frame reveal">
+        <div class="plot-bar"><span class="plot-bar-label">MLE vs. count-variance · y = x</span></div>
+        <div class="plot-canvas" id="e-plot2"><p class="loading">Loading comparison…</p></div>
+        <p class="plot-note" id="e-note2"></p>
+      </div>
+    </div>
+
+    <div class="callout reveal">
+      <h3>The two estimators disagree</h3>
+      <p id="e-callout"></p>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     Execution
+     ============================================================ -->
+<section class="section" id="execution" aria-labelledby="x-heading">
+  <div class="shell">
+    <div class="section-head">
+      <div>
+        <p class="eyebrow">Q7 · 6 symbols · replay</p>
+        <h2 id="x-heading">Execution costs under the measured kernels</h2>
+      </div>
+      <div>
+        <p>
+          Three schedules run against replayed order flow under one cost model, with each symbol's
+          own measured kernel supplying its impact term. The flow-reactive schedule's parameters
+          are chosen on days 1–3 and frozen. Every number below comes from the disjoint days 4–7.
+        </p>
+        <p class="prose-note">
+          This is a cost-model comparison and not a backtest or a trading recommendation. It
+          models no queueing, depth, latency, or reaction by other participants.
+        </p>
+      </div>
+    </div>
+
+    <div class="plot-frame reveal">
+      <div class="plot-bar">
+        <span class="plot-bar-label">Mean shortfall per unit, with dispersion · evaluation window</span>
+      </div>
+      <div class="plot-canvas" id="x-plot"><p class="loading">Loading schedules…</p></div>
+      <p class="plot-note" id="x-note"></p>
+    </div>
+
+    <div class="callout callout--neutral reveal">
+      <h3>Read the error bars before the ranking</h3>
+      <p id="x-callout"></p>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     Regimes — temporal robustness
+     ============================================================ -->
+<section class="section" id="regimes" aria-labelledby="r-heading">
+  <div class="shell">
+    <div class="section-head">
+      <div>
+        <p class="eyebrow" id="r-eyebrow">Q8 · regimes · 2023-06 → 2026-07</p>
+        <h2 id="r-heading">Does it hold over time?</h2>
+      </div>
+      <div>
+        <p>
+          Everything above is June 2023. I re-ran the cross-section and the endogeneity panel
+          unchanged on later months (the one after, then each July through 2026) against the
+          <em>same fixed 207-symbol universe</em>, and once more on the 2026 market's own symbol
+          list. This tests whether the shape of the cross-section belongs to markets in general
+          or to that month.
+        </p>
+        <p class="prose-note">
+          Symbols listed after June 2023 are excluded from the fixed-universe regimes, so those
+          describe what happened to the 2023 panel. The native-universe run shows the 2026
+          market with no 2023 filter, which separates a law that changed from a panel that
+          thinned out.
+        </p>
+      </div>
+    </div>
+
+    <div class="regime-wrap reveal" id="r-table">
+      <p class="loading" style="padding:1rem">Loading regimes…</p>
+    </div>
+
+    <figure class="regime-figure reveal">
+      <img src="assets/q8_regimes.png" width="2834" height="809" loading="lazy" decoding="async"
+           alt="Three panels comparing regimes: the flip-probability law fitted per regime, gamma against activity per regime, and a symbol-level scatter of p_flip in 2023-06 against 2023-07 with a y=x reference line.">
+      <figcaption id="r-figcaption"></figcaption>
+    </figure>
+
+    <div class="callout reveal">
+      <h3>The flip law fades, the γ break is confined to the 2023-listed contracts, and the raw endogeneity drop overstates the drift</h3>
+      <div id="r-callout"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     Method & verification
+     ============================================================ -->
+<section class="section" id="method" aria-labelledby="m-heading">
+  <div class="shell">
+    <div class="section-head">
+      <div>
+        <p class="eyebrow">Checks on the estimators</p>
+        <h2 id="m-heading">What the checks changed</h2>
+      </div>
+      <div>
+        <p>
+          A wrong microstructure number does not crash anything. It lands in the published range
+          and looks like a replication. I ran each estimator on series with known answers before
+          using it on real data, and the checks below changed what I report.
+        </p>
+      </div>
+    </div>
+
+    <ol class="timeline">
+
+      <li class="timeline-item reveal">
+        <span class="timeline-kind" data-kind="build">Ground truth</span>
+        <div class="timeline-body">
+          <h3>Estimators validated against series with analytic answers</h3>
+          <p>
+            i.i.d. signs (ACF exactly 0), a Markov chain (ACF = (2p−1)<sup>k</sup>), FARIMA noise
+            (γ = 1 − 2d), a planted impact kernel the response estimator must recover, and a
+            simulated Hawkes process with a known branching ratio. 268 tests run offline before
+            any real tick touches the pipeline.
+          </p>
+        </div>
+      </li>
+
+      <li class="timeline-item reveal">
+        <span class="timeline-kind" data-kind="check">Null process</span>
+        <div class="timeline-body">
+          <h3>A process with no self-excitation that fakes near-criticality</h3>
+          <p>
+            A regime-switching Poisson process, a rate that alternates on a fixed clock, makes
+            both branching estimators report spurious endogeneity (n̂ = 0.934, α̂ = 0.976) on
+            clock time. That fixture is why business-time rescaling is applied unconditionally.
+          </p>
+        </div>
+      </li>
+
+      <li class="timeline-item reveal">
+        <span class="timeline-kind">R versus G</span>
+        <div class="timeline-body">
+          <h3>A rising response is the expected shape</h3>
+          <p>
+            The literature's decaying object is the kernel G, and the measured response R is a
+            different object, so a rising R does not contradict Bouchaud (2004). An independent
+            check agrees: Q1's γ on two months of trades predicts a plateau ratio of about 4.4×
+            (band 3.5–6.9×), and Q2 measured 5.39× on 14 days of quotes.
+          </p>
+        </div>
+      </li>
+
+      <li class="timeline-item reveal">
+        <span class="timeline-kind">Thinning bias</span>
+        <div class="timeline-body">
+          <h3>Why a wider tolerance was the wrong repair</h3>
+          <p>
+            Thinning a constant-baseline simulation to mimic seasonality gave α̂ ≈ 0.285 against
+            a true 0.35. A control that thinned uniformly at random also dropped α to ≈0.25, so
+            thinning deletes self-excited children regardless of seasonality. A loosened
+            tolerance would be a permanent tax on the test's power. I built a seasonal-baseline
+            simulator instead, and the tight ±0.06 tolerance passes with errors of −0.009 and
+            −0.008.
+          </p>
+        </div>
+      </li>
+
+      <li class="timeline-item reveal">
+        <span class="timeline-kind">Seed ranges</span>
+        <div class="timeline-body">
+          <h3>Synthetic deconvolution contrast, quoted across seeds</h3>
+          <p>
+            The test runs three seeds. Deconvolution recovers 0.377–0.397 and the naive fit
+            returns 0.063–0.125. The point figures (0.3766 vs. 0.0633) are seed 20 alone.
+          </p>
+        </div>
+      </li>
+
+      <li class="timeline-item reveal">
+        <span class="timeline-kind">Two estimators</span>
+        <div class="timeline-body">
+          <h3>"Near-critical" depends on which estimator you ask</h3>
+          <p>
+            Under the MLE, zero of 41 symbols exceed α = 0.9. Under the count-variance estimator
+            computed in the same run, all 41 of 41 do. The panel establishes high endogeneity
+            and leaves how close to critical unresolved, pending a power-law refit.
+          </p>
+        </div>
+      </li>
+
+      <li class="timeline-item reveal">
+        <span class="timeline-kind" data-kind="check">Scope</span>
+        <div class="timeline-body">
+          <h3>Replication against published benchmarks</h3>
+          <p>
+            Prior art exists for each question here, so I chose questions where a published
+            number is available to check against.
+          </p>
+        </div>
+      </li>
+
+    </ol>
+  </div>
+</section>
+
+</main>
+
+<footer class="site-footer">
+  <div class="shell">
+    <div class="footer-grid">
+      <div>
+        <p class="eyebrow">Reproduce it</p>
+        <p class="prose-note">
+          The estimator tests run offline against synthetic ground truth:
+        </p>
+        <pre class="footer-repro"><code>git clone https://github.com/Varkot-dev/binance-microstructure.git
+cd binance-microstructure &amp;&amp; uv sync
+uv run pytest -m "not network" -q</code></pre>
+        <p class="prose-note" style="margin-top:0.75rem">
+          <a href="https://github.com/Varkot-dev/binance-microstructure">Repository</a> ·
+          <a href="https://github.com/Varkot-dev/binance-microstructure/blob/main/docs/report.md">Full report</a> ·
+          <a href="https://github.com/Varkot-dev/binance-microstructure/tree/main/results">Raw result artifacts</a>
+        </p>
+      </div>
+      <div>
+        <p class="eyebrow">The main caveat</p>
+        <p class="footer-caveat">
+          The headline numbers are June 2023, one market regime. The cross-section and the
+          endogeneity panel were re-measured in later regimes (see
+          <a href="#regimes">Over time</a>): the flip law holds one month out, weakens through
+          2025, and is absent in 2026 on both the fixed 2023 panel and the market's own universe.
+          The fixed-panel comparison is confounded by 68 delistings and a 46-symbol surviving
+          panel. The kernel and execution results were not repeated. Every cross-section is also
+          filtered by the one-million-event floor, which 86 of 207 requested symbols fell below
+          in the baseline month.
+        </p>
+      </div>
+    </div>
+    <p class="footer-meta">
+      <span>Binance USDT-M perpetual futures · data.binance.vision</span>
+      <span>Charts: Plotly 4.1.1 · no build step</span>
+    </p>
+  </div>
+</footer>
+
+</body>
+</html>

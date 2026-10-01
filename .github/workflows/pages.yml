@@ -1,0 +1,61 @@
+name: Deploy site to GitHub Pages
+
+# The site is static and has no build step: build_data.py derives
+# site/data/*.json from results/*.json and those slices are committed, so
+# this workflow regenerates them only to prove the committed copies are
+# current, then uploads site/ as-is.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'site/**'
+      - '.github/workflows/pages.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# One deployment at a time; let an in-flight run finish rather than
+# cancelling it, so a half-published site is never left behind.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Verify committed data slices match results/
+        run: |
+          python site/build_data.py
+          if ! git diff --quiet -- site/data; then
+            echo "::error::site/data is stale — run 'python site/build_data.py' and commit the result."
+            git diff --stat -- site/data
+            exit 1
+          fi
+          echo "site/data is current."
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
