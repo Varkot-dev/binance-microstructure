@@ -112,13 +112,27 @@ Whether that is near-critical depends on the estimator. Under the exponential-ke
 Two further results:
 
 - **Endogeneity is liquidity-invariant.** Regressed on log₁₀(activity), the slope is **+0.0286** with stderr 0.1094 and **R² = 0.0017**. The stderr is four times the slope.
-- **The two estimators disagree on every symbol, in one direction.** Median |α̂_MLE − n̂_count-variance| = **0.2395** (correlation 0.2597), with count-variance higher on **41 of 41**. Unanimity points to misspecification of the exponential kernel, though window sensitivity in the count-variance estimator is a competing explanation this data cannot rule out.
+- **The two estimators disagree on every symbol, in one direction.** Median |α̂_MLE − n̂_count-variance| = **0.2395** (correlation 0.2597), with count-variance higher on **41 of 41**. Unanimity points to misspecification of the exponential kernel; Q6b below measures how much of the gap that explains.
 
 I report the two estimators side by side and do not average them. The panel does not resolve whether crypto is near-critical.
 
 The seasonality correction is measured on the real panel. On a regime-switching Poisson process with no self-excitation at all, the repo's own estimators report a spurious **n̂ = 0.934** and **α̂ = 0.976**. On the real panel the measured bias is **median raw_delta = −0.0003**. Crypto perps trade 24/7 with no open, close or lunch lull, so the intraday profile is nearly flat and there is little confound to remove.
 
 [Full results and caveats →](../results/q6_endogeneity.md)
+
+### A second kernel timescale closes about half the estimator gap (Q6b)
+
+![Kernel sensitivity](../results/q6b_kernel_sensitivity.png)
+
+I refit the same 41 symbols and six sub-windows with sums of K = 1, 2 and 3 exponentials. The median branching ratio goes **0.707 → 0.854 → 0.879**. The K=1 → K=2 jump (Δ21) has median **+0.142** and exceeds a finite-sample null floor on **41 of 41** symbols (the 90th percentile of Δ21 across 5 simulations of single-exponential data at the panel's event count is 0.009). Against the count-variance estimator, the median gap falls from **0.240 at K=1 to 0.103 at K=2**, so K=2 closes a median **54%** of it. Across symbols, the K=2 estimate and count-variance n̂ correlate at **0.45**.
+
+The added component is fast: its decay time 1/β_slow has a median of **7.0 business-time seconds** (90th percentile 10.5 s), against a 30-minute deseasonalization bin. That rules out leftover intraday seasonality as the source of the extra excitation.
+
+Slower baseline drift is harder to rule out. For each symbol I compared the K=2 gain with a K=1 fit whose baseline is piecewise-constant over 12 blocks (about six business-time hours each), using a likelihood-ratio rule. The verdict is **inconclusive on 41 of 41**: 25 symbols show no K=2 rise in the test window, and 16 are mixed. At this sample size the test cannot separate drift from long memory.
+
+I left one statistic out. Correlating Δ21 with the K=1 gap to count-variance gives 0.98, but both quantities contain −n̂₁, which varies far more across symbols than n̂₂ or count-variance n̂. With n̂₂ shuffled across symbols the correlation is still 0.97, so it carries no information.
+
+[Full results and caveats →](../results/q6b_kernel_sensitivity.md)
 
 ### Execution: a risk/cost frontier (Q7)
 
@@ -319,7 +333,14 @@ uv run python -m microstructure.analyses.q7_execution \
     --horizon-events 2000 --n-children 20
 ```
 
-Q6 is the heaviest run: 41 symbols × 6 Nelder-Mead multi-start MLE fits, plus one extra raw-clock-time fit per symbol to measure the seasonality bias. Each sub-window is capped at 250,000 events to bound the per-fit cost. Q7's calibration/evaluation split is hard-coded to the first three and remaining days of the requested range, so shifting `--start-day` / `--end-day` shifts both windows together.
+```bash
+# Q6b: K = 1, 2, 3 kernel sensitivity on the Q6 panel, with the drift control
+uv run python -m microstructure.analyses.q6b_kernel_sensitivity \
+    --root data --out results --symbols-file results/q6_symbols_2023-06.txt \
+    --month 2023-06 --windows 6 --ks 1,2,3 --q6-json results/q6_endogeneity.json --null-sims 5
+```
+
+Q6b is the slowest run in the repo, about 20 hours on one core. Q6 is the heaviest of the rest: 41 symbols × 6 Nelder-Mead multi-start MLE fits, plus one extra raw-clock-time fit per symbol to measure the seasonality bias. Each sub-window is capped at 250,000 events to bound the per-fit cost. Q7's calibration/evaluation split is hard-coded to the first three and remaining days of the requested range, so shifting `--start-day` / `--end-day` shifts both windows together.
 
 ### 7. Q8 regime comparison
 
@@ -411,7 +432,7 @@ site/                   # static results site; build_data.py derives site/data/*
 - **The fixed-universe regimes are survivorship-confounded, and the native run and cohort split separate that from the laws themselves.** On the fixed 2023 universe, 2026-07 returns **46 successful, 93 below the 1M-event floor, and 68 with no data at all** (2024-07: 95 / 80 / 32; 2025-07: 94 / 62 / 51). The 68 are delisted, renamed or migrated contracts (MATIC and FTM are migrations); the 93 reflect the 1M-event filter. The 2026-07-native run on the market's own 371-symbol universe (231 pass the floor, against 121 in the baseline) finds no flip law either (slope +0.0006, stderr 0.0126), so survivorship does not explain that disappearance. The γ̂ break (R² 0.2505 in 2025-07, 0.2441 in 2026-07) is small on the native universe (R² 0.0196), and the cohort split shows why. On the 39 contracts shared with the baseline γ̂ became activity-dependent (t +0.98 to +3.56) and the 192 newer listings show little (t +1.32). The native universe differs in composition (tokenized-equity-style perpetuals, USDC-margined pairs), has no Q6 run, still applies the 1M-event floor, and the shared cohort is 39 symbols, so the cohort slopes have wide intervals.
 - **Q6 kernel-mode drift contaminates raw α̂ comparisons.** The share of single-exponential fits with β̂ > 10 is 0.12 in the 2023 months and 0.49, 0.33, 0.31 in 2024-07, 2025-07, 2026-07 (Q8 flags the first two; 2026-07 is partly affected, below its 0.2 threshold). Those fits capture only the fast component of a multi-timescale kernel and understate α̂ by construction. Comparisons here use the slow-mode α̂ median, the count-variance n̂ and symbols paired across months. The paired α̂ sets are small (18–34 symbols) and selected on being slow-mode.
 - **Only one regime describes the 2026 cross-section, and only for Q4.** Post-2023 listings are excluded from the four fixed-universe regimes, so those describe the fate of the 2023 panel. 2026-07-native is the only run that includes the 2026 market's own symbols.
-- **Exponential Hawkes kernel only.** Every Q6 branching ratio is a **lower bound**, because an exponential kernel truncates long-range excitation a power-law kernel would capture. The one-directional 41/41 disagreement between the MLE and the count-variance estimator (median 0.2395 in the baseline) is consistent with that misspecification but is not attributed to it. Count-variance window sensitivity is a competing explanation this data cannot exclude. A power-law refit and a window sweep are the two follow-ups.
+- **Exponential Hawkes kernels only.** Every Q6 branching ratio is a **lower bound**, because exponential kernels truncate long-range excitation a power-law kernel would capture. A second exponential (Q6b) closes a median 54% of the 41/41 MLE vs count-variance gap; the remaining 0.103 is unattributed, and count-variance window sensitivity is still a competing explanation. The drift-vs-memory test was inconclusive on all 41 symbols. A power-law refit and a window sweep are the follow-ups.
 - **Q7 is a cost model.** It has no queue position, no latency, no partial fills, linear own-impact extrapolation, and replayed flow that cannot react to the simulated order, which undercuts the flow-reactive schedule it was built to test. The reactive-vs-TWAP mean difference is unresolved against its own noise, and only the front-loaded variance reduction is resolved.
 - **Optimistic standard errors.** Every Q1–Q3 stderr is OLS, which assumes independent residuals. ACF values at adjacent lags share nearly all their data, and adjacent bars are autocorrelated, so the stated uncertainties are too small. Q4's cross-sectional regressions inherit the problem heteroskedastically. Q5 is the partial fix: it reports a block-bootstrap sd, having measured the OLS stderr to understate the true spread by **6.8×**. Block-bootstrap intervals for Q1 and Q3 remain to be done.
 - **L1-only book data.** `bookTicker` gives one level, which plausibly explains both the low OFI R² and the depth-scaling exponent falling short of −1, and bounds every Q5 mid as well.
@@ -431,7 +452,7 @@ The flip law holds out of sample one month later, weakens through 2024–2025, a
 
 Next, in order of how much each would change the conclusions:
 
-1. A **power-law-kernel refit of Q6**. It would test whether crypto is near-critical, might remove the kernel-mode contamination at its root, and would attribute or dismiss the one-directional 41/41 estimator disagreement.
+1. A **power-law-kernel refit of Q6**. It would test whether crypto is near-critical, might remove the kernel-mode contamination at its root, and would show whether the half of the estimator gap that two exponentials leave is also kernel shape.
 2. A **Q6 run on the 2026 native universe**. The native run covers Q4 only, so the endogeneity comparison still rests on the 2023 panel's survivors.
 3. A **window-sensitivity sweep on the count-variance n̂**, the competing explanation for the estimator gap.
 4. **Re-running Q4b against mainnet exchangeInfo** once network access allows it, to replace the testnet-mirror tick sizes (see [Q4b](../results/q4b_tick_confound.md)).

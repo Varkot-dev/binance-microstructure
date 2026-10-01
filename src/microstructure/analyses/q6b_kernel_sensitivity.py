@@ -345,12 +345,11 @@ def _symbol_record(
     }
 
 
-def _load_q6_gap(q6_json: Path | None) -> dict[str, float]:
-    """Load {symbol: alpha_cv - alpha_median} from a Q6 results JSON, if given.
+def _load_q6_cv(q6_json: Path | None) -> dict[str, float]:
+    """Load {symbol: alpha_cv} (Q6's count-variance n-hat) from a Q6 results JSON.
 
     Returns an empty dict if `q6_json` is None or the file doesn't exist; the
-    correlation with Δ21 is then skipped. It is optional context, not a
-    dependency of Q6b.
+    count-variance comparison is then skipped.
     """
     if q6_json is None or not q6_json.exists():
         return {}
@@ -359,10 +358,9 @@ def _load_q6_gap(q6_json: Path | None) -> dict[str, float]:
     for rec in data.get("records", []):
         symbol = rec.get("symbol")
         alpha_cv = rec.get("alpha_cv")
-        alpha_median = rec.get("alpha_median")
-        if symbol is None or alpha_cv is None or alpha_median is None:
+        if symbol is None or alpha_cv is None:
             continue
-        gaps[symbol] = float(alpha_cv) - float(alpha_median)
+        gaps[symbol] = float(alpha_cv)
     return gaps
 
 
@@ -442,14 +440,53 @@ def _inconclusive_reason_counts(records: list[dict]) -> dict[str, int]:
     return counts
 
 
+def _cv_comparison(records: list[dict], q6_cv: dict[str, float]) -> dict | None:
+    """Compare K=1 and K=2 estimates with Q6's count-variance n-hat.
+
+    Delta21 is deliberately not correlated with (alpha_cv - n_hat_1): both
+    contain -n_hat_1, which varies far more across symbols than n_hat_2 or
+    alpha_cv, so that correlation is near 1 by construction.
+    """
+    rows = [
+        (r["n_median_by_k"][1], r["n_median_by_k"][2], q6_cv[r["symbol"]])
+        for r in records
+        if r["symbol"] in q6_cv
+        and 1 in r["n_median_by_k"]
+        and 2 in r["n_median_by_k"]
+        and np.isfinite(r["n_median_by_k"][1])
+        and np.isfinite(r["n_median_by_k"][2])
+    ]
+    if not rows:
+        return None
+    n1 = np.array([row[0] for row in rows])
+    n2 = np.array([row[1] for row in rows])
+    cv = np.array([row[2] for row in rows])
+    gap1 = cv - n1
+    closable = gap1 > 0
+    corr = (
+        float(np.corrcoef(n2, cv)[0, 1])
+        if len(rows) >= 2 and np.std(n2) > 0 and np.std(cv) > 0
+        else None
+    )
+    return {
+        "n": len(rows),
+        "corr_n2_cv": corr,
+        "median_gap_k1": float(np.median(gap1)),
+        "median_gap_k2": float(np.median(cv - n2)),
+        "median_frac_gap_closed": (
+            float(np.median((n2 - n1)[closable] / gap1[closable])) if closable.any() else None
+        ),
+    }
+
+
 def _cross_section(
-    records: list[dict], q6_gaps: dict[str, float], null_sims: int = 5
+    records: list[dict], q6_cv: dict[str, float], null_sims: int = 5
 ) -> dict:
     if not records:
         return {
             "delta21_distribution": None,
             "frac_n2_at_least_0_9": None,
-            "cv_gap_correlation": None,
+            "cv_comparison": None,
             "null_floor_p90": None,
             "drift_verdict_counts": _drift_verdict_counts([]),
             "drift_inconclusive_reason_counts": _inconclusive_reason_counts([]),
@@ -474,30 +511,12 @@ def _cross_section(
         float(sum(1 for v in n2_values if v >= 0.9) / len(n2_values)) if n2_values else None
     )
 
-    cv_gap_correlation = None
-    if q6_gaps:
-        paired = [
-            (r["delta21"], q6_gaps[r["symbol"]])
-            for r in records
-            if r["symbol"] in q6_gaps and np.isfinite(r["delta21"])
-        ]
-        if len(paired) >= 2:
-            delta_arr = np.array([p[0] for p in paired])
-            gap_arr = np.array([p[1] for p in paired])
-            if np.std(delta_arr) > 0 and np.std(gap_arr) > 0:
-                cv_gap_correlation = {
-                    "correlation": float(np.corrcoef(delta_arr, gap_arr)[0, 1]),
-                    "n": len(paired),
-                }
-            else:
-                cv_gap_correlation = {"correlation": None, "n": len(paired)}
-
     null_floor_p90 = _null_floor_p90(records, null_sims)
 
     return {
         "delta21_distribution": delta21_distribution,
         "frac_n2_at_least_0_9": frac_n2_at_least_0_9,
-        "cv_gap_correlation": cv_gap_correlation,
+        "cv_comparison": _cv_comparison(records, q6_cv) if q6_cv else None,
         "null_floor_p90": null_floor_p90,
         "drift_verdict_counts": _drift_verdict_counts(records),
         "drift_inconclusive_reason_counts": _inconclusive_reason_counts(records),
@@ -533,8 +552,8 @@ def run_q6b(
         except Exception as e:  # noqa: BLE001 - a per-symbol failure is logged, not fatal
             failures.append({"symbol": symbol, "reason": f"{type(e).__name__}: {e}"})
 
-    q6_gaps = _load_q6_gap(q6_json)
-    cross_section = _cross_section(records, q6_gaps, null_sims)
+    q6_cv = _load_q6_cv(q6_json)
+    cross_section = _cross_section(records, q6_cv, null_sims)
 
     null_floor_p90 = cross_section.get("null_floor_p90")
     if null_floor_p90 is not None:
@@ -966,28 +985,28 @@ def _write_results_md(out_dir: Path, result: dict) -> None:
     else:
         lines.append("Fraction of symbols with n̂_2 ≥ 0.9 not estimable (no K=2 results).")
     lines.append("")
-    cv_corr = cross_section["cv_gap_correlation"]
-    if cv_corr is not None and cv_corr.get("correlation") is not None:
+    cmp = cross_section["cv_comparison"]
+    if cmp is not None:
+        corr = f"{cmp['corr_n2_cv']:.4f}" if cmp["corr_n2_cv"] is not None else "n/a"
+        closed = (
+            f"{cmp['median_frac_gap_closed']:.0%}"
+            if cmp["median_frac_gap_closed"] is not None
+            else "n/a"
+        )
         lines.append(
-            f"**Correlation of Δ21 with the Q6 count-variance gap** (alpha_cv − "
-            f"alpha_median, from `--q6-json`): **{cv_corr['correlation']:.4f}** "
-            f"(n={cv_corr['n']}). A positive correlation fits Q6's MLE-vs-count-variance "
-            "disagreement being driven, at least partly, by the K=1 exponential-kernel "
-            "underestimation that Δ21 is built to detect. It equally fits both estimators "
-            "sharing exposure to the same residual baseline non-stationarity, and cannot "
-            "distinguish the two."
+            f"**Against Q6's count-variance n̂** (n={cmp['n']}): the median gap is "
+            f"{cmp['median_gap_k1']:.4f} at K=1 and {cmp['median_gap_k2']:.4f} at K=2, and "
+            f"the median share of the gap closed by K=2 is {closed}. Across symbols, "
+            f"corr(n̂_2, count-variance n̂) = {corr}. Δ21 is not correlated with the K=1 gap "
+            "directly: both contain −n̂_1, so that correlation is high by construction."
         )
     elif result.get("q6_json_used"):
         lines.append(
-            "Correlation of Δ21 with the Q6 count-variance gap was requested "
-            f"(`--q6-json {result['q6_json_used']}`) but is not estimable (fewer than 2 "
-            "overlapping symbols, or zero variance in one of the two series)."
+            f"A Q6 JSON was supplied (`{result['q6_json_used']}`) but shares no symbols with "
+            "this run, so the count-variance comparison was skipped."
         )
     else:
-        lines.append(
-            "No `--q6-json` supplied, so the correlation of Δ21 with the Q6 "
-            "count-variance gap was skipped."
-        )
+        lines.append("No `--q6-json` supplied, so the count-variance comparison was skipped.")
     lines.append("")
 
     lines.extend(_drift_section_lines(result))
@@ -1010,9 +1029,15 @@ def _write_results_md(out_dir: Path, result: dict) -> None:
             f"jump is **{dist['median']:+.4f}**. {drift_count}/{len(records)} symbols are "
             "flagged drift-suspect (median 1/β_slow at K=2 exceeds "
             f"{DRIFT_SUSPECT_MULTIPLIER:.0f}x the deseasonalization bin width of "
-            f"{DESEASON_BIN_WIDTH_S:.1f}s). For these, Δ21 is ambiguous between "
-            "long-memory kernel structure and residual baseline drift leaking through "
-            "deseasonalization."
+            f"{DESEASON_BIN_WIDTH_S:.1f}s)."
+            + (
+                " For those, Δ21 is ambiguous between long-memory kernel structure and "
+                "residual baseline drift leaking through deseasonalization."
+                if drift_count
+                else " The second kernel component decays inside one deseasonalization "
+                "bin for every symbol, so Δ21 is not explained by intraday seasonality "
+                "that the rescaling missed."
+            )
         )
     else:
         lines.append("No successful symbols in this run, so there is no finding.")

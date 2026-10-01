@@ -32,8 +32,10 @@ months through July 2026 to see which results hold over time.
   [q5](results/q5_kernel_panel.md)
 - **About 70% of trades are reactions to other trades.** The median Hawkes branching ratio is
   0.7070 from the exponential-kernel MLE (a lower bound) and 0.959 from the model-free
-  count-variance estimator, which reads higher on 41 of 41 symbols.
-  [q6](results/q6_endogeneity.md)
+  count-variance estimator, which reads higher on 41 of 41 symbols. Adding a second kernel
+  timescale raises the MLE median to 0.854 and closes a median 54% of that gap; the extra
+  component decays in about 7 seconds. [q6](results/q6_endogeneity.md),
+  [q6b](results/q6b_kernel_sensitivity.md)
 - **Front-loading an order trades a stochastic cost for a deterministic one.** On replayed flow
   for 6 symbols, front-loading has a higher mean shortfall (+0.1306 vs +0.0161 for TWAP) but a
   standard deviation of 0.3404 against about 5.2 for TWAP and a reactive schedule, 15× lower.
@@ -102,6 +104,7 @@ Stack: Python 3.12, Polars, NumPy, Matplotlib, pytest, ruff, uv, GitHub Actions.
 | Q4b | Tick-size confound for flip probability | [activity dominates, tick size minor](results/q4b_tick_confound.md) |
 | Q5 | Deconvolved impact kernel, 16 symbols | [critical balance holds for 12 of 16](results/q5_kernel_panel.md) |
 | Q6 | Hawkes branching ratio, 41 symbols | [median 0.7070, MLE lower bound](results/q6_endogeneity.md) |
+| Q6b | Two- and three-timescale Hawkes kernels | [K=2 lifts n̂ 0.707 → 0.854, closes 54% of the estimator gap](results/q6b_kernel_sensitivity.md) |
 | Q7 | Execution schedules on replayed flow | [front-loaded: higher mean, 15× lower sd](results/q7_execution.md) |
 | Q8 | Six regimes, 2023-06 to 2026-07 | [flip law gone by 2026; γ̂ break within the 2023 cohort](results/q8_regimes.md) |
 
@@ -176,9 +179,9 @@ site/            static results site; build_data.py derives site/data/*.json
   Only Q4 and Q6 were repeated across regimes, with one month per year after 2023.
 - Q1–Q3 standard errors are OLS and too small, since ACF values at adjacent lags are correlated.
   Block-bootstrap intervals are done for Q5 only.
-- Every exponential-kernel branching ratio is a lower bound. The MLE and count-variance
-  estimators disagree on all 41 symbols, and this data cannot say whether that is kernel
-  misspecification or count-variance window sensitivity.
+- Every exponential-kernel branching ratio is a lower bound. A second kernel timescale explains
+  about half of the MLE vs count-variance gap; the rest is unattributed. A likelihood-ratio test
+  meant to tell slow baseline drift from long memory was inconclusive on all 41 symbols.
 - Q7 has no queue, latency or partial fills, and replayed flow cannot react to the simulated
   order.
 - The cross-section only includes symbols above one million aggressor events a month, and the

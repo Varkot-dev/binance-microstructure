@@ -351,12 +351,13 @@ def test_run_q6b_cross_section_reports_delta21_distribution_and_frac_near_critic
     assert cross["frac_n2_at_least_0_9"] == 0.0
 
 
-def test_run_q6b_correlates_delta21_with_q6_count_variance_gap(planted_root: Path, tmp_path: Path):
-    """Optional --q6-json input: when present, the cross-section correlates
-    Delta21 with (alpha_cv - alpha_median) per symbol, keyed by symbol name.
-    This is a wiring test (the correlation itself needs no particular
-    sign/magnitude here) -- it only asserts the field is populated when the
-    JSON overlaps the run's symbols, and cleanly absent when it does not.
+def test_run_q6b_compares_k2_with_q6_count_variance(planted_root: Path, tmp_path: Path):
+    """Optional --q6-json input: compare the K=2 estimate with Q6's count-variance n-hat.
+
+    Delta21 is not correlated with (alpha_cv - alpha_median): both subtract the
+    same K=1 estimate, so that correlation is high by construction. Instead the
+    cross-section reports corr(n_hat_2, alpha_cv), the median gap to
+    count-variance at K=1 and K=2, and the median share of the gap K=2 closes.
     """
     q6_json_path = tmp_path / "fake_q6.json"
     q6_json_path.write_text(
@@ -372,18 +373,28 @@ def test_run_q6b_correlates_delta21_with_q6_count_variance_gap(planted_root: Pat
         symbols=["TWOEXPUSDT", "ONEEXPUSDT"], month="2023-06",
         windows=WINDOWS, ks=KS, q6_json=q6_json_path, null_sims=0, drift_blocks=0,
     )
-    cv_corr = result["cross_section"]["cv_gap_correlation"]
-    assert cv_corr is not None
-    assert cv_corr["n"] == 2
+    cmp = result["cross_section"]["cv_comparison"]
+    assert cmp is not None
+    assert cmp["n"] == 2
+    assert "cv_gap_correlation" not in result["cross_section"]
+    cv = {"TWOEXPUSDT": 0.7, "ONEEXPUSDT": 0.32}
+    recs = {r["symbol"]: r for r in result["records"]}
+    gaps_k1 = [cv[s] - recs[s]["n_median_by_k"][1] for s in cv]
+    gaps_k2 = [cv[s] - recs[s]["n_median_by_k"][2] for s in cv]
+    assert cmp["median_gap_k1"] == pytest.approx(float(np.median(gaps_k1)))
+    assert cmp["median_gap_k2"] == pytest.approx(float(np.median(gaps_k2)))
+    assert -1.0 <= cmp["corr_n2_cv"] <= 1.0
+    report = (out_dir / "q6b_kernel_sensitivity.md").read_text()
+    assert "share of the gap" in report
 
-    # Without --q6-json, the field must be present but inert (None / no entry).
+    # Without --q6-json, the field must be present but inert.
     out_dir_no_q6 = planted_root / "results_no_q6json"
     result_no_q6 = run_q6b(
         planted_root, out_dir_no_q6,
         symbols=["TWOEXPUSDT", "ONEEXPUSDT"], month="2023-06",
         windows=WINDOWS, ks=KS, null_sims=0, drift_blocks=0,
     )
-    assert result_no_q6["cross_section"]["cv_gap_correlation"] is None
+    assert result_no_q6["cross_section"]["cv_comparison"] is None
     assert result_no_q6["q6_json_used"] is None
 
 
