@@ -2,8 +2,8 @@ name: Deploy site to GitHub Pages
 
 # The site is static: build_data.py derives site/data/*.json from
 # results/*.json and those slices are committed. The verify job regenerates
-# them to prove the committed copies are current. The site is deployed only
-# from a public repo, since Pages is unavailable on a private one.
+# them to prove the committed copies are current. Deployment is skipped
+# until Pages is enabled for the repository (Settings > Pages > GitHub Actions).
 
 on:
   push:
@@ -52,19 +52,37 @@ jobs:
 
   build:
     needs: verify
-    if: github.event_name != 'pull_request' && github.event.repository.visibility == 'public'
+    if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
+    outputs:
+      enabled: ${{ steps.pages.outputs.enabled }}
     steps:
-      - uses: actions/checkout@v5
+      - name: Check whether Pages is enabled
+        id: pages
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if gh api "repos/${GITHUB_REPOSITORY}/pages" > /dev/null 2>&1; then
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::GitHub Pages is not enabled for this repository; skipping deploy."
+          fi
 
-      - uses: actions/configure-pages@v5
+      - if: steps.pages.outputs.enabled == 'true'
+        uses: actions/checkout@v5
 
-      - uses: actions/upload-pages-artifact@v3
+      - if: steps.pages.outputs.enabled == 'true'
+        uses: actions/configure-pages@v5
+
+      - if: steps.pages.outputs.enabled == 'true'
+        uses: actions/upload-pages-artifact@v3
         with:
           path: site
 
   deploy:
     needs: build
+    if: needs.build.outputs.enabled == 'true'
     runs-on: ubuntu-latest
     environment:
       name: github-pages
