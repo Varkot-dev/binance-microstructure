@@ -393,7 +393,8 @@ src/microstructure/
 │   ├── binance.py      # dump-file URLs; SHA-256 verified download with caching
 │   ├── ingest.py       # zip-CSV → Parquet; sniffs header presence and ms-vs-µs epochs
 │   ├── catalog.py      # sync / sync_days, integrity and continuity reports
-│   └── events.py       # aggressor aggregation + the ±1 sign convention
+│   ├── events.py       # aggressor aggregation + the ±1 sign convention
+│   └── jsonio.py       # strict JSON output (non-finite values become null)
 ├── signals/
 │   ├── load.py         # Parquet → analysis frames; strictly-prior mid join
 │   └── eventtime.py    # intraday rate profile + business-time rescaling
@@ -404,7 +405,8 @@ src/microstructure/
 │   ├── propagator.py   # Toeplitz kernel deconvolution + blocked β̂ uncertainty
 │   └── hawkes.py       # Hawkes simulators (incl. seasonal-μ), MLE, count-variance n̂
 ├── execution/
-│   └── simulator.py    # replay cost model + TWAP / front-loaded / reactive schedules
+│   ├── simulator.py    # replay cost model + TWAP / front-loaded / reactive schedules
+│   └── cost_stats.py   # shortfall summaries and paired differences
 ├── analyses/
 │   ├── q0_aggregation_effect.py # → q0_*.md/.json
 │   ├── q1_orderflow_memory.py   # → q1_*.png/.md/.json
@@ -414,13 +416,14 @@ src/microstructure/
 │   ├── q4_cross_section.py      # → q4_*.png/.md/.json/.parquet
 │   ├── q5_kernel_panel.py       # → q5_*.png/.md/.json
 │   ├── q6_endogeneity.py        # → q6_*.png/.md/.json/.parquet
+│   ├── q6b_kernel_sensitivity.py # → q6b_*.png/.md/.json/.parquet (report in q6b_report.py)
 │   ├── q7_execution.py          # → q7_*.png/.md/.json
-│   └── q8_regimes.py            # → q8_*.png/.md/.json (regime comparator)
+│   └── q8_regimes.py            # → q8_*.png/.md/.json (regime comparator; report in q8_report.py)
 └── synthetic.py        # series with KNOWN properties, for estimator validation
 
 tests/                  # pytest; estimators checked against synthetic ground truth
 results/                # figures + per-question write-ups with methodology and caveats
-└── regimes/<period>/   # Q8 re-runs: Q4 + Q6 for 2023-07/2024-07/2025-07/2026-07, Q4 only for 2026-07-native
+└── regimes/<period>/   # regime re-runs: Q4 + Q6 for 2023-07/2024-07/2025-07/2026-07, Q4 only for 2026-07-native
 site/                   # static results site; build_data.py derives site/data/*.json
 ```
 
