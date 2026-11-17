@@ -46,6 +46,7 @@ STATUS_LABEL = {
     "merged": "merged into another token",
     "index": "index contract (not a coin, not fitted)",
     "new_listing": "new listing (first file after 2023-06)",
+    "new_listing_equity": "new listing that trades like an equity perpetual (excluded)",
 }
 
 
@@ -107,7 +108,7 @@ def comparison_sentence(result: dict, key: str, metric: str = "gbm_all") -> str:
         sign = "above" if c["ols"]["estimate"] > 0 else "below"
         s += (f" Neither raw nor at equal activity is there a difference the data can "
               f"distinguish; the controlled point estimate is {sign} zero by "
-              f"{_pp(abs(c['ols']['estimate']))}.")
+              f"{100 * abs(c['ols']['estimate']):.2f} pp.")
     return s
 
 
@@ -173,11 +174,28 @@ def activity_sentence(result: dict) -> str:
     if not a:
         return ""
     g, lf = a["gbm_all"], a["lift"]
-    return (f"Across the 2023-06 universe, gbm_all accuracy rises "
+    return (f"Across the 2023-06 universe, gbm_all accuracy changes by "
             f"{_f(g['slope'], signed=True)} per decade of events (HC1 se {_f(g['slope_se'])}, "
             f"R^2 {_f(g['r2'], 3)}, n {g['n']}) and the lift over majority "
-            f"{_f(lf['slope'], signed=True)} (se {_f(lf['slope_se'])}, R^2 {_f(lf['r2'], 3)}), "
-            f"so activity is a confound that any group comparison has to hold fixed.")
+            f"{_f(lf['slope'], signed=True)} (se {_f(lf['slope_se'])}, R^2 {_f(lf['r2'], 3)}): "
+            f"busier contracts are {'less' if g['slope'] < 0 else 'more'} predictable, so "
+            "activity is a confound that any group comparison has to hold fixed.")
+
+
+def equity_sentence(result: dict) -> str:
+    eq = result.get("equity_screen")
+    if not eq:
+        return ""
+    flagged = eq["flagged"]
+    if not flagged:
+        return (f"None of the {eq['n_screened']} screened 2026-07 contracts trades like an "
+                "equity perpetual.")
+    names = ", ".join(f["symbol"] for f in flagged)
+    return (f"{len(flagged)} of the {eq['n_screened']} screened 2026-07 contracts trade like "
+            f"equity perpetuals (median weekend day below "
+            f"{eq['rule']['weekend_ratio_below']:.2f} of the median weekday, or a median "
+            f"weekday share of at least {eq['rule']['us_session_median_at_least']:.2f} in the "
+            f"US cash session) and are kept out of the crypto comparison: {names}.")
 
 
 def verdict_paragraph(result: dict) -> str:
@@ -187,6 +205,7 @@ def verdict_paragraph(result: dict) -> str:
         comparison_sentence(result, "delisted_vs_survivors_2023"),
         comparison_sentence(result, "renamed_merged_vs_survivors_2023"),
         paired_sentence(result),
+        equity_sentence(result),
         comparison_sentence(result, "new_vs_survivors_2026"),
         q9_sentence(result),
         ("None of this is a trading result: these are accuracies of next-sign calls on "
@@ -260,7 +279,8 @@ def _caveats(result: dict) -> list[str]:
          f"contracts first listed between 2023-07 and 2026-06 that are alive in 2026-07, "
          f"{nl['per_decile']} from each decile of 2026-07 zip size (seed {nl['seed']}); "
          f"{nl['n_listed_in_2026_07']} first listed in 2026-07 have no complete July and are "
-         "outside the frame. Zip size is an activity proxy, so the draw is stratified on the "
+         "outside the frame. Sampled contracts flagged as equity perpetuals are dropped from "
+         "the crypto group after the draw, so it is smaller than the draw. Zip size is an activity proxy, so the draw is stratified on the "
          "confound but is not the full population."),
         ("- **One month per unit, seven test days.** Each unit is one month with Q9's split, "
          "so a unit's accuracy rests on its 7 or so test days; across-symbol intervals treat "
@@ -367,6 +387,41 @@ def write_markdown(path: Path, result: dict) -> None:
     L += _group_table(list(g["last_month"].items()))
     L += ["", "### 2026-07 cross-section", ""]
     L += _group_table(list(g["cross_2026"].items()))
+    eq = result.get("equity_screen")
+    if eq:
+        r_ = eq["rule"]
+        lo, hi = r_["us_session_utc_minutes"]
+        L += ["", "### Equity-perpetual screen (2026-07)", "",
+              ("Binance listed perpetuals on stock tokens in 2026, some on reused crypto "
+               "tickers. A unit is flagged as equity-like when its median UTC weekend day has "
+               f"fewer than {r_['weekend_ratio_below']:.2f} times the events of its median "
+               f"weekday, or when on the median weekday at least "
+               f"{r_['us_session_median_at_least']:.2f} of the day's events fall in the US cash "
+               f"session ({lo // 60:02d}:{lo % 60:02d} to {hi // 60:02d}:{hi % 60:02d} UTC; a "
+               "flat round-the-clock day puts 0.27 there). Medians over days keep a few burst "
+               "days from deciding it: COTIUSDT, a crypto coin, had 5 pump weekdays in 2026-07 "
+               "that pushed its plain monthly weekend share to 0.01. Screened: "
+               f"{eq['n_screened']} of {eq['n_cross_2026']} 2026-07 units; "
+               f"flagged: {len(eq['flagged'])}. Flagged units are summarised as their own row "
+               "and left out of every comparison."), ""]
+        sess = [u for u in result["units"] if u["set"] == "cross_2026" and u.get("session")]
+        for grp, keep in (("2023 survivors", lambda u: not u["status_2023"].startswith("new")),
+                          ("new listings", lambda u: u["status_2023"].startswith("new"))):
+            w = [u["session"]["weekend_ratio"] for u in sess if keep(u)
+                 and u["session"].get("weekend_ratio") is not None]
+            us = [u["session"]["us_session_median"] for u in sess if keep(u)
+                  and u["session"].get("us_session_median") is not None]
+            if w:
+                L.append(f"- {grp}: weekend ratio {min(w):.3f} to {max(w):.3f} (median "
+                         f"{np.median(w):.3f}); median-weekday US-session share "
+                         f"{min(us):.3f} to {max(us):.3f} (median {np.median(us):.3f}).")
+        if eq["flagged"]:
+            L += ["", ("| contract | status | weekend ratio | US-session share (median "
+                       "weekday) | weekend share (month) |"), "|---|---|---|---|---|"]
+            for f in eq["flagged"]:
+                L.append(f"| {f['symbol']} | {f['status']} | {_f(f.get('weekend_ratio'), 3)} | "
+                         f"{_f(f.get('us_session_median'), 3)} | "
+                         f"{_f(f.get('weekend_share'), 3)} |")
     L += ["", "### Group comparisons", "",
           ("Positive means the first group is more predictable (accuracy) or has the larger "
            "lift. Accuracy differences are in accuracy units (0.01 is one percentage point)."),
@@ -536,10 +591,13 @@ def plot(path: Path, result: dict) -> None:
     new = _fitted(result, "cross_2026", ("new_listing",))
     _scatter(ax, old, _MUTED, "o", f"2023 survivors ({len(old)})")
     _scatter(ax, new, _ORANGE, "s", f"new listings, sample ({len(new)})")
+    eqs = _fitted(result, "cross_2026", ("new_listing_equity", "survivor_equity",
+                                          "survivor_gap_equity"))
+    _scatter(ax, eqs, _AQUA, "^", f"equity-like, excluded ({len(eqs)})", size=36)
     _fit_line(ax, old, _MUTED)
     _fit_line(ax, new, _ORANGE, "--")
     ax.set_xlabel("log10 aggressor events in the month", fontsize=9, color=_INK)
-    ax.set_title("(b) 2026-07: listed after 2023 vs 2023 survivors", fontsize=10,
+    ax.set_title("(b) 2026-07: crypto listed after 2023 vs 2023 survivors", fontsize=10,
                  color=_INK, loc="left")
     ax.legend(frameon=False, fontsize=8, loc="upper left")
     _style(ax)

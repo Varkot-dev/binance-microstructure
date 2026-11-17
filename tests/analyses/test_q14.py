@@ -327,8 +327,11 @@ def _record(ws: q14.Workspace, sym: str, period: str, log_ev: float, acc: float)
     return ws.rel(p)
 
 
-def _status(ws, sym, period, status="ok", record=None, cov_days=30, n_month=30):
-    ws.write_status({"symbol": sym, "period": period, "status": status, "reason": None,
+def _status(ws, sym, period, status="ok", record=None, cov_days=30, n_month=30,
+            session=None):
+    extra = {} if session is None else {"session": session,
+                                        "equity_like": q14.is_equity_like(session)}
+    ws.write_status({**extra, "symbol": sym, "period": period, "status": status, "reason": None,
                      "record": record, "reused_q9_cache": False,
                      "coverage": {"days_in_month": n_month, "n_days": cov_days, "first_day": 1,
                                   "last_day": cov_days},
@@ -344,7 +347,7 @@ def _world(tmp: Path, ended_effect: float, q9_boost: float, seed: int = 0) -> q1
     surv = list(DEFAULT_SYMBOLS) + [f"S{i:02d}USDT" for i in range(40)]
     ended = [f"D{i:02d}USDT" for i in range(30)]
     renamed = [f"R{i:02d}USDT" for i in range(6)]
-    new = [f"N{i:02d}USDT" for i in range(30)]
+    new = [f"N{i:02d}USDT" for i in range(30)] + ["EQAUSDT", "EQBUSDT"]
     c23: dict = {}
     for s in surv:
         c23[s] = {"symbol": s, "status": "survivor", "missing_study_months": [],
@@ -386,9 +389,15 @@ def _world(tmp: Path, ended_effect: float, q9_boost: float, seed: int = 0) -> q1
         x2 = x - 0.5
         _status(ws, s, "2025-02", record=_record(ws, s, "2025-02", x2, acc(x2, ended_effect)),
                 cov_days=28, n_month=28)
+    crypto = {"version": q14.SESSION_VERSION, "weekend_ratio": 0.85, "us_session_median": 0.31}
+    equity = {"version": q14.SESSION_VERSION, "weekend_ratio": 0.02, "us_session_median": 0.81}
     for s in new:
         x = rng.normal(5.8, 0.3)
-        _status(ws, s, "2026-07", record=_record(ws, s, "2026-07", x, acc(x)))
+        # The equity perpetuals are far more predictable; pooled, they would
+        # flip the new-listing comparison.
+        a = acc(x, 0.2 if s.startswith("EQ") else 0.0)
+        _status(ws, s, "2026-07", record=_record(ws, s, "2026-07", x, a),
+                session=equity if s.startswith("EQ") else crypto)
     return ws
 
 
@@ -402,6 +411,12 @@ def test_report_verdict_flips_with_planted_effects(tmp_path: Path):
     v = res["verdict"]
     assert "less predictable" in v
     assert "overstates the typical contract" in v
+    # Equity perpetuals are flagged, named and kept out of the crypto comparison.
+    assert [f["symbol"] for f in res["equity_screen"]["flagged"]] == ["EQAUSDT", "EQBUSDT"]
+    assert res["groups"]["cross_2026"]["new_listings"]["n"] == 30
+    assert res["groups"]["cross_2026"]["new_listings_equity"]["n"] == 2
+    assert res["comparisons"]["new_vs_survivors_2026"]["gbm_all"]["n_treat"] == 30
+    assert "EQAUSDT, EQBUSDT" in v
     assert q14_report.representativeness(res)[0] == "overstates"
 
     ws = _world(tmp_path / "b", ended_effect=0.0, q9_boost=0.0)
@@ -434,3 +449,34 @@ def test_report_files_have_no_long_dashes(tmp_path: Path):
            REPO / "src/microstructure/analyses/q14_report.py", Path(__file__)]
     for text in [md, res["verdict"], *(p.read_text() for p in src)]:
         assert chr(0x2014) not in text and chr(0x2013) not in text
+
+
+def test_equity_screen_separates_session_profiles():
+    rng = np.random.default_rng(0)
+    start = q14.month_start_day("2026-07")
+    t0 = start * MS_PER_DAY
+    crypto = np.sort(t0 + rng.integers(0, 31 * MS_PER_DAY, 100_000))
+    prof = q14.session_profile(crypto)
+    assert prof["weekend_share"] == pytest.approx(8 / 31, abs=0.01)   # July 2026: 8 weekend days
+    assert prof["weekend_ratio"] == pytest.approx(1.0, abs=0.1)
+    assert prof["us_session_median"] == pytest.approx(6.5 / 24, abs=0.02)
+    assert not q14.is_equity_like(prof)
+    # A crypto coin with a pump on its last five weekdays: the monthly weekend
+    # share collapses, the day medians do not (COTIUSDT in 2026-07).
+    pump = np.concatenate([crypto, t0 + 26 * MS_PER_DAY
+                           + rng.integers(0, 5 * MS_PER_DAY, 3_000_000)])
+    prof = q14.session_profile(np.sort(pump))
+    assert prof["weekend_share"] < 0.05
+    assert not q14.is_equity_like(prof)
+    # Equity-like: weekdays only, inside 13:30 to 20:00 UTC.
+    days = [d for d in range(31) if (start + d + 3) % 7 < 5]
+    eq = np.sort(np.concatenate([
+        t0 + d * MS_PER_DAY + rng.integers(13 * 3_600_000 + 1_800_000, 20 * 3_600_000, 3000)
+        for d in days]))
+    prof = q14.session_profile(eq)
+    assert prof["weekend_ratio"] == 0.0 and prof["us_session_median"] == 1.0
+    assert q14.is_equity_like(prof)
+    # Trades every day but concentrated in the US session: flagged on that signal.
+    us_heavy = np.sort(np.concatenate([eq, t0 + rng.integers(0, 31 * MS_PER_DAY, 15_000)]))
+    assert q14.is_equity_like(q14.session_profile(us_heavy))
+    assert not q14.is_equity_like(None)
