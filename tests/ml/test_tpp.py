@@ -4,8 +4,8 @@ Contract under test:
 1. Censoring cells: the business-time mapping of the 1 ms clock cell, the tie
    truncation, and causality (later events never change earlier cells/inputs).
 2. Hawkes censored scoring: the state recursion matches the repo's exact
-   log-likelihood, the cell probability matches a brute-force O(n^2)
-   computation, and on simulated rounded data the true parameters beat
+   log-likelihood, the recorded-gap probability matches a brute-force O(n^2)
+   computation and sums to one over gaps, and on simulated rounded data the true parameters beat
    Poisson and wrong parameters, with well-calibrated residuals. The censored
    score stays finite and at most 0 on tied data while the naive density is
    inflated without bound.
@@ -37,10 +37,23 @@ TINY = tpp.TPPConfig(
 # Stated tolerances (nats per event) for the tiny network trained on ~12k events.
 POISSON_TOL = 0.02       # |neural - Poisson| on Poisson data
 HAWKES_SHORTFALL = 0.035  # neural may fall this far short of the true-parameter Hawkes
+# The GRU runs in float32 and its rounding depends on the batch shape, so equality
+# of scores across differently batched runs holds to about 1e-7, not bit for bit.
+CAUSAL_ATOL = 1e-5
 
 
-def _ms(times_s: np.ndarray, grid_ms: int = 1) -> np.ndarray:
-    return T0_MS + (np.floor(times_s * 1000.0 / grid_ms) * grid_ms).astype(np.int64)
+# A process sped up by COARSE has a millisecond that is COARSE times wider relative
+# to its gaps: the cheap way to get many recorded gaps of 0 from a simulator.
+COARSE = 20.0
+
+
+def _ms(times_s: np.ndarray) -> np.ndarray:
+    """Floor-stamp event times (seconds) to integer milliseconds, as the exchange does."""
+    return T0_MS + np.floor(times_s * 1000.0).astype(np.int64)
+
+
+def _coarse_hawkes(t_end: float, seed: int) -> np.ndarray:
+    return _ms(simulate_hawkes_exp(MU * COARSE, ALPHA, BETA * COARSE, t_end / COARSE, seed=seed))
 
 
 @pytest.fixture(scope="module")
@@ -57,33 +70,55 @@ def test_cells_map_one_clock_millisecond_through_the_local_rate() -> None:
     profile = np.linspace(0.5, 1.5, 48)
     profile /= profile.mean()
     half_hour = 1_800_000
-    # Events in bins 0, 0, 3, and one cell that straddles the bin 3/4 boundary.
+    # Events in bins 0, 0, 3, the last millisecond of bin 3, and bin 4.
     ts = T0_MS + np.array([1000, 1250, 3 * half_hour + 10, 4 * half_hour - 1, 4 * half_hour + 7])
     cen = tpp.censor_intervals(ts, profile)
-    width = cen.hi[1:] - cen.lo[1:]
-    assert width[0] == pytest.approx(profile[0] * 1e-3, rel=1e-6)
-    assert width[1] == pytest.approx(profile[3] * 1e-3, rel=1e-6)
-    assert width[2] == pytest.approx(profile[3] * 1e-3, rel=1e-6)  # ends exactly at the boundary
-    assert width[3] == pytest.approx(profile[4] * 1e-3, rel=1e-6)
-    np.testing.assert_allclose(cen.lo[1:], np.diff(cen.tau))
+    np.testing.assert_allclose(cen.w_cur, profile[[0, 0, 3, 3, 4]] * 1e-3, rtol=1e-6)
+    np.testing.assert_allclose(cen.w_prev[1:], cen.w_cur[:-1])
+    np.testing.assert_allclose(cen.gap[1:], np.diff(cen.tau))
     # A gap that crosses three bin boundaries integrates the profile piecewise.
-    assert cen.lo[2] == pytest.approx(profile[0] * (1800.0 - 1.25)
-                                      + (profile[1] + profile[2]) * 1800.0 + profile[3] * 0.010)
-    assert (cen.lo[0], cen.hi[0]) == (0.0, np.inf)
+    assert cen.gap[2] == pytest.approx(profile[0] * (1800.0 - 1.25)
+                                       + (profile[1] + profile[2]) * 1800.0 + profile[3] * 0.010)
+    # Node u: the previous event sat u ms into its own millisecond.
+    lo, hi = cen.cell(0.25)
+    assert lo[4] == pytest.approx(cen.gap[4] - 0.25 * profile[3] * 1e-3)
+    assert hi[4] == pytest.approx(cen.gap[4] + profile[4] * 1e-3 - 0.25 * profile[3] * 1e-3)
+    np.testing.assert_allclose(tpp.OFFSET_WEIGHTS.sum(), 1.0)
 
 
-def test_tie_truncation_and_contract() -> None:
-    ts = T0_MS + np.array([0, 5, 5, 9, 9, 30])
-    cen = tpp.censor_intervals(ts, FLAT)
+def _ladder(width: float, n_cells: int, truncated: bool) -> tpp.Censored:
+    """Hand-built block whose event d+1 has recorded gap d, all after the same kind of event."""
+    d = np.concatenate(([0], np.arange(n_cells)))
+    w = np.full(d.size, width)
+    return tpp.Censored(tau=np.cumsum(d * width), gap=d * width, w_prev=w, w_cur=w,
+                        truncated=np.full(d.size, truncated), gap_ms=d.astype(np.int64))
+
+
+def test_recorded_gap_probabilities_sum_to_one() -> None:
+    rate, width = 40.0, 1e-3
+    pmf = np.exp(tpp.poisson_censored(rate, _ladder(width, 1500, False)).loglik[1:])
+    assert pmf.sum() == pytest.approx(1.0, abs=1e-9)
+    # d = 0 under floor stamping: integral over u of 1 - exp(-rate (1 - u) w).
+    assert pmf[0] == pytest.approx(1.0 - (1.0 - np.exp(-rate * width)) / (rate * width), rel=1e-9)
+    # Floor-stamped simulated Poisson arrivals tie at that frequency, about half
+    # of what the plain cell [0, 1 ms) would predict.
+    t = np.cumsum(np.random.default_rng(2).exponential(1.0 / rate, 400_000))
+    ties = float((np.diff(np.floor(t / width)) == 0).mean())
+    assert ties == pytest.approx(pmf[0], rel=0.03)
+    assert 1.0 - np.exp(-rate * width) > 1.9 * ties
+    # Known support d >= 1 after a tied pair: d = 0 is excluded and the rest renormalized.
+    trunc = np.exp(tpp.poisson_censored(rate, _ladder(width, 1500, True)).loglik[1:])
+    np.testing.assert_allclose(trunc[1:], pmf[1:] / (1.0 - pmf[0]), rtol=1e-9)
+    assert trunc[1:].sum() == pytest.approx(1.0, abs=1e-9)
+
+
+def test_tie_truncation_flags_and_contract() -> None:
+    cen = tpp.censor_intervals(T0_MS + np.array([0, 5, 5, 9, 9, 30]), FLAT)
     # Events after a tied event (indices 3 and 5) cannot share its millisecond.
-    np.testing.assert_allclose(cen.floor, [0, 0, 0, 1e-3, 0, 1e-3], atol=1e-12)
-    rate = 40.0
-    s = tpp.poisson_censored(rate, cen)
-    expect = np.log((np.exp(-rate * cen.lo[3]) - np.exp(-rate * cen.hi[3])) / np.exp(-rate * 1e-3))
-    assert s.loglik[3] == pytest.approx(expect, rel=1e-9)
-    # Conditional on gap >= 1 ms the cells d = 1, 2, ... still sum to one.
-    cells = np.exp(-rate * 1e-3 * np.arange(0, 2000)) - np.exp(-rate * 1e-3 * np.arange(1, 2001))
-    assert cells[1:].sum() / np.exp(-rate * 1e-3) == pytest.approx(1.0, abs=1e-9)
+    np.testing.assert_array_equal(cen.truncated, [False, False, False, True, False, True])
+    sub = cen.slice(2, 6)
+    np.testing.assert_array_equal(sub.truncated, [False, True, False, True])
+    assert sub.tau[0] == 0.0 and sub.gap_ms[0] == -1
     with pytest.raises(ValueError, match="three events"):
         tpp.censor_intervals(T0_MS + np.array([0, 5, 5, 5, 9]), FLAT)
     with pytest.raises(ValueError, match="sorted"):
@@ -97,7 +132,7 @@ def test_cells_and_features_do_not_read_the_future(hawkes_ts: np.ndarray) -> Non
     corrupt[cut + 1 :] = corrupt[cut] + 50 + 3 * np.arange(ts.size - cut - 1)
     a = tpp.censor_intervals(ts, FLAT, tie_truncation=False)
     b = tpp.censor_intervals(corrupt, FLAT, tie_truncation=False)
-    for name in ("tau", "lo", "hi", "floor"):
+    for name in ("tau", "gap", "w_prev", "w_cur", "truncated"):
         np.testing.assert_array_equal(getattr(a, name)[: cut + 1], getattr(b, name)[: cut + 1])
     fa, fb = (tpp.tpp_features(c, (1.0, 10.0, 100.0)) for c in (a, b))
     np.testing.assert_array_equal(fa[: cut + 1], fb[: cut + 1])
@@ -120,34 +155,39 @@ def test_state_recursion_matches_repo_loglik() -> None:
 
 
 def test_cell_probability_matches_brute_force() -> None:
-    t = simulate_hawkes_exp(MU, ALPHA, BETA, 40.0, seed=5)
-    ts = _ms(t, grid_ms=100)  # coarse grid so cells are wide and ties occur
+    ts = T0_MS + np.floor(simulate_hawkes_exp(MU, ALPHA, BETA, 40.0, seed=5) * 10).astype(np.int64)
     cen = tpp.censor_intervals(ts, FLAT, tie_truncation=False)
-    mu, alphas, betas = 0.8, np.array([0.3, 0.2]), np.array([3.0, 0.4])
+    # One stamp unit is 1 ms of business time here, so rates are per 1e-3 of the simulated unit.
+    mu, alphas, betas = 80.0, np.array([0.3, 0.2]), np.array([300.0, 40.0])
     got = tpp.hawkes_censored(mu, alphas, betas, cen)
 
-    def compensator(i: int, x: float) -> float:
+    def survival(i: int, x: float) -> float:
         past = cen.tau[i - 1] - cen.tau[:i]  # ages of all earlier events at event i-1
-        return mu * x + sum(a * np.sum(np.exp(-b * past) * (1 - np.exp(-b * x)))
-                            for a, b in zip(alphas, betas, strict=True))
+        lam = mu * x + sum(a * np.sum(np.exp(-b * past) * (1 - np.exp(-b * x)))
+                           for a, b in zip(alphas, betas, strict=True))
+        return float(np.exp(-lam))
 
     assert (cen.gap_ms == 0).any()
+    grid = 1e-3
     for i in range(1, cen.n):
-        cell = np.exp(-compensator(i, cen.lo[i])) - np.exp(-compensator(i, cen.hi[i]))
+        d = int(cen.gap_ms[i])
+        cell = sum(w * (survival(i, max(d - u, 0.0) * grid) - survival(i, (d + 1 - u) * grid))
+                   for u, w in zip(tpp.OFFSET_NODES, tpp.OFFSET_WEIGHTS, strict=True))
+        tail = sum(w * survival(i, max(d - u, 0.0) * grid)
+                   for u, w in zip(tpp.OFFSET_NODES, tpp.OFFSET_WEIGHTS, strict=True))
         assert got.loglik[i] == pytest.approx(np.log(cell), rel=1e-9, abs=1e-12)
-        assert got.log_surv_lo[i] == pytest.approx(-compensator(i, cen.lo[i]), abs=1e-10)
+        assert got.log_surv_lo[i] == pytest.approx(np.log(tail), abs=1e-10)
 
 
 def test_true_hawkes_beats_poisson_and_wrong_hawkes_on_rounded_data() -> None:
-    t = simulate_hawkes_exp(MU, ALPHA, BETA, 6000.0, seed=11)
-    ts = _ms(t, grid_ms=20)  # 20 ms grid: many zero gaps
-    cen = tpp.censor_intervals(ts, FLAT, tie_truncation=False)
+    cen = tpp.censor_intervals(_coarse_hawkes(6000.0, seed=11), FLAT, tie_truncation=False)
     assert (cen.gap_ms == 0).mean() > 0.02
     rate = (cen.n - 1) / cen.tau[-1]
-    true = tpp.hawkes_censored(MU, [ALPHA], [BETA], cen)
+    mu, beta = MU * COARSE, BETA * COARSE
+    true = tpp.hawkes_censored(mu, [ALPHA], [beta], cen)
     pois = tpp.poisson_censored(rate, cen)
-    wrong = tpp.hawkes_censored(1.5, [0.4], [0.2], cen)  # same mean rate, kernel 10x too slow
-    spiky = tpp.hawkes_censored(MU, [ALPHA], [1e6], cen)
+    wrong = tpp.hawkes_censored(1.5 * mu, [0.4], [0.1 * beta], cen)  # same rate, kernel too slow
+    spiky = tpp.hawkes_censored(mu, [ALPHA], [1e7], cen)
     means = {k: v.loglik[FIRST:].mean() for k, v in
              {"true": true, "pois": pois, "wrong": wrong, "spiky": spiky}.items()}
     assert all(np.isfinite(v.loglik).all() for v in (true, pois, wrong, spiky))
@@ -159,8 +199,8 @@ def test_true_hawkes_beats_poisson_and_wrong_hawkes_on_rounded_data() -> None:
     # The naive density rewards the degenerate beta -> infinity kernel on the
     # tied events without bound; the censored score ranks it below the truth.
     tied = cen.gap_ms == 0
-    naive_true = tpp.hawkes_density_loglik(MU, [ALPHA], [BETA], cen.tau)
-    naive_spiky = tpp.hawkes_density_loglik(MU, [ALPHA], [1e6], cen.tau)
+    naive_true = tpp.hawkes_density_loglik(mu, [ALPHA], [beta], cen.tau)
+    naive_spiky = tpp.hawkes_density_loglik(mu, [ALPHA], [1e7], cen.tau)
     assert naive_spiky[tied].mean() > naive_true[tied].mean() + 5.0
     assert naive_spiky[tied].mean() > 10.0
 
@@ -176,15 +216,14 @@ def test_true_hawkes_beats_poisson_and_wrong_hawkes_on_rounded_data() -> None:
 def test_polished_fit_recovers_parameters_from_censored_score() -> None:
     from microstructure.analyses.q12_neural_ceiling import polish_hawkes
 
-    ts = _ms(simulate_hawkes_exp(MU, ALPHA, BETA, 5000.0, seed=4), grid_ms=20)
-    cen = tpp.censor_intervals(ts, FLAT, tie_truncation=False)
-    start = {"mu": 2.0, "alphas": [0.3], "betas": [4.0]}
+    cen = tpp.censor_intervals(_coarse_hawkes(5000.0, seed=4), FLAT, tie_truncation=False)
+    start = {"mu": 2.0 * MU * COARSE, "alphas": [0.3], "betas": [2.0 * BETA * COARSE]}
     fit = polish_hawkes(start, cen, 100, iters=200)
-    before = tpp.hawkes_censored(2.0, [0.3], [4.0], cen).loglik[100:].mean()
+    before = tpp.hawkes_censored(start["mu"], [0.3], start["betas"], cen).loglik[100:].mean()
     after = tpp.hawkes_censored(fit["mu"], fit["alphas"], fit["betas"], cen).loglik[100:].mean()
     assert after > before
     assert fit["n"] == pytest.approx(ALPHA, abs=0.08)
-    assert fit["betas"][0] == pytest.approx(BETA, rel=0.3)
+    assert fit["betas"][0] == pytest.approx(BETA * COARSE, rel=0.3)
 
 
 # ---------------------------------------------------------------------------
@@ -227,19 +266,26 @@ def test_mixture_density_integrates_to_one_and_cdf_matches(torch) -> None:
                                                                   abs=0.005)
 
 
-def test_naive_density_fails_on_lattice_gaps_but_cell_score_does_not(torch) -> None:
+def test_naive_density_fails_on_lattice_gaps_but_recorded_gap_score_does_not(torch) -> None:
     mix = _mixture(torch)
     assert float(mix.log_prob(torch.tensor(0.0))) == -np.inf  # a zero gap has density 0
-    y0 = mix.standardize(torch.tensor(0.0))
-    ll, _ = mix.log_cell_y(y0, mix.standardize(torch.tensor(1e-3)), y0)
-    assert np.isfinite(float(ll)) and float(ll) <= 0.0
-    # A component collapsed onto a lattice value: unbounded density, bounded cell score.
-    spike = tpp.LogNormalMixture(torch.zeros(1, dtype=torch.float64),
-                                 torch.tensor([np.log(2e-3)]), torch.tensor([1e-6]))
-    assert float(spike.log_prob(torch.tensor(2e-3))) > 15.0
-    ll, _ = spike.log_cell_y(spike.standardize(torch.tensor(2e-3)),
-                             spike.standardize(torch.tensor(3e-3)), y0)
-    assert float(ll) <= 0.0
+    lad = _ladder(1e-3, 4000, False)
+    args = [torch.from_numpy(v) for v in (lad.gap[1:], lad.w_prev[1:], lad.w_cur[1:],
+                                          lad.truncated[1:])]
+    ll, ls = mix.log_recorded_gap(*args)
+    assert np.isfinite(float(ll[0])) and float(ll[0]) < 0.0  # d = 0 is scored, finitely
+    assert float(ls[0]) == 0.0
+    # A component collapsed onto a lattice value: unbounded density, but the
+    # recorded-gap probabilities still sum to one, so no score above 0.
+    spike = tpp.LogNormalMixture(
+        torch.log(torch.tensor([0.5, 0.5], dtype=torch.float64)),
+        torch.tensor([np.log(2e-3), np.log(0.05)]), torch.tensor([1e-6, 0.5]))
+    assert float(spike.log_prob(torch.tensor(2e-3))) > 10.0
+    pmf = spike.log_recorded_gap(*args)[0].exp()
+    assert float(pmf.sum()) == pytest.approx(1.0, abs=1e-6)
+    assert float(pmf.max()) <= 1.0
+    args[3] = torch.ones_like(args[3])
+    assert float(spike.log_recorded_gap(*args)[0].exp()[1:].sum()) == pytest.approx(1.0, abs=1e-6)
 
 
 def _blocks(ts: np.ndarray, cfg: tpp.TPPConfig):
@@ -279,7 +325,7 @@ def test_neural_model_finds_self_excitation_and_is_causal(torch, hawkes_ts: np.n
     assert resid["ks_distance"] < 0.06
 
     # Causality: alter every event after `cut` (and, separately, drop them);
-    # scores up to `cut` must be bit-identical.
+    # scores up to `cut` must not move (float32 batching noise aside).
     n0 = int(0.8 * hawkes_ts.size)
     test_ts = hawkes_ts[n0:]
     cut = FIRST + 517
@@ -289,10 +335,11 @@ def test_neural_model_finds_self_excitation_and_is_causal(torch, hawkes_ts: np.n
     for other in (altered, test_ts[: cut + 1]):
         cen = tpp.censor_intervals(other, FLAT, tie_truncation=False)
         got = tpp.score_tpp(model, tpp.prepare_block(cen, scaler, TINY.horizons_s, FIRST), TINY)
-        np.testing.assert_array_equal(got.loglik[: cut + 1], scored.loglik[: cut + 1])
-        np.testing.assert_array_equal(got.log_surv_lo[: cut + 1], scored.log_surv_lo[: cut + 1])
-    assert not np.array_equal(
-        tpp.score_tpp(model, tpp.prepare_block(
-            tpp.censor_intervals(altered, FLAT, tie_truncation=False), scaler,
-            TINY.horizons_s, FIRST), TINY).loglik[cut + 1 :],
-        scored.loglik[cut + 1 :])
+        np.testing.assert_allclose(got.loglik[: cut + 1], scored.loglik[: cut + 1],
+                                   rtol=0, atol=CAUSAL_ATOL)
+        np.testing.assert_allclose(got.log_surv_lo[: cut + 1], scored.log_surv_lo[: cut + 1],
+                                   rtol=0, atol=CAUSAL_ATOL)
+    moved = tpp.score_tpp(model, tpp.prepare_block(
+        tpp.censor_intervals(altered, FLAT, tie_truncation=False), scaler,
+        TINY.horizons_s, FIRST), TINY).loglik[cut + 1 :]
+    assert np.abs(moved - scored.loglik[cut + 1 :]).max() > 0.1

@@ -181,38 +181,44 @@ def _method_lines(cfg: dict) -> list[str]:
     return [
         "## Method",
         "",
-        "**Data and split.** Aggressor-level events (`load_events`) of one symbol-month, split "
+        ("**Data and split.** Aggressor-level events (`load_events`) of one symbol-month, split "
         "on whole UTC days: 20 training days, 2 validation days, 1 embargo day, the remaining "
-        "days are the test block (`microstructure.ml.dataset.split_masks`).",
+        "days are the test block (`microstructure.ml.dataset.split_masks`)."),
         "",
-        "**Business time.** As in Q6 and Q6b (`intraday_rate_profile`, 48 bins, then "
+        ("**Business time.** As in Q6 and Q6b (`intraday_rate_profile`, 48 bins, then "
         "`rescale_to_business_time`), except that the profile is estimated on the training days "
         "only and applied unchanged to validation and test, so intraday seasonality is counted "
-        "neither as self-excitation nor as neural skill.",
+        "neither as self-excitation nor as neural skill."),
         "",
-        "**Score: interval-censored likelihood, the same for every model.** Timestamps are "
-        "integer milliseconds and gaps of 0 and 1 ms are common, so a continuous density is not "
-        "a usable score: a log-normal density at a gap of 0 is zero, and a narrow mixture "
-        "component or a Hawkes kernel with a very large beta can push the density on lattice "
-        "values arbitrarily high. An event recorded d ms after its predecessor is scored as "
-        "log(F(d + 1 ms) - F(d ms)), the probability the model gives to the recorded cell "
-        "[d, d + 1) ms. The cells tile the half-line, so each model defines a normalized "
-        "probability mass function over the recorded gap and the log score is proper, at most "
-        "zero, and finite at d = 0. I did not use the symmetric cell [max(d - 1, 0), d + 1): "
-        "those cells overlap and their masses sum to about 2. The clock cell is mapped to "
-        "business time exactly by pushing the times ts and ts + 1 ms through the time change, "
-        "so its business-time width is the local rate times 1 ms. The cell probability is "
-        "closed form for the log-normal mixture (difference of mixture CDFs) and for an "
-        "exponential-sum Hawkes (difference of survival functions, with the compensator "
-        "mu x + sum_k alpha_k A_k (1 - exp(-beta_k x)) and A_k the recursive state).",
+        ("**Score: interval-censored likelihood, the same for every model.** Timestamps are "
+         "integer milliseconds and gaps of 0 and 1 ms are common, so a continuous density is "
+         "not a usable score: a log-normal density at a gap of 0 is zero, and a narrow mixture "
+         "component or a Hawkes kernel with a very large beta can push the density on lattice "
+         "values arbitrarily high. I read the stamps as floors of the true times. If the "
+         "previous event truly happened u ms after its stamp, an event recorded d ms later has "
+         "a true gap in [d - u, d + 1 - u). Averaging over u uniform on [0, 1), the probability "
+         "of the recorded gap is P(d) = integral of F(d + 1 - u) - F(d - u) du, with F the "
+         "model's conditional gap CDF and F = 0 below 0, and the score is log P(d). This is the "
+         "interval [max(d - 1, 0), d + 1) with the weighting inside it that makes the masses "
+         "sum to 1; unweighted, those overlapping intervals would sum to about 2. The integral "
+         "uses a 4-node Gauss-Legendre rule, and for each node the cells tile the half-line, so "
+         "the rule is an exactly normalized probability mass function over the recorded gap "
+         "for any F. The log score is therefore proper, at most zero, finite at d = 0, and "
+         "cannot be improved by spiking. The millisecond is mapped to business time exactly by "
+         "pushing the times ts and ts + 1 ms through the time change (its business-time width "
+         "is the local rate times 1 ms). F is closed form for the log-normal mixture (mixture "
+         "of normal CDFs in log time) and for an exponential-sum Hawkes (survival "
+         "exp(-Lambda(x)) with Lambda(x) = mu x + sum_k alpha_k A_k (1 - exp(-beta_k x)) and "
+         "A_k the recursive state after the previous event). Validation by simulation is in "
+         "tests/ml/test_tpp.py."),
         "",
-        "**Tie truncation.** Same-millisecond same-side prints are one event, so a millisecond "
-        "holds at most a sell and a buy. After such a pair the next gap is at least 1 ms by "
-        "construction of the data. Every model is conditioned on that known support (the cell "
-        "probability is divided by the survival at 1 ms after a tied event), so that learning "
-        "this artifact is not credited to the network.",
+        ("**Tie truncation.** Same-millisecond same-side prints are one event, so a millisecond "
+         "holds at most a sell and a buy. After such a pair the next recorded gap is at least "
+         "1 ms by construction of the data. Every model is conditioned on that known support "
+         "(after a tied event the score is log(P(d) / (1 - P(0)))), so that learning this "
+         "artifact is not credited to the network."),
         "",
-        "**Models.** Poisson: constant rate from the training block. Hawkes K = 1, 2, 3: "
+        ("**Models.** Poisson: constant rate from the training block. Hawkes K = 1, 2, 3: "
         f"`fit_hawkes_exp` and `fit_hawkes_multiexp` on {cfg['hawkes_chunks']} contiguous "
         f"training chunk(s) of at most {cfg['hawkes_fit_events']:,} events (Q6b's cap). Those "
         "fits maximize a continuous likelihood on the recorded times, while the network is "
@@ -230,15 +236,15 @@ def _method_lines(cfg: dict) -> list[str]:
         f"backpropagation on random contiguous windows of {net['window']} events (the first "
         f"{net['window_burn']} warm the state and are not scored), at most "
         f"{net['max_windows_per_epoch']:,} windows per epoch, up to {net['epochs']} epochs, "
-        f"batch {net['batch_size']}, Adam at {net['lr']:g}, {cfg['n_seeds']} seed(s).",
+        f"batch {net['batch_size']}, Adam at {net['lr']:g}, {cfg['n_seeds']} seed(s)."),
         "",
-        "**Same events, same warm-up.** At the first event of the test block every model starts "
+        ("**Same events, same warm-up.** At the first event of the test block every model starts "
         f"from an empty state. The first {cfg['burn_in']:,} events are fed and not scored. All "
         "models are scored on the same remaining events. The network reads between "
         f"{net['window_burn']} and {net['window'] - 1} past events through its recurrent state "
-        "(the same window layout as in training) and the slow rate inputs beyond that.",
+        "(the same window layout as in training) and the slow rate inputs beyond that."),
         "",
-        "**Reported.** Mean score minus the Poisson score, in nats per event. Intervals are 95% "
+        ("**Reported.** Mean score minus the Poisson score, in nats per event. Intervals are 95% "
         "percentile intervals from resampling whole UTC test days "
         f"({cfg['n_boot']:,} resamples) of per-event differences, paired across models. "
         "Residuals: by the time-rescaling theorem the compensator increments of a correct model "
@@ -246,7 +252,7 @@ def _method_lines(cfg: dict) -> list[str]:
         "randomized probability integral transform (a uniform draw between the model's survival "
         "at the two cell edges), which is exactly Exp(1) under a correct model and has no atom "
         "from ties. I report the KS distance to Exp(1) and lag-1 autocorrelations, not "
-        "p-values: at these sample sizes every model is rejected.",
+        "p-values: at these sample sizes every model is rejected."),
         "",
     ]
 
@@ -254,18 +260,18 @@ def _method_lines(cfg: dict) -> list[str]:
 def write_md(out_dir: Path, result: dict) -> None:
     records, v = result["records"], result["verdict"]
     L: list[str] = [
-        "# Q12: how much held-out timing likelihood does the linear Hawkes family leave "
-        "unexplained?",
+        ("# Q12: how much held-out timing likelihood does the linear Hawkes family leave "
+        "unexplained?"),
         "",
         "## Question",
         "",
-        "Q6 and Q6b fit exponential-kernel Hawkes models to trade arrivals; the branching ratio "
+        ("Q6 and Q6b fit exponential-kernel Hawkes models to trade arrivals; the branching ratio "
         "depends on the kernel family. A neural point process cannot settle that, but it can "
         "answer a well-posed question: on identical held-out events, how many nats per event "
         "better is a flexible neural model than Poisson and than the K = 1, 2, 3 exponential "
         "Hawkes fits? If the neural model barely beats the best Hawkes, the parametric family is "
         "close to adequate for one-step-ahead timing. If it wins clearly, there is structure "
-        "the linear self-exciting form misses.",
+        "the linear self-exciting form misses."),
         "",
     ]
     if not records:
@@ -293,8 +299,8 @@ def write_md(out_dir: Path, result: dict) -> None:
                  f"{100 * r['tie_share_test']:.1f}% | {100 * r['share_gap_le_1ms_test']:.1f}% | "
                  + " | ".join(cells) + f" | {_ci(r['models']['neural']['test_gain'])} |")
     L += ["", "## Neural minus Hawkes", "",
-          "The best Hawkes is chosen on the validation block, never on the test block. Seed "
-          "spread is the range of the neural test gain across seeds.", "",
+          ("The best Hawkes is chosen on the validation block, never on the test block. Seed "
+          "spread is the range of the neural test gain across seeds."), "",
           "| symbol-month | share of neural gain: "
           + " / ".join(f"K={m[-1]}" for m in names)
           + " | best Hawkes (validation) | neural minus best Hawkes | interval | seed spread |",
@@ -309,11 +315,11 @@ def write_md(out_dir: Path, result: dict) -> None:
                  f"{label} | {r['neural']['seed_spread_test_gain']:.4f} |")
 
     L += ["", "## Hawkes fits used", "",
-          "`MLE` is the repo's continuous-likelihood fit (best training chunk by validation "
+          ("`MLE` is the repo's continuous-likelihood fit (best training chunk by validation "
           "score); `used` is the validation-selected candidate, which is the MLE itself or its "
-          "censored-score polish. n is the branching ratio, shown for reference only.", "",
-          "| symbol-month | K | used | n (used) | 1/beta (used, business s) | "
-          "test gain, MLE | test gain, used |",
+          "censored-score polish. n is the branching ratio, shown for reference only."), "",
+          ("| symbol-month | K | used | n (used) | 1/beta (used, business s) | "
+          "test gain, MLE | test gain, used |"),
           "|---|---|---|---|---|---|---|"]
     for r in records:
         for k, h in r["hawkes"].items():
@@ -324,10 +330,10 @@ def write_md(out_dir: Path, result: dict) -> None:
                      f"{h['mle_test_gain']:+.4f} | {used:+.4f} |")
 
     L += ["", "## Time-rescaling residuals (test block)", "",
-          "KS distance of the randomized residuals to Exp(1) (0 is a perfect fit; the 5% "
+          ("KS distance of the randomized residuals to Exp(1) (0 is a perfect fit; the 5% "
           "critical value for independent draws at these sizes is about 0.001 to 0.003, so "
           "read the distances as effect sizes) and lag-1 autocorrelation of the residuals z "
-          "and of u = 1 - exp(-z).", "",
+          "and of u = 1 - exp(-z)."), "",
           "| symbol-month | model | KS distance | lag-1 autocorr (z) | lag-1 autocorr (u) |",
           "|---|---|---|---|---|"]
     for r in records:
@@ -337,9 +343,9 @@ def write_md(out_dir: Path, result: dict) -> None:
                      f"{d['lag1_autocorr_z']:+.4f} | {d['lag1_autocorr_u']:+.4f} |")
 
     L += ["", "## Where the neural-minus-best-Hawkes difference comes from", "",
-          "Per recorded gap of the scored event: share of events, mean difference in nats, and "
+          ("Per recorded gap of the scored event: share of events, mean difference in nats, and "
           "contribution (share times mean; the gap rows sum to the overall difference). The "
-          "last row is a separate cut: events whose predecessor was tied.", "",
+          "last row is a separate cut: events whose predecessor was tied."), "",
           "| symbol-month | bucket | share | mean difference | contribution |",
           "|---|---|---|---|---|"]
     for r in records:
@@ -348,8 +354,8 @@ def write_md(out_dir: Path, result: dict) -> None:
                      f"{b['mean_diff']:+.4f} | {b['contribution']:+.4f} |")
 
     L += ["", "## Training log", "",
-          "| symbol-month | parameters | seed | epochs run | best validation gain | test gain | "
-          "seconds (Hawkes / neural) |",
+          ("| symbol-month | parameters | seed | epochs run | best validation gain | test gain | "
+          "seconds (Hawkes / neural) |"),
           "|---|---|---|---|---|---|---|"]
     for r in records:
         for s in r["neural"]["seeds"]:
@@ -360,50 +366,50 @@ def write_md(out_dir: Path, result: dict) -> None:
 
     L += ["", "## Verdict", "", v["headline"], "", v["reading"], ""]
     if v["n_seed_spread_exceeds_gap"]:
-        L += [f"On {v['n_seed_spread_exceeds_gap']} of {v['n_units']} the spread of the neural "
+        L += [(f"On {v['n_seed_spread_exceeds_gap']} of {v['n_units']} the spread of the neural "
               "result across seeds is at least as large as the neural-minus-Hawkes gap, so the "
-              "sign of the gap there depends on the seed.", ""]
+              "sign of the gap there depends on the seed."), ""]
     if v["n_neural_not_above_poisson"]:
-        L += [f"On {v['n_neural_not_above_poisson']} of {v['n_units']} the network did not beat "
-              "Poisson on the test block; shares are not defined there.", ""]
+        L += [(f"On {v['n_neural_not_above_poisson']} of {v['n_units']} the network did not beat "
+              "Poisson on the test block; shares are not defined there."), ""]
     days = sorted({r["n_test_days"] for r in records})
     L += [
         "## Caveats", "",
-        "- **One-step-ahead timing only.** The score is the likelihood of the next recorded "
+        ("- **One-step-ahead timing only.** The score is the likelihood of the next recorded "
         "gap given the past. It says nothing about multi-step simulation, about marks (side, "
-        "size), or about prices, and it is not a trading result.",
-        "- **Nothing here bears on the branching ratio.** A likelihood gap between a network "
+        "size), or about prices, and it is not a trading result."),
+        ("- **Nothing here bears on the branching ratio.** A likelihood gap between a network "
         "and a Hawkes fit does not move the 0.71 / 0.85 / 0.96 dispute of Q6 and Q6b. That "
         "dispute is about long memory versus baseline non-stationarity, which a one-step score "
         "on a few test days barely weighs, and there is no accepted way to read a branching "
-        "ratio out of a recurrent network.",
-        "- **The network is a lower bound on flexible models, not an upper bound.** It is a "
+        "ratio out of a recurrent network."),
+        ("- **The network is a lower bound on flexible models, not an upper bound.** It is a "
         "small, short-memory model (a few hundred events of recurrent state plus "
         "exponentially weighted rates), trained briefly on CPU on a capped number of windows. A "
         "larger or longer-memory model could score higher. A small gap therefore means the "
         "Hawkes family is close to what this network finds, not that nothing better exists; a "
-        "gap in favour of Hawkes means the network is not a ceiling at all.",
-        "- **The Hawkes side is also not the best possible linear model.** Constant baseline, "
+        "gap in favour of Hawkes means the network is not a ceiling at all."),
+        ("- **The Hawkes side is also not the best possible linear model.** Constant baseline, "
         f"at most three exponentials, fitted on at most {records[0]['config']['hawkes_fit_events']:,} "
         "events per chunk with Nelder-Mead. A flexible baseline or more components would "
-        "likely narrow any gap (the research notes cite evidence that it usually does).",
-        "- **Cold start.** All models start empty at the test block and are warmed on the "
+        "likely narrow any gap (the research notes cite evidence that it usually does)."),
+        ("- **Cold start.** All models start empty at the test block and are warmed on the "
         "burn-in only, so kernel components slower than the burn-in are under-used by every "
-        "model equally.",
-        f"- **Few day blocks.** The test block has {', '.join(str(d) for d in days)} day(s), so "
-        "the day-block intervals rest on that many resampling units and are coarse.",
-        "- **Discretization convention.** Scores are for the recorded 1 ms cell with history "
-        "times taken as exact. Other reasonable conventions (for example averaging over the "
-        "unknown sub-millisecond offset of the previous event) would change the absolute "
-        "scores of all models and could change differences that live in the 0 to 1 ms buckets; "
-        "the bucket table shows how much of the gap sits there.",
-        "- **Residual lattice structure.** Even with the tie truncation, a gap of 0 ms can only "
+        "model equally."),
+        (f"- **Few day blocks.** The test block has {', '.join(str(d) for d in days)} day(s), so "
+        "the day-block intervals rest on that many resampling units and are coarse."),
+        ("- **Discretization convention.** The score assumes floor stamps with a uniform, "
+         "independent sub-millisecond offset, and takes the recorded times as exact when "
+         "updating the history state of every model. Stamps that are not floors, or batching "
+         "in the matching engine, would shift probability between the 0 and 1 ms gaps for all "
+         "models. The bucket table shows how much of any gap between models sits there."),
+        ("- **Residual lattice structure.** Even with the tie truncation, a gap of 0 ms can only "
         "occur as a sell followed by a buy, which roughly halves its frequency relative to a "
         "continuous process. A flexible gap distribution can match that and an exponential "
         "kernel cannot, so part of any neural advantage in the 0 ms bucket is recording "
-        "structure, not market dynamics.",
-        "- **Business-time profile** is estimated on 20 training days; drift in the intraday "
-        "pattern between training and test is left in the data for every model.",
+        "structure, not market dynamics."),
+        ("- **Business-time profile** is estimated on 20 training days; drift in the intraday "
+        "pattern between training and test is left in the data for every model."),
         "",
     ]
     (out_dir / f"{STEM}.md").write_text("\n".join(L))

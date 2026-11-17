@@ -154,7 +154,7 @@ def _chunk_starts(n: int, size: int, chunks: int) -> list[int]:
     """Evenly spaced contiguous chunks; a single chunk is the one nearest the test block."""
     if n <= size or chunks <= 1:
         return [max(n - size, 0)]
-    return [int(round(c * (n - size) / (chunks - 1))) for c in range(chunks)]
+    return [round(c * (n - size) / (chunks - 1)) for c in range(chunks)]
 
 
 def hawkes_candidates(

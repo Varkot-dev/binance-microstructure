@@ -13,34 +13,46 @@ or a Hawkes kernel with beta -> infinity, whose intensity right after an
 event is alpha*beta), and a log-normal density at a gap of exactly 0 is 0.
 Both are artifacts of the recording resolution.
 
-Convention used for every model. An event recorded `d` ms after its
-predecessor is scored as the probability that the model's continuous gap
-falls in the cell [d, d+1) ms:
+Convention used for every model. Binance stamps are whole milliseconds, read
+here as floors of the true times. If the previous event truly happened u ms
+after its stamp (u in [0, 1), unknown), an event recorded d ms later has a
+true gap in [d - u, d + 1 - u). Averaging over u uniform gives the
+probability of the recorded gap,
 
-    score = log( F(d+1 ms) - F(d ms) )            (F = conditional gap CDF)
+    P(d) = integral_0^1 [ F(d + 1 - u) - F(d - u) ] du,   F(x) = 0 for x < 0,
 
-The cells tile [0, infinity), so each model defines a normalized probability
-mass function over the recorded integer gap, and the log score of a
-normalized pmf is a proper scoring rule: it is at most 0, finite at d = 0,
-and cannot be improved by spiking. The symmetric alternative
-[max(d-1, 0), d+1) covers the true gap under floor stamping of both events,
-but those cells overlap and their masses sum to about 2, so it is not a pmf
-and I do not use it. The cell is a device to turn a continuous model into a
-pmf for the recorded value; it does not assume the true gap lies in it.
+with F the model's conditional gap CDF, and the score is log P(d). The
+integral is taken with a 4-node Gauss-Legendre rule. For every node the
+cells [d - u, d + 1 - u) tile the half-line, so the rule is an exactly
+normalized probability mass function over the recorded gap for ANY F, not
+only in the limit of many nodes. The log score of a normalized pmf is a
+proper scoring rule: it is at most 0, finite at d = 0, and cannot be improved
+by spiking. This is the interval [max(d - 1, 0), d + 1) one would write down
+for floor-stamped pairs, with the weighting inside it that makes the masses
+sum to 1 (unweighted, those overlapping intervals sum to about 2). The simpler
+cell [d, d + 1) is also a pmf, but it is not what floor stamping produces: a
+Poisson process of rate r with millisecond width w records a gap of 0 with
+probability about r w / 2, while the cell [0, w) has mass about r w. Under the
+convention used here a simulated, floor-stamped process is calibrated at its
+true parameters (tests/ml/test_tpp.py).
 
 Business time. Models live in business time (seconds of
-`rescale_to_business_time`). The 1 ms clock cell maps to a business-time
-cell whose width is the local intraday rate times 1 ms; `censor_intervals`
-computes both edges by pushing the integer clock times `ts` and `ts + 1`
-through the same time change, so cells that straddle a profile bin are exact.
+`rescale_to_business_time`). One clock millisecond maps to a business-time
+width equal to the local intraday rate times 1 ms. `censor_intervals`
+computes those widths by pushing the integer clock times `ts` and `ts + 1`
+through the same time change (profile bins start on whole milliseconds, so
+the rate is constant inside a millisecond). With x the business gap between
+the stamps, w_prev the width of the previous event's millisecond and w_cur
+that of the event's own, node u gives the cell
+[max(x - u w_prev, 0), x + w_cur - u w_prev).
 
 Tie truncation. `to_aggressor_events` merges same-millisecond same-side
 prints, so one millisecond holds at most two events (a sell, then a buy).
-After such a pair the next event cannot share the millisecond: its gap is at
-least 1 ms by construction of the data, not by market behaviour. A flexible
-model would learn that and a Hawkes model cannot, which would count a data
-artifact as neural skill. So every model is conditioned on the same known
-support: after a tied event the score is log((F(hi) - F(lo)) / S(1 ms)).
+After such a pair the next event cannot share the millisecond: d >= 1 by
+construction of the data, not by market behaviour. A flexible model would
+learn that and a Hawkes model cannot, which would count a data artifact as
+neural skill. So every model is conditioned on the same known support: after
+a tied event the score is log(P(d) / (1 - P(0))).
 
 History and state. The Hawkes state and the model inputs use the recorded
 times as if exact. Hawkes: after event j the state of component k is
@@ -76,8 +88,8 @@ except ImportError:  # pragma: no cover - exercised only where torch is absent
     torch = None
     nn = None
 
-# Standardized log-gap edges are clamped to this magnitude so that a lower
-# edge of 0 (log = -inf) contributes CDF 0 with a zero, not NaN, gradient.
+# Standardized log gaps are clamped to this magnitude so that a lower edge of
+# 0 (log = -inf) contributes CDF 0 with a zero, not NaN, gradient.
 _Y_CLAMP = 1.0e3
 _SIGMA_MIN, _SIGMA_MAX = 1.0e-3, 20.0
 _TINY = 1.0e-300
@@ -88,21 +100,30 @@ _TINY = 1.0e-300
 # ---------------------------------------------------------------------------
 
 
+# Gauss-Legendre nodes and weights on [0, 1] for the unknown sub-millisecond
+# offset of the previous event.
+_GL_X, _GL_W = np.polynomial.legendre.leggauss(4)
+OFFSET_NODES = 0.5 * (_GL_X + 1.0)
+OFFSET_WEIGHTS = 0.5 * _GL_W
+
+
 @dataclass(frozen=True)
 class Censored:
-    """Business-time coordinates and censoring cells of one contiguous block.
+    """Business-time coordinates and censoring data of one contiguous block.
 
     `tau[i]` is the business time of event i in seconds from the block's
-    first event. Event i >= 1 is scored on the cell [lo[i], hi[i]) of the gap
-    after event i-1, conditional on the gap exceeding `floor[i]` (0 unless
-    event i-1 was itself tied with its predecessor). Index 0 has no
-    predecessor and carries the uninformative cell [0, inf).
+    first event and `gap[i] = tau[i] - tau[i-1]`. `w_prev[i]` and `w_cur[i]`
+    are the business-time widths of the clock milliseconds of events i-1 and
+    i. `truncated[i]` is True when event i-1 was tied with its own
+    predecessor, so that event i is known to have a recorded gap of at least
+    1 ms. Index 0 has no predecessor and is never scored.
     """
 
     tau: np.ndarray
-    lo: np.ndarray
-    hi: np.ndarray
-    floor: np.ndarray
+    gap: np.ndarray
+    w_prev: np.ndarray
+    w_cur: np.ndarray
+    truncated: np.ndarray
     gap_ms: np.ndarray  # recorded clock gap; -1 at index 0
 
     @property
@@ -111,17 +132,27 @@ class Censored:
 
     def slice(self, start: int, stop: int) -> Censored:
         """Events start..stop-1 as their own block: state and clock restart at `start`."""
-        lo, hi, floor = (v[start:stop].copy() for v in (self.lo, self.hi, self.floor))
-        gap = self.gap_ms[start:stop].copy()
-        lo[0], hi[0], floor[0], gap[0] = 0.0, np.inf, 0.0, -1
+        gap, w_prev, w_cur = (v[start:stop].copy() for v in (self.gap, self.w_prev, self.w_cur))
+        trunc, gap_ms = self.truncated[start:stop].copy(), self.gap_ms[start:stop].copy()
+        gap[0], trunc[0], gap_ms[0] = 0.0, False, -1
         tau = self.tau[start:stop] - self.tau[start]
-        return Censored(tau=tau, lo=lo, hi=hi, floor=floor, gap_ms=gap)
+        return Censored(tau=tau, gap=gap, w_prev=w_prev, w_cur=w_cur, truncated=trunc,
+                        gap_ms=gap_ms)
+
+    def cell(self, u: float) -> tuple[np.ndarray, np.ndarray]:
+        """Gap cell [lo, hi) of every event if the previous event was `u` ms past its stamp."""
+        shift = u * self.w_prev
+        return np.maximum(self.gap - shift, 0.0), self.gap + self.w_cur - shift
+
+    def zero_cell_hi(self, u: float) -> np.ndarray:
+        """Upper edge of the d = 0 cell after the previous event (lower edge is 0)."""
+        return (1.0 - u) * self.w_prev
 
 
 def censor_intervals(
     ts_ms: np.ndarray, profile: np.ndarray, tie_truncation: bool = True
 ) -> Censored:
-    """Map integer-ms event times to business-time censoring cells.
+    """Map integer-ms event times to business-time gaps and millisecond widths.
 
     `profile` is the intraday rate profile (training days only, in the
     analysis). With `tie_truncation` the data must obey the aggressor-event
@@ -137,13 +168,14 @@ def censor_intervals(
     tau = rescale_to_business_time(ts_ms, profile)
     # tau(ts + 1 ms) on the same anchor: prepend ts[0] so the anchor is unchanged.
     tau_next = rescale_to_business_time(np.concatenate((ts_ms[:1], ts_ms + 1)), profile)[1:]
+    width = tau_next - tau
 
     n = ts_ms.size
-    lo = np.zeros(n)
-    hi = np.full(n, np.inf)
-    lo[1:] = tau[1:] - tau[:-1]
-    hi[1:] = tau_next[1:] - tau[:-1]
-    floor = np.zeros(n)
+    gap = np.zeros(n)
+    gap[1:] = np.diff(tau)
+    w_prev = width.copy()
+    w_prev[1:] = width[:-1]
+    truncated = np.zeros(n, dtype=bool)
     if tie_truncation:
         tied = np.zeros(n, dtype=bool)
         tied[1:] = gap_ms == 0
@@ -152,11 +184,10 @@ def censor_intervals(
                 "three events share a millisecond; tie_truncation assumes aggressor-level "
                 "events (at most a sell and a buy per millisecond)"
             )
-        # Event i-1 tied => the first clock millisecond after it is excluded.
-        width = tau_next - tau
-        floor[1:] = np.where(tied[:-1], width[:-1], 0.0)
+        truncated[1:] = tied[:-1]
     gaps = np.concatenate(([-1], gap_ms)).astype(np.int64)
-    return Censored(tau=tau, lo=lo, hi=hi, floor=floor, gap_ms=gaps)
+    return Censored(tau=tau, gap=gap, w_prev=w_prev, w_cur=width, truncated=truncated,
+                    gap_ms=gaps)
 
 
 # ---------------------------------------------------------------------------
@@ -168,8 +199,8 @@ def censor_intervals(
 class Scored:
     """Per-event censored log-likelihood of one model on one block.
 
-    `loglik[i]` = log P(cell_i | history, gap > floor_i). `log_surv_lo[i]` =
-    log P(gap >= lo_i | history, gap > floor_i), kept so that the
+    `loglik[i]` = log P(recorded gap d_i | history, support). `log_surv_lo[i]`
+    = log P(recorded gap >= d_i | history, support), kept so that the
     time-rescaling residuals can be formed without re-running the model.
     Entries before the first scored event are 0.
     """
@@ -194,44 +225,49 @@ def hawkes_states(tau: np.ndarray, betas: np.ndarray) -> np.ndarray:
     return out
 
 
-def _hawkes_compensators(
-    mu: float, alphas: np.ndarray, betas: np.ndarray, cen: Censored
-) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
-    """Lambda(lo), Lambda(hi) - Lambda(lo) and Lambda(floor) for events 1..n-1."""
-    lo, hi, floor = cen.lo[1:], cen.hi[1:], cen.floor[1:]
-    lam_lo = mu * lo
-    d_lam = mu * (hi - lo)
-    lam_floor = mu * floor
-    dt = np.diff(cen.tau)
-    for alpha, beta in zip(alphas, betas, strict=True):
-        # State just after the previous event, one component at a time to
-        # keep memory at O(n) for multi-million-event blocks.
-        weight = alpha * (_excitation_recursion(np.exp(-beta * dt))[:-1] + 1.0)
-        lam_lo += -weight * np.expm1(-beta * lo)
-        # The difference is formed analytically: 1 ms cells make
-        # Lambda(hi) - Lambda(lo) tiny next to either term.
-        d_lam += weight * np.exp(-beta * lo) * -np.expm1(-beta * (hi - lo))
-        lam_floor += -weight * np.expm1(-beta * floor)
-    return lam_lo, d_lam, lam_floor
-
-
 def hawkes_censored(mu: float, alphas: np.ndarray, betas: np.ndarray, cen: Censored) -> Scored:
     """Censored per-event score of a sum-of-exponentials Hawkes with given parameters.
 
     The parameterization is the one of `microstructure.estimators.hawkes`:
     intensity mu + sum_k alpha_k beta_k sum_{t_i < t} exp(-beta_k (t - t_i)).
-    The state starts empty at the block's first event.
+    The state starts empty at the block's first event. Given the state A_k
+    just after the previous event, the gap survival is exp(-Lambda(x)) with
+    Lambda(x) = mu x + sum_k alpha_k A_k (1 - exp(-beta_k x)).
     """
     alphas = np.asarray(alphas, dtype=np.float64)
     betas = np.asarray(betas, dtype=np.float64)
     if mu <= 0.0 or np.any(alphas < 0.0) or np.any(betas <= 0.0):
         raise ValueError("need mu > 0, alphas >= 0, betas > 0")
-    lam_lo, d_lam, lam_floor = _hawkes_compensators(mu, alphas, betas, cen)
+    states = hawkes_states(cen.tau, betas)
+    weights = [a * states[k, :-1] for k, a in enumerate(alphas)]  # alpha_k A_k after event i-1
+    del states
+
+    def compensator(x: np.ndarray) -> np.ndarray:
+        lam = mu * x
+        for w, beta in zip(weights, betas, strict=True):
+            lam -= w * np.expm1(-beta * x)
+        return lam
+
+    m = cen.n - 1
+    cell = np.zeros(m)
+    surv_lo = np.zeros(m)
+    surv_zero = np.zeros(m)  # 1 - P(0): probability the recorded gap is at least 1 ms
+    any_trunc = bool(cen.truncated.any())
+    for u, wq in zip(OFFSET_NODES, OFFSET_WEIGHTS, strict=True):
+        lo, hi = (v[1:] for v in cen.cell(u))
+        lam_lo = compensator(lo)
+        s_lo = np.exp(-lam_lo)
+        # exp(-L(lo)) - exp(-L(hi)) without cancellation for narrow cells.
+        cell += wq * s_lo * -np.expm1(-(compensator(hi) - lam_lo))
+        surv_lo += wq * s_lo
+        if any_trunc:
+            surv_zero += wq * np.exp(-compensator(cen.zero_cell_hi(u)[1:]))
     loglik = np.zeros(cen.n)
     log_surv = np.zeros(cen.n)
     with np.errstate(divide="ignore"):
-        loglik[1:] = -(lam_lo - lam_floor) + np.log(-np.expm1(-d_lam))
-    log_surv[1:] = -(lam_lo - lam_floor)
+        log_norm = np.where(cen.truncated[1:], np.log(surv_zero), 0.0) if any_trunc else 0.0
+        loglik[1:] = np.log(cell) - log_norm
+        log_surv[1:] = np.log(surv_lo) - log_norm
     return Scored(loglik=loglik, log_surv_lo=log_surv)
 
 
@@ -271,7 +307,7 @@ def rescaling_residuals(scored: Scored, first: int, seed: int = 0) -> np.ndarray
     ll = scored.loglik[first:]
     ls = scored.log_surv_lo[first:]
     u = np.random.default_rng(seed).random(ll.size)
-    # S(lo) - u*cell = S(lo) * (1 - u * cell / S(lo)); cell / S(lo) <= 1.
+    # P(D >= d) - u P(d) = P(D >= d) * (1 - u * P(d) / P(D >= d)).
     ratio = np.exp(np.minimum(ll - ls, 0.0))
     return -ls - np.log1p(-u * ratio)
 
@@ -312,8 +348,8 @@ def residual_diagnostics(z: np.ndarray) -> dict:
 def tpp_features(cen: Censored, horizons_s: tuple[float, ...]) -> np.ndarray:
     """Per-event inputs: row j is what is known just after event j.
 
-    Column 0 is the log of the midpoint of event j's own gap cell (finite for
-    a recorded gap of 0). Columns 1.. are log exponentially weighted event
+    Column 0 is the log of event j's own business gap plus half its
+    millisecond width (finite for a recorded gap of 0). Columns 1.. are log exponentially weighted event
     rates, beta * A_beta with beta = 1/horizon, divided by 1 - exp(-beta T)
     for the time T since the block start so a cold start is not read as a
     quiet market. Row j never looks at an event after j.
@@ -321,7 +357,7 @@ def tpp_features(cen: Censored, horizons_s: tuple[float, ...]) -> np.ndarray:
     n = cen.n
     out = np.empty((n, 1 + len(horizons_s)))
     out[0, 0] = np.nan  # no gap before the first event; the scaler imputes the mean
-    out[1:, 0] = np.log(0.5 * (cen.lo[1:] + cen.hi[1:]))
+    out[1:, 0] = np.log(cen.gap[1:] + 0.5 * cen.w_cur[1:])
     betas = np.array([1.0 / h for h in horizons_s])
     states = hawkes_states(cen.tau, betas)
     elapsed = cen.tau - cen.tau[0]
@@ -411,10 +447,11 @@ class LogNormalMixture:
     def log_prob(self, x):
         """Continuous log density in x. Diagnostic only; never used as a score."""
         x = torch.as_tensor(x, dtype=torch.float64)
-        y = (torch.log(x) - self.shift) / self.scale
-        z = self._z(y)
+        safe = x.clamp_min(_TINY)
+        z = self._z((torch.log(safe) - self.shift) / self.scale)
         comp = self.logw - 0.5 * z**2 - torch.log(self.sigma) - 0.5 * np.log(2.0 * np.pi)
-        return torch.logsumexp(comp, -1) - np.log(self.scale) - torch.log(x)
+        out = torch.logsumexp(comp, -1) - np.log(self.scale) - torch.log(safe)
+        return torch.where(x > 0, out, torch.full_like(out, -np.inf))
 
     def cell_prob_y(self, ylo, yhi):
         """P(ylo <= y < yhi), each component's difference taken in its accurate tail."""
@@ -425,12 +462,24 @@ class LogNormalMixture:
         diff = torch.special.ndtr(b) - torch.special.ndtr(a)
         return (self.logw.exp() * diff).sum(-1)
 
-    def log_cell_y(self, ylo, yhi, yfloor):
-        """(log P(cell | y > yfloor), log P(y >= ylo | y > yfloor))."""
-        log_s_floor = torch.log(self.survival_y(yfloor).clamp_min(_TINY))
-        ll = torch.log(self.cell_prob_y(ylo, yhi).clamp_min(_TINY)) - log_s_floor
-        ls = torch.log(self.survival_y(ylo).clamp_min(_TINY)) - log_s_floor
-        return ll, ls
+    def log_recorded_gap(self, gap, w_prev, w_cur, truncated):
+        """(log P(d | support), log P(D >= d | support)) under the offset-averaged cells.
+
+        Arguments are business-time tensors shaped like the leading dims: the
+        gap between the stamps, the two millisecond widths, and the flag for
+        a known support d >= 1 (see the module docstring).
+        """
+        cell = surv_lo = surv_zero = 0.0
+        for u, wq in zip(OFFSET_NODES.tolist(), OFFSET_WEIGHTS.tolist(), strict=True):
+            shift = u * w_prev
+            ylo = self.standardize((gap - shift).clamp_min(0.0))
+            cell = cell + wq * self.cell_prob_y(ylo, self.standardize(gap + w_cur - shift))
+            surv_lo = surv_lo + wq * self.survival_y(ylo)
+            surv_zero = surv_zero + wq * self.survival_y(self.standardize((1.0 - u) * w_prev))
+        log_norm = torch.where(truncated, torch.log(surv_zero.clamp_min(_TINY)),
+                               torch.zeros_like(surv_zero))
+        return (torch.log(cell.clamp_min(_TINY)) - log_norm,
+                torch.log(surv_lo.clamp_min(_TINY)) - log_norm)
 
     def sample(self, n: int, generator=None):
         """n draws per leading index; shape [n, ...]."""
@@ -477,16 +526,21 @@ if nn is not None:
 class TPPBlock:
     """One contiguous block ready for the network.
 
-    `x[j]` is the scaled input after event j. `ylo/yhi/yfloor[i]` are the
-    standardized log edges of event i's cell. Events with index >= `first`
-    are scored; earlier ones only warm the inputs.
+    `x[j]` is the scaled input after event j. `gap`, `w_prev`, `w_cur` and
+    `truncated` are the censoring data of each event (float64, business
+    seconds). Events with index >= `first` are scored; earlier ones only warm
+    the inputs. `shift` and `scale` are the training mean and standard
+    deviation of the log gap, the units the mixture is parameterized in.
     """
 
     x: object
-    ylo: object
-    yhi: object
-    yfloor: object
+    gap: object
+    w_prev: object
+    w_cur: object
+    truncated: object
     first: int
+    shift: float
+    scale: float
 
     @property
     def n(self) -> int:
@@ -499,15 +553,11 @@ def prepare_block(
     _require_torch()
     feats = (tpp_features(cen, horizons_s) - scaler.mean) / scaler.std
     feats = np.clip(np.nan_to_num(feats, nan=0.0), -8.0, 8.0)
-
-    def edge(v: np.ndarray):
-        with np.errstate(divide="ignore"):
-            y = (np.log(v) - scaler.mean[0]) / scaler.std[0]
-        return torch.from_numpy(np.clip(y, -_Y_CLAMP, _Y_CLAMP))
-
     return TPPBlock(
         x=torch.from_numpy(feats.astype(np.float32)),
-        ylo=edge(cen.lo), yhi=edge(cen.hi), yfloor=edge(cen.floor), first=int(first),
+        gap=torch.from_numpy(cen.gap), w_prev=torch.from_numpy(cen.w_prev),
+        w_cur=torch.from_numpy(cen.w_cur), truncated=torch.from_numpy(cen.truncated),
+        first=int(first), shift=float(scaler.mean[0]), scale=float(scaler.std[0]),
     )
 
 
@@ -520,8 +570,10 @@ def _window_loglik(model, block: TPPBlock, starts, length: int, skip: int):
     idx = starts.unsqueeze(1) + torch.arange(length).unsqueeze(0)
     mix = model(block.x[idx])
     tgt = idx[:, skip:] + 1
-    part = LogNormalMixture(mix.logw[:, skip:], mix.mu[:, skip:], mix.sigma[:, skip:])
-    ll, ls = part.log_cell_y(block.ylo[tgt], block.yhi[tgt], block.yfloor[tgt])
+    part = LogNormalMixture(mix.logw[:, skip:], mix.mu[:, skip:], mix.sigma[:, skip:],
+                            block.shift, block.scale)
+    ll, ls = part.log_recorded_gap(block.gap[tgt], block.w_prev[tgt], block.w_cur[tgt],
+                                   block.truncated[tgt])
     return tgt, ll, ls
 
 
