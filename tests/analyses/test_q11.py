@@ -79,7 +79,7 @@ def _run(rule: str, seed: int, horizons=(1,), fee_bps: float = 5.0) -> dict:
     out = {}
     for h in horizons:
         pred, meta = q11.fit_horizon(train, fit_block, valid_block, test, test_block, h,
-                                     stride, max_rounds=60)
+                                     stride, max_rounds=60, threads=1)
         out[str(h)] = {
             **q11.score_horizon(pred, meta["thresholds"], fee_bps, n_boot=200), "fit": meta,
         }
@@ -317,7 +317,7 @@ def test_run_q11_end_to_end_writes_artifacts_and_records_skips(tmp_path: Path):
     cfg = {"train_start": "2023-06-05", "train_end": "2023-06-08", "test_start": "2023-06-10",
            "test_end": "2023-06-11", "valid_days": 2, "embargo_days": 1, "horizons": [2, 4],
            "max_rounds": 20}
-    summary = q11.run_q11(root, out, ["AAAUSDT", "BBBUSDT"], cfg, fee_bps=5.0, n_boot=100)
+    summary = q11.run_q11(root, out, ["AAAUSDT", "BBBUSDT"], cfg, fee_bps=5.0, n_boot=100, threads=1)
     assert [s["symbol"] for s in summary["symbols"]] == ["AAAUSDT"]
     assert summary["skipped"][0]["symbol"] == "BBBUSDT"
     assert "5 of 6 days missing" in summary["skipped"][0]["reason"]

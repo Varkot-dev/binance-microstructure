@@ -157,8 +157,8 @@ def plot(out_dir: Path, records: list[dict]) -> None:
     for side in ("top", "right", "left"):
         ax.spines[side].set_visible(False)
     ax.tick_params(axis="y", length=0)
-    ax.legend(fontsize=8, frameon=False, loc="upper center", bbox_to_anchor=(0.5, -0.9 / fig.get_figheight() * 1.0 - 0.08), ncol=4)
-    fig.tight_layout()
+    fig.legend(fontsize=8, frameon=False, loc="lower center", ncol=4)
+    fig.tight_layout(rect=(0.0, 0.4 / fig.get_figheight(), 1.0, 1.0))
     fig.savefig(out_dir / f"{STEM}.png", dpi=150, bbox_inches="tight")
     plt.close(fig)
 

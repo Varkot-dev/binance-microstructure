@@ -337,7 +337,7 @@ def usable(s: Samples, h: int, start_ms: int, end_ms: int, every: int = 1) -> np
 
 def _fit_stage(
     X: np.ndarray, y: np.ndarray, Xv: np.ndarray, yv: np.ndarray, leaf: int,
-    max_rounds: int | None,
+    max_rounds: int | None, threads: int | None = None,
 ) -> tuple[dict, dict]:
     """The four models for one binary target; returns predictors and fit notes.
 
@@ -352,7 +352,12 @@ def _fit_stage(
     qi = fit_logistic(X[:, [QI_COL]], y)
     logit = fit_logistic(X, y)
     kw = {} if max_rounds is None else {"max_rounds": max_rounds}
-    gbm = fit_gbm(X, y, Xv, yv, params={"min_data_in_leaf": leaf}, **kw)
+    params = {"min_data_in_leaf": leaf}
+    if threads is not None:
+        # LightGBM threads spin while waiting; on a machine shared with other
+        # jobs, fewer threads than cores is far faster than the default.
+        params["num_threads"] = threads
+    gbm = fit_gbm(X, y, Xv, yv, params=params, **kw)
     gain = gbm.gain_importance()
     top = np.argsort(gain)[::-1][:8]
     return (
@@ -379,7 +384,7 @@ def signed_score(p_move: np.ndarray, p_up: np.ndarray) -> np.ndarray:
 def fit_horizon(
     fit: Samples, fit_block: tuple[int, int], valid_block: tuple[int, int],
     test: Samples, test_block: tuple[int, int], h: int, stride: int,
-    max_rounds: int | None = None, train_cap: int = TRAIN_CAP,
+    max_rounds: int | None = None, train_cap: int = TRAIN_CAP, threads: int | None = None,
 ) -> tuple[dict[str, np.ndarray], dict]:
     """Fit both stages at horizon h; return test predictions and fit metadata."""
     if h % stride:
@@ -400,12 +405,12 @@ def fit_horizon(
     moved_tr, moved_va = fit.label[h][tr] != 0, fit.label[h][va] != 0
     move_models, move_info = _fit_stage(
         fit.X[tr], moved_tr.astype(np.float32), fit.X[va], moved_va.astype(np.float32),
-        leaf, max_rounds,
+        leaf, max_rounds, threads,
     )
     dtr, dva = tr[moved_tr], va[moved_va]
     up_models, up_info = _fit_stage(
         fit.X[dtr], (fit.label[h][dtr] > 0).astype(np.float32),
-        fit.X[dva], (fit.label[h][dva] > 0).astype(np.float32), leaf, max_rounds,
+        fit.X[dva], (fit.label[h][dva] > 0).astype(np.float32), leaf, max_rounds, threads,
     )
 
     pred = {
@@ -455,7 +460,8 @@ def config_key(cfg: dict) -> str:
     return hashlib.sha1(blob.encode()).hexdigest()[:12]
 
 
-def fit_symbol(root: Path, cache: Path, symbol: str, cfg: dict) -> dict:
+def fit_symbol(root: Path, cache: Path, symbol: str, cfg: dict,
+               threads: int | None = None) -> dict:
     """Run stages 1 and 2 for one symbol; writes pred_<key>.npz and meta_<key>.json."""
     horizons = tuple(cfg["horizons"])
     stride = math.gcd(*horizons)
@@ -479,7 +485,7 @@ def fit_symbol(root: Path, cache: Path, symbol: str, cfg: dict) -> dict:
     for h in horizons:
         pred, per_h[str(h)] = fit_horizon(
             train, _block(fit_days), _block(valid_days), test, _block(test_days),
-            h, stride, max_rounds=cfg.get("max_rounds"),
+            h, stride, max_rounds=cfg.get("max_rounds"), threads=threads,
         )
         arrays.update({f"h{h}_{k}": v for k, v in pred.items()})
     one_tick_col = FEATURES.index("one_tick")
@@ -774,7 +780,7 @@ def check_windows(cfg: dict) -> None:
 
 def run_q11(root: Path, out: Path, symbols: list[str], cfg: dict, fee_bps: float,
             cache: Path | None = None, report_only: bool = False,
-            n_boot: int = N_BOOT) -> dict:
+            n_boot: int = N_BOOT, threads: int | None = None) -> dict:
     from microstructure.analyses.q11_report import write_outputs
 
     check_windows(cfg)
@@ -799,7 +805,7 @@ def run_q11(root: Path, out: Path, symbols: list[str], cfg: dict, fee_bps: float
                 continue
             print(f"[q11] fitting {symbol}", flush=True)
             try:
-                fit_symbol(root, cache, symbol, cfg)
+                fit_symbol(root, cache, symbol, cfg, threads=threads)
             except ValueError as e:
                 skipped.append({"symbol": symbol, "reason": f"could not be fitted: {e}"})
                 continue
@@ -837,6 +843,8 @@ def main() -> None:
     ap.add_argument("--max-rounds", type=int, default=None,
                     help="cap on boosting rounds (default: the ml.models default)")
     ap.add_argument("--n-boot", type=int, default=N_BOOT)
+    ap.add_argument("--threads", type=int, default=None,
+                    help="LightGBM threads (default: the ml.models default of 4)")
     ap.add_argument("--report-only", action="store_true",
                     help="rebuild the outputs from cached predictions without fitting")
     a = ap.parse_args()
@@ -849,7 +857,7 @@ def main() -> None:
     if a.max_rounds is not None:
         cfg["max_rounds"] = a.max_rounds
     summary = run_q11(a.root, a.out, a.symbols, cfg, a.fee_bps, cache=a.cache,
-                      report_only=a.report_only, n_boot=a.n_boot)
+                      report_only=a.report_only, n_boot=a.n_boot, threads=a.threads)
     v = summary["verdict"]
     print(f"[q11] {len(summary['symbols'])} symbol(s) scored, {len(summary['skipped'])} skipped; "
           f"gross edge exceeds cost in {len(v['exceeds'])} of {v['n_cells']} cells")

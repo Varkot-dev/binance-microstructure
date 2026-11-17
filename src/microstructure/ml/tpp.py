@@ -369,8 +369,8 @@ class TPPConfig:
     window: int = 256          # events per truncated-backpropagation window
     window_burn: int = 64      # leading events of a window that are fed, not scored
     batch_size: int = 64
-    max_windows_per_epoch: int = 8192
-    epochs: int = 8
+    max_windows_per_epoch: int = 4096
+    epochs: int = 10
     patience: int = 2
     lr: float = 2e-3
     grad_clip: float = 1.0
@@ -588,7 +588,7 @@ def train_tpp(train: TPPBlock, valid: TPPBlock, cfg: TPPConfig):
             loss.backward()
             nn.utils.clip_grad_norm_(model.parameters(), cfg.grad_clip)
             opt.step()
-            total += float(ll.sum())
+            total += float(ll.detach().sum())
             count += ll.numel()
         valid_ll = float(score_tpp(model, valid, cfg).loglik[valid.first:].mean())
         history.append({

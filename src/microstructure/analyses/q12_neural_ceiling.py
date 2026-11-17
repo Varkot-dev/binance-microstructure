@@ -92,7 +92,7 @@ class Q12Config:
     polish_events: int = 100_000
     n_seeds: int = 2
     n_boot: int = 2000
-    threads: int = 4
+    threads: int = 1               # PyTorch threads; more is slower when cores are shared
     tpp: tpp.TPPConfig = field(default_factory=tpp.TPPConfig)
 
     def as_dict(self) -> dict:
