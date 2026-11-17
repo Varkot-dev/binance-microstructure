@@ -366,8 +366,8 @@ def figure(summary: dict, path: Path) -> None:
                         markersize=8, linewidth=2, color=SERIES_COLORS[mi],
                         markeredgecolor=SURFACE, markeredgewidth=1.5)
     ax_auc.axhline(0.5, color=INK_MUTED, linestyle="--", linewidth=1)
-    ax_auc.annotate("no skill", (x[-1], 0.5), xytext=(0, 4), textcoords="offset points",
-                    ha="right", fontsize=9, color=INK_MUTED)
+    ax_auc.annotate("no skill", (x[0], 0.5), xytext=(6, 4), textcoords="offset points",
+                    ha="left", fontsize=9, color=INK_MUTED)
     ax_auc.set_xticks(x, [f"h = {h}" for h in hs])
     ax_auc.set_xlabel("label horizon (trade events)", color=INK_MUTED)
     ax_auc.set_ylabel("AUC, up versus down, samples whose mid moved", color=INK_MUTED)
