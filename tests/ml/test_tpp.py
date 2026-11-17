@@ -112,6 +112,44 @@ def test_recorded_gap_probabilities_sum_to_one() -> None:
     assert trunc[1:].sum() == pytest.approx(1.0, abs=1e-9)
 
 
+def _long_gap_block(gap_s: float, truncated: bool) -> tpp.Censored:
+    """Ordinary 5 ms gaps with one gap of `gap_s` seconds in the middle (index 6)."""
+    width = 1e-3
+    gap = np.concatenate(([0.0], np.full(10, 5 * width)))
+    gap[6] = gap_s
+    w = np.full(gap.size, width)
+    return tpp.Censored(tau=np.cumsum(gap), gap=gap, w_prev=w, w_cur=w,
+                        truncated=np.full(gap.size, truncated),
+                        gap_ms=np.round(np.minimum(gap / width, 1e15)).astype(np.int64))
+
+
+def test_extreme_gap_scores_are_finite_and_floored_alike() -> None:
+    rate = 40.0
+    hawkes = (30.0, [0.3, 0.2], [300.0, 40.0])
+    for truncated in (False, True):
+        # rate * gap = 4e5: exp(-4e5) underflows, the old linear-space score was -inf.
+        cen = _long_gap_block(1.0e4, truncated)
+        for got in (tpp.poisson_censored(rate, cen), tpp.hawkes_censored(*hawkes, cen)):
+            assert np.isfinite(got.loglik).all() and np.isfinite(got.log_surv_lo).all()
+            assert np.isfinite(got.loglik[1:].mean())
+            norm = got.loglik[6] - tpp.LOG_FLOOR  # minus the log of the truncated support
+            assert (norm > 0.0) if truncated else (norm == 0.0)
+            assert got.log_surv_lo[6] == got.loglik[6]
+            diag = tpp.residual_diagnostics(tpp.rescaling_residuals(got, 1))
+            assert diag["n_dropped_nonfinite"] == 0 and diag["n"] == cen.n - 1
+            assert np.isfinite(diag["ks_distance"]) and np.isfinite(diag["mean_z"])
+    # Short of the floor the log-space score is the plain one: a gap with
+    # rate * gap = 600 has a representable probability near exp(-600).
+    cen = _long_gap_block(15.0, False)
+    got = tpp.poisson_censored(rate, cen)
+    cell = sum(w * (np.exp(-rate * lo[6]) - np.exp(-rate * hi[6]))
+               for u, w in zip(tpp.OFFSET_NODES, tpp.OFFSET_WEIGHTS, strict=True)
+               for lo, hi in [cen.cell(u)])
+    assert tpp.LOG_FLOOR < got.loglik[6] == pytest.approx(np.log(cell), rel=1e-12)
+    assert tpp.residual_diagnostics(np.array([0.5, np.inf, 1.0, np.nan]))[
+        "n_dropped_nonfinite"] == 2
+
+
 def test_tie_truncation_flags_and_contract() -> None:
     cen = tpp.censor_intervals(T0_MS + np.array([0, 5, 5, 9, 9, 30]), FLAT)
     # Events after a tied event (indices 3 and 5) cannot share its millisecond.
@@ -286,6 +324,22 @@ def test_naive_density_fails_on_lattice_gaps_but_recorded_gap_score_does_not(tor
     assert float(pmf.max()) <= 1.0
     args[3] = torch.ones_like(args[3])
     assert float(spike.log_recorded_gap(*args)[0].exp()[1:].sum()) == pytest.approx(1.0, abs=1e-6)
+
+
+def test_mixture_shares_the_floor_of_poisson_and_hawkes_on_an_extreme_gap(torch) -> None:
+    mix = _mixture(torch)
+    for truncated in (False, True):
+        cen = _long_gap_block(1.0e300, truncated)
+        args = [torch.from_numpy(v) for v in (cen.gap[1:], cen.w_prev[1:], cen.w_cur[1:],
+                                              cen.truncated[1:])]
+        ll, ls = (v.numpy() for v in mix.log_recorded_gap(*args))
+        pois = tpp.poisson_censored(40.0, cen)
+        assert np.isfinite(ll).all() and np.isfinite(ls).all() and np.isfinite(pois.loglik).all()
+        if truncated:  # the floor comes before the division by the known support
+            assert ll[5] > tpp.LOG_FLOOR and pois.loglik[6] > tpp.LOG_FLOOR
+        else:  # both families hit the same floor, to the last bit of the log
+            assert ll[5] == pytest.approx(tpp.LOG_FLOOR, abs=1e-9)
+            assert pois.loglik[6] == tpp.LOG_FLOOR
 
 
 def _blocks(ts: np.ndarray, cfg: tpp.TPPConfig):

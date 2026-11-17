@@ -93,6 +93,12 @@ except ImportError:  # pragma: no cover - exercised only where torch is absent
 _Y_CLAMP = 1.0e3
 _SIGMA_MIN, _SIGMA_MAX = 1.0e-3, 20.0
 _TINY = 1.0e-300
+# The one probability floor of every model family: no recorded gap, tail or
+# support mass is scored below log(_TINY) (about -690.8 nats). Poisson and
+# Hawkes apply it to log probabilities, the mixture clamps the probability at
+# _TINY before the log, which is the same number. Without a common floor one
+# very long gap would cost the families different amounts (or -inf).
+LOG_FLOOR = float(np.log(_TINY))
 
 
 # ---------------------------------------------------------------------------
@@ -248,26 +254,33 @@ def hawkes_censored(mu: float, alphas: np.ndarray, betas: np.ndarray, cen: Censo
             lam -= w * np.expm1(-beta * x)
         return lam
 
+    # Everything is accumulated in log space (a logsumexp over the offset
+    # nodes), so a gap whose survival underflows a float still has a finite
+    # log probability; the shared LOG_FLOOR is then applied as for the mixture.
     m = cen.n - 1
-    cell = np.zeros(m)
-    surv_lo = np.zeros(m)
-    surv_zero = np.zeros(m)  # 1 - P(0): probability the recorded gap is at least 1 ms
+    log_cell = np.full(m, -np.inf)
+    log_surv_lo = np.full(m, -np.inf)
+    # log(1 - P(0)): probability the recorded gap is at least 1 ms
+    log_surv_zero = np.full(m, -np.inf)
     any_trunc = bool(cen.truncated.any())
     for u, wq in zip(OFFSET_NODES, OFFSET_WEIGHTS, strict=True):
         lo, hi = (v[1:] for v in cen.cell(u))
         lam_lo = compensator(lo)
-        s_lo = np.exp(-lam_lo)
-        # exp(-L(lo)) - exp(-L(hi)) without cancellation for narrow cells.
-        cell += wq * s_lo * -np.expm1(-(compensator(hi) - lam_lo))
-        surv_lo += wq * s_lo
+        log_s_lo = np.log(wq) - lam_lo
+        # log[exp(-L(lo)) - exp(-L(hi))] without cancellation for narrow cells.
+        with np.errstate(divide="ignore"):
+            log_width = np.log(-np.expm1(-(compensator(hi) - lam_lo)))
+        log_cell = np.logaddexp(log_cell, log_s_lo + log_width)
+        log_surv_lo = np.logaddexp(log_surv_lo, log_s_lo)
         if any_trunc:
-            surv_zero += wq * np.exp(-compensator(cen.zero_cell_hi(u)[1:]))
+            log_surv_zero = np.logaddexp(
+                log_surv_zero, np.log(wq) - compensator(cen.zero_cell_hi(u)[1:]))
     loglik = np.zeros(cen.n)
     log_surv = np.zeros(cen.n)
-    with np.errstate(divide="ignore"):
-        log_norm = np.where(cen.truncated[1:], np.log(surv_zero), 0.0) if any_trunc else 0.0
-        loglik[1:] = np.log(cell) - log_norm
-        log_surv[1:] = np.log(surv_lo) - log_norm
+    log_norm = (np.where(cen.truncated[1:], np.maximum(log_surv_zero, LOG_FLOOR), 0.0)
+                if any_trunc else 0.0)
+    loglik[1:] = np.maximum(log_cell, LOG_FLOOR) - log_norm
+    log_surv[1:] = np.maximum(log_surv_lo, LOG_FLOOR) - log_norm
     return Scored(loglik=loglik, log_surv_lo=log_surv)
 
 
@@ -319,6 +332,7 @@ def residual_diagnostics(z: np.ndarray) -> dict:
     The autocorrelation is reported for z and for the uniform transform
     1 - exp(-z), which is not dominated by the exponential tail.
     """
+    n_all = z.size
     z = z[np.isfinite(z)]
     n = z.size
     u = np.sort(-np.expm1(-z))
@@ -332,6 +346,7 @@ def residual_diagnostics(z: np.ndarray) -> dict:
 
     return {
         "n": int(n),
+        "n_dropped_nonfinite": int(n_all - n),
         "ks_distance": ks,
         "ks_5pct_critical_iid": float(1.36 / np.sqrt(n)),
         "lag1_autocorr_z": lag1(z),

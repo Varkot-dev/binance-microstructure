@@ -333,6 +333,60 @@ def test_run_q11_end_to_end_writes_artifacts_and_records_skips(tmp_path: Path):
     (root / "parquet").rename(root / "parquet_gone")
     again = q11.run_q11(root, out, ["AAAUSDT"], cfg, fee_bps=1.0, n_boot=100)
     assert again["symbols"][0]["horizons"]["2"]["economics"]["gbm_all"][0]["fee_cost_bps"] == 2.0
+    # The thread override and the fitted feature list come from the cached meta.
+    assert summary["symbols"][0]["lgb_threads"] == again["symbols"][0]["lgb_threads"] == 1
+    assert stored["config"]["features"] == stored["symbols"][0]["fit_settings"]["features"]
+    assert stored["symbols"][0]["fit_settings"]["train_cap"] == q11.TRAIN_CAP
+
+
+def test_prediction_key_covers_every_fit_setting_but_not_fee_or_threads(
+        tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
+    cfg = {"train_start": "2023-06-05", "train_end": "2023-06-08", "test_start": "2023-06-10",
+           "test_end": "2023-06-11", "valid_days": 2, "embargo_days": 1, "horizons": [2, 4]}
+    base = q11.config_key(cfg)
+    assert q11.config_key({**cfg, "max_rounds": 20}) != base
+    changes = [
+        (q11, "TRAIN_CAP", 1000), (q11, "VALID_CAP", 1000), (q11, "BASE_LEAF", 7),
+        (q11, "WARMUP", 10), (q11, "FEATURES", [*q11.FEATURES, "extra"]),
+        (q11, "LGB_PARAMS", {**q11.LGB_PARAMS, "num_leaves": 7}),
+        (q11, "DAY_CACHE_VERSION", q11.DAY_CACHE_VERSION + 1),
+    ]
+    keys = set()
+    for obj, name, value in changes:
+        with monkeypatch.context() as mp:
+            mp.setattr(obj, name, value)
+            keys.add(q11.config_key(cfg))
+    assert base not in keys and len(keys) == len(changes)
+    with monkeypatch.context() as mp:
+        mp.setattr(q11, "LGB_PARAMS", {**q11.LGB_PARAMS, "num_threads": 1})
+        assert q11.config_key(cfg) == base
+    # Predictions cached under other settings are not found: a miss, never a silent reuse.
+    (tmp_path / "AAAUSDT").mkdir()
+    np.savez_compressed(tmp_path / "AAAUSDT" / f"pred_{base}.npz", x=np.zeros(1))
+    (tmp_path / "AAAUSDT" / f"meta_{base}.json").write_text("{}")
+    assert q11.load_cached(tmp_path, "AAAUSDT", cfg) is not None
+    monkeypatch.setattr(q11, "BASE_LEAF", 7)
+    assert q11.load_cached(tmp_path, "AAAUSDT", cfg) is None
+
+
+def test_day_cache_without_the_current_version_is_extracted_again(
+        tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
+    root, cache, day = tmp_path / "data", tmp_path / "cache", "2023-06-05"
+    _write_day(root, "AAAUSDT", day, seed=1)
+    first = q11.cached_day(root, cache, "AAAUSDT", day)
+    path = q11.day_cache_path(cache, "AAAUSDT", day)
+    assert q11.day_cache_current(path) and "version" not in first
+    stamp = path.stat().st_mtime_ns
+    again = q11.cached_day(root, cache, "AAAUSDT", day)
+    assert path.stat().st_mtime_ns == stamp and set(again) == set(first)
+    # A file from before the version field (here with wrong content) is not trusted.
+    np.savez_compressed(path, **{**first, "ts": first["ts"][:10]})
+    assert not q11.day_cache_current(path)
+    fresh = q11.cached_day(root, cache, "AAAUSDT", day)
+    np.testing.assert_array_equal(fresh["ts"], first["ts"])
+    assert q11.day_cache_current(path)
+    monkeypatch.setattr(q11, "DAY_CACHE_VERSION", q11.DAY_CACHE_VERSION + 1)
+    assert not q11.day_cache_current(path)
 
 
 def test_windows_must_leave_an_embargo_day():
