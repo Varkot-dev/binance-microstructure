@@ -316,7 +316,7 @@ COLUMNS = [
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--refresh", action="store_true",
-                    help="re-list symbols whose cached listing is not older than 7 days")
+                    help="re-list the symbol list and every symbol whose cached days reach the last 7 days")
     ap.add_argument("--n-verify", type=int, default=12)
     args = ap.parse_args()
 
