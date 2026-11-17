@@ -23,9 +23,10 @@ import polars as pl
 import pytest
 
 from microstructure.analyses.q10_drift import _parse_args, run_q10
-from microstructure.analyses.q10_report import ladder_path, transfer_path
+from microstructure.analyses.q10_report import fit_path, ladder_path, shift_path, transfer_path
 from microstructure.data.catalog import parquet_path
 from microstructure.ml import drift, models
+from microstructure.ml.ladder import FINGERPRINT_KEY, ladder_fingerprint
 from microstructure.synthetic import markov_signs
 
 SYMBOLS = ["AAAUSDT", "BBBUSDT"]
@@ -189,3 +190,57 @@ def test_cli_refuses_reduced_fits_into_the_shared_cache():
     with pytest.raises(SystemExit):
         _parse_args(["--gbm-rounds", "10"])
     assert _parse_args(["--gbm-rounds", "10", "--cache", "x"]).gbm_rounds == 10
+
+
+def test_refitted_ladder_invalidates_downstream_caches(run):
+    """Runs last: it refits one ladder in the shared cache."""
+    root, _, _ = run
+    cache, out = root / "ml_cache", root / "refit"
+    sym, src = "AAAUSDT", PERIODS[0]
+    lad = ladder_path(cache, sym, src)
+    old_fp = ladder_fingerprint(lad)
+    cell_files = [transfer_path(cache, sym, p) for p in PERIODS]
+    from_src = [shift_path(cache, sym, src, p) for p in PERIODS[1:]]
+    other = shift_path(cache, sym, PERIODS[1], PERIODS[2])
+    untouched = [other, transfer_path(cache, "BBBUSDT", PERIODS[0]),
+                 ladder_path(cache, sym, PERIODS[1])]
+    for f in [fit_path(cache, sym, src), *from_src]:
+        assert json.loads(f.read_text())[FINGERPRINT_KEY] == old_fp
+    assert all(json.loads(f.read_text())[FINGERPRINT_KEY][src] == old_fp for f in cell_files)
+    old_cells = [json.loads(f.read_text())["cells"] for f in cell_files]
+    stamps = [f.stat().st_mtime_ns for f in untouched]
+
+    # A refit elsewhere (Q9 with --force) replaces the pickle under the same name.
+    lad.unlink()
+    fast = {**FAST, "gbm_rounds": 3}
+    run_q10(root, out, symbols=SYMBOLS, periods=PERIODS, stages=("fit",), **fast)
+    new_fp = ladder_fingerprint(lad)
+    assert new_fp != old_fp
+    assert json.loads(fit_path(cache, sym, src).read_text())[FINGERPRINT_KEY] == new_fp
+    # The report refuses the cells and shift files of the old ladder instead of mixing them in.
+    r = run_q10(root, out, symbols=SYMBOLS, periods=PERIODS, stages=("report",),
+                n_boot=FAST["n_boot"])
+    assert r["symbols"] == ["BBBUSDT"]
+    assert [s["symbol"] for s in r["skipped"]] == [sym]
+    assert "not from the ladder now on disk" in r["skipped"][0]["reason"]
+
+    r = run_q10(root, out, symbols=SYMBOLS, periods=PERIODS, **fast)
+    assert r["symbols"] == SYMBOLS and r["skipped"] == []
+    for f, old in zip(cell_files, old_cells, strict=True):
+        rec = json.loads(f.read_text())
+        assert rec[FINGERPRINT_KEY][src] == new_fp
+        assert rec["cells"][src]["gbm_all"] != old[src]["gbm_all"]
+        assert rec["cells"][PERIODS[1]] == old[PERIODS[1]]  # other ladders are not rescored
+    assert all(json.loads(f.read_text())[FINGERPRINT_KEY] == new_fp for f in from_src)
+    assert [f.stat().st_mtime_ns for f in untouched] == stamps
+
+    # A cache written before fingerprints existed is recomputed, not trusted and not a crash.
+    rec = json.loads(cell_files[0].read_text())
+    del rec[FINGERPRINT_KEY]
+    cell_files[0].write_text(json.dumps(rec))
+    rec = json.loads(other.read_text())
+    del rec[FINGERPRINT_KEY]
+    other.write_text(json.dumps(rec))
+    run_q10(root, out, symbols=[sym], periods=PERIODS, stages=("transfer", "shift"), **fast)
+    assert set(json.loads(cell_files[0].read_text())[FINGERPRINT_KEY]) == set(PERIODS)
+    assert FINGERPRINT_KEY in json.loads(other.read_text())

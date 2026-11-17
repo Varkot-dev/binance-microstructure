@@ -40,6 +40,7 @@ from microstructure.ml.drift import (
     shift_decomposition,
 )
 from microstructure.ml.features import FEATURE_NAMES
+from microstructure.ml.ladder import FINGERPRINT_KEY, ladder_fingerprint, same_ladder
 
 PERIODS = ("2023-06", "2023-07", "2024-07", "2025-07", "2026-07")
 SYMBOLS = ("BTCUSDT", "ETHUSDT", "SOLUSDT", "XRPUSDT", "DOGEUSDT", "BNBUSDT", "LINKUSDT",
@@ -88,6 +89,12 @@ def _read(path: Path) -> dict | None:
     return json.loads(path.read_text()) if path.exists() else None
 
 
+def _read_shift(cache: Path, symbol: str, src: str, tgt: str) -> dict | None:
+    """A shift file, or None if absent or computed with a source ladder since refitted."""
+    f = _read(shift_path(cache, symbol, src, tgt))
+    return f if same_ladder(f, ladder_path(cache, symbol, src)) else None
+
+
 # ---------------------------------------------------------------------------
 # Loading and the bootstrap of the transfer matrix
 # ---------------------------------------------------------------------------
@@ -106,6 +113,16 @@ def _load_panel(cache: Path, symbols: list[str], periods: list[str]) -> tuple[di
                        if i not in transfers[j]["cells"]]
         if missing:
             skipped.append({"symbol": sym, "reason": "no cached result for " + ", ".join(missing)})
+            continue
+        # Every cached number must come from the ladder now on disk: ladders are
+        # keyed by symbol and period only, so a refit replaces them in place.
+        fps = {p: ladder_fingerprint(ladder_path(cache, sym, p)) for p in periods}
+        stale = [p for p in periods if fps[p] is None or fits[p].get(FINGERPRINT_KEY) != fps[p]]
+        stale += [f"{i}->{j}" for j in periods for i in periods if i not in stale
+                  and transfers[j].get(FINGERPRINT_KEY, {}).get(i) != fps[i]]
+        if stale:
+            skipped.append({"symbol": sym, "reason": "cached result is not from the ladder now "
+                            "on disk (rerun the fit and transfer stages) for " + ", ".join(stale)})
             continue
         panel[sym] = {"fit": fits, "transfer": transfers}
     return panel, skipped
@@ -215,7 +232,7 @@ def _covariate_shift(cache: Path, symbols: list[str], periods: list[str]) -> dic
     features: dict = {}
     for a, pa in enumerate(periods):
         for pb in periods[a + 1:]:
-            files = {s: _read(shift_path(cache, s, pa, pb)) for s in symbols}
+            files = {s: _read_shift(cache, s, pa, pb) for s in symbols}
             files = {s: f for s, f in files.items() if f is not None}
             if not files:
                 continue
@@ -251,7 +268,7 @@ def _attribution(cache: Path, symbols: list[str], periods: list[str], source: st
     for pj in periods:
         if pj == source:
             continue
-        files = {s: _read(shift_path(cache, s, source, pj)) for s in symbols}
+        files = {s: _read_shift(cache, s, source, pj) for s in symbols}
         files = {s: f for s, f in files.items() if f is not None and "attribution" in f}
         if not files:
             continue

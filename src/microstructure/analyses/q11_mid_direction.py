@@ -59,7 +59,14 @@ from microstructure.ml.l1_features import (
     estimate_tick,
     fill_l1_columns,
 )
-from microstructure.ml.models import fit_gbm, fit_logistic, subsample
+from microstructure.ml.models import (
+    LGB_MAX_ROUNDS,
+    LGB_PARAMS,
+    LGB_PATIENCE,
+    fit_gbm,
+    fit_logistic,
+    subsample,
+)
 from microstructure.signals.load import events_with_prior_mid, load_events
 
 HORIZONS = (10, 50, 200)
@@ -79,6 +86,9 @@ SPREAD_HIST_MAX = 64
 AUC_BINS = 512
 N_BOOT = 2000
 CACHE_VERSION = 1
+# Layout and content of days/<day>.npz. Bump when `extract_day` changes what it
+# returns; a day file with another version (or none) is extracted again.
+DAY_CACHE_VERSION = 1
 _QUOTE_COLS = ("bid_price", "bid_qty", "ask_price", "ask_qty", "ofi_cum")
 _BOOK_FIELDS = ("ts", "sign", "qty", "price", "n_prints",
                 "bid_p", "bid_q", "ask_p", "ask_q", "ofi_cum")
@@ -163,15 +173,27 @@ def extract_day(root: Path, symbol: str, day: str) -> dict[str, np.ndarray]:
     }
 
 
+def day_cache_path(cache: Path, symbol: str, day: str) -> Path:
+    return cache / symbol / "days" / f"{day}.npz"
+
+
+def day_cache_current(path: Path) -> bool:
+    """True if a day extract exists and was written by the current `extract_day`."""
+    if not path.exists():
+        return False
+    with np.load(path) as z:
+        return "version" in z.files and int(z["version"]) == DAY_CACHE_VERSION
+
+
 def cached_day(root: Path, cache: Path, symbol: str, day: str) -> dict[str, np.ndarray]:
-    path = cache / symbol / "days" / f"{day}.npz"
-    if path.exists():
+    path = day_cache_path(cache, symbol, day)
+    if day_cache_current(path):
         with np.load(path) as z:
-            return {k: z[k] for k in z.files}
+            return {k: z[k] for k in z.files if k != "version"}
     out = extract_day(root, symbol, day)
     path.parent.mkdir(parents=True, exist_ok=True)
     tmp = path.with_suffix(".tmp.npz")
-    np.savez_compressed(tmp, **out)
+    np.savez_compressed(tmp, version=np.int64(DAY_CACHE_VERSION), **out)
     tmp.rename(path)
     return out
 
@@ -455,8 +477,30 @@ def split_train_days(
     return days[:n_fit], days[n_fit + embargo_days:]
 
 
+def fit_settings() -> dict:
+    """The code-level settings that shape cached predictions, besides the run config.
+
+    The LightGBM thread count is left out on purpose: it is a property of the
+    machine, a later report must find the predictions whatever `--threads` it
+    is given, and the count actually used is recorded in the meta instead.
+    """
+    return {
+        "train_cap": TRAIN_CAP, "valid_cap": VALID_CAP, "base_leaf": BASE_LEAF,
+        "warmup_events": WARMUP,
+        "lgb_params": {k: v for k, v in LGB_PARAMS.items() if k != "num_threads"},
+        "lgb_max_rounds": LGB_MAX_ROUNDS, "lgb_patience": LGB_PATIENCE,
+        "features": list(FEATURES), "models": list(MODELS),
+        "top_fractions": list(TOP_FRACTIONS), "day_cache_version": DAY_CACHE_VERSION,
+    }
+
+
 def config_key(cfg: dict) -> str:
-    blob = json.dumps({**cfg, "version": CACHE_VERSION}, sort_keys=True)
+    """Key of the cached predictions: the run config and every fit setting.
+
+    The fee is not part of either, so it stays a report-time parameter.
+    """
+    blob = json.dumps({**cfg, "version": CACHE_VERSION, "fit_settings": fit_settings()},
+                      sort_keys=True)
     return hashlib.sha1(blob.encode()).hexdigest()[:12]
 
 
@@ -490,7 +534,9 @@ def fit_symbol(root: Path, cache: Path, symbol: str, cfg: dict,
         arrays.update({f"h{h}_{k}": v for k, v in pred.items()})
     one_tick_col = FEATURES.index("one_tick")
     meta = {
-        "symbol": symbol, "config": cfg, "tick": tick, "stride": stride,
+        "symbol": symbol, "config": cfg, "fit_settings": fit_settings(),
+        "lgb_threads": LGB_PARAMS["num_threads"] if threads is None else threads,
+        "tick": tick, "stride": stride,
         "fit_days": fit_days, "valid_days": valid_days, "test_days": test_days,
         "n_train_events": n_train_events, "n_test_events": n_test_events,
         "spread": {
@@ -733,6 +779,7 @@ def score_symbol(meta: dict, arrays: dict[str, np.ndarray], fee_bps: float,
         "n_train_events": meta["n_train_events"], "n_test_events": meta["n_test_events"],
         "fit_days": meta["fit_days"], "valid_days": meta["valid_days"],
         "test_days": meta["test_days"], "horizons": horizons,
+        "fit_settings": meta["fit_settings"], "lgb_threads": meta["lgb_threads"],
     }
 
 
@@ -792,7 +839,7 @@ def run_q11(root: Path, out: Path, symbols: list[str], cfg: dict, fee_bps: float
         cached = load_cached(cache, symbol, cfg)
         if cached is None:
             gone = missing_days(root, symbol, days)
-            have_days = all((cache / symbol / "days" / f"{d}.npz").exists() for d in days)
+            have_days = all(day_cache_current(day_cache_path(cache, symbol, d)) for d in days)
             if report_only:
                 skipped.append({"symbol": symbol, "reason": "no cached predictions (report-only)"})
                 continue
@@ -811,8 +858,11 @@ def run_q11(root: Path, out: Path, symbols: list[str], cfg: dict, fee_bps: float
                 continue
             cached = load_cached(cache, symbol, cfg)
         results.append(score_symbol(*cached, fee_bps=fee_bps, n_boot=n_boot))
+    # The feature list the cached predictions were fitted with (it is part of the
+    # cache key, so every symbol loaded here shares it), not merely today's code.
+    features = results[0]["fit_settings"]["features"] if results else list(FEATURES)
     summary = {
-        "config": {**cfg, "taker_fee_bps": fee_bps, "features": list(FEATURES),
+        "config": {**cfg, "taker_fee_bps": fee_bps, "features": features,
                    "models": list(MODELS), "top_fractions": list(TOP_FRACTIONS),
                    "n_boot": n_boot},
         "symbols": results,

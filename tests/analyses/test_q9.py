@@ -6,6 +6,7 @@ rule that only a nonlinear model with size features can see. The ladder must
 report each for what it is before its real-data numbers are trusted.
 """
 import json
+import shutil
 from datetime import UTC, datetime
 from pathlib import Path
 
@@ -31,7 +32,14 @@ from microstructure.analyses.q9_sign_prediction import (
 from microstructure.data.catalog import parquet_path
 from microstructure.ml.dataset import load_sign_dataset
 from microstructure.ml.evaluate import MS_PER_DAY, day_block_ci, log_loss_bits
-from microstructure.ml.ladder import RUNGS, Ladder, daily_sums, predict_ladder
+from microstructure.ml.ladder import (
+    FINGERPRINT_KEY,
+    RUNGS,
+    Ladder,
+    daily_sums,
+    ladder_fingerprint,
+    predict_ladder,
+)
 from microstructure.ml.models import LGB_PARAMS
 from microstructure.synthetic import iid_signs, markov_signs
 
@@ -263,3 +271,69 @@ def test_stages_resume_and_holdout_never_refits(world: Path):
     # A symbol with no data is recorded as a failure and does not stop the run.
     failures = run_stage("fit", world, ["ABSENTUSDT"], PERIOD, HOLDOUT, **FIT_KW)
     assert [f["symbol"] for f in failures] == ["ABSENTUSDT"]
+
+
+def test_refit_invalidates_the_holdout_cache(world: Path, tmp_path: Path):
+    root = tmp_path / "copy"
+    shutil.copytree(world, root)
+    cache, sym = cache_root(root), MARKOV[0]
+    lad, nxt = ladder_path(cache, sym, PERIOD), holdout_cache_path(cache, sym, PERIOD, HOLDOUT)
+    old_fp = ladder_fingerprint(lad)
+    assert json.loads(nxt.read_text())[FINGERPRINT_KEY] == old_fp
+    assert _fit(root, sym)[FINGERPRINT_KEY] == old_fp
+    stamp = nxt.stat().st_mtime_ns
+    holdout_symbol(root, sym, PERIOD, HOLDOUT)
+    assert nxt.stat().st_mtime_ns == stamp  # same ladder: the cache is reused
+
+    with pytest.MonkeyPatch.context() as mp:
+        mp.setitem(LGB_PARAMS, "num_threads", 1)
+        fit_symbol(root, sym, PERIOD, force=True, **{**FIT_KW, "gbm_rounds": 5})
+    new_fp = ladder_fingerprint(lad)
+    assert new_fp != old_fp and _fit(root, sym)[FINGERPRINT_KEY] == new_fp
+    # Until the holdout is rescored the report leaves the stale file out and says so.
+    res = run_report(tmp_path / "stale", cache, list(MARKOV), PERIOD, HOLDOUT, n_boot=100)
+    assert res["next_month_symbols"] == [MARKOV[1]]
+    assert res["next_month_stale_symbols"] == [sym]
+    assert sym in (tmp_path / "stale" / "q9_sign_prediction.md").read_text().split(
+        "since been refitted:")[1]
+    holdout_symbol(root, sym, PERIOD, HOLDOUT)  # no force: the mismatch alone triggers it
+    assert json.loads(nxt.read_text())[FINGERPRINT_KEY] == new_fp
+    res = run_report(tmp_path / "fresh", cache, list(MARKOV), PERIOD, HOLDOUT, n_boot=100)
+    assert res["next_month_symbols"] == list(MARKOV) and not res["next_month_stale_symbols"]
+
+    # A cache written before fingerprints existed is a mismatch, not a crash.
+    rec = json.loads(nxt.read_text())
+    del rec[FINGERPRINT_KEY]
+    nxt.write_text(json.dumps(rec))
+    holdout_symbol(root, sym, PERIOD, HOLDOUT)
+    assert json.loads(nxt.read_text())[FINGERPRINT_KEY] == new_fp
+
+
+def test_failed_symbol_is_reported_with_its_reason_not_from_a_stale_cache(
+        world: Path, tmp_path: Path):
+    root = tmp_path / "copy"
+    shutil.copytree(world, root)
+    cache, sym = cache_root(root), MARKOV[0]
+    # The month disappears, then a forced refit fails; the old fit JSON is still on disk.
+    parquet_path(root, sym, "aggTrades", PERIOD).unlink()
+    failures = run_stage("fit", root, [sym], PERIOD, HOLDOUT, force=True, **FIT_KW)
+    assert [(f["symbol"], f["stage"]) for f in failures] == [(sym, "fit")]
+    assert failures[0]["reason"] and fit_cache_path(cache, sym, PERIOD).exists()
+    res = run_report(tmp_path / "out", cache, list(MARKOV), PERIOD, HOLDOUT, n_boot=100,
+                     failures=failures)
+    assert res["symbols"] == [MARKOV[1]] and sym not in res["within_month"]["per_symbol"]
+    assert res["next_month_symbols"] == [MARKOV[1]]
+    assert res["symbols_without_cache"] == []
+    on_disk = json.loads((tmp_path / "out" / "q9_sign_prediction.json").read_text())
+    assert on_disk["failures"] == failures
+    md = (tmp_path / "out" / "q9_sign_prediction.md").read_text()
+    assert f"{sym} (fit stage: {failures[0]['reason']})" in md
+    assert chr(0x2014) not in md and chr(0x2013) not in md
+    # Without the failure record the same call would have reported the old numbers.
+    assert sym in run_report(tmp_path / "old", cache, list(MARKOV), PERIOD, HOLDOUT,
+                             n_boot=100)["symbols"]
+    # A holdout failure keeps the within-month scores and drops only the next-month block.
+    nxt_fail = [{"symbol": MARKOV[1], "stage": "next", "reason": "boom"}]
+    res = run_report(tmp_path / "nxt", cache, [MARKOV[1]], PERIOD, HOLDOUT, n_boot=100,
+                     failures=nxt_fail)
+    assert res["symbols"] == [MARKOV[1]] and res["next_month"] is None

@@ -71,12 +71,15 @@ from microstructure.ml.drift import (
 from microstructure.ml.evaluate import MS_PER_DAY, log_loss_bits
 from microstructure.ml.features import FEATURE_NAMES
 from microstructure.ml.ladder import (
+    FINGERPRINT_KEY,
     LINEAR_ORDER,
     TRAIN_CAP,
     Ladder,
     daily_sums,
     fit_ladder,
+    ladder_fingerprint,
     predict_ladder,
+    same_ladder,
 )
 from microstructure.ml.models import subsample
 
@@ -92,6 +95,10 @@ def _write_json(path: Path, obj: dict) -> None:
     tmp = path.with_suffix(path.suffix + ".tmp")
     tmp.write_text(dumps_strict(obj, indent=0))
     os.replace(tmp, path)
+
+
+def _read_json(path: Path) -> dict | None:
+    return json.loads(path.read_text()) if path.exists() else None
 
 
 def _log(msg: str) -> None:
@@ -112,7 +119,8 @@ def fit_stage(
     skips: list[dict] = []
     for period in periods:
         lp, sp, fp = (f(cache, symbol, period) for f in (ladder_path, sample_path, fit_path))
-        if lp.exists() and sp.exists() and fp.exists():
+        # The fit summary must describe the ladder now on disk (Q9 can refit it).
+        if sp.exists() and same_ladder(_read_json(fp), lp):
             continue
         try:
             ds = load_sign_dataset(root, symbol, period)
@@ -138,7 +146,8 @@ def fit_stage(
                             ts_test=ds.ts_ms[te])
         os.replace(tmp, sp)
         _write_json(fp, {
-            "symbol": symbol, "period": period, "n_events": int(ds.signs.size),
+            "symbol": symbol, "period": period, FINGERPRINT_KEY: ladder_fingerprint(lp),
+            "n_events": int(ds.signs.size),
             "tie_share": ds.tie_share, "n_train_rows": ladder.n_train_rows,
             "n_test_rows": int(test_rows.size), "p_repeat_train": ladder.p_repeat,
             "buy_share_train": ladder.buy_share,
@@ -163,11 +172,15 @@ def fit_stage(
 def transfer_stage(root: Path, cache: Path, symbol: str, periods: list[str]) -> list[dict]:
     """Score every cached ladder on each period's test block; returns skips."""
     skips: list[dict] = []
-    trained = [p for p in periods if ladder_path(cache, symbol, p).exists()]
+    fps = {p: ladder_fingerprint(ladder_path(cache, symbol, p)) for p in periods}
+    trained = [p for p in periods if fps[p] is not None]
     for test_period in periods:
         path = transfer_path(cache, symbol, test_period)
-        existing = json.loads(path.read_text()) if path.exists() else None
-        todo = [p for p in trained if existing is None or p not in existing["cells"]]
+        existing = _read_json(path)
+        # A cell is done only if it was scored with the ladder now on disk.
+        done = {} if existing is None else existing.get(FINGERPRINT_KEY, {})
+        todo = [p for p in trained
+                if existing is None or p not in existing["cells"] or done.get(p) != fps[p]]
         if not todo:
             continue
         try:
@@ -186,9 +199,11 @@ def transfer_stage(root: Path, cache: Path, symbol: str, periods: list[str]) -> 
         out.update({"n_test_rows": int(rows.size), "tie_share": ds.tie_share,
                     "repeat_last": {"day": repeat["day"], "n": repeat["n"],
                                     "correct": repeat["r"]["correct"]}})
+        out.setdefault(FINGERPRINT_KEY, {})
         for train_period in todo:
             probs = predict_ladder(Ladder.load(ladder_path(cache, symbol, train_period)), ds, rows)
             out["cells"][train_period] = daily_sums(y, ts, {r: probs[r] for r in TRANSFER_RUNGS})
+            out[FINGERPRINT_KEY][train_period] = fps[train_period]
             del probs
         _write_json(path, out)
         _log(f"transfer {symbol} test={test_period}: {rows.size} rows, trained on {todo}")
@@ -230,7 +245,8 @@ def shift_stage(cache: Path, symbol: str, periods: list[str],
     for a, src in enumerate(have):
         for tgt in have[a + 1:]:
             path = shift_path(cache, symbol, src, tgt)
-            if path.exists():
+            # The attribution scores the source ladder, so it is tied to that file.
+            if same_ladder(_read_json(path), ladder_path(cache, symbol, src)):
                 continue
             s, t = sample(src), sample(tgt)
             Xs_fit, Xt_fit = equal_size(s["X_train"], t["X_train"], seed=0)
@@ -248,7 +264,8 @@ def shift_stage(cache: Path, symbol: str, periods: list[str],
                 att["tgt_days"] = _day_sums(t["ts_test"], loss=loss_t)
                 attribution[rung] = att
             _write_json(path, {
-                "symbol": symbol, "source": src, "target": tgt, "auc": auc,
+                "symbol": symbol, "source": src, "target": tgt,
+                FINGERPRINT_KEY: ladder_fingerprint(ladder_path(cache, symbol, src)), "auc": auc,
                 "n_fit_per_period": clf.n_src, "n_src_eval": int(s["X_test"].shape[0]),
                 "n_tgt_eval": int(t["X_test"].shape[0]),
                 "features": feature_shift(Xs_fit, Xt_fit, FEATURE_NAMES),

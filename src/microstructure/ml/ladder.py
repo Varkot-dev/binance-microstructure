@@ -16,6 +16,7 @@ Rungs, in increasing order of what they are allowed to use:
 """
 from __future__ import annotations
 
+import hashlib
 import pickle
 from dataclasses import dataclass
 from pathlib import Path
@@ -38,6 +39,34 @@ TRAIN_CAP = 2_000_000
 VALID_CAP = 500_000
 RUNGS = ("majority", "persistence", "linear", "logit_signs", "gbm_signs", "logit_all", "gbm_all")
 SIGN_IDX = [FEATURE_NAMES.index(f) for f in SIGN_FEATURES]
+# Key under which every cache entry computed from a saved ladder records which one.
+FINGERPRINT_KEY = "ladder_sha256"
+
+
+def ladder_fingerprint(path: Path) -> str | None:
+    """sha256 of the saved ladder file, or None if there is none.
+
+    Ladders are cached by symbol and period only, so a refit replaces the file
+    in place. Everything computed from a ladder stores this next to its numbers
+    and is recomputed when it no longer matches the file on disk.
+    """
+    if not path.exists():
+        return None
+    h = hashlib.sha256()
+    with path.open("rb") as f:
+        for block in iter(lambda: f.read(1 << 20), b""):
+            h.update(block)
+    return h.hexdigest()
+
+
+def same_ladder(record: dict | None, path: Path) -> bool:
+    """True if a cache record was computed with the ladder now saved at `path`.
+
+    A record without a fingerprint (written before fingerprints existed) and a
+    missing ladder both count as a mismatch.
+    """
+    fp = ladder_fingerprint(path)
+    return fp is not None and record is not None and record.get(FINGERPRINT_KEY) == fp
 
 
 @dataclass(frozen=True)

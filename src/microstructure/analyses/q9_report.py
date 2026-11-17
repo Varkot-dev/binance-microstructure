@@ -263,6 +263,20 @@ def _caveats(result: dict) -> list[str]:
     ]
 
 
+def _run_problems(result: dict) -> str:
+    """Sentences for symbols that failed in this run or whose holdout cache is stale."""
+    out = ""
+    failures = result.get("failures") or []
+    if failures:
+        out += " Failed in this run and left out of the affected block: " + "; ".join(
+            f"{f['symbol']} ({f['stage']} stage: {f['reason']})" for f in failures) + "."
+    stale = result.get("next_month_stale_symbols") or []
+    if stale:
+        out += (" Next-month caches left out because they were scored with a ladder that has "
+                f"since been refitted: {', '.join(stale)}.")
+    return out
+
+
 def write_markdown(path: Path, result: dict) -> None:
     win, nxt = result["within_month"], result["next_month"]
     rungs = result["rungs"]
@@ -295,7 +309,8 @@ def write_markdown(path: Path, result: dict) -> None:
         "",
         (f"Symbols with a fit cache: {len(result['symbols'])} ({', '.join(result['symbols'])}). "
         f"Without: {', '.join(result['symbols_without_cache']) or 'none'}. "
-        f"Next-month caches: {len(result['next_month_symbols'])}."),
+        f"Next-month caches: {len(result['next_month_symbols'])}."
+        + _run_problems(result)),
         "",
         ("| symbol | events | train rows used | test rows | test days | tie share | "
         "gbm_all rounds | gamma (train days) |"),

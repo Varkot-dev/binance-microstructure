@@ -57,6 +57,7 @@ from microstructure.ml.dataset import (
 from microstructure.ml.evaluate import MS_PER_DAY, PairedCI, score, skill
 from microstructure.ml.features import FEATURE_NAMES, SIGN_FEATURES, WARMUP
 from microstructure.ml.ladder import (
+    FINGERPRINT_KEY,
     LINEAR_ORDER,
     RUNGS,
     TRAIN_CAP,
@@ -64,7 +65,9 @@ from microstructure.ml.ladder import (
     Ladder,
     daily_sums,
     fit_ladder,
+    ladder_fingerprint,
     predict_ladder,
+    same_ladder,
 )
 from microstructure.ml.models import LGB_MAX_ROUNDS, LGB_PARAMS, LGB_PATIENCE
 
@@ -300,7 +303,9 @@ def fit_symbol(
     """Fit, save and score the ladder for one symbol-month; returns the cache path."""
     cache = cache_root(root, cache)
     out_path = fit_cache_path(cache, symbol, period)
-    if out_path.exists() and not force:
+    lp = ladder_path(cache, symbol, period)
+    # Current only if its scores are from the ladder now on disk (Q10 shares the file).
+    if out_path.exists() and not force and same_ladder(json.loads(out_path.read_text()), lp):
         return out_path
     ds = load_sign_dataset(root, symbol, period)
     test_rows = ds.rows(ds.test)
@@ -312,10 +317,11 @@ def fit_symbol(
             f"{TRAIN_DAYS + VALID_DAYS + EMBARGO_DAYS} days of events"
         )
     ladder = fit_ladder(ds, linear_order=linear_order, train_cap=train_cap, gbm_rounds=gbm_rounds)
-    ladder.save(ladder_path(cache, symbol, period))
+    ladder.save(lp)
     record = {
         "symbol": symbol,
         "period": period,
+        FINGERPRINT_KEY: ladder_fingerprint(lp),
         "config": run_config(linear_order, train_cap, gbm_rounds),
         "counts": {
             "n_events": int(ds.signs.size),
@@ -357,11 +363,12 @@ def holdout_symbol(
         raise ValueError("the holdout month must differ from the training month")
     cache = cache_root(root, cache)
     out_path = holdout_cache_path(cache, symbol, period, holdout_period)
-    if out_path.exists() and not force:
-        return out_path
     lp = ladder_path(cache, symbol, period)
     if not lp.exists():
         raise FileNotFoundError(f"no saved ladder at {lp}; run the fit stage first")
+    # A holdout score from a ladder that has since been refitted is not reused.
+    if out_path.exists() and not force and same_ladder(json.loads(out_path.read_text()), lp):
+        return out_path
     ladder = Ladder.load(lp)
     ds = load_sign_dataset(root, symbol, holdout_period)
     rows = np.flatnonzero(ds.scoreable)
@@ -371,6 +378,7 @@ def holdout_symbol(
         "symbol": symbol,
         "period": period,
         "holdout_period": holdout_period,
+        FINGERPRINT_KEY: ladder_fingerprint(lp),
         "counts": {
             "n_events": int(ds.signs.size),
             "n_rows": int(rows.size),
@@ -501,21 +509,45 @@ def _trial_log(fits: dict[str, dict]) -> dict:
 
 def build_result(
     cache: Path, symbols: list[str], period: str, holdout_period: str | None,
-    n_boot: int = N_BOOT,
+    n_boot: int = N_BOOT, failures: list[dict] | None = None,
 ) -> dict:
+    """The report dict, from the caches only.
+
+    `failures` are the `run_stage` records of this run. A symbol whose fit
+    failed is left out even if an older fit cache is still on disk (that cache
+    is not what this run produced); one whose holdout stage failed keeps its
+    within-month scores and is left out of the next-month block. A holdout
+    cache scored with a ladder other than the one behind the fit cache is
+    stale and is left out as well.
+    """
+    failures = list(failures or [])
+    failed = {stage: {f["symbol"] for f in failures if f["stage"] == stage}
+              for stage in ("fit", "next")}
     fits: dict[str, dict] = {}
     nexts: dict[str, dict] = {}
+    without: list[str] = []
+    stale_next: list[str] = []
     for sym in symbols:
         p = fit_cache_path(cache, sym, period)
         if not p.exists():
+            without.append(sym)
+            continue
+        if sym in failed["fit"]:
             continue
         fits[sym] = json.loads(p.read_text())
-        if holdout_period:
+        if holdout_period and sym not in failed["next"]:
             ph = holdout_cache_path(cache, sym, period, holdout_period)
             if ph.exists():
-                nexts[sym] = json.loads(ph.read_text())
+                rec = json.loads(ph.read_text())
+                fp = fits[sym].get(FINGERPRINT_KEY)
+                if fp is not None and rec.get(FINGERPRINT_KEY) == fp:
+                    nexts[sym] = rec
+                else:
+                    stale_next.append(sym)
     if not fits:
-        raise FileNotFoundError(f"no Q9 fit caches for {period} under {cache / 'q9'}")
+        raise FileNotFoundError(
+            f"no usable Q9 fit caches for {period} under {cache / 'q9'}"
+            + (f"; failed in this run: {failures}" if failures else ""))
 
     within = _block_summary(fits, n_boot)
     for sym, rec in fits.items():
@@ -552,7 +584,8 @@ def build_result(
         "period": period,
         "holdout_period": holdout_period,
         "symbols": list(fits),
-        "symbols_without_cache": [s for s in symbols if s not in fits],
+        "symbols_without_cache": without,
+        "failures": failures,
         "rungs": list(RUNGS),
         "increments": [
             {"key": k, "lower": lo, "upper": up, "meaning": m} for k, lo, up, m in INCREMENTS
@@ -561,6 +594,7 @@ def build_result(
         "within_month": within,
         "next_month": _block_summary(nexts, n_boot) if nexts else None,
         "next_month_symbols": list(nexts),
+        "next_month_stale_symbols": stale_next,
         "feature_importance": {
             "gbm_all_mean_gain_share": dict(sorted(gain.items(), key=lambda kv: -kv[1])),
             "logit_all_standardized_coef": coef,
@@ -574,9 +608,9 @@ def build_result(
 
 def run_report(
     out_dir: Path, cache: Path, symbols: list[str], period: str,
-    holdout_period: str | None, n_boot: int = N_BOOT,
+    holdout_period: str | None, n_boot: int = N_BOOT, failures: list[dict] | None = None,
 ) -> dict:
-    result = build_result(cache, symbols, period, holdout_period, n_boot)
+    result = build_result(cache, symbols, period, holdout_period, n_boot, failures)
     out_dir.mkdir(parents=True, exist_ok=True)
     (out_dir / "q9_sign_prediction.json").write_text(dumps_strict(result))
     q9_report.write_markdown(out_dir / "q9_sign_prediction.md", result)
@@ -603,14 +637,16 @@ def main(argv: list[str] | None = None) -> None:
     args = _parse_args(argv)
     holdout = None if args.holdout_period.lower() == "none" else args.holdout_period
     cache = cache_root(args.root, args.cache)
+    failures: list[dict] = []
     if args.stage in ("fit", "all"):
-        run_stage("fit", args.root, args.symbols, args.period, holdout,
-                  cache=cache, force=args.force)
+        failures += run_stage("fit", args.root, args.symbols, args.period, holdout,
+                              cache=cache, force=args.force)
     if args.stage in ("next", "all") and holdout:
-        run_stage("next", args.root, args.symbols, args.period, holdout,
-                  cache=cache, force=args.force)
+        failures += run_stage("next", args.root, args.symbols, args.period, holdout,
+                              cache=cache, force=args.force)
     if args.stage in ("report", "all"):
-        result = run_report(args.out, cache, args.symbols, args.period, holdout)
+        result = run_report(args.out, cache, args.symbols, args.period, holdout,
+                            failures=failures)
         print(result["verdict"])
 
 
