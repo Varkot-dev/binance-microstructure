@@ -1,0 +1,480 @@
+<title>Binance Order Flow Findings</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap">
+<style>
+/* Layout: one reading column on drafting paper, with a left annotation
+   gutter that carries each question's label; readouts sit on tolerance bands.
+   Tokens follow the repository's existing results site (site/styles.css). */
+:root {
+  --paper: oklch(97.2% 0.008 85);
+  --paper-sunk: oklch(94.6% 0.011 85);
+  --paper-edge: oklch(89% 0.014 85);
+  --ink: oklch(24% 0.018 262);
+  --ink-soft: oklch(46% 0.016 262);
+  --ink-faint: oklch(50% 0.016 262);
+  --plot: oklch(46% 0.14 248);
+  --band: oklch(74% 0.10 142);
+  --flag: oklch(55% 0.17 32);
+  --rule: oklch(80% 0.02 262);
+  --band-wash: oklch(74% 0.10 142 / 0.18);
+  --flag-wash: oklch(55% 0.17 32 / 0.12);
+  --plot-wash: oklch(46% 0.14 248 / 0.10);
+  --figure-ground: oklch(99% 0.003 85);
+
+  --face-display: "Archivo", "Helvetica Neue", Arial, sans-serif;
+  --face-body: "Source Serif 4", "Iowan Old Style", Georgia, serif;
+  --face-data: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+
+  --text-micro: 0.72rem;
+  --text-small: 0.875rem;
+  --text-base: clamp(1rem, 0.96rem + 0.18vw, 1.0625rem);
+  --text-lead: clamp(1.0625rem, 0.98rem + 0.42vw, 1.25rem);
+  --text-h3: clamp(1.125rem, 1.02rem + 0.5vw, 1.35rem);
+  --text-h2: clamp(1.5rem, 1.18rem + 1.55vw, 2.25rem);
+  --text-display: clamp(2.1rem, 1.2rem + 4.4vw, 4.5rem);
+  --text-figure: clamp(1.6rem, 1.1rem + 2.4vw, 2.6rem);
+  --measure: 64ch;
+  --frame: 72rem;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: oklch(19.5% 0.018 262);
+    --paper-sunk: oklch(23.5% 0.02 262);
+    --paper-edge: oklch(31% 0.024 262);
+    --ink: oklch(93% 0.012 85);
+    --ink-soft: oklch(76% 0.014 85);
+    --ink-faint: oklch(68% 0.014 85);
+    --plot: oklch(72% 0.14 248);
+    --band: oklch(78% 0.13 142);
+    --flag: oklch(72% 0.16 32);
+    --rule: oklch(40% 0.024 262);
+    --band-wash: oklch(78% 0.13 142 / 0.16);
+    --flag-wash: oklch(72% 0.16 32 / 0.14);
+    --plot-wash: oklch(72% 0.14 248 / 0.12);
+    --figure-ground: oklch(96% 0.006 85);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: oklch(19.5% 0.018 262);
+  --paper-sunk: oklch(23.5% 0.02 262);
+  --paper-edge: oklch(31% 0.024 262);
+  --ink: oklch(93% 0.012 85);
+  --ink-soft: oklch(76% 0.014 85);
+  --ink-faint: oklch(68% 0.014 85);
+  --plot: oklch(72% 0.14 248);
+  --band: oklch(78% 0.13 142);
+  --flag: oklch(72% 0.16 32);
+  --rule: oklch(40% 0.024 262);
+  --band-wash: oklch(78% 0.13 142 / 0.16);
+  --flag-wash: oklch(72% 0.16 32 / 0.14);
+  --plot-wash: oklch(72% 0.14 248 / 0.12);
+  --figure-ground: oklch(96% 0.006 85);
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--face-body);
+  font-size: var(--text-base);
+  line-height: 1.6;
+}
+.wrap {
+  max-width: var(--frame);
+  margin: 0 auto;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+a { color: var(--plot); text-underline-offset: 0.18em; }
+a:focus-visible { outline: 2px solid var(--plot); outline-offset: 2px; border-radius: 2px; }
+h1, h2, h3 { font-family: var(--face-display); text-wrap: balance; margin: 0; line-height: 1.12; }
+p { margin: 0; max-width: var(--measure); }
+.label {
+  font-family: var(--face-data);
+  font-size: var(--text-micro);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+.num { font-family: var(--face-data); font-variant-numeric: tabular-nums; }
+
+/* Hero */
+header.hero { padding-block: clamp(2.5rem, 1.5rem + 5vw, 5.5rem) clamp(2rem, 1rem + 3vw, 3.5rem); border-bottom: 1px solid var(--rule); }
+.hero .stack { display: grid; gap: 1.25rem; }
+.hero h1 { font-size: var(--text-display); font-weight: 700; letter-spacing: -0.02em; max-width: 18ch; }
+.hero h1 .quiet { color: var(--ink-soft); }
+.hero .lead { font-size: var(--text-lead); color: var(--ink-soft); }
+.byline { display: flex; flex-wrap: wrap; gap: 0.5rem 1.5rem; }
+
+/* Readouts on tolerance bands */
+.readouts { display: grid; grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr)); gap: 1px; background: var(--rule); border: 1px solid var(--rule); margin-top: 2rem; }
+.readout { background: var(--paper); padding: 1.1rem 1.1rem 1.2rem; display: grid; gap: 0.45rem; align-content: start; min-width: 0; }
+.readout .value { font-family: var(--face-data); font-size: var(--text-figure); font-weight: 500; line-height: 1; letter-spacing: -0.02em; }
+.readout .value.flag { color: var(--flag); }
+.readout p { font-size: var(--text-small); color: var(--ink-soft); }
+.bar { position: relative; height: 10px; background: var(--paper-sunk); border: 1px solid var(--paper-edge); }
+.bar .fill { position: absolute; inset: 0 auto 0 0; background: var(--plot-wash); border-right: 2px solid var(--plot); }
+.bar .fill.flag { background: var(--flag-wash); border-right-color: var(--flag); }
+.bar .tick { position: absolute; top: -4px; bottom: -4px; width: 0; border-left: 1px dashed var(--ink-faint); }
+
+/* Sections */
+section.part { padding-block: clamp(2.5rem, 1.5rem + 4vw, 4.5rem); border-bottom: 1px solid var(--rule); }
+.part-head { display: grid; gap: 0.75rem; margin-bottom: 2rem; }
+.part-head h2 { font-size: var(--text-h2); font-weight: 700; letter-spacing: -0.01em; }
+.part-head p { color: var(--ink-soft); font-size: var(--text-lead); }
+
+.entry { display: grid; grid-template-columns: 7.5rem minmax(0, 1fr); gap: 0 2rem; padding-block: 1.75rem; border-top: 1px solid var(--paper-edge); }
+.entry:first-of-type { border-top: 0; }
+.entry .gutter { display: grid; gap: 0.35rem; align-content: start; }
+.entry .qid { font-family: var(--face-data); font-size: 1.05rem; font-weight: 500; color: var(--plot); }
+.entry .body { display: grid; gap: 0.85rem; min-width: 0; }
+.entry h3 { font-size: var(--text-h3); font-weight: 600; }
+.entry .answer { font-weight: 600; }
+.entry ul { margin: 0; padding-left: 1.1rem; display: grid; gap: 0.35rem; max-width: var(--measure); }
+.entry li::marker { color: var(--ink-faint); }
+.verdict { display: inline-flex; align-items: center; gap: 0.4rem; font-family: var(--face-data); font-size: var(--text-micro); letter-spacing: 0.06em; text-transform: uppercase; padding: 0.2rem 0.5rem; border: 1px solid currentColor; width: fit-content; }
+.verdict.yes { color: var(--plot); }
+.verdict.no { color: var(--flag); }
+.verdict.mixed { color: var(--ink-soft); }
+
+figure { margin: 0; display: grid; gap: 0.4rem; }
+figure .plate { background: var(--figure-ground); border: 1px solid var(--paper-edge); padding: 0.5rem; }
+figure img { display: block; width: 100%; height: auto; }
+figcaption { font-size: var(--text-small); color: var(--ink-faint); }
+.figs { display: grid; grid-template-columns: repeat(auto-fit, minmax(17rem, 1fr)); gap: 1rem; }
+
+.table-scroll { overflow-x: auto; border: 1px solid var(--paper-edge); }
+table { border-collapse: collapse; width: 100%; font-size: var(--text-small); }
+th, td { padding: 0.5rem 0.75rem; text-align: right; white-space: nowrap; border-bottom: 1px solid var(--paper-edge); }
+th:first-child, td:first-child { text-align: left; }
+thead th { font-family: var(--face-data); font-size: var(--text-micro); font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-faint); background: var(--paper-sunk); }
+td { font-family: var(--face-data); font-variant-numeric: tabular-nums; }
+td:first-child { font-family: var(--face-body); }
+tbody tr:last-child td { border-bottom: 0; }
+td.hi { color: var(--plot); font-weight: 500; }
+td.bad { color: var(--flag); font-weight: 500; }
+
+.limits { display: grid; grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr)); gap: 1.25rem 2rem; }
+.limits div { display: grid; gap: 0.3rem; align-content: start; }
+.limits h3 { font-size: 1rem; font-weight: 600; }
+.limits p { font-size: var(--text-small); color: var(--ink-soft); }
+
+footer { padding-block: 2rem 3rem; display: grid; gap: 0.5rem; }
+footer p { font-size: var(--text-small); color: var(--ink-faint); }
+
+@media (max-width: 640px) {
+  .entry { grid-template-columns: minmax(0, 1fr); gap: 0.6rem; }
+  .entry .gutter { grid-auto-flow: column; justify-content: start; gap: 0.75rem; align-items: baseline; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .bar .fill { transition: width 600ms ease-out; }
+}
+</style>
+
+<div class="wrap">
+  <header class="hero">
+    <div class="stack">
+      <span class="label">Binance USDT-M perpetual futures · 2023 to 2026 · tick data</span>
+      <h1>Order flow is predictable. <span class="quiet">Trading on it is not.</span></h1>
+      <p class="lead">Thirteen questions about how trades behave one at a time on Binance futures: how long their direction stays predictable, how prices respond, how much trading is a reaction to other trading, what that means for executing an order, and whether machine learning finds anything that pays.</p>
+      <div class="byline">
+        <span class="label">Varshith Kotagiri · University of Pennsylvania</span>
+        <span class="label">105M trades · 114M top-of-book quotes · 121 symbols</span>
+      </div>
+    </div>
+
+    <div class="readouts" aria-label="Headline numbers">
+      <div class="readout">
+        <span class="label">Next trade's direction</span>
+        <span class="value num">60.0%</span>
+        <div class="bar" aria-hidden="true"><span class="fill" style="width:60%"></span><span class="tick" style="left:50%"></span></div>
+        <p>Median accuracy of the best model on 10 symbols. A coin flip is 50% (dashed line).</p>
+      </div>
+      <div class="readout">
+        <span class="label">Trades that are reactions</span>
+        <span class="value num">71 to 96%</span>
+        <div class="bar" aria-hidden="true"><span class="fill" style="width:71%"></span><span class="tick" style="left:96%"></span></div>
+        <p>Hawkes branching ratio: 0.71 from the exponential fit (a lower bound), 0.96 kernel-free.</p>
+      </div>
+      <div class="readout">
+        <span class="label">Price predictions that pay</span>
+        <span class="value num flag">0 of 144</span>
+        <div class="bar" aria-hidden="true"><span class="fill flag" style="width:18.5%"></span><span class="tick" style="left:100%"></span></div>
+        <p>Best case covers 18.5% of the round-trip taker cost (bar), against 100% needed to break even.</p>
+      </div>
+      <div class="readout">
+        <span class="label">Model staleness by 2026</span>
+        <span class="value num">+1.6 pts</span>
+        <div class="bar" aria-hidden="true"><span class="fill" style="width:35%"></span><span class="tick" style="left:4%"></span></div>
+        <p>Accuracy a 2023 model misses against a retrained one; normal one-month drift is 0.2 points.</p>
+      </div>
+    </div>
+  </header>
+
+  <section class="part" aria-labelledby="p1">
+    <div class="part-head">
+      <span class="label">Part one · Q0 to Q8</span>
+      <h2 id="p1">What the market does</h2>
+      <p>Classical market microstructure results, first replicated on BTC and ETH against published equity numbers, then extended across many symbols and five months from June 2023 to July 2026.</p>
+    </div>
+
+    <article class="entry">
+      <div class="gutter"><span class="qid">Q0</span><span class="label">Method check</span></div>
+      <div class="body">
+        <h3>Should one market order count as one trade?</h3>
+        <p class="answer">Yes, and getting this wrong changes everything downstream.</p>
+        <p>Binance prints one market order as many fills. Measuring on raw prints inflates the memory exponent by 0.29 to 0.50, and the inflated value still looks plausible against published ranges. Every later result merges same-millisecond, same-side prints into one aggressor event.</p>
+      </div>
+    </article>
+
+    <article class="entry">
+      <div class="gutter"><span class="qid">Q1</span><span class="label">Memory</span></div>
+      <div class="body">
+        <h3>Do buys follow buys?</h3>
+        <p class="answer">Yes, for a very long time. The direction of trades has long memory.</p>
+        <p>The sign autocorrelation decays as a power law with exponent <span class="num">0.3803</span> for BTC and <span class="num">0.2380</span> for ETH. A short-lag zigzag in the curve (Q1b) is real market structure, not an artifact of how ties are broken.</p>
+        <div class="figs">
+          <figure><div class="plate"><img src="q1_acf_loglog.png" alt="Log-log plot of trade sign autocorrelation against lag for BTC and ETH, decaying as a straight line" loading="lazy"></div><figcaption>Sign autocorrelation on log-log axes; a straight line is a power law.</figcaption></figure>
+        </div>
+      </div>
+    </article>
+
+    <article class="entry">
+      <div class="gutter"><span class="qid">Q2 · Q3</span><span class="label">Price response</span></div>
+      <div class="body">
+        <h3>How do prices respond to order flow?</h3>
+        <p class="answer">They rise and then level off, inside the range theory predicts.</p>
+        <ul>
+          <li>The price response grows <span class="num">5.39×</span> before plateauing, inside the <span class="num">3.5 to 6.9×</span> band implied by the memory exponent.</li>
+          <li>Price change is linear in order-flow imbalance with R² <span class="num">0.40</span>, against the 65 to 70% reported for equities.</li>
+        </ul>
+        <div class="figs">
+          <figure><div class="plate"><img src="q2_response.png" alt="Price response function rising with lag and flattening" loading="lazy"></div><figcaption>Response function R(ℓ).</figcaption></figure>
+          <figure><div class="plate"><img src="q3_ofi_scatter.png" alt="Scatter of price change against order-flow imbalance with a fitted line" loading="lazy"></div><figcaption>Price change against order-flow imbalance.</figcaption></figure>
+        </div>
+      </div>
+    </article>
+
+    <article class="entry">
+      <div class="gutter"><span class="qid">Q4 · Q4b</span><span class="label">Cross-section</span></div>
+      <div class="body">
+        <h3>Does memory depend on how busy a market is?</h3>
+        <p class="answer">The memory exponent does not. The chance that the next trade flips direction does.</p>
+        <p>Across 121 symbols, the memory exponent is flat in trading activity (slope <span class="num">−0.0112</span>, R² <span class="num">0.0003</span>). Flip probability rises with activity (R² <span class="num">0.2632</span>); tick size is a borderline second factor (t <span class="num">2.09</span>).</p>
+        <div class="figs">
+          <figure><div class="plate"><img src="q4_gamma_vs_activity.png" alt="Memory exponent against log activity across 121 symbols, with a flat fitted line" loading="lazy"></div><figcaption>Memory exponent against activity.</figcaption></figure>
+          <figure><div class="plate"><img src="q4_flip_vs_activity.png" alt="Flip probability against log activity, rising" loading="lazy"></div><figcaption>Flip probability against activity.</figcaption></figure>
+        </div>
+      </div>
+    </article>
+
+    <article class="entry">
+      <div class="gutter"><span class="qid">Q5</span><span class="label">Impact kernel</span></div>
+      <div class="body">
+        <h3>Why doesn't predictable order flow make prices predictable?</h3>
+        <p class="answer">Because each trade's impact fades at the rate that keeps prices close to a random walk.</p>
+        <p>Separating the bare impact kernel from flow memory, <span class="num">12</span> of <span class="num">16</span> symbols satisfy the critical-balance condition. This is the mechanism behind the headline of this page: predictable trades, unpredictable prices.</p>
+        <div class="figs">
+          <figure><div class="plate"><img src="q5_kernel_panel.png" alt="Panel of deconvolved impact kernels for 16 symbols" loading="lazy"></div><figcaption>Deconvolved impact kernels, 16 symbols.</figcaption></figure>
+        </div>
+      </div>
+    </article>
+
+    <article class="entry">
+      <div class="gutter"><span class="qid">Q6 · Q6b</span><span class="label">Endogeneity</span></div>
+      <div class="body">
+        <h3>How much trading is a reaction to other trading?</h3>
+        <p class="answer">Most of it: at least 70%, and probably more.</p>
+        <ul>
+          <li>Median Hawkes branching ratio <span class="num">0.7070</span> from the exponential-kernel fit, a lower bound; <span class="num">0.959</span> from the kernel-free count-variance estimator, higher on 41 of 41 symbols.</li>
+          <li>A second kernel timescale raises the fit to <span class="num">0.854</span> and closes a median 54% of the gap; the extra component decays in about 7 seconds.</li>
+        </ul>
+        <div class="figs">
+          <figure><div class="plate"><img src="q6_endogeneity.png" alt="Branching ratio estimates across 41 symbols from two estimators" loading="lazy"></div><figcaption>Branching ratio, 41 symbols, two estimators.</figcaption></figure>
+          <figure><div class="plate"><img src="q6b_kernel_sensitivity.png" alt="Branching ratio under one, two and three kernel timescales" loading="lazy"></div><figcaption>Sensitivity to the number of kernel timescales.</figcaption></figure>
+        </div>
+      </div>
+    </article>
+
+    <article class="entry">
+      <div class="gutter"><span class="qid">Q7</span><span class="label">Execution</span></div>
+      <div class="body">
+        <h3>What does this mean for executing a large order?</h3>
+        <p class="answer">Front-loading trades a random cost for a predictable one.</p>
+        <p>On replayed flow for 6 symbols, front-loading costs more on average (<span class="num">2.11</span> against <span class="num">0.55</span> bps of arrival mid for TWAP), but its standard deviation is <span class="num">1.75</span> bps against <span class="num">29.3</span>, about 17 times lower, and lower on every symbol. This is a cost model, not a backtest.</p>
+        <div class="figs">
+          <figure><div class="plate"><img src="q7_execution.png" alt="Execution shortfall distributions for TWAP, front-loaded and flow-reactive schedules" loading="lazy"></div><figcaption>Shortfall by execution schedule.</figcaption></figure>
+        </div>
+      </div>
+    </article>
+
+    <article class="entry">
+      <div class="gutter"><span class="qid">Q8</span><span class="label">Over time</span></div>
+      <div class="body">
+        <h3>Do these results hold from 2023 to 2026?</h3>
+        <p class="answer">Partly. The flip law fades, and memory starts depending on liquidity for older contracts.</p>
+        <ul>
+          <li>Flip probability against activity: slope <span class="num">+0.1114</span> in June 2023, <span class="num">+0.0006</span> by July 2026. On 39 contracts present in both, its t-statistic fell from 4.0 to 1.1.</li>
+          <li>On those same 39 contracts the memory exponent went from no activity dependence (t 1.0) to a clear one (t 3.6); contracts listed since show little.</li>
+          <li>An apparent collapse in endogeneity in 2024 (0.71 to 0.39) is a fitting artifact: the kernel-free estimator moves only from 0.96 to 0.93.</li>
+        </ul>
+        <div class="figs">
+          <figure><div class="plate"><img src="q8_regimes.png" alt="Six-regime comparison of flip-law slopes, memory exponents and branching ratios" loading="lazy"></div><figcaption>Six regimes, June 2023 to July 2026.</figcaption></figure>
+        </div>
+      </div>
+    </article>
+  </section>
+
+  <section class="part" aria-labelledby="p2">
+    <div class="part-head">
+      <span class="label">Part two · Q9 to Q13</span>
+      <h2 id="p2">What can be predicted</h2>
+      <p>Machine learning on top of the classical results, each model scored on held-out days against the baseline that theory already implies, with intervals from resampling whole trading days.</p>
+    </div>
+
+    <article class="entry">
+      <div class="gutter"><span class="qid">Q9</span><span class="label">Trade direction</span></div>
+      <div class="body">
+        <h3>How well can the next trade's direction be predicted?</h3>
+        <span class="verdict yes">About 60% · mostly from known memory</span>
+        <p>Ten symbols, trained on June 2023 and tested on held-out days. Three quarters of the best model's gain over a coin flip is already in the linear predictor built from the memory measured in Q1. Size, timing and recent price moves add most of the rest.</p>
+        <div class="table-scroll">
+          <table>
+            <thead><tr><th>Method</th><th>Median accuracy</th><th>Next month</th></tr></thead>
+            <tbody>
+              <tr><td>Always guess the more common side</td><td>50.0%</td><td>n/a</td></tr>
+              <tr><td>Repeat the last trade</td><td>53.5%</td><td>n/a</td></tr>
+              <tr><td>Linear predictor from long memory</td><td>57.0%</td><td>58.1%</td></tr>
+              <tr><td>Boosted trees, all features</td><td class="hi">60.0%</td><td class="hi">60.6%</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p>The models were frozen and scored on all of July 2023; every improvement step holds there on all ten symbols. BTC and ETH reach 68 to 69%.</p>
+        <figure><div class="plate"><img src="q9_sign_prediction.png" alt="Accuracy by model for each of 10 symbols, rising from 50% to about 60%, and pooled increments with intervals" loading="lazy"></div><figcaption>Accuracy by model rung, and what each step adds.</figcaption></figure>
+      </div>
+    </article>
+
+    <article class="entry">
+      <div class="gutter"><span class="qid">Q10</span><span class="label">Drift</span></div>
+      <div class="body">
+        <h3>Does a 2023 model go stale?</h3>
+        <span class="verdict mixed">Yes, by missing a gain rather than suffering a loss</span>
+        <p>The 2023 model stays at about 60% in every later year. What changes is the market: a model retrained in 2025 reaches 66%. Staleness here is the accuracy retraining would recover.</p>
+        <div class="table-scroll">
+          <table>
+            <thead><tr><th>Tested on</th><th>Recovered by retraining</th><th>Market got easier by</th><th>Symbols above normal drift</th></tr></thead>
+            <tbody>
+              <tr><td>July 2023 (normal one-month drift)</td><td>+0.19 pts</td><td>+0.90 pts</td><td>n/a</td></tr>
+              <tr><td>July 2024</td><td>+2.42 pts</td><td>+2.49 pts</td><td>10 of 10</td></tr>
+              <tr><td>July 2025</td><td class="hi">+4.63 pts</td><td>+4.42 pts</td><td>10 of 10</td></tr>
+              <tr><td>July 2026</td><td>+1.63 pts</td><td>+2.23 pts</td><td>10 of 10</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <ul>
+          <li>The inputs moved: a classifier tells 2023 trading from 2025 with a median AUC of 0.82 (0.5 means indistinguishable).</li>
+          <li>Whether the inputs or the relationship changed more is not settled: the median and the per-symbol majority disagree.</li>
+          <li>PEPE, XRP and DOGE went stale most, by up to 14 points in 2025; BTC and ETH by under one point.</li>
+        </ul>
+        <figure><div class="plate"><img src="q10_drift.png" alt="Transfer matrix of accuracy by training and test period, and staleness gaps with intervals" loading="lazy"></div><figcaption>Accuracy when trained on one period and tested on another.</figcaption></figure>
+      </div>
+    </article>
+
+    <article class="entry">
+      <div class="gutter"><span class="qid">Q11</span><span class="label">Price direction</span></div>
+      <div class="body">
+        <h3>Can the next price move be predicted, and does it pay?</h3>
+        <span class="verdict no">Predictable · does not pay</span>
+        <p>Four symbols with top-of-book quotes (2023 only). Direction a few trades ahead is highly predictable where the minimum price step is large relative to the price, but the predicted move is a small fraction of what a round trip costs a taker.</p>
+        <div class="table-scroll">
+          <table>
+            <thead><tr><th>Symbol</th><th>AUC, 10 trades ahead</th><th>Best predicted move</th><th>Round-trip cost</th><th>Share of cost</th></tr></thead>
+            <tbody>
+              <tr><td>BTCUSDT</td><td class="hi">0.929</td><td>1.02 bps</td><td>10.05 bps</td><td class="bad">10%</td></tr>
+              <tr><td>ETHUSDT</td><td class="hi">0.877</td><td>0.97 bps</td><td>10.06 bps</td><td class="bad">10%</td></tr>
+              <tr><td>SOLUSDT</td><td>0.655</td><td>1.98 bps</td><td>10.69 bps</td><td class="bad">18%</td></tr>
+              <tr><td>DOGEUSDT</td><td>0.679</td><td>1.93 bps</td><td>11.60 bps</td><td class="bad">17%</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p>Best predicted move is the most confident 5% of predictions from the best model for each symbol. Cost is half the spread at entry and exit plus a 5 bps taker fee each way. The gross edge covers cost in 0 of 144 combinations of symbol, horizon, model and confidence level. An AUC of 0.5 is no skill and 1.0 is perfect.</p>
+        <figure><div class="plate"><img src="q11_mid_direction.png" alt="AUC falling with prediction horizon for each symbol, and gross edge far below taker cost at every confidence level" loading="lazy"></div><figcaption>Predictive skill by horizon (left) and edge against cost (right).</figcaption></figure>
+      </div>
+    </article>
+
+    <article class="entry">
+      <div class="gutter"><span class="qid">Q12</span><span class="label">Trade timing</span></div>
+      <div class="body">
+        <h3>Does a neural network predict trade timing better than Hawkes?</h3>
+        <span class="verdict mixed">Yes, but Hawkes gets 91% of the way</span>
+        <p>A recurrent neural point process and Hawkes models with one to three timescales, scored on identical held-out trades with a likelihood that handles millisecond timestamps correctly.</p>
+        <ul>
+          <li>The network beats the best Hawkes on 10 of 10 symbols, by a median <span class="num">0.053</span> nats per trade.</li>
+          <li>The best Hawkes already captures a median <span class="num">91%</span> of the network's gain over random arrivals, so Q6's model describes timing well.</li>
+          <li>XRP's Hawkes fits failed (likely a regime change within June), so its larger gap is a poor fit rather than missing structure.</li>
+          <li>This does not change Q6's branching ratios.</li>
+        </ul>
+        <figure><div class="plate"><img src="q12_neural_ceiling.png" alt="Held-out likelihood over Poisson for Hawkes K equals 1, 2, 3 and the neural model, per symbol" loading="lazy"></div><figcaption>Held-out timing likelihood over a random-arrival baseline.</figcaption></figure>
+      </div>
+    </article>
+
+    <article class="entry">
+      <div class="gutter"><span class="qid">Q13</span><span class="label">Break-even</span></div>
+      <div class="body">
+        <h3>How far from paying are the price predictions, and are they useful anyway?</h3>
+        <span class="verdict no">Needs fees under 0.65 bps per side · small timing value</span>
+        <p>Q13 reuses Q11's predictions unchanged and reproduces its numbers exactly, then asks two questions Q11 left open.</p>
+        <p><strong>At what fee would trading on them pay?</strong> The best case for every symbol needs a taker fee under 0.65 bps per side, against the 5 bps assumed. Even a fee of zero would not be enough for 43 of the 144 combinations, because the spread alone is larger than the predicted move.</p>
+        <div class="table-scroll">
+          <table>
+            <thead><tr><th>Symbol</th><th>Break-even fee per side</th><th>95% interval</th><th>Cost at 5 bps ÷ edge</th></tr></thead>
+            <tbody>
+              <tr><td>BTCUSDT</td><td>0.49 bps</td><td>0.38 to 0.58</td><td class="bad">9.9×</td></tr>
+              <tr><td>ETHUSDT</td><td>0.46 bps</td><td>0.43 to 0.49</td><td class="bad">10.4×</td></tr>
+              <tr><td>SOLUSDT</td><td>0.64 bps</td><td>0.33 to 0.92</td><td class="bad">5.4×</td></tr>
+              <tr><td>DOGEUSDT</td><td>0.16 bps</td><td>−0.87 to 1.10</td><td class="bad">6.0×</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p><strong>Can they cut the cost of a trade you must make anyway?</strong> A trader who must buy waits when the model predicts the price will dip, and a seller waits when it predicts a rise. That saves 0.22 to 0.36 bps per order on average at the mid price, against roughly zero for waiting at random. The saving is real but small next to its risk: the standard deviation per order is 1.4 to 10 bps, and 31 to 45% of delayed orders end up worse.</p>
+        <div class="table-scroll">
+          <table>
+            <thead><tr><th>Symbol</th><th>Mean saving per order</th><th>Spread of outcomes (sd)</th><th>Delayed orders that end worse</th></tr></thead>
+            <tbody>
+              <tr><td>BTCUSDT</td><td class="hi">0.22 bps</td><td>2.3 bps</td><td>41%</td></tr>
+              <tr><td>ETHUSDT</td><td class="hi">0.22 bps</td><td>1.4 bps</td><td>31%</td></tr>
+              <tr><td>SOLUSDT</td><td class="hi">0.35 bps</td><td>4.9 bps</td><td>44%</td></tr>
+              <tr><td>DOGEUSDT</td><td class="hi">0.36 bps</td><td>10.4 bps</td><td>45%</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p>The timing saving leaves out any change in the spread at the delayed time, the order's own impact, latency and missed fills. The best cell per symbol is chosen as a maximum over many combinations, which flatters it.</p>
+        <figure><div class="plate"><img src="q13_break_even.png" alt="Break-even fee per side for each symbol and horizon, all far below the 5 bps assumed fee; and timing savings as a share of perfect foresight, well above random waiting" loading="lazy"></div><figcaption>Break-even fee (left) and timing value as a share of perfect foresight (right).</figcaption></figure>
+      </div>
+    </article>
+  </section>
+
+  <section class="part" aria-labelledby="p4">
+    <div class="part-head">
+      <span class="label">Reading these results</span>
+      <h2 id="p4">What this does and does not show</h2>
+    </div>
+    <div class="limits">
+      <div><h3>Not a trading strategy</h3><p>No result here claims profit. Q11's cost accounting is optimistic (no latency, no queue, no own impact), and still nothing covers cost.</p></div>
+      <div><h3>Few test days</h3><p>Most test blocks are one or two weeks, so intervals from resampling days are coarse and probably too narrow.</p></div>
+      <div><h3>Survivor symbols</h3><p>The ML panels use contracts listed in every month studied; delisted and newer contracts are absent.</p></div>
+      <div><h3>Quotes only for 2023</h3><p>Binance publishes top-of-book dumps for 2023 only, so price prediction is limited to that year.</p></div>
+      <div><h3>Fee not verified at source</h3><p>The 5 bps taker fee is the regular tier as reported by third-party pages.</p></div>
+      <div><h3>Every model checked against a planted answer</h3><p>Each estimator and analysis is first tested on synthetic data with a known result; 487 tests pass.</p></div>
+    </div>
+  </section>
+
+  <footer>
+    <p>Source, per-question write-ups and data: <a href="https://github.com/Varkot-dev/binance-microstructure" target="_blank" rel="noopener">github.com/Varkot-dev/binance-microstructure</a> (results in the <span class="num">results/</span> folder).</p>
+    <p>Data: public aggTrades and bookTicker dumps from data.binance.vision, each file verified against its published checksum.</p>
+  </footer>
+</div>
