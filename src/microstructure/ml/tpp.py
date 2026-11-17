@@ -405,7 +405,7 @@ class TPPConfig:
     window: int = 256          # events per truncated-backpropagation window
     window_burn: int = 64      # leading events of a window that are fed, not scored
     batch_size: int = 64
-    max_windows_per_epoch: int = 4096
+    max_windows_per_epoch: int = 8192
     epochs: int = 10
     patience: int = 2
     lr: float = 2e-3

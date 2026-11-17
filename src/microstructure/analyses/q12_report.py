@@ -131,7 +131,7 @@ def plot(out_dir: Path, records: list[dict]) -> None:
     """Held-out nats per event over Poisson, one row per symbol-month, one mark per model."""
     rows = sorted(records, key=lambda r: (r["month"], -r["n_events"]))
     fig, ax = plt.subplots(figsize=(9.5, 1.6 + 0.62 * max(len(rows), 1)))
-    offsets = np.linspace(0.27, -0.27, len(_STYLE))
+    offsets = np.linspace(-0.27, 0.27, len(_STYLE))
     for (name, (label, color, marker)), off in zip(_STYLE.items(), offsets, strict=True):
         ys, xs, err = [], [], [[], []]
         for i, r in enumerate(rows):
@@ -151,7 +151,10 @@ def plot(out_dir: Path, records: list[dict]) -> None:
     ax.set_yticklabels([_unit(r) for r in rows])
     ax.set_ylim(len(rows) - 0.5, -0.5)
     ax.set_xlabel("held-out nats per event over Poisson (interval-censored; 95% day-block CI)")
-    ax.set_title("Q12: one-step-ahead timing likelihood, Hawkes K=1,2,3 vs neural", loc="left")
+    ax.set_title("Q12: one-step-ahead timing likelihood, Hawkes K=1,2,3 vs neural\n"
+                 "Each interval is model minus Poisson; day-to-day variation is shared across "
+                 "models, so compare models with the paired differences in the table.",
+                 loc="left", fontsize=9)
     ax.grid(axis="x", color="#e4e3df", linewidth=0.8)
     ax.set_axisbelow(True)
     for side in ("top", "right", "left"):

@@ -87,7 +87,7 @@ class Q12Config:
     ks: tuple[int, ...] = (1, 2, 3)
     burn_in: int = 20_000          # events fed but not scored at the start of each block
     hawkes_fit_events: int = MAX_FIT_EVENTS
-    hawkes_chunks: int = 3         # contiguous training chunks each K is fit on
+    hawkes_chunks: int = 2         # contiguous training chunks each K is fit on
     polish_iters: int = 300        # Nelder-Mead iterations on the censored score; 0 disables
     polish_events: int = 100_000
     n_seeds: int = 2
