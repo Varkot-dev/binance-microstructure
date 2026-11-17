@@ -38,6 +38,16 @@ def test_estimate_tick_ignores_float_noise():
         estimate_tick(np.array([1.0, 1.0]))
 
 
+def test_estimate_tick_ignores_a_stray_off_grid_price():
+    grid = 25_000.0 + 0.1 * np.arange(5_000)
+    prices = np.concatenate([grid, [25_348.98]])
+    assert estimate_tick(prices) == pytest.approx(0.1, rel=1e-9)
+    # A sparse grid, where most gaps are several ticks, still finds the tick.
+    rng = np.random.default_rng(0)
+    sparse = 0.001 * np.unique(rng.integers(0, 20_000, size=4_000))
+    assert estimate_tick(sparse) == pytest.approx(0.001, rel=1e-9)
+
+
 def test_cumulative_ofi_differences_recover_window_sums():
     bid_p, bid_q, ask_p, ask_q, _, _ = _book(500, seed=0)
     c = cumulative_quote_ofi(bid_p, bid_q, ask_p, ask_q)

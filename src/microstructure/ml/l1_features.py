@@ -39,16 +39,34 @@ L1_FEATURES = (
 )
 
 
-def estimate_tick(prices: np.ndarray) -> float:
-    """Smallest positive increment between distinct observed prices.
+# An increment must account for at least this share of the gaps between
+# adjacent distinct prices to count as the tick, once there are enough gaps
+# for a share to mean something.
+TICK_MIN_SHARE = 0.01
+TICK_MIN_GAPS = 200
 
-    Rounded to 6 significant digits so float noise in the subtraction
-    (17.385 - 17.384 = 0.000999999...) does not survive into the estimate.
+
+def estimate_tick(prices: np.ndarray) -> float:
+    """Smallest increment that recurs between adjacent distinct observed prices.
+
+    Increments are rounded to 6 significant digits so float noise in the
+    subtraction (17.385 - 17.384 = 0.000999999...) does not survive into the
+    estimate. A plain minimum is not robust: one stray off-grid price in
+    millions of quotes (BTCUSDT 2023-06-15 has a single 25348.98 on a 0.1
+    grid) would set the tick. With at least TICK_MIN_GAPS gaps, the estimate
+    is the smallest increment that makes up TICK_MIN_SHARE of them or more;
+    with fewer, it is the minimum.
     """
     u = np.unique(np.asarray(prices, dtype=np.float64))
     if u.size < 2:
         raise ValueError("need at least two distinct prices to estimate the tick")
-    return float(f"{np.diff(u).min():.6g}")
+    gaps = np.array([float(f"{d:.6g}") for d in np.diff(u)])
+    values, counts = np.unique(gaps, return_counts=True)
+    if gaps.size >= TICK_MIN_GAPS:
+        common = values[counts >= TICK_MIN_SHARE * gaps.size]
+        if common.size:
+            return float(common[0])
+    return float(values[0])
 
 
 def cumulative_quote_ofi(

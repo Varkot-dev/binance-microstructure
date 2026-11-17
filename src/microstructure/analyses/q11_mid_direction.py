@@ -88,7 +88,7 @@ N_BOOT = 2000
 CACHE_VERSION = 1
 # Layout and content of days/<day>.npz. Bump when `extract_day` changes what it
 # returns; a day file with another version (or none) is extracted again.
-DAY_CACHE_VERSION = 1
+DAY_CACHE_VERSION = 2  # 2: tick estimate ignores stray off-grid prices
 _QUOTE_COLS = ("bid_price", "bid_qty", "ask_price", "ask_qty", "ofi_cum")
 _BOOK_FIELDS = ("ts", "sign", "qty", "price", "n_prints",
                 "bid_p", "bid_q", "ask_p", "ask_q", "ofi_cum")
