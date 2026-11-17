@@ -27,8 +27,10 @@ import random
 import re
 import sys
 import zipfile
-from datetime import date, timedelta
+from datetime import UTC, date, datetime, timedelta
 from pathlib import Path
+
+import httpx
 
 ROOT = Path(__file__).resolve().parents[2]
 CACHE = ROOT / "data" / "universe" / "lifecycle_cache"
@@ -93,6 +95,37 @@ def price_match(old_close: float | None, new_close: float | None,
     return None
 
 
+def ticker_multiplier(sym: str) -> float:
+    """Units per contract implied by the ticker prefix: 1000PEPE is 1e3, 1000000BOB and
+    1MBABYDOGE are 1e6, anything else 1."""
+    if sym.startswith("1000000") or re.match(r"1M[A-Z]", sym):
+        return 1e6
+    if sym.startswith("1000"):
+        return 1e3
+    return 1.0
+
+
+def denomination_consistent(old: str, new: str, k: float) -> bool:
+    """A price ratio old/new of k is only a plausible rename if the tickers say so:
+    k must equal multiplier(old) / multiplier(new) (1 for two plain tickers)."""
+    want = ticker_multiplier(old) / ticker_multiplier(new)
+    return abs(k / want - 1.0) < 1e-9
+
+
+def drop_artifact_days(days: dict[str, int], positive_rows: dict[str, int],
+                       max_bytes: int = 1000) -> tuple[list[str], list[str]]:
+    """Split a symbol's {day: zip size} into (trading days, artifact days). A day is an
+    artifact if its file is under `max_bytes` and was checked to hold no print with a
+    positive price (`positive_rows[day] == 0`); unchecked tiny days are kept."""
+    keep, drop = [], []
+    for d in sorted(days):
+        if days[d] < max_bytes and positive_rows.get(d) == 0:
+            drop.append(d)
+        else:
+            keep.append(d)
+    return keep, drop
+
+
 def window_candidates(end: date, starts: dict[str, date], own: str,
                       window: int = CANDIDATE_WINDOW_DAYS) -> list[str]:
     """Contracts (life keys) other than `own` whose first day is within `window` days
@@ -126,7 +159,6 @@ def classify(sym: str, life_idx: int, n_lives: int, alive: bool) -> tuple[str, s
 # Network (S3 listing and tiny downloads), all cached
 # --------------------------------------------------------------------------
 def _client():
-    import httpx
     return httpx.Client(timeout=60, follow_redirects=True)
 
 
@@ -154,7 +186,7 @@ def list_s3(prefix: str, delimiter: str | None = None):
                 r = client().get(S3, params=params)
                 r.raise_for_status()
                 break
-            except Exception:
+            except httpx.HTTPError:
                 if attempt == 4:
                     raise
         t = r.text
@@ -163,7 +195,7 @@ def list_s3(prefix: str, delimiter: str | None = None):
             last = items[-1] if items else None
         else:
             items = []
-            for b in re.findall(r"<Contents>(.*?)</Contents>", t, re.S):
+            for b in re.findall(r"<Contents>(.*?)</Contents>", t, re.DOTALL):
                 k = re.search(r"<Key>([^<]+)</Key>", b).group(1)
                 s = int(re.search(r"<Size>(\d+)</Size>", b).group(1))
                 items.append((k, s))
@@ -232,12 +264,26 @@ def cached_closes(keys: list[tuple[str, str]]) -> dict[str, float | None]:
     def one(sd):
         try:
             return sd, daily_close(*sd)
-        except Exception as e:  # keep going; recorded as missing
+        except (httpx.HTTPError, zipfile.BadZipFile, ValueError, IndexError) as e:
             print("close failed", sd, e, file=sys.stderr)
             return sd, None
     with cf.ThreadPoolExecutor(8) as ex:
         for (s, d), c in ex.map(one, todo):
             cache[f"{s}|{d}"] = c
+    f.parent.mkdir(parents=True, exist_ok=True)
+    f.write_text(json.dumps(cache, sort_keys=True))
+    return cache
+
+
+def positive_price_rows(files: list[tuple[str, str]]) -> dict[str, int]:
+    """Number of aggTrades rows with a positive price in each (symbol, day) file, cached."""
+    f = CACHE / "positive_price_rows.json"
+    cache = json.loads(f.read_text()) if f.exists() else {}
+    for s, d in files:
+        k = f"{s}|{d}"
+        if k not in cache:
+            rows = fetch_zip_csv(f"{DL}/{AGG_PFX}{s}/{s}-aggTrades-{d}.zip") or []
+            cache[k] = sum(float(r[1]) > 0 for r in _data_rows(rows))
     f.parent.mkdir(parents=True, exist_ok=True)
     f.write_text(json.dumps(cache, sort_keys=True))
     return cache
@@ -284,7 +330,7 @@ def main() -> None:
     perps = [s for s in syms if is_usdt_perp(s)]
     print(len(syms), "symbols,", len(perps), "USDT perps", file=sys.stderr)
 
-    refresh_after = (date.today() - timedelta(days=7)) if args.refresh else None
+    refresh_after = (datetime.now(UTC).date() - timedelta(days=7)) if args.refresh else None
     inv: dict[str, dict[str, int]] = {}
     with cf.ThreadPoolExecutor(8) as ex:
         for s, d in zip(perps, ex.map(lambda s: symbol_days(s, refresh_after), perps)):
@@ -293,26 +339,42 @@ def main() -> None:
     archive_end = max(date.fromisoformat(max(d)) for d in inv.values())
     print("archive end", archive_end, file=sys.stderr)
 
+    # tiny files (under 1 KB) are opened: a file holding only zero-price prints (seen
+    # after settlement) is not a trading day
+    tiny = [(s, d) for s in inv for d, b in inv[s].items() if b < 1000]
+    pos = positive_price_rows(tiny)
+
     # one record per life
     lives = []
     for s in sorted(inv):
-        days = [date.fromisoformat(x) for x in inv[s]]
+        keep, dropped = drop_artifact_days(
+            inv[s], {d: pos[f"{s}|{d}"] for (ss, d) in tiny if ss == s})
+        if not keep:
+            continue
+        days = [date.fromisoformat(x) for x in keep]
         parts = split_lives(days)
         for i, ds in enumerate(parts):
             lives.append({"symbol": s, "life": i + 1, "n_lives": len(parts), "days": ds,
                           "first": ds[0], "last": ds[-1],
                           "alive": is_alive(ds[-1], archive_end),
-                          "last_bytes": inv[s][ds[-1].isoformat()]})
+                          "last_bytes": inv[s][ds[-1].isoformat()],
+                          "dropped": [d for d in dropped if ds[0].isoformat() <= d]
+                          if i == len(parts) - 1 else []})
     key = {(lv["symbol"], lv["life"]): lv for lv in lives}
     starts = {f"{lv['symbol']}#{lv['life']}": lv["first"] for lv in lives}
 
+    reuse_pairs = []
     for lv in lives:
         st, succ, ev = classify(lv["symbol"], lv["life"] - 1, lv["n_lives"], lv["alive"])
         lv.update(status=st, successor=succ, evidence=ev)
+        if lv["dropped"]:
+            lv["evidence"] += ("; ignored zero-price artifact file(s) on "
+                               + ", ".join(lv["dropped"]))
         if st == "reused-symbol":
             nxt = key[(lv["symbol"], lv["life"] + 1)]
             lv["gap_days"] = (nxt["first"] - lv["last"]).days
             lv["evidence"] += f" (life {lv['life'] + 1} starts {nxt['first']})"
+            reuse_pairs.append((lv, nxt))
         elif succ:
             ss = [x for x in lives if x["symbol"] == succ]
             if ss:
@@ -336,24 +398,41 @@ def main() -> None:
             if cs == lv["symbol"]:
                 continue
             pairs.append((lv, key[(cs, int(cl))]))
-    need = sorted({(a["symbol"], a["last"].isoformat()) for a, _ in pairs}
-                  | {(b["symbol"], b["first"].isoformat()) for _, b in pairs})
+    allp = pairs + reuse_pairs
+    need = sorted({(a["symbol"], a["last"].isoformat()) for a, _ in allp}
+                  | {(b["symbol"], b["first"].isoformat()) for _, b in allp})
     print(len(pairs), "candidate pairs,", len(need), "closes", file=sys.stderr)
     closes = cached_closes(need)
+    n_raw = 0
     for a, b in pairs:
         ca = closes.get(f"{a['symbol']}|{a['last'].isoformat()}")
         cb = closes.get(f"{b['symbol']}|{b['first'].isoformat()}")
         k = price_match(ca, cb)
-        if k is not None:
+        if k is None:
+            continue
+        n_raw += 1
+        if denomination_consistent(a["symbol"], b["symbol"], k):
+            dev = abs(ca / cb / k - 1)
             a.setdefault("cands", []).append(
-                f"{b['symbol']}(start {b['first']}, close {ca:g}/{cb:g}, k={k:g})")
+                (dev, (f"{b['symbol']} (starts {b['first']}, close {ca:g} vs {cb:g}, "
+                       f"ratio {ca / cb:.3g})")))
+    for lv in lives:
+        lv["cands"] = [t for _, t in sorted(lv.get("cands", []))]
+    print(n_raw, "raw price matches;",
+          sum(bool(lv["cands"]) for lv in lives), "contracts with candidates",
+          file=sys.stderr)
+    for a, b in reuse_pairs:
+        ca = closes.get(f"{a['symbol']}|{a['last'].isoformat()}")
+        cb = closes.get(f"{b['symbol']}|{b['first'].isoformat()}")
+        if ca and cb:
+            a["evidence"] += (f"; close {ca:g} at end vs {cb:g} at restart "
+                              f"(ratio {ca / cb:.3g})")
 
     # verify that the last day is a real trading day for a sample of small files
     rng = random.Random(0)
     dead = [lv for lv in lives if not lv["alive"]]
     small = [lv for lv in dead if lv["last_bytes"] < 3_000_000]
     sample = rng.sample(small, min(args.n_verify, len(small)))
-    # always include the known renames' smallest few and LUNA-like reuse
     rows = verify_rows([(lv["symbol"], lv["last"].isoformat()) for lv in sample])
 
     OUT_CSV.parent.mkdir(parents=True, exist_ok=True)
@@ -366,7 +445,7 @@ def main() -> None:
                 lv["symbol"], lv["life"], lv["n_lives"], lv["first"], lv["last"],
                 len(lv["days"]), cal, cal - len(lv["days"]), int(lv["alive"]),
                 lv["status"], lv["successor"], lv.get("gap_days", ""),
-                "; ".join(lv.get("cands", [])), lv["last_bytes"],
+                "; ".join(lv["cands"]), lv["last_bytes"],
                 rows.get(f"{lv['symbol']}|{lv['last'].isoformat()}", ""), lv["evidence"],
             ])
     print("wrote", OUT_CSV, len(lives), "rows", file=sys.stderr)
