@@ -27,6 +27,10 @@ ml = [
     "lightgbm>=4.3",
     "scikit-learn>=1.5",
 ]
+# Q12 only. Kept out of dev so CI stays light; tests that need it skip without it.
+torch = [
+    "torch>=2.2",
+]
 
 [build-system]
 requires = ["hatchling"]
