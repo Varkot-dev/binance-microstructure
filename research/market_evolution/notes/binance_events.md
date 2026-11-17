@@ -6,6 +6,68 @@ because binance.com and developers.binance.com could not be reached from the san
 **[S]** secondary: a search-engine snippet of a binance.com page or a news report, not
 opened; **[I]** inference. Dates are UTC.
 
+## Verification pass (2026-11-17, second session)
+
+What was checked. For a short window www.binance.com was reachable, and 34 announcements
+were read in full through Binance's own JSON endpoint behind each announcement page
+(`https://www.binance.com/bapi/composite/v1/public/cms/article/detail/query?articleCode=<code>`,
+where `<code>` is the 32-character id at the end of each announcement URL; the human page is
+`https://www.binance.com/en/support/announcement/<code>`). The full title lists of the
+"Latest Binance News" (catalogId 49, 4,000 most recent titles back to 2020-04) and
+"Delisting" (catalogId 161, 446 titles) categories were also downloaded from
+`https://www.binance.com/bapi/composite/v1/public/cms/article/list/query?type=1&catalogId=<id>&pageNo=<n>&pageSize=50`.
+After that, www.binance.com, developers.binance.com, arxiv.org and export.arxiv.org were
+refused again by the network proxy (HTTP 403 on CONNECT), so about 45 further notices whose
+titles were found could not be opened. "[V title]" below means the title, code and
+publication time were read in Binance's own list, but the body was not. The 2024-09-20 batch
+was also re-checked in the data.binance.vision archive for the five contracts not checked
+before.
+
+What changed.
+- **2024-09-20 batch has 12 USDT-M contracts, not 7** [V]: APT, ASTR, JOE, KEY, XVG,
+  BIGTIME, ILV, GLM, ETHFI, TURBO, ZRO, RPL (all tick cut 10x at 06:30). All 12 now verified
+  in the archive (old-grid share 1.000 on 2024-09-19, 0.12 to 0.34 on 2024-09-21 for APT,
+  ASTR, XVG, BIGTIME, TURBO and KEY) [V]. APTUSDT is also in the opposite-direction
+  2023-02-10 batch.
+- **The Taker Program did not start on 2023-10-31** [V]. "Binance Futures Launches Taker
+  Program" was published 2022-07-19 [V title], with upgrades effective 2023-02-07,
+  2023-05-02, 2023-08-08, 2023-10-31, 2024-01-30, 2024-04-30, 2024-07-30, 2024-10-29,
+  2025-01-28 and 2025-08-12 [V title for all; body V for 2023-10-31, 2024-07-30,
+  2025-01-28, 2025-08-12]. 2023-10-31 is one quarterly renewal (up to 25% taker discount,
+  validity 2023-10-31 to 2024-01-29), so it is not a clean break.
+- **2023-10 funding batch list corrected** [V]: the 15 contracts are IMX, LPT, API3, HIFI,
+  NMR, TRB, BLZ, DODO, STMX, CYBER, YGG, UNFI, FLM, PERP, AMB (8h to 4h at 2023-10-12
+  08:00; +/-3% cap from 2023-10-09 08:30 for all contracts with max leverage 25x or below).
+  BIGTIME, LOOM, STRAX, ORBS, STPT, WAXP and BSV are not in this notice.
+- **2023-08-29 batch took effect at 2023-08-29 06:30**, one time, not "29 to 30" [V].
+- **There are far more tick-size batches than the table lists** [V title]: 67 USDT-M
+  futures tick notices from 2023-01 to 2026-11 (4 in 2023, 11 in 2024, 22 in 2025, 30 in
+  2026). The full list is in the appendix at the end. Inside the Q10 window (2023-06 to
+  2025-07) there are at least 12 batches whose contract lists were not read (2023-06-05,
+  2024-02-05, 2024-03-19, 2024-04-11, 2024-05-08, 2024-06-20, 2024-07-25, 2024-11-04,
+  2024-11-28, 2025-03-25, 2025-04-17, 2025-06-12). Any of them could hit a Q10 symbol or a
+  planned control.
+- The "2024-06-21 06:30" batch has no notice under that date; the only notice nearby is
+  titled (2024-06-20), published 2024-06-20 04:00 [V title]. Date corrected to 2024-06-20,
+  time unconfirmed.
+- 2025-10-17 batch is BASUSDT and CLOUSDT only, both tick increases, at 07:00 [V].
+- Renames: futures settlement times confirmed for MATIC (2024-09-04 09:00), RNDR
+  (2024-07-16 09:00), FTM (2025-01-06 09:00) and EOS (2025-05-21 09:00) [V]. The new
+  futures listing times (POL, RENDER, S, A) are in separate notices that were not opened.
+  No MKR to SKY notice exists in either downloaded title list [unverified].
+- RPI: "Binance Futures Launches Retail Price Improvement (RPI) Orders" was published
+  2025-11-18 09:00 [V title]; body (start time, symbol list) not opened.
+- STP mandatory from 2024-12-10 06:00 with default EXPIRE_MAKER [V]; optional API STP by
+  2023-09-06 10:00 [V]. 2025-05-02 08:00 rule (1h funding after a cap/floor settlement)
+  [V]. 2025-09-18 08:01 funding formula change [V]. 2025-04-02 06:00 price cap change (6
+  contracts: SIREN, BROCCOLIF3B, PLUME, WAL, VIRTUAL, 1000WHY) [V].
+
+Still unverified: the regular USDT-M fee 0.02%/0.05% (FAQ 360033544231 not reachable); the
+2026-03-05 contract list (title V, body not opened; the archive check of all 12 still holds);
+the RPI symbol list and start time; MKR to SKY; AGIX/OCEAN merger time; the 2024-01-03 USDC-M
+launch time; XAU/XAG funding change; the 2026-08-13 REST lookback change; and every
+developers.binance.com claim (aggTrade definition, RPI fields).
+
 ## Summary
 
 The most useful exchange-side events for a natural experiment are **tick-size (price
