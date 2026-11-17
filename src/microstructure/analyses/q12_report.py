@@ -54,6 +54,29 @@ def classify(ci: dict) -> str:
     return "indistinguishable"
 
 
+# A fitted timescale 1/beta outside this range (business seconds) is not a
+# kernel the data can identify: the optimizer ran off to a boundary.
+TIMESCALE_RANGE = (1e-6, 1e6)
+
+
+def hawkes_fit_problems(r: dict) -> list[str]:
+    """Hawkes models of one record whose used fit is degenerate or below Poisson on test."""
+    out = []
+    # An optimizer that stopped at its iteration limit with sensible parameters
+    # is not flagged; only timescales the data cannot identify are.
+    for k, h in sorted(r.get("hawkes", {}).items()):
+        fit = h["selected"]
+        scales = [1.0 / b for b in fit["betas"] if b > 0]
+        degenerate = (len(scales) < len(fit["betas"])
+                      or any(not TIMESCALE_RANGE[0] <= s <= TIMESCALE_RANGE[1] for s in scales))
+        gain = r["models"].get(f"hawkes_k{k}", {}).get("test_gain", {}).get("estimate")
+        if degenerate:
+            out.append(f"K={k} fit is degenerate")
+        elif gain is not None and gain <= 0:
+            out.append(f"K={k} scores below Poisson on test")
+    return out
+
+
 def summarize(records: list[dict]) -> dict:
     """Verdict computed from the records; no sentence here is fixed in advance."""
     n = len(records)
@@ -78,6 +101,7 @@ def summarize(records: list[dict]) -> dict:
         for r, g in zip(records, gaps, strict=True)
     )
     n_neural_below_poisson = int((neural_gain <= 0).sum())
+    fit_problems = {_unit(r): p for r in records if (p := hawkes_fit_problems(r))}
 
     share_txt = ", ".join(
         f"K={m[-1]} {100 * s:.0f}%" for m, s in shares.items() if s is not None
@@ -118,6 +142,7 @@ def summarize(records: list[dict]) -> dict:
         "median_share_of_neural_gain": shares,
         "n_seed_spread_exceeds_gap": int(n_seed_fragile),
         "n_neural_not_above_poisson": n_neural_below_poisson,
+        "hawkes_fit_problems": fit_problems,
         "headline": headline, "reading": reading,
     }
 
@@ -375,6 +400,13 @@ def write_md(out_dir: Path, result: dict) -> None:
     if v["n_neural_not_above_poisson"]:
         L += [(f"On {v['n_neural_not_above_poisson']} of {v['n_units']} the network did not beat "
               "Poisson on the test block; shares are not defined there."), ""]
+    if v.get("hawkes_fit_problems"):
+        parts = "; ".join(f"{u}: {', '.join(p)}" for u, p in v["hawkes_fit_problems"].items())
+        L += [(f"Hawkes fits that did not behave: {parts}. A degenerate fit has a timescale "
+              f"outside {TIMESCALE_RANGE[0]:g} to {TIMESCALE_RANGE[1]:g} business seconds. Where the fits of one symbol disagree this much, the training "
+              "chunks probably differ in regime, and the neural-minus-best-Hawkes gap there "
+              "measures a poor linear fit as much as missing structure; read the median, not "
+              "that symbol."), ""]
     days = sorted({r["n_test_days"] for r in records})
     L += [
         "## Caveats", "",

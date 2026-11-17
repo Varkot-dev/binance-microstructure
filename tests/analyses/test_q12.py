@@ -191,3 +191,21 @@ def test_verdict_follows_the_numbers() -> None:
     assert v["n_neural_not_above_poisson"] == 1
     assert q12_report.summarize([])["n_units"] == 0
     assert q12_report.classify({"ci95": [0.0, 0.1]}) == "indistinguishable"
+
+
+def test_hawkes_fit_problems_flags_degenerate_and_losing_fits():
+    from microstructure.analyses.q12_report import hawkes_fit_problems
+
+    def fit(betas):
+        return {"selected": {"betas": betas, "converged": True}}
+
+    record = {
+        "hawkes": {"1": fit([40.0]), "2": fit([0.7, 90.0]), "3": fit([1e308, 26.0, 1e-17])},
+        "models": {"hawkes_k1": {"test_gain": {"estimate": -0.13}},
+                   "hawkes_k2": {"test_gain": {"estimate": 0.27}},
+                   "hawkes_k3": {"test_gain": {"estimate": -0.84}}},
+    }
+    assert hawkes_fit_problems(record) == [
+        "K=1 scores below Poisson on test", "K=3 fit is degenerate"]
+    record["hawkes"] = {"2": fit([0.7, 90.0])}
+    assert hawkes_fit_problems(record) == []
