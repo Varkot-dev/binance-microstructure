@@ -11,6 +11,13 @@ HNTUSDT (small, delisted 2023-03), FTTUSDT (delisted 2022-11), plus a few others
 Inventory used for counts: `data/universe/aggtrades_monthly_inventory.json` (923 symbols
 ending in USDT, 21,232 contract-months).
 
+## Verification pass (2026-11-17, second session)
+
+Checked: the spot timestamp switch date, against the binance-public-data README (raw GitHub,
+reachable) [V, upgraded from S]. Not checked: the REST API statements below (fapi.binance.com
+and developers.binance.com were refused by the proxy for the whole pass), so they stay [S].
+Nothing else changed in this note.
+
 ## Summary
 
 1. **Order-book depth exists for 2023 to today.** `futures/um/daily/bookDepth` runs from
@@ -57,7 +64,10 @@ interval subfolder: 1m, 3m, 5m, 15m, 30m, 1h, 2h, 4h, 6h, 8h, 12h, 1d, 3d, 1w, 1
 Path pattern: `data/futures/um/{monthly|daily}/{type}/{SYMBOL}/[{interval}/]{SYMBOL}-{type or interval}-{YYYY-MM[-DD]}.zip`
 plus a `.CHECKSUM` file next to each zip [V]. Timestamps are milliseconds in all USDT-M
 files checked, including 2026 [V]; bookDepth and metrics use text `YYYY-MM-DD HH:MM:SS`
-[V]. Spot klines are in **microseconds** in 2026 files [V] (spot switched in 2025 [S]).
+[V]. Spot klines are in **microseconds** in 2026 files [V] (spot switched on 2025-01-01 [V:
+the binance-public-data README says "The timestamp for SPOT Data from January 1st 2025
+onwards will be in microseconds",
+https://raw.githubusercontent.com/binance/binance-public-data/master/README.md]).
 
 ## Table
 

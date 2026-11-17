@@ -13,6 +13,52 @@ snippets and summaries, and are tagged [S] at best. Nothing here is [V]. Before 
 numbers goes into the write-up, open the paper and check it. Allowing arxiv.org and
 www.binance.com in the session network settings would let a later pass upgrade tags to [V].
 
+## Verification pass (2026-11-17, second session)
+
+What was checked. www.binance.com was reachable for a short window and the Binance
+announcements cited here were read in full through Binance's JSON endpoint
+(`https://www.binance.com/bapi/composite/v1/public/cms/article/detail/query?articleCode=<code>`;
+human page `https://www.binance.com/en/support/announcement/<code>`), plus Binance's full title list of
+"Latest Binance News". arxiv.org, export.arxiv.org and every other paper host were refused by
+the proxy for the whole pass (getaddrinfo or HTTP 403), so **no paper could be opened**. The
+bibliographic details of seven papers were cross-checked with a web search instead (still
+[S], but enough to fix wrong citations).
+
+What changed.
+- **Taker Program**: it was launched on 2022-07-19 ("Binance Futures Launches Taker
+  Program", [V title]) and renewed roughly every quarter (2023-02-07, 2023-05-02,
+  2023-08-08, 2023-10-31, 2024-01-30, 2024-04-30, 2024-07-30, 2024-10-29, 2025-01-28,
+  2025-08-12) [V title]. The 2023-10-31 notice says "Binance Futures is upgrading the Taker
+  Program" and lets earlier participants carry over [V,
+  https://www.binance.com/en/support/announcement/143cee3a83944c4da2b1a53f302f45f0]. So 2023-10-31 is not a launch, and the
+  section 3.1 inference that it is "the single event whose timing best matches" the Q10 jump
+  is weakened: the program already existed in 2023-06. Corrected below.
+- Toth et al. 2015: published title is "Why is equity order flow so persistent?" (the arXiv
+  title lacks "equity"); DOI 10.1016/j.jedc.2014.10.007 [S, search].
+- Briola, Bartolucci, Aste "Deep limit order book forecasting" is published as "Deep limit
+  order book forecasting: a microstructural guide", Quantitative Finance 25(7), 1101 to
+  1131, 2025 (not 2024, not ESWA) [S, search]. HLOB is in Expert Systems with Applications
+  266 (2025), not 2024 [S, search].
+- Primicerio and Challet: Market Microstructure and Liquidity 4 (2019), doi
+  10.1142/S2382626619500047 [S, search]. Donier and Bonart: Market Microstructure and
+  Liquidity 1(2), 1550008 (2015) [S, search].
+- LP, RPI and tick dates in section 3.1 checked against Binance's own pages (tags updated
+  there).
+
+Confirmed as cited (by search, so still [S]): Lillo, Mike and Farmer 2005 (PRE 71, 066122;
+the abstract states the sign ACF decays as tau^-(alpha - 1), that is gamma = alpha - 1);
+Sato and Kanazawa 2023 (PRL 131, 197401; TSE data over nine years; LMF holds "even at the
+quantitative level"; companion PRR 5, 043131); Toth et al. (JEDC 51, 218 to 239; splitting
+dominates below a few hours); Primicerio and Challet (6.7 billion trades; number of active
+metaorders is the main contributor); arXiv 2607.09426 exists with the cited title, submitted
+2026-07-16, q-fin.TR.
+
+Still unverified: every number taken from inside a paper (for example Donier and Bonart's
+ACF exponent 0.4, Lillo and Farmer's 0.6, the "six Binance USDT-M perpetuals" of 2607.09426,
+whose search summary also mentions Bybit), the 2026 arXiv preprints 2607.27070, 2608.03616,
+2607.04280 and 2602.19590, the unreviewed equities write-up, and all developers.binance.com
+statements on aggTrade aggregation.
+
 ## Summary
 
 The standard account is that order signs are persistent mainly because large parent orders
@@ -33,10 +79,12 @@ crypto venues for 2018 to 2026 [S]. Crypto-specific work that does exist shows s
 exponents near 0.4 on early Bitcoin data (Donier and Bonart) and, very recently, clock-periodic
 algorithmic order flow on six Binance USDT-M perpetuals concentrated at quarter-hour boundaries
 (arXiv 2607.09426, July 2026) [S]. Binance itself changed several things that could move these
-levers between mid-2023 and late 2025: a Liquidity Provider program change (2023-06-05), a new
-Taker Program with fee discounts for large takers (2023-10-31), LP upgrades (2024-01-03 and
-2024-06-03), a revised Taker Program (2025-08-12), RPI orders (from 2025-11-20) and many
-per-contract tick-size changes [S]. All mechanisms can be proxied from aggTrades alone, with one
+levers between mid-2023 and late 2025: a Liquidity Provider program change (2023-06-05), an
+upgrade of the existing Taker Program with fee discounts up to 25% for large takers
+(2023-10-31; the program dates from 2022-07-19 and is renewed about quarterly), LP upgrades
+(2023-10-23, 2024-01-03 and 2024-06-03), a revised Taker Program (2025-08-12), RPI orders
+(notice published 2025-11-18; start 2025-11-20 not read in the notice) and many per-contract
+tick-size changes [V for the dates in Binance's own titles and notices; see section 3.1]. All mechanisms can be proxied from aggTrades alone, with one
 caveat that matters a lot: one aggTrade is one taker order filled at one price, so a single
 sweep produces several same-sign records in the same millisecond [S].
 
@@ -74,8 +122,8 @@ sweep produces several same-sign records in the same millisecond [S].
 
 ### 1.2 Splitting versus herding
 
-- Toth, Palit, Lillo and Farmer ("Why is order flow so persistent?", arXiv 1108.1632; J. Econ.
-  Dyn. Control 51, 2015, 218 to 239) use LSE data with member identifiers and find that on
+- Toth, Palit, Lillo and Farmer ("Why is order flow so persistent?", arXiv 1108.1632; published
+  as "Why is equity order flow so persistent?", J. Econ. Dyn. Control 51, 2015, 218 to 239) use LSE data with member identifiers and find that on
   horizons of a few hours or less persistence is overwhelmingly due to splitting rather than
   herding; at longer horizons different investors are anti-correlated [S].
 - Herding (different traders choosing the same side) remains the alternative explanation, and
@@ -91,7 +139,7 @@ sweep produces several same-sign records in the same millisecond [S].
 ### 1.3 What weakens memory
 
 - Primicerio and Challet ("Large large-trader activity weakens the long memory of limit order
-  markets", arXiv 1803.08390; Market Microstructure and Liquidity, 2019) combine more than 6.7
+  markets", arXiv 1803.08390; Market Microstructure and Liquidity 4, 2019) combine more than 6.7
   billion trades with quarterly fund holdings. Sign memory is noticeably weaker when large funds
   trade directionally and when their participation ratio is high; between a higher number of
   active metaorders and a change in the metaorder size distribution, the evidence favours the
@@ -137,7 +185,7 @@ sweep produces several same-sign records in the same millisecond [S].
 ## 3. Crypto-specific evidence
 
 - Donier and Bonart ("A million metaorder analysis of market impact on the Bitcoin", arXiv
-  1412.4503): full Bitcoin/USD exchange data (Mt.Gox era) with more than a million reconstructed
+  1412.4503; Market Microstructure and Liquidity 1(2), 1550008, 2015): full Bitcoin/USD exchange data (Mt.Gox era) with more than a million reconstructed
   metaorders; square-root impact holds over four decades despite little market making and
   statistical arbitrage; metaorder signs have ACF exponent around 0.4, similar to trade signs;
   metaorder size and duration distributions are not power laws [S]. [I] The last point means
@@ -174,25 +222,30 @@ sweep produces several same-sign records in the same millisecond [S].
 
 ### 3.1 Binance events 2023 to 2026 usable as natural experiments
 
-All dates from Binance announcement titles or snippets [S]; verify on binance.com before use.
+Verification pass: dates checked in Binance's own announcement list and notices
+(https://www.binance.com/en/support/announcement/<code>); tags per row.
 
 | date | event | lever it moves |
 |---|---|---|
-| 2023-06-05 | USDT-M Liquidity Provider program adds weekly maker-volume qualification with negative maker fees | maker competition, quoting |
-| 2023-08-29 | tick-size update, multiple USDT-M perpetuals | relative tick |
-| 2023-10-31 | Futures Taker Program launched, up to 25% taker discount by volume | cost of aggressive splitting |
-| 2024-01-03 | LP program upgrade, USDC-margined maker volume counts | maker competition |
-| 2024-06-03 | LP program update, threshold 0.20% weekly maker share, quoting-ranking stream removed | maker competition |
-| 2024-09-20 | tick-size update, seven contracts | relative tick |
-| 2025-01-28, 2025-08-12 | Taker Program updates (2025-08-12: 10/14/18% tiers) | taker costs |
-| 2025-10-17, 2025-12-15, 2025-12-22 | tick-size updates, several small-cap contracts | relative tick |
-| 2025-11-20 | RPI (Retail Price Improvement) orders on selected USDT-M symbols; RPI orders match only non-algorithmic orders; RPI trades are not tagged in trade data | retail versus algo segmentation |
+| 2023-06-05 | USDT-M Liquidity Provider program adds weekly maker-volume qualification with negative maker fees (date [V title], code 41e7931982274a24a48eb545222cf531; content [S]) | maker competition, quoting |
+| 2023-08-29 06:30 | tick-size update, 5 USDT-M perpetuals (AMB, HOOK, API3, TRB, DODOX, all cut 10x) [V] | relative tick |
+| 2023-10-31 00:00 | Futures Taker Program **upgraded** (corrected: not launched; launch was 2022-07-19), up to 25% taker discount by weekly taker volume or share, for users with 100M USDT 30-day volume [V] | cost of aggressive splitting |
+| 2023-10-23 | LP program upgrade (missed in the first pass; code 891da3b2fb6842fb875e40d1f4463fc5) [V title] | maker competition |
+| 2024-01-03 12:30 | LP program upgrade, USDC-margined maker volume counts; USDT-M maker rebates -0.003% to -0.005% by tier [V] | maker competition |
+| 2024-06-03 | LP program update, threshold 0.20% weekly maker share, quoting-ranking stream removed (date [V title], code fefc6aa25e0947e2bf745c1c56bea13e; content [S]) | maker competition |
+| 2024-09-20 06:30 | tick-size update, twelve contracts (corrected from seven): APT, ASTR, JOE, KEY, XVG, BIGTIME, ILV, GLM, ETHFI, TURBO, ZRO, RPL, all cut 10x [V] | relative tick |
+| 2025-01-28, 2025-08-12 | Taker Program updates (2025-01-28: up to 20%; 2025-08-12 07:00: 10/14/18% tiers, lower thresholds) [V] | taker costs |
+| 2025-10-17, 2025-12-15, 2025-12-22 (07:00) | tick-size updates: 10-17 BAS and CLO (increases); 12-15 seven contracts and 12-22 eleven contracts (cuts) [V] | relative tick |
+| 2025-11-20 | RPI (Retail Price Improvement) orders on selected USDT-M symbols; RPI orders match only non-algorithmic orders; RPI trades are not tagged in trade data (launch notice published 2025-11-18 09:00 [V title], code d0ed1c8add7848c8b3e5a87bbabf6300; start date and mechanics [S]) | retail versus algo segmentation |
 
-[I] The Taker Program (between the 2023-07 and 2024-07 snapshots) is the single event whose
-timing best matches the big jump in Q10's D. It lowers the cost of trading aggressively for
-large takers, which should increase taker-side algorithmic splitting. It applies to all
-contracts at once, so it offers no untreated control group; tick-size changes are per contract
-and are the better difference-in-differences design.
+[I] (Revised in the verification pass.) The Taker Program was first thought to start between
+the 2023-07 and 2024-07 snapshots and so to match the big jump in Q10's D. It did not: it was
+launched on 2022-07-19 and was already in force at the 2023-06 start of the panel [V title].
+What changed on 2023-10-31 was the tier table (up to 25% off), which may or may not be larger
+than the 2023-08-08 terms (not read). It can still lower the cost of trading aggressively for
+large takers, but as a quarterly-renewed program it is a weak candidate for a one-time break.
+It applies to all contracts at once, so it offers no untreated control group; tick-size
+changes are per contract and are the better difference-in-differences design.
 
 ## 4. Relative tick size as a driver
 
@@ -205,8 +258,9 @@ and are the better difference-in-differences design.
   1207.6325; Market Microstructure and Liquidity 2015): the implicit spread replaces the quoted
   spread for large-tick assets and restores the spread-volatility relation; an optimal tick
   corresponds to eta = 1/2 [S].
-- Briola, Bartolucci and Aste ("Deep Limit Order Book Forecasting", arXiv 2403.09267; HLOB,
-  arXiv 2405.18938, Expert Systems with Applications 2024): on 15 NASDAQ stocks, forecastability
+- Briola, Bartolucci and Aste ("Deep Limit Order Book Forecasting", arXiv 2403.09267,
+  Quantitative Finance 25(7), 2025; HLOB, arXiv 2405.18938, Expert Systems with Applications
+  266, 2025): on 15 NASDAQ stocks, forecastability
   depends on microstructure; large-tick stocks have compact books that deep models exploit,
   small-tick books are sparse and hard to model; high forecast accuracy need not be tradable [S].
 - Garèche, Disdier, Kockelkoren and Bouchaud (arXiv 1304.6819) model the best-queue dynamics of
@@ -269,9 +323,9 @@ data [I].
 | heavier-tailed metaorder sizes | LMF gives gamma = alpha - 1, so smaller alpha means slower ACF decay | run-length tail exponent vs 1 + gamma | Lillo, Mike, Farmer 2005; Sato and Kanazawa 2023 |
 | fewer concurrent large metaorders | concurrency mixes signs and weakens memory; fewer means cleaner runs | ratio of lag-1 to lag-100 ACF; run purity | Primicerio and Challet 2019 |
 | clock-periodic bots | scheduled flow makes sign and timing forecastable at fixed phases | phase-resolved ACF, minute and quarter-hour concentration, size roundness | arXiv 2607.09426 |
-| cheaper aggressive trading for large takers | lowers cost of splitting via market orders | taker-side run lengths before vs after 2023-10-31 | Binance Taker Program 2023 [S] |
+| cheaper aggressive trading for large takers | lowers cost of splitting via market orders | taker-side run lengths around Taker Program renewals (program in force since 2022-07-19; tier changes 2023-10-31, 2024-07-30, 2025-08-12) | Binance Taker Program notices [V] |
 | maker competition and rebates | thicker, more stable queues make queue depletion predictable | fills per aggTrade, unchanged-price share | Binance LP program 2023, 2024 [S]; Eisler, Bouchaud, Kockelkoren 2012 |
-| larger relative tick | tick-bound book with one-tick spread makes price moves and queue state informative, less bounce | tick / price, unchanged-price share, bounce share | Briola et al. 2024; Dayri and Rosenbaum 2015; Q4b |
+| larger relative tick | tick-bound book with one-tick spread makes price moves and queue state informative, less bounce | tick / price, unchanged-price share, bounce share | Briola et al. 2025; Dayri and Rosenbaum 2015; Q4b |
 | smaller trade sizes | more trades per unit of demand, so more same-sign repeats | median USD notional, small-trade share | Kyle, Obizhaeva, Tuzun; O'Hara, Yao, Ye 2014 |
 | liquidation cascades | forced one-sided market orders cluster | same-sign high-notional bursts during fast moves | arXiv 2607.27070, 2608.03616 |
 | flow composition (retail to DEX, or retail segmented by RPI) | remaining flow more algorithmic and regular | roundness share, size distribution shape | Kaiko / The Block coverage [S]; Binance RPI 2025 [S] |
@@ -280,7 +334,7 @@ data [I].
 ## References
 
 1. Lillo, F., Mike, S., Farmer, J. D. (2005). Theory for long memory in supply and demand. Phys. Rev. E 71, 066122. https://arxiv.org/abs/cond-mat/0412708 ; https://www.doi.org/10.1103/PHYSREVE.71.066122
-2. Toth, B., Palit, I., Lillo, F., Farmer, J. D. (2015). Why is order flow so persistent? J. Econ. Dyn. Control 51, 218 to 239. https://arxiv.org/abs/1108.1632
+2. Toth, B., Palit, I., Lillo, F., Farmer, J. D. (2015). Why is equity order flow so persistent? J. Econ. Dyn. Control 51, 218 to 239. doi:10.1016/j.jedc.2014.10.007. arXiv title "Why is order flow so persistent?": https://arxiv.org/abs/1108.1632
 3. Sato, Y., Kanazawa, K. (2023). Inferring microscopic financial information from the long memory in market-order flow: a quantitative test of the Lillo-Mike-Farmer model. Phys. Rev. Lett. 131, 197401. https://journals.aps.org/prl/abstract/10.1103/PhysRevLett.131.197401 ; https://arxiv.org/abs/2301.13505
 4. Sato, Y., Kanazawa, K. (2023). Quantitative statistical analysis of order-splitting behavior of individual trading accounts in the Japanese stock market over nine years. Phys. Rev. Research 5, 043131. https://physics.aps.org/featured-article-pdf/10.1103/PhysRevResearch.5.043131
 5. Lillo, F. (2023). Physics Viewpoint on the LMF test. Physics 16, 192. https://physics.aps.org/articles/pdf/10.1103/Physics.16.192
@@ -288,7 +342,7 @@ data [I].
 7. Lillo, F., Farmer, J. D. (2004). The long memory of the efficient market. Stud. Nonlinear Dyn. Econom. 8. https://arxiv.org/abs/cond-mat/0311053
 8. Bouchaud, J.-P., Farmer, J. D., Lillo, F. (2008). How markets slowly digest changes in supply and demand. https://arxiv.org/abs/0809.0822
 9. Mike, S., Farmer, J. D. (2008). An empirical behavioral model of liquidity and volatility. J. Econ. Dyn. Control 32, 200 to 234. https://arxiv.org/abs/0709.0159
-10. Primicerio, K., Challet, D. (2019). Large large-trader activity weakens the long memory of limit order markets. Market Microstructure and Liquidity. https://arxiv.org/abs/1803.08390
+10. Primicerio, K., Challet, D. (2019). Large large-trader activity weakens the long memory of limit order markets. Market Microstructure and Liquidity 4. doi:10.1142/S2382626619500047. https://arxiv.org/abs/1803.08390
 11. Gould, M. D., Porter, M. A., Howison, S. D. (2016). The long memory of order flow in the foreign exchange spot market. Market Microstructure and Liquidity 2. https://arxiv.org/abs/1504.04354
 12. Tick size reduction and price clustering in a FX order book. https://arxiv.org/abs/1307.5440
 13. Is high-frequency trading inducing changes in market microstructure and dynamics? https://arxiv.org/abs/1006.5490
@@ -300,12 +354,12 @@ data [I].
 19. Dayri, K., Rosenbaum, M. (2015). Large tick assets: implicit spread and optimal tick size. Market Microstructure and Liquidity 1(1). https://arxiv.org/abs/1207.6325
 20. Gareche, A., Disdier, G., Kockelkoren, J., Bouchaud, J.-P. (2013). A Fokker-Planck description for the queue dynamics of large tick stocks. https://arxiv.org/abs/1304.6819
 21. Modeling the coupled return-spread high frequency dynamics of large tick assets. https://arxiv.org/abs/1310.4539
-22. Briola, A., Bartolucci, S., Aste, T. (2024). Deep limit order book forecasting. https://arxiv.org/abs/2403.09267
-23. Briola, A., Bartolucci, S., Aste, T. (2024). HLOB: information persistence and structure in limit order books. Expert Systems with Applications. https://arxiv.org/abs/2405.18938
+22. Briola, A., Bartolucci, S., Aste, T. (2025). Deep limit order book forecasting: a microstructural guide. Quantitative Finance 25(7), 1101 to 1131. doi:10.1080/14697688.2025.2522911. https://arxiv.org/abs/2403.09267 (preprint 2024)
+23. Briola, A., Bartolucci, S., Aste, T. (2025). HLOB: information persistence and structure in limit order books. Expert Systems with Applications 266. https://arxiv.org/abs/2405.18938 (preprint 2024)
 24. No tick-size too small: a general method for modelling small tick limit order books. https://arxiv.org/abs/2410.08744
 25. Dyhrberg, A. H., Foley, S., Svec, J. (2023). When bigger is better: the impact of a tiny tick size on undercutting behavior. JFQA 58(6), 2387 to 2416. https://ideas.repec.org/a/cup/jfinqa/v58y2023i6p2387-2416_4.html
 26. Tick size changes across seven crypto exchanges (AUT working paper). https://acfr.aut.ac.nz/__data/assets/pdf_file/0008/926567/Tick-size-paper.pdf
-27. Donier, J., Bonart, J. (2015). A million metaorder analysis of market impact on the Bitcoin. https://arxiv.org/abs/1412.4503
+27. Donier, J., Bonart, J. (2015). A million metaorder analysis of market impact on the Bitcoin. Market Microstructure and Liquidity 1(2), 1550008. https://arxiv.org/abs/1412.4503
 28. Schnaubelt, M., Rende, J., Krauss, C. (2019). Testing stylized facts of Bitcoin limit order books. J. Risk Financial Manag. 12(1), 25. https://www.mdpi.com/1911-8074/12/1/25
 29. Kononovicius, A., Ruseckas, J. Order book model with herd behavior exhibiting long-range memory. https://arxiv.org/abs/1809.02772
 30. Bitcoin market route to maturity? Evidence from return fluctuations, temporal correlations and multiscaling effects. https://arxiv.org/abs/1804.05916
@@ -323,7 +377,7 @@ data [I].
 42. Binance. Updates on tick size (2025-12-15). https://www.binance.com/en/support/announcement/baee5eb8aa8447c0810512b9da108f0a
 43. Binance. Updates on tick size (2025-12-22). https://www.binance.com/en/support/announcement/1cd08ee9bafd40a2a94e8dfc58408f82
 44. Binance. Futures Liquidity Provider program change effective 2023-06-05. https://www.binance.com/en/feed/post/583227
-45. Binance. Futures Upgrades Taker Program (2023-10-31). https://www.binance.com/en/support/announcement/detail/143cee3a83944c4da2b1a53f302f45f0
+45. Binance. Futures Upgrades Taker Program (2023-10-31). https://www.binance.com/en/support/announcement/detail/143cee3a83944c4da2b1a53f302f45f0 [V]. The program itself: "Binance Futures Launches Taker Program" (2022-07-19), https://www.binance.com/en/support/announcement/bdecf435a8be4d98a5f66c07ee51150b [V title]
 46. Binance. USDT-M Futures Liquidity Provider Program upgrade (2024-01-03). https://www.binance.com/en/support/announcement/detail/f5d3200b65104308b8349cee59a2296e
 47. Binance. LP program update (June 2024). https://www.binance.com/bg/square/post/7238586397249
 48. Binance. Futures Updates Taker Program (2025-01-28). https://www.binance.com/en/support/announcement/1d115917f1e24f83b93c8adfc41708ef

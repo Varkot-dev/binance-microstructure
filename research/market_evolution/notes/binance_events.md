@@ -8,7 +8,7 @@ opened; **[I]** inference. Dates are UTC.
 
 ## Verification pass (2026-11-17, second session)
 
-What was checked. For a short window www.binance.com was reachable, and 34 announcements
+What was checked. For a short window www.binance.com was reachable, and 48 announcements
 were read in full through Binance's own JSON endpoint behind each announcement page
 (`https://www.binance.com/bapi/composite/v1/public/cms/article/detail/query?articleCode=<code>`,
 where `<code>` is the 32-character id at the end of each announcement URL; the human page is
@@ -17,7 +17,7 @@ where `<code>` is the 32-character id at the end of each announcement URL; the h
 "Delisting" (catalogId 161, 446 titles) categories were also downloaded from
 `https://www.binance.com/bapi/composite/v1/public/cms/article/list/query?type=1&catalogId=<id>&pageNo=<n>&pageSize=50`.
 After that, www.binance.com, developers.binance.com, arxiv.org and export.arxiv.org were
-refused again by the network proxy (HTTP 403 on CONNECT), so about 45 further notices whose
+refused again by the network proxy (HTTP 403 on CONNECT), so 46 further notices whose
 titles were found could not be opened. "[V title]" below means the title, code and
 publication time were read in Binance's own list, but the body was not. The 2024-09-20 batch
 was also re-checked in the data.binance.vision archive for the five contracts not checked
@@ -168,27 +168,52 @@ Notes on the table:
    tick and volume that were not in the list. Clean prediction from Q4b/Q8: sign
    predictability and trades per aggTrade should fall for treated coins. Caveat: these are
    weak coins (selection on price decline), so match controls on price trend.
-2. **2024-09-20 06:30 tick cut on 7 contracts** (JOE, KEY, ILV, GLM, ETHFI, ZRO, RPL), 6
-   verified in data. Mid-sized coins, a year before the March 2026 batch, so it gives an
-   independent replication in a different market regime.
+2. **2024-09-20 06:30 tick cut on 12 contracts** (APT, ASTR, JOE, KEY, XVG, BIGTIME, ILV,
+   GLM, ETHFI, TURBO, ZRO, RPL; corrected from 7 in the verification pass), all 12 verified
+   in the notice and in the data. Mid-sized coins, a year before the March 2026 batch, so it
+   gives an independent replication in a different market regime, and the treated group is
+   as large as the March 2026 one. APTUSDT had the opposite change on 2023-02-10, so it
+   gives a within-contract reversal.
 3. **2024-10-14 06:30 SOLUSDT tick increase.** Only one treated contract, but a large liquid
    one, inside the Q10 panel, with an opposite-sign treatment (coarser grid). It already
    explains SOL's jump in trades per aggTrade (2.6 to 5.2) and must be controlled for in the
-   Q10 panel; as an event study use the other 9 Q10 symbols, whose ticks did not change, as
-   controls (single treated unit, so use synthetic control or permutation inference).
+   Q10 panel; as an event study use the other 9 Q10 symbols as controls (single treated
+   unit, so use synthetic control or permutation inference). Verification pass caveat: "whose
+   ticks did not change" is not established. At least 12 tick batches in the Q10 window have
+   unread contract lists (see the appendix); check each against the Q10 symbols, or check the
+   price grid of each Q10 symbol in the archive, before using them as controls [I].
 4. **2023-08-29 tick cut (5 contracts) and 2023-02-10 tick increase (APT, OCEAN).** Small
    groups but early in the sample, giving opposite-direction treatments before the 2025
-   rise; pooling all verified batches (about 30 contracts, both directions) into one stacked
-   event study is the strongest design.
+   rise; pooling all verified batches (now about 35 contracts, both directions) into one
+   stacked event study is the strongest design. The appendix shows 67 USDT-M tick notices in
+   2023 to 2026, so the pool can grow a lot once their bodies are read.
 5. **Funding interval switches (2023-10 batches, 8h to 4h).** Clear dates and a named subset
-   of about 15 to 20 small caps, but the treatment acts on funding, not on the trading
+   of 15 small caps (list verified in the notice), but the treatment acts on funding, not on the trading
    mechanism, so it is a placebo-style test: predictability should not change. Verify the
    lists from the archive's fundingRate files before use.
 
 Not recommended: fee promotions (market-wide or USDC-only), STP default (market-wide, no
-controls), RPI (symbol list not found; untagged in aggTrades, but worth a second look if the
+controls), RPI (launch notice found, published 2025-11-18, but its symbol list not read; untagged in aggTrades, but worth a second look if the
 eligible list can be recovered from exchangeInfo permissionSets), and renames (a new symbol
 after a 7 to 10 day gap is a different market, not a treatment).
 
 Sources that could not be opened this session: www.binance.com and developers.binance.com
 (blocked by the sandbox network); allowing them would turn most [S] rows into [V].
+(Verification pass: www.binance.com was reachable briefly, see the section at the top;
+developers.binance.com was never reachable.)
+
+## Appendix: all USDT-M futures tick-size notices, 2023-01 to 2026-11 [V title]
+
+From Binance's own announcement list (catalogId 49, read in the verification pass). Format:
+date in the title (usually the effective date; for 2023-02-03 it is the publication date and
+the change took effect 2023-02-10) (publication date, article code). Each notice is at
+`https://www.binance.com/en/support/announcement/<code>`. Bodies read [V]: 98315efa,
+8764f0d8, fa192e78, 8bfe2e9b, fd11627d, baee5eb8, 1cd08ee9, be5c80d7, 7157d432, 84b9812b,
+plus 313d5923, 83351356, f74b3070, 731403f0, 82a93632, 1fa92e04, 6138b61b, 2b19fead,
+4688df6f, 95224ce8, 77a8571f (contract lists parsed but not copied into the table above).
+All others: title only. Spot-only and options tick notices are excluded.
+
+- 2023 (4): 2023-02-03 (pub 2023-02-03, 98315efae83841a2bb71046d4bbae204); 2023-04-26 (pub 2023-04-26, 33ddfb48e3f44c56a3131f9f0fd145a2; BNXUSDT); 2023-06-05 (pub 2023-05-26, bdb9b2ed43524fe4afeeb41b19481900); 2023-08-29 (pub 2023-08-23, 8764f0d84e6b4c7abc97f036bb6f9ebc)
+- 2024 (11): 2024-02-05 (pub 2024-01-29, cb9bf7716ffb4bbb944b2d858af5a639); 2024-03-19 (pub 2024-03-18, 98e6086608424b21a5a385f30ffebd15); 2024-04-11 (pub 2024-04-10, c58b0b29e87e425f95bb3036ad851770); 2024-05-08 (pub 2024-05-06, aa2bfe791cca4fbc9db2764249b19592); 2024-06-20 (pub 2024-06-20, 50df6c9af8f14d09937a01956779d2a3); 2024-07-25 (pub 2024-07-24, 08f043a4f20d4f0290817ece13b3d7f4); 2024-09-20 (pub 2024-09-19, fa192e78242d4d96be9562ab7d76a10a); 2024-10-14 (pub 2024-10-01, 8bfe2e9b86734cd08f3cbcdb82b79f51; SOL); 2024-11-04 (pub 2024-11-01, f9baa987cd944e75b3e06c297bca05f7); 2024-11-28 (pub 2024-11-27, 8a4a0a76026a472b841162860d10d8cd); 2024-11-29 (pub 2024-11-29, 0d330d9e556e44c68dacbc902306c907; 1000WHY, 1000CHEEMS)
+- 2025 (22): 2025-03-25 (pub 2025-03-24, aa26fca9dc2d47e5a978e9442aa627a7; LINAUSDT, plus min trade amount); 2025-04-17 (pub 2025-04-16, cb6f7e88fed2459a8de11d55a69bef58); 2025-06-12 (pub 2025-06-05, fed6c0cbecb84685a157fed45da638ad); 2025-08-01 (pub 2025-07-27, cf3f3712e01843cf8616551013341612); 2025-08-04 (pub 2025-08-01, 9ae525699b9f41ceac480d24f0c7e8e6; postponement); 2025-08-11 (pub 2025-08-07, 59caa67040004b68ba2e9ff2d1800132); 2025-08-25 (pub 2025-08-20, 697d02491af24cc6a7249c81fdac7281); 2025-09-02 (pub 2025-09-02, 4661056f7d5845568ada26a1861fd4d8; SOMIUSDT); 2025-09-03 (pub 2025-09-01, 0f7995f922734628892b4b66d9d62e1a); 2025-09-10 (pub 2025-09-10, c4e5c6581cc04aeeb41ca03a7756de07); 2025-09-19 (pub 2025-09-17, 01535c3f5c7842189883d4108efdd055); 2025-10-08 (pub 2025-10-06, d901cffcd4a745b5a1151697109571a8); 2025-10-10 (pub 2025-10-08, a1e0bd9e7e124105ad10fdcfa923ce42); 2025-10-17 (pub 2025-10-16, fd11627dc39046b791b7504a2f08e3fc); 2025-10-27 (pub 2025-10-24, f9dd6ab751f3499cb88f236549c8ef23); 2025-10-31 (pub 2025-10-29, 47ee5d503df340d1b077023862d33ae8); 2025-11-07 (pub 2025-11-05, 21a1b8c2e3404cbcb6c89b6a78d5aa0f); 2025-11-20 (pub 2025-11-18, 6ca4596f6725408d8403da3793caeeeb); 2025-11-27 (pub 2025-11-25, aa023c2359ff49729690dd6b0fd14f79); 2025-12-08 (pub 2025-12-05, d9d73edb19864da1b1b25393f8263513); 2025-12-15 (pub 2025-12-12, baee5eb8aa8447c0810512b9da108f0a); 2025-12-22 (pub 2025-12-18, 1cd08ee9bafd40a2a94e8dfc58408f82)
+- 2026 (30): 2026-01-28 (pub 2026-01-27, 2fe0af37c46c41debabf8cd9b4ebd642; plus min trade amount); 2026-02-09 (pub 2026-02-03, 093b607141f84dff8379f17fcf6db7b8); 2026-02-12 (pub 2026-02-09, 5bb4a627791043cc9fa5a083de3111c3); 2026-02-27 (pub 2026-02-25, 5f7fa3af3efa43cdae0716427defb95b); 2026-03-05 (pub 2026-03-02, f0e08ccaf57d4cc8a719b67337706763); 2026-03-18/2026-03-19 (pub 2026-03-16, fb7a1674c55c43a4a018ac56de1afee3); 2026-04-02/2026-04-07 (pub 2026-03-31, 74de1917c41548108f9b799658fa3f3f); 2026-04-06 (pub 2026-04-02, 6dbc37d4df4b42cd91b3ca768ec547dd); no date in title (pub 2026-04-10, 3208154ca9544e22a999808c06f26cd7); 2026-04-21/2026-04-22 (pub 2026-04-17, b0cea42f963f43e79f3ff35e4b166668); 2026-04-27/2026-04-29 (pub 2026-04-25, bb0c704f3ca344c7a8741c551dd624ce); 2026-06-04/2026-06-08 (pub 2026-06-03, fcf3698a42104ba2b52e5c475d155321); 2026-06-06 (pub 2026-06-05, d38329a5dd4843c584ed2cc0784166f9); 2026-06-10/2026-06-12 (pub 2026-06-09, 3d7ade5e0521477cbe75ca92a913c211); 2026-06-13 (pub 2026-06-12, 6baee79f009c4f39b8aa62d8a09a24df); 2026-06-17 (pub 2026-06-16, 60b48c91060a42df97240dba45cca2e9); 2026-07-07/2026-07-08 (pub 2026-07-06, 313d5923733d4fdd9db339966bebe227); 2026-07-09 (pub 2026-07-08, 83351356ed4c4c80ab9a609e77dd20f2); 2026-07-21/2026-07-22 (pub 2026-07-20, f74b3070321a4cdaaea15f9dd8ceb0e8); 2026-07-30 (pub 2026-07-29, 731403f07ae7487b907bef649bdda4d6); 2026-08-06 (pub 2026-08-05, be5c80d75197412b86d0faa1c5efd146); 2026-08-15 (pub 2026-08-14, 82a93632adbd4d0cb42bbf24c9b35400); 2026-08-18 (pub 2026-08-17, 1fa92e0498854e28872d5364b7fbba0b); 2026-08-24 (pub 2026-08-21, 6138b61bc47340e2969a9080bf1cd539); 2026-09-17 (pub 2026-09-16, 2b19feada63c4f97b05322298f4121cb); 2026-10-15 (pub 2026-10-14, 7157d432816e455dbf9fe7f3e452b0cf); 2026-10-22 (pub 2026-10-21, 84b9812b7a88404baedec318c5d60b37); 2026-10-28 (pub 2026-10-27, 4688df6f250848478383acf772a7424c); 2026-11-11 (pub 2026-11-10, 95224ce8010046e790f1558283a8a4cf); 2026-11-18 (pub 2026-11-17, 77a8571f886c4f1ea665420330b96f58)
