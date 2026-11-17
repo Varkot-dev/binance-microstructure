@@ -27,6 +27,29 @@ not change, and the two parts together separate those.
 - A surprising number is a bug until shown otherwise (the BTC tick-size bug in Q11 and
   the delisted-coin listing bug in Q14 were both found this way).
 
+## Week 0 findings (already measured)
+
+`e0_what_changed.py` on the 10 Q10 symbols x 5 months (`e0_what_changed.json`). Ten
+symbols, so these are leads, not conclusions.
+
+- **The change in accuracy moves with two drivers:** the sign repeat rate (r = +0.53)
+  and the number of raw prints per aggressor event (r = +0.51), across 40 within-symbol
+  changes from 2023-06. Typical trade size in USD moves the other way (r = -0.34):
+  trades got smaller where accuracy rose. Activity alone barely matters (r = +0.08).
+  The repeat-rate link is partly mechanical (a higher repeat rate makes the next sign
+  easier to guess), so it describes the change rather than explaining it.
+- **A possible measurement artifact to rule out first.** For SOL and DOGE the raw data
+  changed shape: about 2.8 to 3 trades per aggTrade record in 2023 against about 6 in
+  2025 to 2026, and far fewer records sharing a millisecond (SOL 27% to 3%). For BTC it
+  barely moved. If Binance changed how trades are aggregated, part of the "rise" could
+  be a change in what one event means. Week 1 starts by settling this.
+- **A natural experiment found in the data.** SOLUSDT's price tick went from 0.001 to
+  0.01 between August 2024 and July 2025 (relative tick 0.07 bps in 2024-07, 0.66 bps in
+  2025-07); the other 9 contracts kept theirs. The exact date is being researched.
+- **Relative tick size moves a lot without any exchange change**, because prices move:
+  1000PEPE went from 0.85 bps in 2023-06 to 0.09 bps in 2024-07. That gives within-coin
+  variation in a driver Q4b and Q8 already found important.
+
 ## Part A: why did predictability rise? (weeks 1 to 6)
 
 ### Weeks 1 to 2: describe the change
