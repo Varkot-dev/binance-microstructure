@@ -448,11 +448,19 @@ def _verdict(dec: dict, attribution: dict, n_symbols: int, source: str, yardstic
             "The weights are degenerate on most symbols, so this split is unreliable and should "
             "be read as indicative only."
         )
+        if n_dom * 2 > att["n_symbols"]:
+            side_text = (f"The larger side is {label}, by the cross-symbol median and on {n_dom} "
+                         f"of {att['n_symbols']} symbols.")
+        else:
+            other = "covariate part" if dominant == "concept" else "concept residual"
+            side_text = (f"No side dominates: by the cross-symbol median the larger side is "
+                         f"{label}, but the {other} is the larger one on "
+                         f"{att['n_symbols'] - n_dom} of {att['n_symbols']} symbols.")
         parts.append(
             f"Attribution of the {source} model's log loss change to {target} "
-            f"({att['total']['median']:+.4f} bits): covariate part {_bits_ci(cov)}, concept "
-            f"residual {_bits_ci(con)}. The larger side is {label}, on {n_dom} of "
-            f"{att['n_symbols']} symbols. Effective sample size is above the "
+            f"({att['total']['median']:+.4f} bits; negative means the old model's loss fell): "
+            f"covariate part {_bits_ci(cov)}, concept residual {_bits_ci(con)}. {side_text} "
+            f"Effective sample size is above the "
             f"{MIN_ESS_SHARE:.0%} threshold on {att['n_reliable']} of {att['n_symbols']} symbols "
             f"(median share {att['ess_share_median']:.0%}). {trust}"
         )

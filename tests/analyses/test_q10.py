@@ -244,3 +244,19 @@ def test_refitted_ladder_invalidates_downstream_caches(run):
     run_q10(root, out, symbols=[sym], periods=PERIODS, stages=("transfer", "shift"), **fast)
     assert set(json.loads(cell_files[0].read_text())[FINGERPRINT_KEY]) == set(PERIODS)
     assert FINGERPRINT_KEY in json.loads(other.read_text())
+
+
+def test_verdict_says_no_side_dominates_when_median_and_majority_disagree(run):
+    import copy
+
+    from microstructure.analyses.q10_report import _verdict
+
+    _, _, r = run
+    att = copy.deepcopy(r["attribution"])
+    entry = att["gbm_all"]["2026-07"]
+    entry["covariate"]["median"], entry["concept"]["median"] = -0.009, 0.0
+    entry["n_symbols"], entry["n_symbols_concept_larger"] = 10, 6
+    v = _verdict(r["decomposition"], att, 10, "2023-06", "2023-07", "2026-07")
+    assert v["attribution_dominant"] == "covariate"
+    assert "No side dominates" in v["text"]
+    assert "concept residual is the larger one on 6 of 10 symbols" in v["text"]
