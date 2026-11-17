@@ -652,6 +652,8 @@ def write_md(out_dir: Path, r: dict) -> Path:
           "symbols)"), "", "| feature | " + " | ".join(periods) + f" | verdict for {target} |",
           "|---|" + "---|" * (len(periods) + 1)]
     moved, flipped = [], []
+    quiet = ("within the cross-symbol spread" if co["n_symbols"] > 1
+             else "no sign change (spread undefined with one symbol)")
     for row in co["features"]:
         ch = row["changes"][target]
         tag = []
@@ -665,7 +667,7 @@ def write_md(out_dir: Path, r: dict) -> Path:
             moved.append(row["feature"])
         L.append(f"| {row['feature']} | "
                  + " | ".join(f"{row['median_by_period'][p]:+.3f}" for p in periods)
-                 + f" | {'; '.join(tag) if tag else 'within the cross-symbol spread'} |")
+                 + f" | {'; '.join(tag) if tag else quiet} |")
     y_moved = [row["feature"] for row in co["features"]
                if yardstick != target and row["changes"][yardstick]["moved"]]
     L += ["", f"Of the {len(co['features'])} largest coefficients in {source}, "
@@ -704,6 +706,10 @@ def write_md(out_dir: Path, r: dict) -> Path:
           "points, participant mix) lands in the residual. In a sequence model the features are "
           "past signs, so a change in the sign dynamics also moves the feature distribution; "
           "the two kinds of shift are not independent causes."),
+          ("- **Within-month drift.** The domain classifier and its weights are fitted on "
+           "train days and the losses are measured on test days. Drift between the first "
+           "three weeks and the last week of a month is therefore mixed into both parts; the "
+           "one-month yardstick row shows how large that can be when little else changed."),
           ("- **Coefficients.** The sign-history features are strongly collinear, so single "
           "coefficients can trade off against each other without the fitted function changing "
           "much. The coefficient table is a description, not a test."),
