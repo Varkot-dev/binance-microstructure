@@ -396,7 +396,7 @@ def kline_month_features(daily: pl.DataFrame) -> pl.DataFrame:
         avg_trade_usd=pl.when(pl.col("n_trades") > 0)
         .then(pl.col("quote_volume") / pl.col("n_trades")),
         ret_month=pl.col("close_last") / pl.col("open_first") - 1.0,
-    ).drop("taker_buy_quote", "open_first").sort("symbol", "month")
+    ).drop("taker_buy_quote").sort("symbol", "month")
 
 
 def funding_month_features(funding: pl.DataFrame) -> pl.DataFrame:
