@@ -23,7 +23,9 @@ ROOT = Path("data")
 
 
 def drivers(symbol: str, period: str) -> dict:
-    raw = pl.scan_parquet(ROOT / "parquet" / "aggTrades" / symbol / f"{period}*.parquet")
+    # The monthly file only: the folder also holds daily files for some 2023 days,
+    # and a {period}* pattern would read those days twice.
+    raw = pl.scan_parquet(ROOT / "parquet" / "aggTrades" / symbol / f"{period}.parquet")
     raw = raw.select("ts", "price", "qty", "is_buyer_maker").collect()
     ev = to_aggressor_events(raw)
     notional = (ev["price"] * ev["qty"]).to_numpy() if "price" in ev.columns else None

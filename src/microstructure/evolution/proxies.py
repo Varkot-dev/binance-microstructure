@@ -172,8 +172,12 @@ def sweep_continues(ts_ms: np.ndarray, sign: np.ndarray, gap_ms: int = SWEEP_GAP
 
 
 def detect_lot(qty: np.ndarray) -> float:
-    """Lot size: the smallest recurring increment of the qty grid (estimate_tick on qty)."""
-    return estimate_tick(np.asarray(qty, dtype=np.float64))
+    """Lot size: the smallest recurring increment of the qty grid (estimate_tick on qty).
+
+    Event qty is a float sum of prints (0.1 + 0.2 = 0.30000000000000004), so values
+    are rounded to 9 decimals first; otherwise the float noise sets the "lot".
+    """
+    return estimate_tick(np.round(np.asarray(qty, dtype=np.float64), 9))
 
 
 def lots(qty: np.ndarray, lot: float) -> np.ndarray:
@@ -283,7 +287,7 @@ def relative_tick(events: pl.DataFrame, raw: pl.DataFrame | None = None) -> dict
     ev_ts, ev_price = _ts_ms(events), events["price"].to_numpy()
     if raw is not None:
         _need(raw, ("ts", "price"), "raw")
-        if "agg_trade_id" in raw.columns:
+        if "agg_trade_id" in raw.columns and not raw["agg_trade_id"].is_sorted():
             raw = raw.sort("agg_trade_id")
         g_ts, g_price = _ts_ms(raw), raw["price"].to_numpy()
         seq_price = g_price
