@@ -4,7 +4,7 @@ Built by `research/market_evolution/b0_baselines.py build` from `contract_lifecy
 `monthly_panel.parquet` and the per-contract daily klines under `data/raw_panel/`.
 Person-period layout: one row per contract life per month t, a prediction made at the end
 of month t. Horizon H = 3. Last complete month: 2026-10 (archive ends 2026-11-16).
-Build time 2.5 s.
+Build time 2.7 s.
 
 ## Size
 

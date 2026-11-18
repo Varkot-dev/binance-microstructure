@@ -56,8 +56,9 @@ Top 5% alert rate per month (n alerts = max(1, round(0.05 x live contracts))):
 | (c) logistic: dlog_qv_3m, qv_rank_pct, log_age | 0.053 (0.021 to 0.075) | 0.111 (0.061 to 0.144) | 29/552 | 0.045 (0.019 to 0.064) |
 
 Paired differences (same bootstrap months): precision (c) - (a)
-0.025 (-0.014 to 0.047); (b) - (a) 0.056 (0.002 to 0.103); PR-AUC (c) - (a)
-0.017 (0.002 to 0.028).
+0.025 (-0.014 to 0.047); (b) - (a) 0.056 (0.002 to 0.103); (c) - (b)
+-0.031 (-0.063 to -0.006). PR-AUC (c) - (a) 0.017 (0.002 to 0.028); (c) - (b)
+-0.011 (-0.031 to 0.003).
 
 Rule (a) as a fixed threshold (flag dlog_qv_3m < thr, thr = training quantile with the
 best training F1, chosen per fold on training rows only): precision
@@ -112,8 +113,9 @@ Top 5% alert rate per month (n alerts = max(1, round(0.05 x live contracts))):
 | (c) logistic: dlog_qv_3m, qv_rank_pct, log_age | 0.029 (0.008 to 0.044) | 0.088 (0.036 to 0.126) | 16/550 | 0.028 (0.013 to 0.040) |
 
 Paired differences (same bootstrap months): precision (c) - (a)
-0.013 (-0.008 to 0.024); (b) - (a) 0.038 (0.008 to 0.060); PR-AUC (c) - (a)
-0.009 (0.001 to 0.015).
+0.013 (-0.008 to 0.024); (b) - (a) 0.038 (0.008 to 0.060); (c) - (b)
+-0.025 (-0.041 to -0.011). PR-AUC (c) - (a) 0.009 (0.001 to 0.015); (c) - (b)
+-0.012 (-0.024 to 0.001).
 
 Rule (a) as a fixed threshold (flag dlog_qv_3m < thr, thr = training quantile with the
 best training F1, chosen per fold on training rows only): precision
@@ -152,19 +154,35 @@ Folds (training rows have t + 3 < test start; rows purged per fold:
 
 ## What a model must beat (plain language)
 
-- The base rate is about 2.4% per contract-month on the scored origins: a random
-  5% alert list would be right about 2.4% of the time.
-- Ranking by the lowest volume rank alone (b) gives precision 8.3% and catches
-  18% of the contract-months that die within 3 months; the falling-volume
-  rule (a) gives 2.7% and 6%; the 3-feature logistic (c) gives
-  5.3% and 11%. The best of these, at the top-5% alert rate and
-  in PR-AUC, is the bar for LightGBM and for any trade-level feature.
+- The base rate is 2.4% per contract-month on the scored origins: a random 5%
+  alert list would be right about 2.4% of the time, and a random score has a
+  PR-AUC near 0.024.
+- Best baseline at the top-5% alert rate: (b) lowest volume rank: score = -qv_rank_pct with precision
+  8.3% and recall 18% (main run). Best PR-AUC:
+  (b) lowest volume rank: score = -qv_rank_pct, 0.056. Those two numbers, with the paired
+  month-bootstrap interval of the difference, are the bar for logistic variants, LightGBM
+  and any trade-level feature.
+- The falling-volume rule (a) is no better than chance here: precision 2.7%
+  against a base rate of 2.4%. Its threshold version flags about
+  22% of contracts each month and is right 2.5% of the
+  time. In the logistic fits the coefficient on the 3-month volume change is positive in
+  3 of 6 folds (main run): in recent years volume
+  tends to rise, not fall, before a delisting. Market-wide swings in volume and
+  announcement or pump spikes are the likely reasons; a within-month rank of the volume
+  change would remove the first.
+- Small coins die: the level of volume (its rank in the month) carries almost all the
+  signal. Adding the volume change and age in (c) does not beat the rank alone; the
+  coefficients on those two are small and change sign between folds.
+- (c) uses no class weights. On the test rows it predicts 1.5% on average
+  against an observed 2.4%: the delisting rate rose after the training years, so
+  it under-predicts in most deciles. Its Brier score barely beats predicting the training
+  base rate (skill 0.007).
 - Without the final full month before the last trading month (the month most likely to
-  contain the announcement), precision moves to 1.6% (a), 5.5%
-  (b), 2.9% (c). The drop shows how much of the score could come from
-  post-announcement trading, which a live model would not have in time to act on.
-- Small coins die: the level of volume (rank) matters at least as much as its recent fall.
-  A model that adds only volume transforms is unlikely to clear the bar by much.
+  contain the announcement), the base rate falls to 1.7% and precision to
+  1.6% (a), 5.5% (b), 2.9% (c). The ranking of the
+  baselines is unchanged, but part of every score comes from that month, which a live
+  model would reach too late to act on. Report both until announcement dates are
+  collected.
 - Intervals are wide because events come in batches: one delisting wave decides a 6-month
-  block. Differences between methods should be judged with the paired intervals, not by
-  comparing two separate intervals.
+  block (the 2023 blocks have 9 positive rows in all). Judge differences between methods
+  with the paired intervals, not by comparing two separate intervals.
