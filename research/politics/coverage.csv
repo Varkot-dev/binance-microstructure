@@ -1,2 +1,2 @@
 platform,handle,first_post_utc,last_post_utc,rows,known_gaps,collected_by,notes
-x,EricTrump,2023-01-17T00:03:10Z,2023-10-25T17:50:52Z,87,not yet collected: 2023-11 to 2026-11; 2023-03 (passes disagreed); 2023-04 (passes disagreed),claude-desktop,"X search by month, 2 passes/month (3rd where they disagreed); 49 plain reposts skipped (X shows only the original post's time)"
+x,EricTrump,2023-01-17T00:03:10Z,2023-12-19T23:48:03Z,108,not yet collected: 2024-01 to 2026-11; 2023-03 (passes disagreed); 2023-04 (passes disagreed),claude-desktop,"X search by month, 2 passes/month (3rd where they disagreed); 65 plain reposts skipped (X shows only the original post's time) | 7 long posts still have X's cut-off preview text; full text is fetched when the account finishes"
