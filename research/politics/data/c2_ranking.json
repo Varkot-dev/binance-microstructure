@@ -1,0 +1,390 @@
+{
+ "prereg_sha256": "41ef1cf1fd1af1479572d06061894a5d58d91f949ec39cf516aeb01c905a22e7",
+ "generated_utc": "2026-11-18T05:04:02Z",
+ "period": [
+  "2020-01-01T00:00:00+00:00",
+  "2026-11-01T00:00:00+00:00"
+ ],
+ "kline_months": [
+  "2020-01",
+  "2026-10"
+ ],
+ "klines_unpublished": [
+  "SOLUSDT 2020-01",
+  "SOLUSDT 2020-02",
+  "SOLUSDT 2020-03",
+  "SOLUSDT 2020-04",
+  "SOLUSDT 2020-05",
+  "SOLUSDT 2020-06",
+  "SOLUSDT 2020-07",
+  "SOLUSDT 2020-08"
+ ],
+ "files": [
+  {
+   "file": "truth_realDonaldTrump.csv",
+   "sha256": "d3ce5a47062fd0d92dff8dae92f3e616f2386f4b1d378a49eb5d4e40e374cf3c",
+   "platform": "truth",
+   "handle": "realDonaldTrump",
+   "person": "Donald Trump",
+   "group": "trump_family"
+  },
+  {
+   "file": "x_EricTrump.csv",
+   "sha256": "e290519d298a000a751bd4e144cdc27c1a0ecdd22a131e80473b66bdab9a13ca",
+   "platform": "x",
+   "handle": "EricTrump",
+   "person": "Eric Trump",
+   "group": "trump_family"
+  }
+ ],
+ "skipped": [],
+ "main": {
+  "people": {
+   "Donald Trump": {
+    "n": 6051,
+    "raw": 0.43058229303562306,
+    "se": 0.13536939608795587,
+    "raw_lo": 0.16539768012835013,
+    "raw_hi": 0.6969719408461703,
+    "p": 0.00019998000199980003,
+    "q": 0.00039996000399960006,
+    "shrunk": 0.43058229303562306,
+    "shrunk_lo": 0.16525827670322957,
+    "shrunk_hi": 0.6959063093680166,
+    "factor": 1.0,
+    "rank": 1,
+    "rank_lo": 1,
+    "rank_hi": 2
+   },
+   "Eric Trump": {
+    "n": 59,
+    "raw": 0.29879418405846553,
+    "se": 0.8196820570195799,
+    "raw_lo": -1.2307746833070752,
+    "raw_hi": 1.992630175049792,
+    "p": 0.7797220277972203,
+    "q": 0.7797220277972203,
+    "shrunk": 0.29879418405846553,
+    "shrunk_lo": -1.3077826476999108,
+    "shrunk_hi": 1.905371015816842,
+    "factor": 1.0,
+    "rank": 2,
+    "rank_lo": 1,
+    "rank_hi": 2
+   }
+  },
+  "prior": {
+   "applied": false,
+   "J": 2,
+   "m": null,
+   "tau2": null
+  },
+  "listed": {}
+ },
+ "without_1010": {
+  "people": {
+   "Donald Trump": {
+    "n": 6043,
+    "raw": 0.4312068927074026,
+    "se": 0.13483097221382961,
+    "raw_lo": 0.17107891865260377,
+    "raw_hi": 0.6989850861382421,
+    "p": 0.00039996000399960006,
+    "q": 0.0007999200079992001,
+    "shrunk": 0.4312068927074026,
+    "shrunk_lo": 0.16693818716829656,
+    "shrunk_hi": 0.6954755982465086,
+    "factor": 1.0,
+    "rank": 1,
+    "rank_lo": 1,
+    "rank_hi": 2
+   },
+   "Eric Trump": {
+    "n": 59,
+    "raw": 0.29879418405846553,
+    "se": 0.8196820570195799,
+    "raw_lo": -1.2307746833070752,
+    "raw_hi": 1.992630175049792,
+    "p": 0.7639236076392361,
+    "q": 0.7639236076392361,
+    "shrunk": 0.29879418405846553,
+    "shrunk_lo": -1.3077826476999108,
+    "shrunk_hi": 1.905371015816842,
+    "factor": 1.0,
+    "rank": 2,
+    "rank_lo": 1,
+    "rank_hi": 2
+   }
+  },
+  "prior": {
+   "applied": false,
+   "J": 2,
+   "m": null,
+   "tau2": null
+  },
+  "listed": {}
+ },
+ "topics": {
+  "crypto": {
+   "people": {
+    "Donald Trump": {
+     "n": 17,
+     "raw": -1.1933676365013597,
+     "se": 2.2074444753815445,
+     "raw_lo": -4.690541205679471,
+     "raw_hi": 3.350530250338289,
+     "p": 0.8713128687131287,
+     "q": 0.8713128687131287,
+     "shrunk": -1.1933676365013597,
+     "shrunk_lo": -5.519958808249187,
+     "shrunk_hi": 3.1332235352464677,
+     "factor": 1.0,
+     "rank": 1,
+     "rank_lo": 1,
+     "rank_hi": 1
+    }
+   },
+   "prior": {
+    "applied": false,
+    "J": 1,
+    "m": null,
+    "tau2": null
+   },
+   "listed": {
+    "Eric Trump": {
+     "n": 0,
+     "mean": null,
+     "lo": null,
+     "hi": null
+    }
+   }
+  },
+  "tariffs": {
+   "people": {
+    "Donald Trump": {
+     "n": 199,
+     "raw": 3.642584823725802,
+     "se": 1.3946673823790907,
+     "raw_lo": 1.0905347998563644,
+     "raw_hi": 6.5325268666924305,
+     "p": 0.0053994600539946005,
+     "q": 0.0053994600539946005,
+     "shrunk": 3.642584823725802,
+     "shrunk_lo": 0.9090367542627842,
+     "shrunk_hi": 6.37613289318882,
+     "factor": 1.0,
+     "rank": 1,
+     "rank_lo": 1,
+     "rank_hi": 1
+    }
+   },
+   "prior": {
+    "applied": false,
+    "J": 1,
+    "m": null,
+    "tau2": null
+   },
+   "listed": {
+    "Eric Trump": {
+     "n": 0,
+     "mean": null,
+     "lo": null,
+     "hi": null
+    }
+   }
+  },
+  "fed": {
+   "people": {
+    "Donald Trump": {
+     "n": 40,
+     "raw": 3.406240847418238,
+     "se": 1.5435760431388692,
+     "raw_lo": 0.6220006785493211,
+     "raw_hi": 6.632093173157367,
+     "p": 0.11438856114388561,
+     "q": 0.11438856114388561,
+     "shrunk": 3.406240847418238,
+     "shrunk_lo": 0.38083180286605467,
+     "shrunk_hi": 6.431649891970421,
+     "factor": 1.0,
+     "rank": 1,
+     "rank_lo": 1,
+     "rank_hi": 1
+    }
+   },
+   "prior": {
+    "applied": false,
+    "J": 1,
+    "m": null,
+    "tau2": null
+   },
+   "listed": {
+    "Eric Trump": {
+     "n": 0,
+     "mean": null,
+     "lo": null,
+     "hi": null
+    }
+   }
+  },
+  "other": {
+   "people": {
+    "Donald Trump": {
+     "n": 5795,
+     "raw": 0.3045067629268186,
+     "se": 0.13217898176548384,
+     "raw_lo": 0.04600948772780284,
+     "raw_hi": 0.5658092149659112,
+     "p": 0.0017998200179982,
+     "q": 0.0035996400359964,
+     "shrunk": 0.3045067629268186,
+     "shrunk_lo": 0.045435958666470266,
+     "shrunk_hi": 0.563577567187167,
+     "factor": 1.0,
+     "rank": 1,
+     "rank_lo": 1,
+     "rank_hi": 2
+    },
+    "Eric Trump": {
+     "n": 59,
+     "raw": 0.29879418405846553,
+     "se": 0.8196820570195799,
+     "raw_lo": -1.2307746833070752,
+     "raw_hi": 1.992630175049792,
+     "p": 0.7797220277972203,
+     "q": 0.7797220277972203,
+     "shrunk": 0.29879418405846553,
+     "shrunk_lo": -1.3077826476999108,
+     "shrunk_hi": 1.905371015816842,
+     "factor": 1.0,
+     "rank": 2,
+     "rank_lo": 1,
+     "rank_hi": 2
+    }
+   },
+   "prior": {
+    "applied": false,
+    "J": 2,
+    "m": null,
+    "tau2": null
+   },
+   "listed": {}
+  }
+ },
+ "pre": {
+  "Donald Trump": {
+   "n": 6051,
+   "mean": 0.22343750947625315,
+   "median": -1.8301484357551594,
+   "lo": -0.05415759463448389,
+   "hi": 0.5332983189449304,
+   "p": 0.0023997600239976003,
+   "plac_mean": -0.24113503156020555,
+   "post_minus_pre": 0.20714478355936983,
+   "pmp_lo": -0.07892178177561786,
+   "pmp_hi": 0.4873872493269577,
+   "elevated": true
+  },
+  "Eric Trump": {
+   "n": 59,
+   "mean": 0.3269533899058059,
+   "median": -2.00354801360322,
+   "lo": -1.4577969187646298,
+   "hi": 2.317984060277256,
+   "p": 0.7511248875112488,
+   "plac_mean": 0.0681085033067647,
+   "post_minus_pre": -0.028159205847340267,
+   "pmp_lo": -1.5016804328613393,
+   "pmp_hi": 1.392806656075668,
+   "elevated": false
+  }
+ },
+ "separate": {},
+ "secondary": {
+  "Donald Trump": {
+   "BTCUSDT absret": {
+    "n": 6051,
+    "mean": 0.5725564376379901,
+    "lo": 0.23488597449721774,
+    "hi": 0.9209527922678603
+   },
+   "ETHUSDT rv": {
+    "n": 6051,
+    "mean": 0.5899650701666375,
+    "lo": 0.23951664544507895,
+    "hi": 0.9415549719753025
+   },
+   "SOLUSDT rv": {
+    "n": 6051,
+    "mean": 0.5682621797308463,
+    "lo": 0.08284292035302356,
+    "hi": 1.0776369988524677
+   }
+  },
+  "Eric Trump": {
+   "BTCUSDT absret": {
+    "n": 59,
+    "mean": 0.9215220568472448,
+    "lo": -1.291621157821786,
+    "hi": 3.470744369209757
+   },
+   "ETHUSDT rv": {
+    "n": 59,
+    "mean": -0.019955010592984792,
+    "lo": -1.497657991855885,
+    "hi": 1.5864673611587872
+   },
+   "SOLUSDT rv": {
+    "n": 59,
+    "mean": -1.032116043658611,
+    "lo": -3.7857057385104733,
+    "hi": 1.9255718432212932
+   }
+  }
+ },
+ "coverage": {
+  "Donald Trump": {
+   "group": "trump_family",
+   "files": [
+    "truth_realDonaldTrump.csv"
+   ],
+   "posts": 38074,
+   "kinds": {
+    "original": 30186,
+    "repost": 7580,
+    "quote": 308
+   },
+   "first": "2022-02-14T15:54:32Z",
+   "last": "2026-11-17T03:07:24Z",
+   "events": 15206,
+   "in_period": 15075,
+   "clean_v1": 7331,
+   "overlap": 8,
+   "clean": 7327,
+   "analysable": 6051,
+   "pool": 19213
+  },
+  "Eric Trump": {
+   "group": "trump_family",
+   "files": [
+    "x_EricTrump.csv"
+   ],
+   "posts": 87,
+   "kinds": {
+    "quote": 19,
+    "original": 68
+   },
+   "first": "2023-01-17T00:03:10Z",
+   "last": "2023-10-25T17:50:52Z",
+   "events": 82,
+   "in_period": 82,
+   "clean_v1": 65,
+   "overlap": 7,
+   "clean": 59,
+   "analysable": 59,
+   "pool": 20000
+  }
+ },
+ "answer": "Donald Trump moves crypto the most of the 2 ranked politicians: about +0.43 bps of extra BTC realized volatility in the 5 minutes after a post (raw +0.43 bps, 95% CI 0.17 to 0.70, FDR q 0.0004, 6,051 events), rank interval 1 to 2, although the lead is not distinguishable from the next people; the minutes before the posts are elevated too, so the posts may partly react to moves already under way.",
+ "negative_control": "not in the data yet"
+}
