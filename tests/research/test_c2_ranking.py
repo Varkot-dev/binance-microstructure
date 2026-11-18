@@ -163,3 +163,11 @@ def test_refuses_when_preregistration_changed(tmp_path):
 
 def test_committed_preregistration_matches_recorded_hash():
     assert c2.check_prereg() == c2.PREREG_SHA
+
+
+def test_addenda_listed_with_hash(tmp_path):
+    (tmp_path / "PREREGISTRATION_RANKING.md").write_text("main", encoding="utf-8")
+    (tmp_path / "PREREGISTRATION_ADDENDUM_X.md").write_text("add", encoding="utf-8")
+    got = c2.addenda(tmp_path)
+    assert [a["file"] for a in got] == ["PREREGISTRATION_ADDENDUM_X.md"]
+    assert got[0]["sha256"] == c2.sha256(tmp_path / "PREREGISTRATION_ADDENDUM_X.md")

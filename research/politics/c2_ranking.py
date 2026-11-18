@@ -70,6 +70,13 @@ def sha256(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
+def addenda(folder: Path = HERE) -> list[dict]:
+    """Pre-registration addenda (PREREGISTRATION_ADDENDUM_*.md) with their sha256, for the
+    report. Addenda only add post files and accounts; they never change the frozen design."""
+    return [{"file": p.name, "sha256": sha256(p)}
+            for p in sorted(folder.glob("PREREGISTRATION_ADDENDUM_*.md"))]
+
+
 def check_prereg(path: Path = PREREG, expected: str | None = None) -> str:
     """Refuse to run if the pre-registration differs from the hashed version."""
     expected = PREREG_SHA if expected is None else expected
@@ -495,7 +502,7 @@ def analyze() -> dict:
                          if k not in el}
         return res
 
-    res: dict = {"prereg_sha256": prereg_sha, "generated_utc":
+    res: dict = {"prereg_sha256": prereg_sha, "addenda": addenda(), "generated_utc":
                  dt.datetime.now(dt.UTC).strftime("%Y-%m-%dT%H:%M:%SZ"),
                  "period": [T0.isoformat(), T_END.isoformat()], "kline_months": MONTHS,
                  "klines_unpublished": missing,
@@ -624,6 +631,7 @@ def plot(res: dict, path: Path) -> None:
     names = labels
     for ti, t in enumerate(TOPICS):
         tk = res["topics"][t]
+        labelled = False
         for i, k in enumerate(names):
             r = tk["people"].get(k)
             if r is None:
@@ -631,7 +639,8 @@ def plot(res: dict, path: Path) -> None:
             y = i + (ti - 1.5) * 0.15
             ax2.plot([r["raw_lo"], r["raw_hi"]], [y] * 2, color=colors[t], lw=1.5)
             ax2.plot(r["raw"], y, "o", color=colors[t], ms=5,
-                     label=TOPIC_NAMES[t] if i == 0 else None)
+                     label=None if labelled else TOPIC_NAMES[t])
+            labelled = True
     ax2.axvline(0, color="#52514e", lw=0.8)
     ax2.set_xlabel("raw effect by topic (bps), people with 10+ events in the topic")
     ax2.set_title("By topic", loc="left", fontsize=11, pad=24)
@@ -654,6 +663,7 @@ def report(res: dict) -> str:
          f"(analysis run {res['generated_utc']}). Design fixed in "
          "`research/politics/PREREGISTRATION_RANKING.md` before any X post file existed:"), "",
          f"- pre-registration sha256 `{res['prereg_sha256']}`"]
+    L += [f"- addendum `{a['file']}` sha256 `{a['sha256']}`" for a in res.get("addenda", [])]
     L += [f"- `posts/{f['file']}` ({f['person']}, {f['group']}) sha256 `{f['sha256']}`"
           for f in res["files"]]
     if res["skipped"]:

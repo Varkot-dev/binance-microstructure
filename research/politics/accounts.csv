@@ -21,3 +21,43 @@ x,elonmusk,Elon Musk,musk_separate,Not a politician; analysed separately as a co
 x,JoeBiden,Joe Biden,democrats,President 2021 to 2025; administration hostile to crypto (SEC actions)
 x,POTUS46Archive,Office of the President (Biden era),white_house,Archived Biden-era POTUS account; verify the handle before collecting
 x,BarackObama,Barack Obama,democrats,Left office before the data starts; a check that should show no effect
+x,MikeCrapo,Mike Crapo,republicans,Congress (congresstweets 2020-01 to 2023-07-11); Senate Banking chair 2020
+x,crapoforsenate,Mike Crapo,republicans,Congress (congresstweets 2020-01 to 2023-07-11); Senate Banking chair 2020
+x,SenSherrodBrown,Sherrod Brown,democrats,"Congress (congresstweets 2020-01 to 2023-07-11); Senate Banking ranking 2020, chair 2021 to 2023"
+x,SherrodBrown,Sherrod Brown,democrats,"Congress (congresstweets 2020-01 to 2023-07-11); Senate Banking ranking 2020, chair 2021 to 2023"
+x,SenToomey,Pat Toomey,republicans,Congress (congresstweets 2020-01 to 2023-07-11); Senate Banking ranking 2021 to 2022
+x,PatToomey,Pat Toomey,republicans,Congress (congresstweets 2020-01 to 2023-07-11); Senate Banking ranking 2021 to 2022
+x,SenatorTimScott,Tim Scott,republicans,Congress (congresstweets 2020-01 to 2023-07-11); Senate Banking ranking 2023
+x,votetimscott,Tim Scott,republicans,Congress (congresstweets 2020-01 to 2023-07-11); Senate Banking ranking 2023
+x,TimScottSC,Tim Scott,republicans,Congress (congresstweets 2020-01 to 2023-07-11); Senate Banking ranking 2023
+x,MaxineWaters,Maxine Waters,democrats,"Congress (congresstweets 2020-01 to 2023-07-11); HFSC chair 2020 to 2022, ranking 2023"
+x,PatrickMcHenry,Patrick McHenry,republicans,"Congress (congresstweets 2020-01 to 2023-07-11); HFSC ranking 2020 to 2022, chair 2023"
+x,McHenryCampaign,Patrick McHenry,republicans,"Congress (congresstweets 2020-01 to 2023-07-11); HFSC ranking 2020 to 2022, chair 2023"
+x,SenPatRoberts,Pat Roberts,republicans,Congress (congresstweets 2020-01 to 2023-07-11); Senate Agriculture chair 2020
+x,PatRoberts,Pat Roberts,republicans,Congress (congresstweets 2020-01 to 2023-07-11); Senate Agriculture chair 2020
+x,SenStabenow,Debbie Stabenow,democrats,"Congress (congresstweets 2020-01 to 2023-07-11); Senate Agriculture ranking 2020, chair 2021 to 2023"
+x,stabenow,Debbie Stabenow,democrats,"Congress (congresstweets 2020-01 to 2023-07-11); Senate Agriculture ranking 2020, chair 2021 to 2023"
+x,JohnBoozman,John Boozman,republicans,Congress (congresstweets 2020-01 to 2023-07-11); Senate Agriculture ranking 2021 to 2023
+x,Boozman4AR,John Boozman,republicans,Congress (congresstweets 2020-01 to 2023-07-11); Senate Agriculture ranking 2021 to 2023
+x,collinpeterson,Collin Peterson,democrats,Congress (congresstweets 2020-01 to 2023-07-11); House Agriculture chair 2020
+x,ConawayTX11,Mike Conaway,republicans,Congress (congresstweets 2020-01 to 2023-07-11); House Agriculture ranking 2020
+x,repdavidscott,David Scott,democrats,"Congress (congresstweets 2020-01 to 2023-07-11); House Agriculture chair 2021 to 2022, ranking 2023"
+x,Electdavidscott,David Scott,democrats,"Congress (congresstweets 2020-01 to 2023-07-11); House Agriculture chair 2021 to 2022, ranking 2023"
+x,CongressmanGT,Glenn Thompson,republicans,"Congress (congresstweets 2020-01 to 2023-07-11); House Agriculture ranking 2021 to 2022, chair 2023"
+x,GT_TeamGT,Glenn Thompson,republicans,"Congress (congresstweets 2020-01 to 2023-07-11); House Agriculture ranking 2021 to 2022, chair 2023"
+x,LeaderMcConnell,Mitch McConnell,republicans,"Congress (congresstweets 2020-01 to 2023-07-11); Senate majority leader 2020, minority leader 2021 to 2023"
+x,McConnellPress,Mitch McConnell,republicans,"Congress (congresstweets 2020-01 to 2023-07-11); Senate majority leader 2020, minority leader 2021 to 2023"
+x,SRCC,Mitch McConnell,republicans,"Congress (congresstweets 2020-01 to 2023-07-11); Senate majority leader 2020, minority leader 2021 to 2023"
+x,Team_Mitch,Mitch McConnell,republicans,"Congress (congresstweets 2020-01 to 2023-07-11); Senate majority leader 2020, minority leader 2021 to 2023"
+x,chuckschumer,Chuck Schumer,democrats,"Congress (congresstweets 2020-01 to 2023-07-11); Senate minority leader 2020, majority leader 2021 to 2023"
+x,LeaderHoyer,Steny Hoyer,democrats,Congress (congresstweets 2020-01 to 2023-07-11); House majority leader 2020 to 2022
+x,StenyHoyer,Steny Hoyer,democrats,Congress (congresstweets 2020-01 to 2023-07-11); House majority leader 2020 to 2022
+x,GOPLeader,Kevin McCarthy,republicans,Congress (congresstweets 2020-01 to 2023-07-11); House minority leader 2020 to 2022
+x,kevinomccarthy,Kevin McCarthy,republicans,Congress (congresstweets 2020-01 to 2023-07-11); House minority leader 2020 to 2022
+x,SteveScalise,Steve Scalise,republicans,Congress (congresstweets 2020-01 to 2023-07-11); House majority leader 2023
+x,SteveScaliseGOP,Steve Scalise,republicans,Congress (congresstweets 2020-01 to 2023-07-11); House majority leader 2023
+x,RepJeffries,Hakeem Jeffries,democrats,Congress (congresstweets 2020-01 to 2023-07-11); House minority leader 2023
+x,hakeemjeffries,Hakeem Jeffries,democrats,Congress (congresstweets 2020-01 to 2023-07-11); House minority leader 2023
+x,CynthiaMLummis,Cynthia Lummis,republicans,Congress (congresstweets 2020-01 to 2023-07-11); accounts.csv member
+x,BillHagertyTN,Bill Hagerty,republicans,Congress (congresstweets 2020-01 to 2023-07-11); accounts.csv member
+x,ewarren,Elizabeth Warren,democrats,Congress (congresstweets 2020-01 to 2023-07-11); accounts.csv member

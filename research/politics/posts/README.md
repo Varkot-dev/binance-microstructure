@@ -60,3 +60,24 @@ The analysis checks the rebuilt file's sha256 against the one recorded in
 
 X posts collected with `../CLAUDE_DESKTOP_PROMPT.md` are handled the same way: keep the
 CSVs local (or send them over directly), and commit only their index.
+
+Members of Congress (2020-01-01 to 2023-07-11) and Trump's 2020 tweets
+(`x_realDonaldTrump.csv`) come from `alexlitel/congresstweets` (MIT) and the Hershey
+Trump Twitter file, as fixed in `../PREREGISTRATION_ADDENDUM_CONGRESS.md`:
+
+```bash
+R=data/politics/raw/congresstweets
+GIT_LFS_SKIP_SMUDGE=1 git clone --depth 1 --filter=blob:none --no-checkout \
+  https://github.com/alexlitel/congresstweets $R/repo     # commit f5c837de11a6
+git -C $R/repo checkout HEAD -- 'data/2019-12-31.json' 'data/2020-*' 'data/2021-*' \
+  'data/2022-*' 'data/2023-*'                             # about 1.6 GB
+git clone --depth 1 --filter=blob:none --no-checkout \
+  https://github.com/alexlitel/congresstweets-automator $R/automator  # commit 002e949c8534
+git -C $R/automator checkout HEAD -- data/historical-users-filtered.json
+PYTHONPATH=src .venv/bin/python research/politics/convert_congress.py
+```
+
+Each selected account is one file `x_<screen_name>.csv`; `../accounts.csv` maps the
+accounts of one person (office and campaign) to that person, and the analysis pools
+them. Trump's 2020 tweets use his real handle, so they share the (x, realDonaldTrump)
+row with any X posts collected later and pool with his Truth Social posts.

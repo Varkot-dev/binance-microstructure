@@ -1,0 +1,12 @@
+platform,handle,post_id,url,created_at_utc,kind,has_media,topic
+x,PatToomey,1228071041366450179,https://x.com/PatToomey/status/1228071041366450179,2020-02-13T21:38:47Z,original,false,other
+x,PatToomey,1258085861549395970,https://x.com/PatToomey/status/1258085861549395970,2020-05-06T17:26:58Z,original,false,other
+x,PatToomey,1296171441885450240,https://x.com/PatToomey/status/1296171441885450240,2020-08-19T19:45:28Z,repost,true,other
+x,PatToomey,1555965430170370050,https://x.com/PatToomey/status/1555965430170370050,2022-08-06T17:14:01Z,original,false,other
+x,PatToomey,1569476101373833217,https://x.com/PatToomey/status/1569476101373833217,2022-09-13T00:00:36Z,quote,false,other
+x,PatToomey,1573694802046107651,https://x.com/PatToomey/status/1573694802046107651,2022-09-24T15:24:13Z,quote,false,other
+x,PatToomey,1573705987940405248,https://x.com/PatToomey/status/1573705987940405248,2022-09-24T16:08:40Z,quote,false,other
+x,PatToomey,1573722919234158596,https://x.com/PatToomey/status/1573722919234158596,2022-09-24T17:15:56Z,original,false,other
+x,PatToomey,1590360066556764161,https://x.com/PatToomey/status/1590360066556764161,2022-11-09T15:06:01Z,original,false,other
+x,PatToomey,1590360068616093698,https://x.com/PatToomey/status/1590360068616093698,2022-11-09T15:06:02Z,original,false,other
+x,PatToomey,1592237962313740288,https://x.com/PatToomey/status/1592237962313740288,2022-11-14T19:28:07Z,original,true,other
