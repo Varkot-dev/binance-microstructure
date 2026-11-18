@@ -126,6 +126,28 @@ contracts whose tick did not change, 21 days either side.
   mechanical (a finer grid splits the same order into more same-side events); other
   changes Binance made the same day cannot be ruled out.
 
+## Weeks 3 to 4: panel regressions and the composition split (e4)
+
+`data/e4_panel_regressions.md`. Mean accuracy rose +2.75 pp (+2.07 to +3.49) from
+2023-06 to 2026-07 across the cross-section; the one-month noise floor is +0.55.
+
+- **It is not composition.** Contracts present in both months rose +3.41 pp; exits
+  (-0.17) and new listings (-0.48) both pulled the average down slightly. Survivorship
+  does not create the rise.
+- **Trade size is the driver that holds up.** Log median trade size is negative in
+  every model (contract fixed effects -3.4 pp per log point, -4.3 to -2.4) and is the
+  only driver that survives a Bonferroni correction. In a Gelbach decomposition it
+  accounts for more than the whole within-contract rise, because USD trade sizes fell
+  by about 84% for nearly all survivors, a shift far outside the cross-sectional range.
+- **Relative tick has the right sign but explains none of the rise**, because it did
+  not shrink on average between the two snapshots. Its implied effect of a 10x tick cut
+  (+0.4 to +1.3 pp on 136 contracts, +2.9 on the 10 coins) has the same sign as the e3
+  experiment and is smaller.
+- **Open question, now the most important one:** is the 84% fall in USD trade size a
+  real change in who trades and how orders are sliced, or partly a change in what one
+  aggTrade record represents? Settling it decides whether "smaller trades" is a market
+  finding or a data finding.
+
 ## Part A: why did predictability rise? (weeks 1 to 6)
 
 ### Weeks 1 to 2: describe the change
