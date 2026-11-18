@@ -290,10 +290,67 @@ def csv_bytes(zip_path: Path) -> int:
         return sum(i.file_size for i in zf.infolist())
 
 
+def _in_month(period: str) -> pl.Expr:
+    """Rows of `period` (same rows as e1's strftime filter, without a string column)."""
+    lo, hi = _month_bounds(period)
+    start = pl.lit(lo).str.to_datetime("%Y-%m-%d", time_unit="ms", time_zone="UTC")
+    end = pl.lit(hi).str.to_datetime("%Y-%m-%d", time_unit="ms", time_zone="UTC")
+    return (pl.col("ts") >= start) & (pl.col("ts") < end + pl.duration(days=1))
+
+
+LEAN_ROWS = 40_000_000
+# Columns of raw that contract_month_proxies reads (relative_tick, aggregation_shape).
+RAW_PROXY_COLS = ["agg_trade_id", "ts", "price", "first_trade_id", "last_trade_id"]
+
+
+def day_by_day_events(lf: pl.LazyFrame, period: str) -> pl.DataFrame:
+    """to_aggressor_events one UTC day at a time, concatenated. Events group prints by
+    (ts, side), which never spans two days, and the output is sorted by (ts, sign), so
+    this is the same frame as one call on the whole month, with a far smaller peak
+    (one call on 93M prints, BANKUSDT 2026-07, needed over 12 GB)."""
+    lo, _ = _month_bounds(period)
+    first = np.datetime64(lo, "D")
+    n_days = int((np.datetime64(_month_bounds(period)[1], "D") - first).astype(int)) + 1
+    out = []
+    for k in range(n_days):
+        d0 = pl.lit(str(first + k)).str.to_datetime("%Y-%m-%d", time_unit="ms", time_zone="UTC")
+        day = lf.filter((pl.col("ts") >= d0) & (pl.col("ts") < d0 + pl.duration(days=1)))
+        ev = to_aggressor_events(day)
+        if ev.height:
+            out.append(ev)
+        gc.collect()
+    return pl.concat(out, rechunk=True)
+
+
+def month_proxies_lean(paths: list[Path], period: str) -> dict | None:
+    """month_proxies for very large months, with less memory: events are built from a
+    lazy scan before raw is loaded, and raw keeps only the columns the proxies read.
+    Same result as month_proxies when the files are in agg_trade_id order (the dumps
+    are); returns None otherwise so the caller falls back."""
+    lf = pl.scan_parquet(paths).filter(_in_month(period))
+    if not lf.select((pl.col("agg_trade_id").diff().drop_nulls() > 0).all()).collect().item():
+        return None
+    events = day_by_day_events(lf.select("ts", "is_buyer_maker", "price", "qty"), period)
+    gc.collect()
+    raw = lf.select(RAW_PROXY_COLS).collect()
+    out = contract_month_proxies(events, raw)
+    if out.pop("month") != period:
+        raise ValueError("proxies month does not match the unit's period")
+    out["n_raw"] = raw.height
+    return out
+
+
 def month_proxies(paths: list[Path], period: str) -> dict:
     """e1_proxies.month_proxies on given parquet file(s): this month only, id order."""
+    n = pl.scan_parquet(paths).select(pl.len()).collect().item()
+    if n > LEAN_ROWS:
+        out = month_proxies_lean(paths, period)
+        if out is not None:
+            return out
     raw = pl.read_parquet(paths, columns=RAW_COLS)
-    raw = raw.filter(pl.col("ts").dt.strftime("%Y-%m") == period)
+    in_month = _in_month(period)
+    if not raw.select(in_month.all()).item():   # no copy when every row is in the month
+        raw = raw.filter(in_month)
     if not raw["agg_trade_id"].is_sorted():
         raw = raw.sort("agg_trade_id")
     events = to_aggressor_events(raw)
@@ -413,7 +470,7 @@ def run(units: list[dict], max_units: int | None = None) -> dict:
                 for t in todo[i + 1:i + 1 + LOOKAHEAD]:
                     if t["q9_symbol"]:
                         continue
-                    z = t["zip_bytes"] or 0
+                    z = _temp_need(t)    # its zip plus, later, its parquet
                     if (t["symbol"], t["period"]) in pre.futs:
                         in_flight += z
                         continue
