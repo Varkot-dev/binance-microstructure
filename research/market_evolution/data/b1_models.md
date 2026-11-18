@@ -2,7 +2,7 @@
 
 Built by `research/market_evolution/b1_models.py` from `delisting_panel.parquet`, reusing
 the folds, purge, alert rule, PR-AUC and month block bootstrap of `b0_baselines.py`. Run
-time 67 s, LightGBM on 2 threads.
+time 56 s, LightGBM on 2 threads.
 
 **Lock-box: origins 2026-01 on are removed before any fit and are NOT scored.**
 The bar to beat is b0's baseline (b), score = -qv_rank_pct: precision 8.3% at the top 5%,

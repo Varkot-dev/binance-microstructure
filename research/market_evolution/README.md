@@ -151,6 +151,23 @@ contracts whose tick did not change, 21 days either side.
   shifted toward many very small orders on top of the same total volume, which fits
   algorithmic slicing and small automated orders, the order-splitting mechanism.
 
+## Part B weeks 8 to 9: models against the baseline (b1)
+
+`data/b1_models.md`, same six folds and bootstrap as the baselines; the 2026 lock-box was
+not touched.
+
+- **Nothing beats the lowest-volume-rank rule with an interval that excludes zero.**
+  Full-feature logistic regression: precision at the top 5% 0.101 (0.038 to 0.153)
+  against 0.083 for the rule, paired difference +0.018 (-0.008 to +0.042). LightGBM:
+  0.078, no better than the rule; it stops improving after 1 to 36 trees, so what it
+  learns from earlier years does not carry forward.
+- **Open interest is the only extra signal**, the largest share of the tree model's
+  attributions and the only feature group that helps both models, though never by a
+  significant margin over the rule.
+- **The frozen candidates for the lock-box are the full logistic model and the
+  lowest-volume-rank rule**, scored once each on 2026.
+- Scores are for ranking, not probabilities: calibration did not improve the Brier score.
+
 ## Part A: why did predictability rise? (weeks 1 to 6)
 
 ### Weeks 1 to 2: describe the change
