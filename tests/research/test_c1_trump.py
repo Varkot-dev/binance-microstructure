@@ -95,7 +95,7 @@ def _synthetic(effect: float, seed: int):
 def test_planted_effect_is_recovered():
     ab = _synthetic(effect=4.0, seed=1)
     x = ab["post5"]["rv"]
-    lo, hi = c1.boot_mean(x, B=2000)
+    lo, _hi = c1.boot_mean(x, B=2000)
     # true rv over 5 minutes is about sqrt(5)*5 bps = 11.2 bps; x4 raises it by ~33.5 bps
     assert lo > 20 and 25 < np.nanmean(x) < 45
     lo_pre, hi_pre = c1.boot_mean(ab["pre5"]["rv"], B=2000)
