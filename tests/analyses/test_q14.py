@@ -480,3 +480,22 @@ def test_equity_screen_separates_session_profiles():
     us_heavy = np.sort(np.concatenate([eq, t0 + rng.integers(0, 31 * MS_PER_DAY, 15_000)]))
     assert q14.is_equity_like(q14.session_profile(us_heavy))
     assert not q14.is_equity_like(None)
+
+
+@pytest.mark.parametrize("header", [False, True])
+def test_streaming_ingest_matches_repo_ingest(tmp_path: Path, header: bool):
+    from microstructure.data.ingest import ingest_agg_trades
+    df = _trades(PERIOD, n_days=2, per_day=500).with_columns(pl.col("ts") * 1000)  # microseconds
+    df = df.sample(fraction=1.0, shuffle=True, seed=1)        # out of order: must be sorted
+    buf = io.StringIO()
+    df.write_csv(buf, include_header=header)
+    zp = tmp_path / "XUSDT-aggTrades-2023-06.zip"
+    with zipfile.ZipFile(zp, "w") as zf:
+        zf.writestr("XUSDT-aggTrades-2023-06.csv", buf.getvalue())
+    (tmp_path / "a").mkdir()
+    (tmp_path / "b").mkdir()
+    a = pl.read_parquet(ingest_agg_trades(zp, tmp_path / "a"))
+    b = pl.read_parquet(q14.ingest_agg_trades_streaming(zp, tmp_path / "b"))
+    assert a.schema == b.schema
+    assert a.equals(b)
+    assert not any(p.suffix == ".csv" for p in tmp_path.rglob("*"))

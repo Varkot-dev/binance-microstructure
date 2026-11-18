@@ -191,11 +191,13 @@ def equity_sentence(result: dict) -> str:
         return (f"None of the {eq['n_screened']} screened 2026-07 contracts trades like an "
                 "equity perpetual.")
     names = ", ".join(f["symbol"] for f in flagged)
-    return (f"{len(flagged)} of the {eq['n_screened']} screened 2026-07 contracts trade like "
-            f"equity perpetuals (median weekend day below "
-            f"{eq['rule']['weekend_ratio_below']:.2f} of the median weekday, or a median "
-            f"weekday share of at least {eq['rule']['us_session_median_at_least']:.2f} in the "
-            f"US cash session) and are kept out of the crypto comparison: {names}.")
+    return (f"{len(flagged)} of the {eq['n_screened']} screened 2026-07 contracts are flagged as "
+            f"stock, ETF or commodity perpetuals (identified by ticker name, or by a timing "
+            f"screen: median weekend day below {eq['rule']['weekend_ratio_below']:.2f} of the "
+            f"median weekday, or a median weekday share of at least "
+            f"{eq['rule']['us_session_median_at_least']:.2f} in the US cash session) and are "
+            f"kept out of the crypto comparison: {names}. "
+            f"{sum(1 for f in flagged if f['outcome'] == 'ok')} of them were fitted.")
 
 
 def verdict_paragraph(result: dict) -> str:
@@ -401,12 +403,20 @@ def write_markdown(path: Path, result: dict) -> None:
                "flat round-the-clock day puts 0.27 there). Medians over days keep a few burst "
                "days from deciding it: COTIUSDT, a crypto coin, had 5 pump weekdays in 2026-07 "
                "that pushed its plain monthly weekend share to 0.01. Screened: "
-               f"{eq['n_screened']} of {eq['n_cross_2026']} 2026-07 units; "
+               f"{eq['n_screened']} of {eq['n_cross_2026']} 2026-07 units. Timing alone does not "
+               "separate the groups (BTCUSDT has a weekend ratio of 0.53; thin ETF contracts "
+               "such as EWZUSDT reach 0.85), so the primary label is a review of the ticker "
+               "names for stocks, ETFs and commodities, and the strict timing cuts above, which "
+               "flag no known crypto contract, are a cross-check for names the review did not "
+               "recognise. A unit is excluded if either label flags it. "
                f"flagged: {len(eq['flagged'])}. Flagged units are summarised as their own row "
                "and left out of every comparison."), ""]
         sess = [u for u in result["units"] if u["set"] == "cross_2026" and u.get("session")]
-        for grp, keep in (("2023 survivors", lambda u: not u["status_2023"].startswith("new")),
-                          ("new listings", lambda u: u["status_2023"].startswith("new"))):
+        for grp, keep in (
+                ("2023 survivors, not flagged", lambda u: not u["status_2023"].startswith("new")
+                 and not u.get("equity_like")),
+                ("crypto new listings", lambda u: u["status_2023"] == "new_listing"),
+                ("flagged contracts", lambda u: u.get("equity_like"))):
             w = [u["session"]["weekend_ratio"] for u in sess if keep(u)
                  and u["session"].get("weekend_ratio") is not None]
             us = [u["session"]["us_session_median"] for u in sess if keep(u)
@@ -416,12 +426,13 @@ def write_markdown(path: Path, result: dict) -> None:
                          f"{np.median(w):.3f}); median-weekday US-session share "
                          f"{min(us):.3f} to {max(us):.3f} (median {np.median(us):.3f}).")
         if eq["flagged"]:
-            L += ["", ("| contract | status | weekend ratio | US-session share (median "
-                       "weekday) | weekend share (month) |"), "|---|---|---|---|---|"]
+            L += ["", ("| contract | outcome | weekend ratio | US-session share (median "
+                       "weekday) | flagged by timing screen | identified by name |"),
+                  "|---|---|---|---|---|---|"]
             for f in eq["flagged"]:
-                L.append(f"| {f['symbol']} | {f['status']} | {_f(f.get('weekend_ratio'), 3)} | "
+                L.append(f"| {f['symbol']} | {f['outcome']} | {_f(f.get('weekend_ratio'), 3)} | "
                          f"{_f(f.get('us_session_median'), 3)} | "
-                         f"{_f(f.get('weekend_share'), 3)} |")
+                         f"{'yes' if f['by_screen'] else 'no'} | {f['by_name'] or 'no'} |")
     L += ["", "### Group comparisons", "",
           ("Positive means the first group is more predictable (accuracy) or has the larger "
            "lift. Accuracy differences are in accuracy units (0.01 is one percentage point)."),

@@ -43,6 +43,7 @@ import json
 import math
 import shutil
 import time
+import zipfile
 from collections.abc import Callable
 from itertools import pairwise
 from pathlib import Path
@@ -140,11 +141,37 @@ LAST_MONTH_MAX_BACK = 3  # candidate months tried for the last complete month
 # 2026-07) cannot flip them: the median weekend day against the median weekday
 # (about 0.7 to 1 for a crypto contract) and the median weekday share of events
 # in the US cash session (13:30 to 20:00 UTC in July; 6.5 / 24 = 0.27 for a
-# flat round-the-clock day).
+# flat round-the-clock day). Timing alone does not separate the groups: BTCUSDT
+# has a weekend ratio of 0.53 and 1000XECUSDT 0.44 in 2026-07, while thinly
+# traded ETF contracts traded by crypto users on weekends reach 0.85 (EWZUSDT).
+# So the primary label is a review of the ticker names (NON_CRYPTO_BY_NAME) and
+# the timing screen uses strict cuts that flag no known crypto contract, as a
+# cross-check that catches non-crypto tickers the review did not recognise.
 EQUITY_WEEKEND_RATIO_MAX = 0.25
 EQUITY_US_SESSION_MIN = 0.60
 US_SESSION_UTC_MIN = (13 * 60 + 30, 20 * 60)  # EDT; the 2026-07 cross-section only
 SESSION_VERSION = 2
+# Primary label: sampled 2026-07 tickers recognised by name as non-crypto
+# underlyings (reviewed by hand; the report shows where it and the timing screen
+# agree). A unit is kept out of the crypto comparison if either flags it.
+NON_CRYPTO_BY_NAME = {
+    "COSTUSDT": "stock (Costco)", "UBERUSDT": "stock (Uber)", "SONYUSDT": "stock (Sony)",
+    "VUSDT": "stock (Visa)", "BRKBUSDT": "stock (Berkshire Hathaway B)",
+    "FLNCUSDT": "stock (Fluence Energy)", "ALABUSDT": "stock (Astera Labs)",
+    "ASMLUSDT": "stock (ASML)", "ASTSUSDT": "stock (AST SpaceMobile)",
+    "CRWVUSDT": "stock (CoreWeave)", "AMATUSDT": "stock (Applied Materials)",
+    "QCOMUSDT": "stock (Qualcomm)", "GOOGLUSDT": "stock (Alphabet)",
+    "CRCLUSDT": "stock (Circle)", "ARMUSDT": "stock (Arm Holdings)",
+    "SKHYNIXUSDT": "stock (SK hynix)", "URNMUSDT": "ETF (uranium miners)",
+    "QQQUSDT": "ETF (Nasdaq-100)", "SQQQUSDT": "ETF (inverse Nasdaq-100)",
+    "XAUUSDT": "commodity (gold)", "XPTUSDT": "commodity (platinum)",
+    "PAXGUSDT": "gold-backed token",
+    "AMDUSDT": "stock (AMD)", "AVGOUSDT": "stock (Broadcom)", "CIENUSDT": "stock (Ciena)",
+    "CRDOUSDT": "stock (Credo Technology)", "HPEUSDT": "stock (Hewlett Packard Enterprise)",
+    "JPMUSDT": "stock (JPMorgan Chase)", "METAUSDT": "stock (Meta Platforms)",
+    "SNDKUSDT": "stock (SanDisk)", "TSLAUSDT": "stock (Tesla)",
+    "EWYUSDT": "ETF (South Korea)", "EWZUSDT": "ETF (Brazil)", "IWMUSDT": "ETF (Russell 2000)",
+}
 N_BOOT = 2000
 SAMPLE_DECILES = 10
 SAMPLE_PER_DECILE = 10
@@ -493,12 +520,74 @@ def delete_if_created(ws: Workspace, p: Path) -> bool:
     return False
 
 
+# `ingest_agg_trades` holds the whole CSV in memory as bytes and then as text
+# columns, which needs over 13 GB for a 3.9 GB CSV (SKHYNIXUSDT 2026-07). Above
+# this uncompressed size the same schema is written by a streaming scan instead.
+STREAM_INGEST_BYTES = 1_500_000_000
+_AGG_COLS = ("agg_trade_id", "price", "qty", "first_trade_id", "last_trade_id", "ts_raw",
+             "is_buyer_maker")
+
+
+def ingest_agg_trades_streaming(zip_path: Path, out_dir: Path) -> Path:
+    """`ingest_agg_trades` for CSVs too large to hold in memory.
+
+    Same header sniffing, column casts, millisecond normalization and output
+    schema; the CSV is extracted next to the zip, scanned lazily and sunk to
+    parquet, then sorted by agg_trade_id only if it is not already (the dumps
+    are)."""
+    with zipfile.ZipFile(zip_path) as zf:
+        members = zf.namelist()
+        if len(members) != 1:
+            raise ValueError(f"{zip_path.name}: expected 1 member, got {len(members)}")
+        csv = Path(zf.extract(members[0], zip_path.parent / (zip_path.stem + "_csv")))
+    dest = out_dir / (zip_path.stem + ".parquet")
+    try:
+        with csv.open("rb") as fh:
+            first = fh.read(256).split(b",", 1)[0].split(b"\n", 1)[0]
+        has_header = not first.strip().strip(b'"').strip(b"'").lstrip(b"-").isdigit()
+        lf = pl.scan_csv(csv, has_header=has_header, infer_schema=False)
+        names = lf.collect_schema().names()
+        if len(names) < len(_AGG_COLS):
+            raise ValueError(f"{zip_path.name}: expected >= {len(_AGG_COLS)} cols, "
+                             f"got {len(names)}")
+        lf = lf.select(names[:len(_AGG_COLS)]).rename(dict(zip(names, _AGG_COLS, strict=False)))
+        ts = pl.col("ts_raw").cast(pl.Int64)
+        lf = lf.with_columns(
+            pl.col("agg_trade_id").cast(pl.Int64),
+            pl.col("first_trade_id").cast(pl.Int64),
+            pl.col("last_trade_id").cast(pl.Int64),
+            pl.col("is_buyer_maker").cast(pl.Utf8).str.to_lowercase().eq("true")
+            .alias("is_buyer_maker"),
+            pl.when(ts > 100_000_000_000_000).then(ts // 1000).otherwise(ts)
+            .cast(pl.Datetime("ms")).dt.replace_time_zone("UTC").alias("ts"),
+            pl.col("price").cast(pl.Float64),
+            pl.col("qty").cast(pl.Float64),
+        ).select("agg_trade_id", "price", "qty", "first_trade_id", "last_trade_id", "ts",
+                 "is_buyer_maker")
+        lf.sink_parquet(dest)
+    finally:
+        csv.unlink(missing_ok=True)
+        shutil.rmtree(csv.parent, ignore_errors=True)
+    ids = pl.read_parquet(dest, columns=["agg_trade_id"])["agg_trade_id"]
+    if not ids.is_sorted():
+        pl.read_parquet(dest).sort("agg_trade_id").write_parquet(dest)
+    return dest
+
+
+def _csv_bytes(zip_path: Path) -> int:
+    with zipfile.ZipFile(zip_path) as zf:
+        return sum(i.file_size for i in zf.infolist())
+
+
 def ingest_zip(ws: Workspace, zip_path: Path, symbol: str, period: str) -> Path:
     """Ingest into the normal parquet layout, verified before the final rename."""
     dest = parquet_path(ws.root, symbol, "aggTrades", period)
     dest.parent.mkdir(parents=True, exist_ok=True)
     ws.record_created(dest)
-    produced = ingest_agg_trades(zip_path, dest.parent)
+    if _csv_bytes(zip_path) > STREAM_INGEST_BYTES:
+        produced = ingest_agg_trades_streaming(zip_path, dest.parent)
+    else:
+        produced = ingest_agg_trades(zip_path, dest.parent)
     try:
         pl.scan_parquet(produced).select(pl.len()).collect()
     except Exception:
@@ -974,8 +1063,10 @@ def build_result(ws: Workspace, n_boot: int = N_BOOT) -> dict:
                      coverage=st.get("coverage"), reused_q9_cache=st.get("reused_q9_cache"))
             if t["set"] == "cross_2026":
                 u["session"] = st.get("session")
-                u["equity_like"] = st.get("equity_like")
-                if st.get("equity_like"):
+                u["equity_screen"] = is_equity_like(st.get("session"))
+                u["name_review"] = NON_CRYPTO_BY_NAME.get(sym)
+                u["equity_like"] = u["equity_screen"] or u["name_review"] is not None
+                if u["equity_like"]:
                     u["status_2023"] = status = f"{status}_equity"
             if st["status"] == "ok":
                 rec = json.loads(ws.resolve(st["record"]).read_text())
@@ -1108,7 +1199,8 @@ def build_result(ws: Workspace, n_boot: int = N_BOOT) -> dict:
                      "us_session_median_at_least": EQUITY_US_SESSION_MIN,
                      "us_session_utc_minutes": list(US_SESSION_UTC_MIN)},
             "flagged": [{"symbol": u["symbol"], "status": u["status_2023"],
-                         **(u.get("session") or {})}
+                         "outcome": u["outcome"], "by_screen": u["equity_screen"],
+                         "by_name": u["name_review"], **(u.get("session") or {})}
                         for u in units if u["set"] == "cross_2026" and u.get("equity_like")],
             "n_screened": sum(1 for u in units if u["set"] == "cross_2026"
                               and u.get("session") is not None),
