@@ -104,6 +104,28 @@ What this means:
   within-versus-between distinction in `notes/panel_and_causal_methods.md` section 1.2,
   and a good first exercise for the fixed-effects regressions.
 
+## Week 1 third pass: a natural experiment (e3, tick cuts)
+
+`data/e3_event_study.md`: Binance cut the tick 10x on 12 contracts at 2026-03-05 07:00 UTC
+(replicated on the 2024-09-20 batch, 10 of 12 contracts), compared with activity-matched
+contracts whose tick did not change, 21 days either side.
+
+- **Trade signs became more persistent after the cut, sharply and in both events.**
+  Repeat rate +6.7 pp (+4.1 to +9.2) and +8.8 pp; lag-1 sign autocorrelation +0.16 and
+  +0.18. No pre-trends by a permutation test. This matches the cross-sectional lead
+  (smaller relative tick, more predictable), now with a before-and-after design.
+- **The extra predictability is almost all simple persistence.** The prespecified
+  outcome (a model frozen on pre-cut days) shows no change (-0.7 pp, -4.4 to +2.9), and a
+  model refit each day gains (+3.9 pp, +1.0 to +6.9), but that refit outcome was added
+  after seeing the first result, so treat it as exploratory. Either way, the model's edge
+  over "repeat the last sign" shrinks after the cut.
+- **The mechanism looks like finer price steps letting orders walk the book in more,
+  smaller same-side steps:** the share of trades at an unchanged price falls by about
+  30 pp, long same-sign runs rise, and trade size falls in the 2024 event.
+- **Caveats:** sign persistence is not price predictability; part of the effect may be
+  mechanical (a finer grid splits the same order into more same-side events); other
+  changes Binance made the same day cannot be ruled out.
+
 ## Part A: why did predictability rise? (weeks 1 to 6)
 
 ### Weeks 1 to 2: describe the change
