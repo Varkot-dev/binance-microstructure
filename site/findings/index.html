@@ -331,7 +331,7 @@ footer p { font-size: var(--text-small); color: var(--ink-faint); }
 
   <section class="part" aria-labelledby="p2">
     <div class="part-head">
-      <span class="label">Part two · Q9 to Q13</span>
+      <span class="label">Part two · Q9 to Q14</span>
       <h2 id="p2">What can be predicted</h2>
       <p>Machine learning on top of the classical results, each model scored on held-out days against the baseline that theory already implies, with intervals from resampling whole trading days.</p>
     </div>
@@ -456,6 +456,33 @@ footer p { font-size: var(--text-small); color: var(--ink-faint); }
         <figure><div class="plate"><img src="q13_break_even.png" alt="Break-even fee per side for each symbol and horizon, all far below the 5 bps assumed fee; and timing savings as a share of perfect foresight, well above random waiting" loading="lazy"></div><figcaption>Break-even fee (left) and timing value as a share of perfect foresight (right).</figcaption></figure>
       </div>
     </article>
+
+    <article class="entry">
+      <div class="gutter"><span class="qid">Q14</span><span class="label">Survivorship</span></div>
+      <div class="body">
+        <h3>Did studying only coins that survived bias the results?</h3>
+        <span class="verdict mixed">Barely · and the 60% headline is, if anything, low</span>
+        <p>Q9 and Q10 used 10 large coins that traded in every month studied. Q14 reruns the same prediction test on every coin trading in June 2023 (181, including 45 that later stopped trading), on each dead coin's last full month, and on 113 coins listed after 2023. Stock, ETF and commodity contracts that Binance added in 2026 are labelled and kept out.</p>
+        <ul>
+          <li>The biggest factor is how busy a coin is: busier coins are less predictable, by about 4 points of accuracy per tenfold increase in trading.</li>
+          <li>At equal activity, coins that later died were, if anything, slightly <em>more</em> predictable in 2023 (about +1 point for genuine delistings). Renamed coins were no different.</li>
+          <li>New listings in 2026 are no different from the coins that survived from 2023.</li>
+          <li>Q9's 10 coins are among the busiest 5%, so they sit at the 28th percentile for accuracy. The typical coin reaches 61.5%, against Q9's 60.0%. What the models add over a coin flip is typical.</li>
+        </ul>
+        <div class="table-scroll">
+          <table>
+            <thead><tr><th>Comparison, June 2023</th><th>Difference in accuracy</th><th>95% interval</th></tr></thead>
+            <tbody>
+              <tr><td>Later delisted vs survivors, equal activity</td><td>+0.8 pts</td><td>+0.1 to +1.6</td></tr>
+              <tr><td>All coins that later ended vs survivors, equal activity</td><td>+0.6 pts</td><td>−0.2 to +1.4</td></tr>
+              <tr><td>Renamed or merged vs survivors, equal activity</td><td>0.0 pts</td><td>−1.5 to +1.5</td></tr>
+              <tr><td>Typical coin vs Q9's 10 coins (median accuracy)</td><td class="hi">61.5% vs 60.0%</td><td>61.0 to 62.1 (typical)</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <figure><div class="plate"><img src="q14_survivorship.png" alt="Accuracy against activity for 181 coins in June 2023, falling with activity, with Q9's 10 coins circled among the busiest; new listings against survivors in July 2026; and each dead coin's last month against its June 2023 accuracy" loading="lazy"></div><figcaption>Accuracy against activity, June 2023 and July 2026, and dead coins before they stopped.</figcaption></figure>
+      </div>
+    </article>
   </section>
 
   <section class="part" aria-labelledby="p4">
@@ -466,7 +493,7 @@ footer p { font-size: var(--text-small); color: var(--ink-faint); }
     <div class="limits">
       <div><h3>Not a trading strategy</h3><p>No result here claims profit. Q11's cost accounting is optimistic (no latency, no queue, no own impact), and still nothing covers cost.</p></div>
       <div><h3>Few test days</h3><p>Most test blocks are one or two weeks, so intervals from resampling days are coarse and probably too narrow.</p></div>
-      <div><h3>Survivor symbols</h3><p>The ML panels use contracts listed in every month studied; delisted and newer contracts are absent.</p></div>
+      <div><h3>Survivor symbols, checked</h3><p>The main ML panels use 10 large contracts listed in every month studied. Q14 checks this against 181 contracts, including ones later delisted, and finds little bias.</p></div>
       <div><h3>Quotes only for 2023</h3><p>Binance publishes top-of-book dumps for 2023 only, so price prediction is limited to that year.</p></div>
       <div><h3>Fee not verified at source</h3><p>The 5 bps taker fee is the regular tier as reported by third-party pages.</p></div>
       <div><h3>Every model checked against a planted answer</h3><p>Each estimator and analysis is first tested on synthetic data with a known result; 487 tests pass.</p></div>

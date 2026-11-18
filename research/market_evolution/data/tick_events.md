@@ -27,8 +27,8 @@ Files: `tick_events.csv` (one row per treated contract-event), `tick_event_contr
   1,430 trade days, and the 7 exceptions are thin days.
 - **Budget.** The 32 contract-events of the five events named in the task (2023-02-10,
   2023-08-29, 2024-09-20, 2024-10-14, 2026-03-05) got their +/- 10 days of trades,
-  water-filled to 41.7 MB each: most have all 21 days, but APT 2023 has 4, OCEAN 8,
-  SOL 9, TRB 10 and BIGTIME 14. Every other contract-event got its change day only,
+  water-filled to 41.7 MB each: 23 have all 21 days. The others have fewer: APT 2023 4,
+  OCEAN 8, SOL 9, TRB 10, TURBO 12, BIGTIME 14, APT 2024 15, and API3 and ZRO 17. Every other contract-event got its change day only,
   when that file was 5 MB or less. Otherwise the 2h klines give the time to within 2h.
   No day file was over 300 MB (largest 275 MB), so none was skipped for size. Total
   downloaded: 1.82 GB. Kept: 137 MB of JSON summaries under `data/tick_events/`.
@@ -54,8 +54,8 @@ Files: `tick_events.csv` (one row per treated contract-event), `tick_event_contr
 
 ## Counts
 
-- **458 treated contract-events** (366 contracts) on 75 distinct change dates: 394
-  cuts and 64 increases, almost all 10x. 451 are `verified` (the change is on the
+- **458 treated contract-events** (366 contracts) on 74 distinct change dates: 394
+  cuts and 64 increases, all 10x except two 100x changes. 451 are `verified` (the change is on the
   notice date) and 7 are `date-differs`. No contract named in the notes is `no-change`.
   The median relative tick for cuts is 12.3 bps before and 1.3 bps after.
 - **Controls:** 2,602 treated-control pairs, 2,225 distinct control-event pairs, and
