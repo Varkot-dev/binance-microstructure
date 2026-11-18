@@ -811,7 +811,9 @@ def plot(res: dict, path: Path) -> None:
             ax.set_xlabel("days relative to the tick change (day -1 = 0)", fontsize=9,
                           color=INK2)
         if i == 0:
-            ax.legend(fontsize=8, frameon=False, loc="upper left")
+            h, lbl = ax.get_legend_handles_labels()
+            fig.legend(h, lbl, loc="upper center", ncol=2, frameon=False, fontsize=10,
+                       bbox_to_anchor=(0.4, 0.965))
     # forest: per-arm repeat-rate effect
     ax = fig.add_subplot(gs[:, 3])
     arms = [a for a in res["arms"] if "repeat_rate" in a]
@@ -838,8 +840,8 @@ def plot(res: dict, path: Path) -> None:
     ax.set_xlim(-25, 25)
     ax.set_yticks([])
     ax.set_xlabel("repeat-rate effect, treated minus controls (pp)", fontsize=9, color=INK2)
-    ax.set_title("By batch: repeat rate (primary)\n95% CI: clustered, or permutation when "
-                 "fewer than 3 treated", fontsize=10, color=INK)
+    ax.set_title("By batch: repeat rate (primary), T treated / C controls\n95% CI: "
+                 "clustered, or permutation when fewer than 3 treated", fontsize=10, color=INK)
     for sp in ("top", "right", "left"):
         ax.spines[sp].set_visible(False)
     ax.tick_params(labelsize=8, colors=INK2)
@@ -873,7 +875,7 @@ def plan_summary(plan: dict) -> dict:
 
 def main() -> None:
     ap = argparse.ArgumentParser()
-    ap.add_argument("stage", choices=["plan", "run", "analyze"])
+    ap.add_argument("stage", choices=["plan", "run", "analyze", "plot"])
     a = ap.parse_args()
     plan = design()
     E5_CACHE.mkdir(parents=True, exist_ok=True)
@@ -887,6 +889,9 @@ def main() -> None:
         print(f"{len(ps['arms'])} arms; {len(jobs)} contract-days to fetch, about "
               f"{sum(day_bytes(s, d) for _, s, d in jobs) / 1e9:.2f} GB")
         print("reserved:", ps["reserved"])
+    elif a.stage == "plot":
+        plot(json.loads((E5_CACHE / "e5_results.json").read_text()),
+             OUT / "e5_stacked_events.png")
     elif a.stage == "run":
         prev = E5_CACHE / "e5_plan.json"
         if prev.exists() and json.loads(prev.read_text())["arms"] != ps["arms"]:

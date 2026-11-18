@@ -183,6 +183,22 @@ not touched.
   rest on few independent months; and 16 of the 61 lock-box delistings already appeared
   as positives in the last cross-validation block that informed which model to freeze.
 
+## Weeks 5 to 6: stacked event study over 35 tick-change batches (e5)
+
+`data/e5_stacked_events.md`. 113 treated contract-events in 35 batches (97 cuts, 16
+increases including SOLUSDT 2024-10-14), each with its own controls; the 2026-08-06 and
+2026-10-15 batches are reserved as the lock-box and were not loaded.
+
+- **Both prespecified predictions hold.** Cuts raise the sign repeat rate by +7.5 pp
+  (+6.5 to +8.5); increases lower it by -5.6 pp (-7.4 to -3.9). Pooled, the repeat rate
+  changes by -3.15 pp per log point of relative tick (-3.55 to -2.76). No pre-trends in
+  the primary outcomes.
+- **It matches the cross-section.** At equal activity, the cross-sectional slope of the
+  repeat rate on log relative tick is -1.9 to -3.9; the experiment gives -3.2.
+- **Limits:** a budget rule kept mostly small contracts (the full design would have been
+  about 110 GB); only 16 increases; 2023 batches show no effect; sign persistence is not
+  price predictability, and part of it is mechanical.
+
 ## Part A: why did predictability rise? (weeks 1 to 6)
 
 ### Weeks 1 to 2: describe the change
