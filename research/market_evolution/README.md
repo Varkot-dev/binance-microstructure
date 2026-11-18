@@ -143,10 +143,13 @@ contracts whose tick did not change, 21 days either side.
   not shrink on average between the two snapshots. Its implied effect of a 10x tick cut
   (+0.4 to +1.3 pp on 136 contracts, +2.9 on the 10 coins) has the same sign as the e3
   experiment and is smaller.
-- **Open question, now the most important one:** is the 84% fall in USD trade size a
-  real change in who trades and how orders are sliced, or partly a change in what one
-  aggTrade record represents? Settling it decides whether "smaller trades" is a market
-  finding or a data finding.
+- **The fall in trade size is real, not a change in the record format.** Checked on
+  DOGE, LINK, AVAX and BTC, 2023-06 vs 2026-07: the median USD size of an individual
+  exchange fill (the atomic match, below the aggTrade level) fell by about as much as the
+  median aggTrade (DOGE fill $147 to $50, aggTrade $238 to $94; BTC fill $353 to $126,
+  aggTrade $686 to $195), while USD volume per day stayed in the same range. Trading
+  shifted toward many very small orders on top of the same total volume, which fits
+  algorithmic slicing and small automated orders, the order-splitting mechanism.
 
 ## Part A: why did predictability rise? (weeks 1 to 6)
 
