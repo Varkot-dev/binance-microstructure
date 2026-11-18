@@ -159,7 +159,7 @@ not touched.
 - **Nothing beats the lowest-volume-rank rule with an interval that excludes zero.**
   Full-feature logistic regression: precision at the top 5% 0.101 (0.038 to 0.153)
   against 0.083 for the rule, paired difference +0.018 (-0.008 to +0.042). LightGBM:
-  0.078, no better than the rule; it stops improving after 1 to 36 trees, so what it
+  0.078, no better than the rule; early stopping keeps it to 20 to 41 trees, so what it
   learns from earlier years does not carry forward.
 - **Open interest is the only extra signal**, the largest share of the tree model's
   attributions and the only feature group that helps both models, though never by a
