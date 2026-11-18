@@ -30,6 +30,11 @@ of posts/README.md. Mapping choices (the archive has no reply, quote or repost f
   archive's scraped_at, truncated the same way.
 - Two posts with empty text and no media (2024-03-05 17:23:39) fail the contract and are
   dropped.
+
+Known mapping error, found after the file was frozen and pre-registered: 1,116 posts of
+the form "RT: <status url><own text>" are quote posts with Trump's own comment, but are
+mapped to repost. The frozen file is kept for v1; `analyze` reports an exploratory
+re-run with them as quotes. Fix in the converter before a v2.
 """
 from __future__ import annotations
 
@@ -279,9 +284,10 @@ def week_offsets(max_weeks: int = MAX_WEEKS) -> np.ndarray:
     return np.array([s * j for j in range(1, max_weeks + 1) for s in (-1, 1)]) * WEEK
 
 
-def pick_controls(anchors: np.ndarray, eligible: np.ndarray, k: int = N_CTRL) -> np.ndarray:
+def pick_controls(anchors: np.ndarray, eligible: np.ndarray, k: int = N_CTRL,
+                  max_weeks: int = MAX_WEEKS) -> np.ndarray:
     """(n, k) control minutes: the first k eligible of m-1w, m+1w, m-2w, ...; -1 if short."""
-    cand = anchors[:, None] + week_offsets()[None, :]
+    cand = anchors[:, None] + week_offsets(max_weeks)[None, :]
     inside = (cand >= 0) & (cand < eligible.size)
     ok = np.zeros_like(inside)
     ok[inside] = eligible[cand[inside]]
@@ -626,6 +632,38 @@ def stacked_check(arr: dict, anchors: np.ndarray, ctrl: np.ndarray) -> dict:
             "p": float(f["p"]), "G": int(f["G"])}
 
 
+_RT_URL = re.compile(r"RT: https://truthsocial\.com/\S*?/statuses/\d+")
+
+
+def reclassify_rt_comments(posts: list[dict]) -> list[dict]:
+    """Exploratory: posts "RT: <status url><own text>" become quotes (found after step 1
+    was frozen; the pre-registered file keeps them as reposts)."""
+    out = []
+    for p in posts:
+        q = dict(p)
+        if p["kind"] == "repost" and p["text"].startswith("RT:"):
+            m = _RT_URL.match(p["text"])
+            if m and p["text"][m.end():].strip():
+                q["kind"] = "quote"
+        out.append(q)
+    return out
+
+
+def exploratory_reclass(posts: list[dict], post_min: np.ndarray, pool_min: np.ndarray) -> dict:
+    rp = reclassify_rt_comments(posts)
+    events = [e for e in build_events(rp) if PRE_SPAN <= e["minute"] < N_MIN - POST_SPAN]
+    topics = np.array([e["topic"] for e in events])
+    clean = np.array([e["clean"] for e in events])
+    run = compute_symbol("BTCUSDT", events, post_min, pool_min, False)
+    out = {"n_reclassified": sum(a["kind"] != b["kind"] for a, b in zip(posts, rp, strict=True))}
+    for w in ("post5", "pre5"):
+        for k in ("absret", "rv"):
+            pool = run["pool"][w][k]
+            out[(w, k)] = {t: stats_block(run["ab"][w][k][clean & (topics == t) & run["ok"]],
+                                          pool) for t in TOPICS}
+    return out
+
+
 def analyze() -> dict:
     if _sha(PREREG) != PREREG_SHA:
         raise SystemExit("PREREGISTRATION.md changed since it was hashed; refusing to run")
@@ -745,6 +783,8 @@ def analyze() -> dict:
         x = btc["ab"]["post5"]["rv"][m]
         expl[t] = float(np.mean(x > q95))
     res["exploratory_top5"] = expl
+    # exploratory: "RT: <status url>" followed by own text is read as a quote, not a repost
+    res["reclass"] = exploratory_reclass(posts, post_min, pool_min)
     # profile
     res["profile"] = {}
     for t in TOPICS:
@@ -769,11 +809,19 @@ def analyze() -> dict:
         for sym in SYMBOLS:
             r = runs[(sym, False)]
             c = pick_controls(m, r["elig"])
+            row[f"fallback_{sym}"] = bool((c < 0).any())
+            if row[f"fallback_{sym}"]:  # illustration-only: widen to +/-52 weeks, k >= 4
+                c = pick_controls(m, r["elig"], max_weeks=52)
+                c = c[:, c[0] >= 0]
+            if c.shape[1] < 4:
+                row[sym] = {w: {k: np.nan for k in ("absret", "rv", "ret")} for w in WINDOWS}
+                continue
             ab = abnormal(r["arr"], m, c)
             row[sym] = {w: {k: float(ab[w][k][0]) for k in ("absret", "rv", "ret")}
                         for w in ab}
         prv = btc["pool"]["post5"]["rv"]
-        row["pctl"] = float(np.mean(prv[np.isfinite(prv)] <= row["BTCUSDT"]["post5"]["rv"]))
+        v = row["BTCUSDT"]["post5"]["rv"]
+        row["pctl"] = float(np.mean(prv[np.isfinite(prv)] <= v)) if np.isfinite(v) else np.nan
         named.append(row)
     res["named"] = named
     # counts and coverage
@@ -826,7 +874,8 @@ def plot(res: dict, path: Path) -> None:
     ax.set_xlabel("minutes from post (minute 0 not shown)")
     ax.set_ylabel("abnormal |1-min return|, bps")
     ax.set_title("A. BTCUSDT abnormal |return| by minute, clean events")
-    ax.legend(frameon=False, fontsize=9)
+    ax.set_ylim(-3, 4)
+    ax.legend(frameon=False, fontsize=9, ncol=2, loc="upper left")
 
     for ax, k, title in ((axes[0, 1], "rv", "B. Abnormal realized vol, BTCUSDT"),
                          (axes[1, 0], "absret", "C. Abnormal |return|, BTCUSDT")):
@@ -861,7 +910,8 @@ def plot(res: dict, path: Path) -> None:
     ax.invert_yaxis()
     ax.set_xlabel("mean abnormal realized vol +1 to +5, bps (95% CI)")
     ax.set_title("D. Robustness and subgroups, BTCUSDT")
-    ax.legend(frameon=False, fontsize=9, loc="lower right")
+    ax.legend(frameon=False, fontsize=9, ncol=4, loc="upper center",
+              bbox_to_anchor=(0.4, -0.12))
     for a in axes.ravel():
         a.spines[["top", "right"]].set_visible(False)
         a.grid(axis="y", color="#ecebe8", lw=0.6)
@@ -980,11 +1030,28 @@ def report(res: dict, conclusion: str) -> str:
           "95th percentile of the placebo pool (5% expected under no effect): "
           + ", ".join(f"{LABEL[t]} {100 * v:.1f}%" for t, v in res["exploratory_top5"].items())
           + ".", ""]
+    rc = res["reclass"]
+    L += ["### Exploratory: quote posts misread as reposts", "",
+          (f"After the post file was frozen, the analysis showed that {rc['n_reclassified']:,} "
+           "posts of the form \"RT: <truthsocial status url><own text>\" are quote posts with "
+           "Trump's own comment (for example the 2025-03-02 17:11 'And, obviously, BTC and "
+           "ETH...' post), not plain reposts. The pre-registered results above keep them as "
+           "reposts (not events). Re-running the primary and pre-window statistics with them "
+           "as quotes (BTCUSDT, clean events, mean [95% CI] (placebo p, n)):"), "",
+          "| window | outcome | " + " | ".join(LABEL[t] for t in TOPICS) + " |",
+          "|---|---|" + "---|" * len(TOPICS)]
+    for (w, k), blk in ((key, v) for key, v in rc.items() if isinstance(key, tuple)):
+        cells = [f"{_f(blk[t]['mean'])} [{_f(blk[t]['lo'])}, {_f(blk[t]['hi'])}] "
+                 f"(p {_p(blk[t]['p'])}, n {blk[t]['n']})" for t in TOPICS]
+        L.append(f"| {w} | {k} | " + " | ".join(cells) + " |")
+    L += [""]
     L += ["## Key named events: illustrations, not tests", "",
           ("Chosen because they are famous, which selects on the outcome. BTCUSDT abnormal "
           "values in bps; pctl = percentile of the +1 to +5 abnormal realized volatility "
           "within the placebo pool. Status says whether the post is a clean event in the "
-          "tested sample."), "",
+          "tested sample. * = fewer than 16 eligible controls within 26 weeks (busy "
+          "posting hours), so up to 16 from within 52 weeks are used, illustration only; "
+          "n/a = fewer than 4."), "",
           ("| event | UTC | kind / topic | status | BTC pre rv | BTC +1..+5 rv | pctl | "
           "BTC +1..+5 ret | BTC +1..+60 ret | SOL +1..+60 ret |"),
           "|---|---|---|---|---|---|---|---|---|---|"]
@@ -993,16 +1060,26 @@ def report(res: dict, conclusion: str) -> str:
             L.append(f"| {r['label']} | {r['ts']} | not found | | | | | | | |")
             continue
         b, s = r["BTCUSDT"], r["SOLUSDT"]
+        pct = _f(100 * r["pctl"], 0)
+        star = "*" if r["fallback_BTCUSDT"] else ""
         L.append(f"| {r['label']} | {r['ts'][:16].replace('T', ' ')} | {r['kind']} / "
                  f"{r['topic']} | {r['status']} | {_f(b['pre5']['rv'], 1)} | "
-                 f"{_f(b['post5']['rv'], 1)} | {100 * r['pctl']:.0f} | "
+                 f"{_f(b['post5']['rv'], 1)}{star} | {pct} | "
                  f"{_f(b['post5']['ret'], 1)} | {_f(b['post60']['ret'], 1)} | "
                  f"{_f(s['post60']['ret'], 1)} |")
     L += ["", "## Caveats", "",
           ("- Topic keywords are crude: content in images, videos and links is invisible, "
           "and 'powell' or 'reciprocal' can be off-topic. Media-only posts are 'other'."),
           ("- The archive probably lacks posts deleted before 2026-08-20, and kinds are "
-          "inferred from text; there is no reply flag."),
+          "inferred from text; there is no reply flag. 1,116 quote posts were misread as "
+          "reposts in the frozen file (see the exploratory section)."),
+          ("- The pre-registered keywords miss some crypto posts: 'CONGRATULATIONS "
+          "BITCOINERS!!! $100,000!!!' is 'other' because `bitcoins?` does not match "
+          "'bitcoiners'. Left as registered; a v2 list should use `bitcoin\\w*`."),
+          ("- About 17% of clean events (1,276) lack 16 eligible control weeks (or a complete "
+          "window) "
+          "within 26 weeks, because Trump posts at the same hours week after week; they are "
+          "dropped, so the busiest posting hours are under-represented."),
           ("- Times are when Truth Social stored the post; markets learn of it seconds to "
           "minutes later through alert accounts and wires, which is why minute 0 is "
           "skipped and +15 and +60 are reported."),
@@ -1045,7 +1122,35 @@ def main(argv: list[str]) -> int:
     return 0
 
 
-CONCLUSION = "(to be written after the first run)"
+CONCLUSION = """\
+**Yes, but only some posts, by a little, and mainly through tariffs.** Over 6,055 clean
+post events (2022-05 to 2026-10), BTC futures were more volatile than usual in the five
+minutes after a Trump post about tariffs and trade: abnormal realized volatility +3.6 bps
+[95% CI 1.1, 6.5] on a normal level of about 12.6 bps (roughly +29%), abnormal absolute
+return +5.1 bps [1.3, 9.8] (about +49%), volume about +23%, placebo p 0.0002 (Holm
+0.002), and clearly larger than for other posts (difference +3.3 bps rv [0.8, 6.3],
+permutation p 0.0001). ETH and SOL show the same pattern. The effect is a small average
+with a long tail: 13% of tariff posts land in the top 5% of the placebo distribution,
+led by the 2025-04-09 tariff pause and the 2025-10-10 100% China tariff, and it holds
+without 2025-10-10.
+
+Fed and rates posts point the same way (+3.4 bps rv [0.6, 6.6]) but do not survive the
+multiple-testing correction (placebo p 0.044, Holm 0.18). Crypto posts, the topic one
+would expect to matter most, show no average effect (-1.2 bps rv [-4.7, 3.4], n = 17
+clean events): too few posts, several famous ones fall inside posting bursts and are
+not in the clean sample, and the big ones (the 2025-03-02 reserve post) are rare
+exceptions. All other posts, 96% of events, move BTC by about +0.3 bps (2.5%), which
+is statistically detectable only because there are thousands of them and is matched by
+a similar rise just before the posts, so it is not evidence of influence.
+
+The pre-window check is reassuring for the topics that matter: in minutes -5 to -1
+before tariff and Fed posts, BTC was no more volatile than usual (tariffs +0.8 bps rv
+[-0.6, 2.3]), and the post-minus-pre difference is positive (tariffs +2.8 [0.6, 5.4]).
+So, on average, tariff posts are not just commentary on a move already under way.
+
+In plain terms: a typical Trump post does nothing to crypto; a tariff post adds a few
+basis points of extra movement in the next five minutes, and occasionally a great deal;
+crypto-specific posts have no detectable average effect at this sample size."""
 
 if __name__ == "__main__":
     sys.exit(main(sys.argv[1:]))
