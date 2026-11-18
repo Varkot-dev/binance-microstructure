@@ -168,6 +168,21 @@ not touched.
   lowest-volume-rank rule**, scored once each on 2026.
 - Scores are for ranking, not probabilities: calibration did not improve the Brier score.
 
+## Part B lock-box (b2): one run on 2026
+
+`data/b2_lockbox.md`. Frozen configurations from commit b3571a6, scored once on 2026-01 to
+2026-07 (3,730 contract-months, 61 delisted contracts, base rate 3.9%).
+
+- **The logistic model beats the lowest-volume rule on the lock-box:** precision at the
+  top 5% 0.270 (0.187 to 0.356) against 0.151, paired difference +0.119 (+0.097 to
+  +0.145). The direction matches cross-validation and the interval now excludes zero.
+- **But more than half of that edge comes from the month that likely contains the
+  delisting announcement.** Without it, the gain is +0.049 (-0.016 to +0.081): ahead, not
+  decisively. That is the fairer test of predicting a delisting before it is announced.
+- **Caveats:** 2026 delistings came in batches (23 distinct stop days), so the intervals
+  rest on few independent months; and 16 of the 61 lock-box delistings already appeared
+  as positives in the last cross-validation block that informed which model to freeze.
+
 ## Part A: why did predictability rise? (weeks 1 to 6)
 
 ### Weeks 1 to 2: describe the change
