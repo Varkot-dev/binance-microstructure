@@ -208,10 +208,10 @@ def parse_e4(text: str) -> dict:
         "implied_10x_cut": {
             k: _cell_range(imp[label][0], imp[label][1])
             for k, label in (
-                ("total", "survivors, contract FE + 2026 dummy, relative tick only "
-                          "(total effect)"),
-                ("partial", "survivors, all six drivers (partial: trade size etc. held "
-                            "fixed)"))},
+                ("total", ("survivors, contract FE + 2026 dummy, relative tick only "
+                          "(total effect)")),
+                ("partial", ("survivors, all six drivers (partial: trade size etc. held "
+                            "fixed)")))},
     }
 
 
@@ -262,7 +262,7 @@ def e5_summary(e5: dict) -> dict:
 def lockbox_summary(folder: Path) -> dict:
     """Every lock-box run (normally one) and the final one in full."""
     runs = []
-    for p in sorted(folder.glob("e5_lockbox_run*.json"), key=lambda p: int(p.stem[15:])):
+    for p in sorted(folder.glob("e5_lockbox_run*.json"), key=lambda p: int(p.stem.removeprefix("e5_lockbox_run"))):
         r = json.loads(p.read_text())
         runs.append({"run": r["run"], "file": str(p.name), "rerun_reason": r["rerun_reason"],
                      "frozen_commit": r["frozen_commit"], "head": r["head"],
