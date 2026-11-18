@@ -1,0 +1,20 @@
+platform,handle,person,group,why
+truth,realDonaldTrump,Donald Trump,trump_family,President; most posts are on Truth Social
+x,realDonaldTrump,Donald Trump,trump_family,X account; occasional posts since 2022
+x,POTUS,Office of the President,white_house,Official presidential account
+x,WhiteHouse,White House,white_house,Official statements
+x,EricTrump,Eric Trump,trump_family,World Liberty Financial and American Bitcoin
+x,DonaldJTrumpJr,Donald Trump Jr.,trump_family,World Liberty Financial
+x,worldlibertyfi,World Liberty Financial,trump_family,Trump-linked crypto project
+x,GetTrumpMemes,$TRUMP memecoin,trump_family,Official $TRUMP memecoin account
+x,JDVance,JD Vance,republicans,Vice President
+x,DavidSacks,David Sacks,administration,White House AI and crypto czar
+x,SECGov,U.S. SEC,regulators,Securities and Exchange Commission
+x,GaryGensler,Gary Gensler,regulators,SEC chair until January 2025
+x,SenLummis,Cynthia Lummis,republicans,Senator; pro-Bitcoin legislation
+x,SenatorHagerty,Bill Hagerty,republicans,Senator; stablecoin legislation
+x,SenWarren,Elizabeth Warren,democrats,Senator; leading crypto critic
+x,SenSchumer,Chuck Schumer,democrats,Senate Democratic leader
+x,RepMaxineWaters,Maxine Waters,democrats,House Financial Services ranking member
+x,KamalaHarris,Kamala Harris,democrats,2024 Democratic nominee
+x,elonmusk,Elon Musk,musk_separate,Not a politician; analysed separately as a comparison
