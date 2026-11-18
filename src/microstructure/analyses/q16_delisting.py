@@ -258,24 +258,24 @@ def check_cv_copy(cv: dict, copied: dict) -> list[dict]:
 # --------------------------------------------------------------------------------------
 
 def excluded_lives(panel_md: str) -> dict:
-    m = re.search(r"## Excluded lives \((\d+)\)\n\n(.+?)\n\n", panel_md, re.S)
+    m = re.search(r"## Excluded lives \((\d+)\)\n\n(.+?)\n\n", panel_md, re.DOTALL)
     if not m:
         raise ValueError("excluded lives list not found")
     cats: dict[str, int] = {}
     for line in m[2].splitlines():
         reason = line.split(": ", 1)[1] if ": " in line else line
         if "index contract" in reason:
-            c = "index contract"
+            c = "index contracts"
         elif "stock" in reason:
-            c = "stock (Q14 name review)"
+            c = "stocks (Q14 name review)"
         elif "ETF" in reason:
-            c = "ETF (Q14 name review)"
+            c = "ETFs (Q14 name review)"
         elif "commodity" in reason or "gold-backed" in reason:
-            c = "commodity (Q14 name review)"
+            c = "commodities (Q14 name review)"
         elif "weekend screen" in reason:
-            c = "weekend screen, non-crypto by name"
+            c = "by the weekend-volume screen, confirmed by name"
         elif "under 14 trading days" in reason:
-            c = "non-crypto by name, under 14 trading days"
+            c = "non-crypto by name with under 14 trading days"
         elif "timing screen" in reason:
             c = "Q14 timing screen"
         else:
