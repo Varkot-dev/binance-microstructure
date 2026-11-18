@@ -15,6 +15,11 @@ accounts.csv, downloads any missing BTC/ETH/SOL 1-minute kline months into
 data/politics/klines/, and writes research/politics/data/c2_ranking.json. `report`
 turns that JSON into data/c2_ranking.md and data/c2_ranking.png. When a new post file
 arrives in posts/, run all three steps again.
+
+Post-hoc robustness check (not pre-registered; `DEVIATION_LOCAL_CONTROLS.md`): with
+`--controls local`, `analyze` and `report` use same-minute-of-week controls within plus or
+minus 4 weeks that avoid every tracked person's posts, add the post-minus-pre outcome, and
+write data/c2_ranking_local.{json,md,png}. The primary files are never touched by it.
 """
 from __future__ import annotations
 
@@ -45,6 +50,11 @@ ACCOUNTS = HERE / "accounts.csv"
 KLINES = c1.KLINES
 OUT = HERE / "data"
 RESULTS = OUT / "c2_ranking.json"
+DEVIATION = HERE / "DEVIATION_LOCAL_CONTROLS.md"
+DEVIATION_SHA = "7fc16189f475bd7f3a0d7912c7a8dadc7f8e30f086b77fe2593cfe663b969cda"
+RESULTS_LOCAL = OUT / "c2_ranking_local.json"
+LOCAL_WEEKS = 4
+LOCAL_MIN_CTRL = 6
 INDEX_COLUMNS = ["platform", "handle", "post_id", "url", "created_at_utc", "kind",
                  "has_media", "topic"]
 
@@ -300,6 +310,99 @@ def person_run(arr: dict, valid: np.ndarray, ev_min: np.ndarray, post_min: np.nd
     return out
 
 
+# ------------------------------------------------- local controls (post-hoc deviation)
+
+def local_offsets(weeks: int = LOCAL_WEEKS) -> np.ndarray:
+    """Same minute of the week, j = -weeks..-1, +1..+weeks."""
+    return np.array([j for j in range(-weeks, weeks + 1) if j != 0]) * c1.WEEK
+
+
+def pick_local_controls(anchors: np.ndarray, eligible: np.ndarray, weeks: int = LOCAL_WEEKS,
+                        min_ctrl: int = LOCAL_MIN_CTRL) -> tuple[np.ndarray, np.ndarray]:
+    """(n, 2*weeks) control minutes (-1 where not eligible) and the rows with at least
+    min_ctrl eligible controls. All eligible candidates are used."""
+    anchors = np.asarray(anchors, dtype=np.int64)
+    cand = anchors[:, None] + local_offsets(weeks)[None, :]
+    inside = (cand >= 0) & (cand < eligible.size)
+    ok = np.zeros_like(inside)
+    ok[inside] = eligible[cand[inside]]
+    ctrl = np.where(ok, cand, -1)
+    return ctrl, ok.sum(axis=1) >= min_ctrl
+
+
+def abnormal_local(arr: dict, anchors: np.ndarray, ctrl: np.ndarray,
+                   enough: np.ndarray) -> dict:
+    """Like c1.abnormal, but the control mean is over the eligible controls of each row
+    (ctrl >= 0); rows without enough controls are NaN. Adds the pseudo-window "pmp"
+    (post5 minus pre5, both against the same controls)."""
+    has = ctrl >= 0
+    cnt = np.maximum(has.sum(axis=1), 1)
+    out: dict = {}
+    for w, (a, b) in c1.WINDOWS.items():
+        ev = c1.window_values(arr, anchors, a, b)
+        cv = c1.window_values(arr, np.where(has, ctrl, c1.PRE_SPAN), a, b)
+        out[w] = {}
+        for k in c1.MEASURES:
+            with np.errstate(invalid="ignore"):
+                x = ev[k] - np.where(has, cv[k], 0.0).sum(axis=1) / cnt
+            x[~enough] = np.nan
+            out[w][k] = x
+    out["pmp"] = {k: out["post5"][k] - out["pre5"][k] for k in c1.MEASURES}
+    return out
+
+
+def person_run_local(arr: dict, valid: np.ndarray, ev_min: np.ndarray,
+                     own_busy: np.ndarray, ctrl_busy: np.ndarray, pool_min: np.ndarray | None,
+                     drop_1010: bool) -> dict:
+    """Outcomes with local controls. Pool minutes follow the pre-registered rule (valid, no
+    own post within 60 minutes); controls avoid every minute in ctrl_busy."""
+    n = valid.size
+    ex = excl_mask(n)
+    elig = valid & ~ctrl_busy
+    pool_ok = valid & ~own_busy
+    if drop_1010:
+        elig &= ~ex
+        pool_ok &= ~ex
+    ok = (ev_min >= c1.PRE_SPAN) & (ev_min < n - c1.POST_SPAN)
+    ok[ok] &= valid[ev_min[ok]]
+    if drop_1010:
+        ok[ok] &= ~ex[ev_min[ok]]
+    anchors = np.where(ok, ev_min, c1.PRE_SPAN)
+    ctrl, enough = pick_local_controls(anchors, elig)
+    good = ok & enough
+    out = {"ab": abnormal_local(arr, anchors, ctrl, good), "ok": good, "win_ok": ok,
+           "n_ctrl": (ctrl >= 0).sum(axis=1)}
+    if pool_min is not None:
+        pm = pool_min[pool_ok[pool_min]]
+        pctrl, penough = pick_local_controls(pm, elig)
+        pab = abnormal_local(arr, pm, pctrl, penough)
+        out["pool"] = {w: {k: v[penough] for k, v in d.items()} for w, d in pab.items()}
+    return out
+
+
+def check_deviation(path: Path = DEVIATION, expected: str | None = None) -> str:
+    """Refuse the local run if the deviation document changed after it was hashed."""
+    return check_prereg(path, DEVIATION_SHA if expected is None else expected)
+
+
+def control_distance(ev_min: np.ndarray, valid: np.ndarray, own_busy: np.ndarray,
+                     local_ok: np.ndarray) -> dict:
+    """Diagnostic: how far (in weeks) the pre-registered controls lie from the events, for
+    all clean events with a complete window and for those kept under local controls."""
+    n = valid.size
+    ok = (ev_min >= c1.PRE_SPAN) & (ev_min < n - c1.POST_SPAN)
+    ok[ok] &= valid[ev_min[ok]]
+    ctrl = c1.pick_controls(ev_min[ok], valid & ~own_busy)
+    good = (ctrl >= 0).all(axis=1)
+    wk = np.abs(ctrl[good] - ev_min[ok][good][:, None]) / c1.WEEK
+    later = (ctrl[good] > ev_min[ok][good][:, None]).mean() if good.any() else np.nan
+    return {"n": int(good.sum()), "mean_abs_weeks": float(wk.mean()) if good.any() else None,
+            "max_abs_weeks_p90": float(np.quantile(wk.max(axis=1), 0.9))
+            if good.any() else None,
+            "share_later": float(later) if good.any() else None,
+            "local_kept": int(local_ok.sum())}
+
+
 # ---------------------------------------------------------------------------- ranking
 
 def bh(p) -> np.ndarray:
@@ -392,7 +495,12 @@ def rank_people(samples: dict[str, np.ndarray], pools: dict[str, np.ndarray],
     return {"people": rows, "prior": prior}
 
 
-def answer(ranking: dict, pre: dict) -> str:
+WHAT_POST5 = "extra BTC realized volatility in the 5 minutes after a post"
+WHAT_PMP = ("extra BTC realized volatility in the 5 minutes after a post over the 5 "
+            "minutes before it")
+
+
+def answer(ranking: dict, pre: dict, what: str = WHAT_POST5) -> str:
     """The pre-registered one-sentence answer (section 6)."""
     rows = ranking["people"]
     J = len(rows)
@@ -401,13 +509,15 @@ def answer(ranking: dict, pre: dict) -> str:
                 "yet, so there is no answer.")
     sig = [k for k, r in rows.items() if r["q"] < 0.05 and r["raw"] > 0]
     if not sig:
+        eff = ("on BTC realized volatility in the 5 minutes after a post"
+               if what == WHAT_POST5 else f"({what})")
         return (f"No politician's posts are distinguishable from random times: none of the "
                 f"{J} ranked politician{'s' if J > 1 else ''} has an FDR q below 0.05 with "
-                "a positive effect on BTC realized volatility in the 5 minutes after a post.")
+                f"a positive effect {eff}.")
     x = max(sig, key=lambda k: rows[k]["shrunk"])
     r = rows[x]
-    detail = (f"about {r['shrunk']:+.2f} bps of extra BTC realized volatility in the 5 "
-              f"minutes after a post ({'shrunken; ' if ranking['prior']['applied'] else ''}"
+    detail = (f"about {r['shrunk']:+.2f} bps of {what} "
+              f"({'shrunken; ' if ranking['prior']['applied'] else ''}"
               f"raw {r['raw']:+.2f} bps, 95% CI {r['raw_lo']:.2f} to {r['raw_hi']:.2f}, "
               f"FDR q {_p(r['q'])}, {r['n']:,} events)")
     if J == 1:
@@ -447,8 +557,12 @@ def _ci(x: np.ndarray) -> dict:
     return {"n": int(x.size), "mean": float(x.mean()), "lo": float(lo), "hi": float(hi)}
 
 
-def analyze() -> dict:
+def analyze(controls: str = "global") -> dict:
+    """The C2 analysis. controls="global" is the pre-registered primary; "local" is the
+    post-hoc robustness check of DEVIATION_LOCAL_CONTROLS.md."""
     prereg_sha = check_prereg()
+    local = controls == "local"
+    dev_sha = check_deviation() if local else None
     files, skipped = discover()
     if not files:
         raise SystemExit("no validated post files listed in accounts.csv")
@@ -463,6 +577,9 @@ def analyze() -> dict:
     topics = {k: np.array([e["topic"] for e in events[k]]) for k in names}
     runs: dict = {}
     pools_min = {}
+    if local:
+        busy_all = c1.busy_mask(np.concatenate([post_min[k] for k in names]), N_MIN)
+        dist: dict = {}
     for sym in SYMBOLS:
         px = load_prices(sym)
         arr = c1.minute_arrays(px["close"], px["vol"], px["tb"])
@@ -475,10 +592,23 @@ def analyze() -> dict:
                                                   replace=False))
         for k in names:
             pm = pools_min[k] if sym == "BTCUSDT" else None
-            runs[(sym, k, False)] = person_run(arr, valid, ev_min[k], post_min[k], pm, False)
+            if not local:
+                runs[(sym, k, False)] = person_run(arr, valid, ev_min[k], post_min[k], pm,
+                                                   False)
+                if sym == "BTCUSDT":
+                    runs[(sym, k, True)] = person_run(arr, valid, ev_min[k], post_min[k],
+                                                      pm, True)
+                continue
+            own = c1.busy_mask(post_min[k], N_MIN)
+            runs[(sym, k, False)] = person_run_local(arr, valid, ev_min[k], own, busy_all,
+                                                     pm, False)
             if sym == "BTCUSDT":
-                runs[(sym, k, True)] = person_run(arr, valid, ev_min[k], post_min[k], pm,
-                                                  True)
+                runs[(sym, k, True)] = person_run_local(arr, valid, ev_min[k], own,
+                                                        busy_all, pm, True)
+                runs[(sym, k, "own")] = person_run_local(arr, valid, ev_min[k], own, own,
+                                                         pm, False)
+                dist[k] = control_distance(ev_min[k][sel[k]], valid, own,
+                                           runs[(sym, k, False)]["ok"][sel[k]])
         del arr, px, valid
 
     def x_of(k, w="post5", m="rv", sym="BTCUSDT", drop=False, topic=None):
@@ -494,11 +624,12 @@ def analyze() -> dict:
     politicians = [k for k in names if people[k]["group"] != MUSK_GROUP]
     separate = [k for k in names if people[k]["group"] == MUSK_GROUP]
 
-    def ranking(drop=False, topic=None):
-        el = [k for k in politicians if x_of(k, drop=drop, topic=topic).size >= MIN_EVENTS]
-        res = rank_people({k: x_of(k, drop=drop, topic=topic) for k in el},
-                          {k: pool_of(k, drop=drop) for k in el})
-        res["listed"] = {k: _ci(x_of(k, drop=drop, topic=topic)) for k in politicians
+    def ranking(drop=False, topic=None, w="post5"):
+        el = [k for k in politicians
+              if x_of(k, w=w, drop=drop, topic=topic).size >= MIN_EVENTS]
+        res = rank_people({k: x_of(k, w=w, drop=drop, topic=topic) for k in el},
+                          {k: pool_of(k, w=w, drop=drop) for k in el})
+        res["listed"] = {k: _ci(x_of(k, w=w, drop=drop, topic=topic)) for k in politicians
                          if k not in el}
         return res
 
@@ -549,6 +680,26 @@ def analyze() -> dict:
                   "pool": int(pool_of(k).size)}
     res["coverage"] = cov
     res["answer"] = answer(res["main"], pre)
+    if local:
+        res["deviation_sha256"] = dev_sha
+        res["controls"] = "local"
+        res["pmp"] = ranking(w="pmp")
+        res["pmp_without_1010"] = ranking(drop=True, w="pmp")
+        res["pmp_topics"] = {t: ranking(topic=t, w="pmp") for t in TOPICS}
+        res["answer_pmp"] = answer(res["pmp"], {}, what=WHAT_PMP)
+        res["sensitivity_own"] = {"main": ranking(drop="own"),
+                                  "pmp": ranking(drop="own", w="pmp")}
+        for k in names:
+            run = runs[("BTCUSDT", k, False)]
+            win = sel[k] & run["win_ok"]
+            cov[k]["dropped_local"] = int((win & ~run["ok"]).sum())
+            cov[k]["window_ok"] = int(win.sum())
+            cov[k]["mean_n_ctrl"] = (float(run["n_ctrl"][sel[k] & run["ok"]].mean())
+                                     if (sel[k] & run["ok"]).any() else None)
+            cov[k]["pool_local"] = int(pool_of(k).size)
+            cov[k]["analysable_own"] = int(x_of(k, drop="own").size)
+            cov[k]["dropped_own"] = int((win & ~runs[("BTCUSDT", k, "own")]["ok"]).sum())
+        res["control_distance"] = dist
     neg = res["main"]["people"].get(NEG_CONTROL)
     res["negative_control"] = (
         "not in the data yet" if NEG_CONTROL not in names else
@@ -756,13 +907,203 @@ def report(res: dict) -> str:
     return "\n".join(L)
 
 
+def _cell(r: dict | None) -> str:
+    if r is None:
+        return "not ranked | | "
+    return f"{r['rank']} ({r['rank_lo']} to {r['rank_hi']}) | {_f(r['shrunk'])} | {_p(r['q'])}"
+
+
+def side_by_side(primary: dict, local: dict) -> list[str]:
+    """Primary (global controls) next to local controls and post minus pre."""
+    P, Lc, M = primary["main"]["people"], local["main"]["people"], local["pmp"]["people"]
+    cov = local["coverage"]
+    names = sorted(set(P) | set(Lc) | set(M),
+                   key=lambda k: (Lc[k]["rank"] if k in Lc else 999, k))
+    out = [("| person | primary rank (interval) | primary shrunken | primary q | local rank "
+            "(interval) | local shrunken | local q | post-minus-pre rank (interval) | "
+            "post-minus-pre shrunken | post-minus-pre q | events primary / local / dropped |"),
+           "|---|---|---|---|---|---|---|---|---|---|---|"]
+    for k in names:
+        c = cov.get(k, {})
+        n_p = P[k]["n"] if k in P else primary["coverage"].get(k, {}).get("analysable", 0)
+        out.append(f"| {k} | {_cell(P.get(k))} | {_cell(Lc.get(k))} | {_cell(M.get(k))} | "
+                   f"{n_p:,} / {c.get('analysable', 0):,} / {c.get('dropped_local', 0):,} |")
+    return out
+
+
+def moves(rk: dict) -> list[str]:
+    return sorted(k for k, r in rk["people"].items() if r["q"] < 0.05 and r["raw"] > 0)
+
+
+def lowers(rk: dict) -> list[str]:
+    return sorted(k for k, r in rk["people"].items() if r["q"] < 0.05 and r["raw"] < 0)
+
+
+def report_local(res: dict, primary: dict) -> str:
+    cov = res["coverage"]
+    L = ["# C2 robustness check: local control windows (post-hoc, not pre-registered)", "",
+         ("**This is a post-hoc deviation from the pre-registration**, designed after the "
+          "primary C2 run had been seen; it checks the primary ranking "
+          "(`c2_ranking.md`, unchanged) and does not replace it. Design: "
+          "`research/politics/DEVIATION_LOCAL_CONTROLS.md`. Generated by "
+          "`research/politics/c2_ranking.py report --controls local` from "
+          f"`c2_ranking_local.json` (analysis run {res['generated_utc']})."), "",
+         f"- deviation sha256 `{res['deviation_sha256']}`",
+         f"- pre-registration sha256 `{res['prereg_sha256']}`"]
+    L += [f"- addendum `{a['file']}` sha256 `{a['sha256']}`" for a in res.get("addenda", [])]
+    L += [f"- primary results: `c2_ranking.json` analysis run {primary['generated_utc']}",
+          (f"- {len(res['files'])} post files, the same as the primary run "
+           f"({'identical hashes' if res['files'] == primary['files'] else 'DIFFERENT'})"),
+          "", "## What changed", "",
+          ("Controls: the same minute of the week within plus or minus 4 weeks (8 candidates), "
+           "excluding any candidate within 60 minutes of a post of any kind by any tracked "
+           "person, all eligible used, at least 6 required (else the event or placebo minute "
+           "is dropped). Primary: the first 16 eligible within plus or minus 26 weeks, "
+           "excluding only the same person's posts. Post minus pre: abnormal rv over +1..+5 "
+           "minus abnormal rv over -5..-1, both against the same local controls. Everything "
+           "else (events, overlap rule, minimum 10 events, placebo, BH FDR, shrinkage, rank "
+           "intervals) as pre-registered."), "",
+          "## Answer under local controls (computed in code)", "",
+          f"**{res['answer']}**", "",
+          f"Post minus pre: {res['answer_pmp']}", "",
+          f"Primary answer, for comparison: {primary['answer']}", "",
+          "## Side by side", "",
+          ("Rank (rank interval), shrunken effect in bps, BH q. Sorted by the local rank. "
+           "Events: analysable clean events in the primary run / under local controls / "
+           "clean events with a complete window dropped for having fewer than 6 local "
+           "controls."), ""]
+    L += side_by_side(primary, res)
+    for title, rk in (("Primary (global controls)", primary["main"]),
+                      ("Local controls", res["main"]), ("Post minus pre (local)", res["pmp"]),
+                      ("Sensitivity: local band, own posts only excluded",
+                       res["sensitivity_own"]["main"]),
+                      ("Sensitivity: post minus pre, own posts only excluded",
+                       res["sensitivity_own"]["pmp"])):
+        L.append(f"- {title}: q < 0.05 and positive: {', '.join(moves(rk)) or 'nobody'}; "
+                 f"q < 0.05 and negative: {', '.join(lowers(rk)) or 'nobody'}.")
+    L += ["", "## Ranking with local controls (abnormal rv +1..+5)", ""]
+    L += ranking_table(res["main"])
+    L += ["", "### Without 2025-10-10/11", ""]
+    L += ranking_table(res["without_1010"])
+    L += ["", "## Ranking on post minus pre (local controls)", ""]
+    L += ranking_table(res["pmp"])
+    L += ["", "### Without 2025-10-10/11", ""]
+    L += ranking_table(res["pmp_without_1010"])
+    L += ["", "## Sensitivity: plus or minus 4 weeks, only the same person's posts excluded",
+          "", "Abnormal rv +1..+5:", ""]
+    L += ranking_table(res["sensitivity_own"]["main"])
+    L += ["", "Post minus pre:", ""]
+    L += ranking_table(res["sensitivity_own"]["pmp"])
+    L += ["", "## Per topic (local controls)", "",
+          ("| topic | outcome | person | events | raw [95% CI] | shrunken | rank interval | "
+           "placebo p | q (within topic) |"), "|---|---|---|---|---|---|---|---|---|"]
+    for t in TOPICS:
+        for lab, tk in (("rv +1..+5", res["topics"][t]), ("post minus pre",
+                                                           res["pmp_topics"][t])):
+            for k, r in sorted(tk["people"].items(), key=lambda kv: kv[1]["rank"]):
+                L.append(f"| {TOPIC_NAMES[t]} | {lab} | {k} | {r['n']:,} | {_f(r['raw'])} "
+                         f"{_ci_s(r['raw_lo'], r['raw_hi'])} | {_f(r['shrunk'])} | "
+                         f"{r['rank_lo']} to {r['rank_hi']} | {_p(r['p'])} | {_p(r['q'])} |")
+    pt = primary["topics"]["tariffs"]["people"].get("Donald Trump")
+    if pt:
+        L += ["", (f"Primary, for comparison: Donald Trump on tariffs {_f(pt['raw'])} "
+                   f"{_ci_s(pt['raw_lo'], pt['raw_hi'])}, placebo p {_p(pt['p'])}, "
+                   f"{pt['n']} events.")]
+    L += ["", "## Pre-window check (local controls)", "",
+          ("| person | events | pre5 mean [95% CI] | placebo p | elevated | primary pre5 mean "
+           "|"), "|---|---|---|---|---|---|"]
+    for k, v in sorted(res["pre"].items()):
+        pv = primary["pre"].get(k, {})
+        L.append(f"| {k} | {v['n']} | {_f(v['mean'])} {_ci_s(v['lo'], v['hi'])} | "
+                 f"{_p(v['p'])} | {'yes' if v['elevated'] else 'no'} | {_f(pv.get('mean'))} |")
+    L += ["", "## Where the primary controls came from (diagnostic, exploratory)", "",
+          ("Pre-registered controls of each person's clean events: mean distance from the "
+           "event in weeks, 90th percentile of the farthest control, share of controls after "
+           "the event; and the local-control coverage."), "",
+          ("| person | events | mean distance (weeks) | farthest, p90 (weeks) | share later | "
+           "kept under local | dropped under local | mean local controls | kept, own-only "
+           "exclusion |"), "|---|---|---|---|---|---|---|---|---|"]
+    for k, d in sorted(res["control_distance"].items()):
+        c = cov[k]
+        L.append(f"| {k} | {d['n']:,} | {_f(d['mean_abs_weeks'], 1)} | "
+                 f"{_f(d['max_abs_weeks_p90'], 1)} | {_f(d['share_later'])} | "
+                 f"{c['analysable']:,} | {c['dropped_local']:,} | {_f(c['mean_n_ctrl'], 1)} | "
+                 f"{c['analysable_own']:,} |")
+    L += ["", "## Caveats", "",
+          ("- Post-hoc: chosen after seeing the primary ranking. It can show which primary "
+           "conclusions are robust; it cannot confirm new ones."),
+          ("- Excluding every tracked person's posts drops events and removes busy weekday "
+           "hours from the controls in 2020 to 2023-07; the own-posts-only sensitivity shows "
+           "how much this matters."),
+          ("- Post minus pre is noisier (two windows) and also moves when a post follows, and "
+           "is followed by, a move already under way."),
+          "- All caveats of the primary run apply (`c2_ranking.md`).",
+          "", "![C2 local-controls figure](c2_ranking_local.png)", ""]
+    return "\n".join(L)
+
+
+def plot_local(res: dict, primary: dict, path: Path) -> None:
+    import matplotlib
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+
+    P, Lc, M = primary["main"]["people"], res["main"]["people"], res["pmp"]["people"]
+    names = sorted(set(P) | set(Lc) | set(M),
+                   key=lambda k: (Lc[k]["rank"] if k in Lc else 999, k))
+    n = max(len(names), 1)
+    fig, axes = plt.subplots(1, 2, figsize=(11, 2.4 + 0.42 * n), sharey=True)
+    ax = axes[0]
+    for i, k in enumerate(names):
+        for rk, dy, col, lab in ((P, -0.14, "#9a9890", "primary (global controls)"),
+                                 (Lc, 0.14, "#2a78d6", "local controls")):
+            r = rk.get(k)
+            if r is None:
+                continue
+            ax.plot([r["shrunk_lo"], r["shrunk_hi"]], [i + dy] * 2, color=col, lw=2)
+            ax.plot(r["shrunk"], i + dy, "o", color=col, ms=6,
+                    label=lab if i == next(j for j, x in enumerate(names) if x in rk) else None)
+    ax.set_title("Abnormal BTC rv, minutes +1 to +5", loc="left", fontsize=11, pad=24)
+    ax.set_xlabel("shrunken effect, 95% posterior (bps)")
+    ax2 = axes[1]
+    first = True
+    for i, k in enumerate(names):
+        r = M.get(k)
+        if r is None:
+            continue
+        ax2.plot([r["shrunk_lo"], r["shrunk_hi"]], [i] * 2, color="#eb6834", lw=2)
+        ax2.plot(r["shrunk"], i, "o", color="#eb6834", ms=6,
+                 label="post minus pre, local controls" if first else None)
+        first = False
+    ax2.set_title("Post minus pre (removes the volatility level)", loc="left", fontsize=11,
+                  pad=24)
+    ax2.set_xlabel("shrunken effect, 95% posterior (bps)")
+    axes[0].set_yticks(range(n), names)
+    axes[0].invert_yaxis()
+    for a in axes:
+        a.axvline(0, color="#52514e", lw=0.8)
+        a.spines[["top", "right"]].set_visible(False)
+        a.grid(axis="x", color="#e6e5e0", lw=0.6)
+        a.legend(frameon=False, fontsize=8, loc="lower left", bbox_to_anchor=(0, 1.0), ncol=2)
+    fig.suptitle("Post-hoc robustness check (not pre-registered): local control windows",
+                 x=0.01, ha="left", fontsize=10, color="#52514e")
+    fig.tight_layout()
+    fig.savefig(path, dpi=140)
+    plt.close(fig)
+
+
 def main(argv: list[str]) -> int:
     import argparse
 
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("step", choices=["index", "analyze", "report"])
+    ap.add_argument("--controls", choices=["global", "local"], default="global",
+                    help="global: the pre-registered primary; local: the post-hoc "
+                    "robustness check of DEVIATION_LOCAL_CONTROLS.md (separate files)")
     a = ap.parse_args(argv)
     check_prereg()
+    local = a.controls == "local"
+    if local:
+        check_deviation()
     if a.step == "index":
         done, failed = index_all()
         for p in done:
@@ -770,19 +1111,29 @@ def main(argv: list[str]) -> int:
         for msg in failed:
             print("NOT indexed:", msg)
         return 1 if failed else 0
+    results = RESULTS_LOCAL if local else RESULTS
     if a.step == "analyze":
-        res = analyze()
+        res = analyze(a.controls)
         OUT.mkdir(parents=True, exist_ok=True)
-        RESULTS.write_text(json.dumps(res, indent=1), encoding="utf-8")
-        print("wrote", RESULTS.relative_to(ROOT))
+        results.write_text(json.dumps(res, indent=1), encoding="utf-8")
+        print("wrote", results.relative_to(ROOT))
         print(res["answer"])
         return 0
-    res = json.loads(RESULTS.read_text(encoding="utf-8"))
+    res = json.loads(results.read_text(encoding="utf-8"))
     if res["prereg_sha256"] != PREREG_SHA:
-        raise SystemExit("c2_ranking.json was made under a different pre-registration")
-    plot(res, OUT / "c2_ranking.png")
-    (OUT / "c2_ranking.md").write_text(report(res), encoding="utf-8")
-    print("wrote", (OUT / "c2_ranking.md").relative_to(ROOT))
+        raise SystemExit(f"{results.name} was made under a different pre-registration")
+    if local:
+        if res.get("deviation_sha256") != DEVIATION_SHA:
+            raise SystemExit(f"{results.name} was made under a different deviation document")
+        primary = json.loads(RESULTS.read_text(encoding="utf-8"))
+        plot_local(res, primary, OUT / "c2_ranking_local.png")
+        md = OUT / "c2_ranking_local.md"
+        md.write_text(report_local(res, primary), encoding="utf-8")
+    else:
+        plot(res, OUT / "c2_ranking.png")
+        md = OUT / "c2_ranking.md"
+        md.write_text(report(res), encoding="utf-8")
+    print("wrote", md.relative_to(ROOT))
     print(res["answer"])
     return 0
 
