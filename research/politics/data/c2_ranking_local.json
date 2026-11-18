@@ -1,0 +1,5060 @@
+{
+ "prereg_sha256": "41ef1cf1fd1af1479572d06061894a5d58d91f949ec39cf516aeb01c905a22e7",
+ "addenda": [
+  {
+   "file": "PREREGISTRATION_ADDENDUM_CONGRESS.md",
+   "sha256": "f8d6b1e0b03d664a4074a896a64feb847cdf30910aaf7173e2efee9c28c3210f"
+  }
+ ],
+ "generated_utc": "2026-11-18T05:34:33Z",
+ "period": [
+  "2020-01-01T00:00:00+00:00",
+  "2026-11-01T00:00:00+00:00"
+ ],
+ "kline_months": [
+  "2020-01",
+  "2026-10"
+ ],
+ "klines_unpublished": [
+  "SOLUSDT 2020-01",
+  "SOLUSDT 2020-02",
+  "SOLUSDT 2020-03",
+  "SOLUSDT 2020-04",
+  "SOLUSDT 2020-05",
+  "SOLUSDT 2020-06",
+  "SOLUSDT 2020-07",
+  "SOLUSDT 2020-08"
+ ],
+ "files": [
+  {
+   "file": "truth_realDonaldTrump.csv",
+   "sha256": "d3ce5a47062fd0d92dff8dae92f3e616f2386f4b1d378a49eb5d4e40e374cf3c",
+   "platform": "truth",
+   "handle": "realDonaldTrump",
+   "person": "Donald Trump",
+   "group": "trump_family"
+  },
+  {
+   "file": "x_BillHagertyTN.csv",
+   "sha256": "4b1190251c5dfe47e2fc10b9deea73ee02368fd24e9997033912e2d35d82bd6d",
+   "platform": "x",
+   "handle": "BillHagertyTN",
+   "person": "Bill Hagerty",
+   "group": "republicans"
+  },
+  {
+   "file": "x_Boozman4AR.csv",
+   "sha256": "a4bbfcb52d39035b28148199f18456e45a34411e11fd7cd7c1df15328ba70a8e",
+   "platform": "x",
+   "handle": "Boozman4AR",
+   "person": "John Boozman",
+   "group": "republicans"
+  },
+  {
+   "file": "x_ConawayTX11.csv",
+   "sha256": "09f7e365c418dd55280fa559430ee0b249ac414af82ec7876fd9f26099b90779",
+   "platform": "x",
+   "handle": "ConawayTX11",
+   "person": "Mike Conaway",
+   "group": "republicans"
+  },
+  {
+   "file": "x_CongressmanGT.csv",
+   "sha256": "ed13655adbcddd9fa6bb23dbc42803034ba95788093418f4a1e5bd3099e7267c",
+   "platform": "x",
+   "handle": "CongressmanGT",
+   "person": "Glenn Thompson",
+   "group": "republicans"
+  },
+  {
+   "file": "x_CynthiaMLummis.csv",
+   "sha256": "47643e523737803cd45a603b07bedf54487fc2691acbb62f664223a2cd83622c",
+   "platform": "x",
+   "handle": "CynthiaMLummis",
+   "person": "Cynthia Lummis",
+   "group": "republicans"
+  },
+  {
+   "file": "x_Electdavidscott.csv",
+   "sha256": "5859991aad96ebb4669b20830344c84363f312f58fb3a7baa6ec8fc23c21b1da",
+   "platform": "x",
+   "handle": "Electdavidscott",
+   "person": "David Scott",
+   "group": "democrats"
+  },
+  {
+   "file": "x_EricTrump.csv",
+   "sha256": "e290519d298a000a751bd4e144cdc27c1a0ecdd22a131e80473b66bdab9a13ca",
+   "platform": "x",
+   "handle": "EricTrump",
+   "person": "Eric Trump",
+   "group": "trump_family"
+  },
+  {
+   "file": "x_GOPLeader.csv",
+   "sha256": "193fe558aab131ab2b0af9a10fa27c6f4630be91bf9ed614894952326b750690",
+   "platform": "x",
+   "handle": "GOPLeader",
+   "person": "Kevin McCarthy",
+   "group": "republicans"
+  },
+  {
+   "file": "x_GT_TeamGT.csv",
+   "sha256": "9627436d586a1759582c17bc034c22021cf8d31fcafd5b648aa2daf76df56718",
+   "platform": "x",
+   "handle": "GT_TeamGT",
+   "person": "Glenn Thompson",
+   "group": "republicans"
+  },
+  {
+   "file": "x_JohnBoozman.csv",
+   "sha256": "dbea4cab65eb0c0377075983855058d8dead928e6e1715f2bd249ab72bcbdf38",
+   "platform": "x",
+   "handle": "JohnBoozman",
+   "person": "John Boozman",
+   "group": "republicans"
+  },
+  {
+   "file": "x_KamalaHarris.csv",
+   "sha256": "e22e7debf41f5c79b440983af157042904abfd473bc3d05cf7cc47d9e34aaae0",
+   "platform": "x",
+   "handle": "KamalaHarris",
+   "person": "Kamala Harris",
+   "group": "democrats"
+  },
+  {
+   "file": "x_LeaderHoyer.csv",
+   "sha256": "09b1e9a2be7f23e7298620adf8c37e5128d66d4f7a80f8635d95073649e112de",
+   "platform": "x",
+   "handle": "LeaderHoyer",
+   "person": "Steny Hoyer",
+   "group": "democrats"
+  },
+  {
+   "file": "x_LeaderMcConnell.csv",
+   "sha256": "540345012cfcc4338ee28585555e058b18b5fda7b8a5f73922064952756d8bbb",
+   "platform": "x",
+   "handle": "LeaderMcConnell",
+   "person": "Mitch McConnell",
+   "group": "republicans"
+  },
+  {
+   "file": "x_MaxineWaters.csv",
+   "sha256": "4810373024697fa5b44f9432ab0473369be72b3147ac7efc42a0cd847fb8f02b",
+   "platform": "x",
+   "handle": "MaxineWaters",
+   "person": "Maxine Waters",
+   "group": "democrats"
+  },
+  {
+   "file": "x_McConnellPress.csv",
+   "sha256": "3f309bdc8b70f43e9d27e6973fbaf6738264d6d3acea0e3b55927d4a5ee459a4",
+   "platform": "x",
+   "handle": "McConnellPress",
+   "person": "Mitch McConnell",
+   "group": "republicans"
+  },
+  {
+   "file": "x_McHenryCampaign.csv",
+   "sha256": "7ea68163ffa951a8e04b497e3ae61d6a9c561181c39c317ef229bdc024518799",
+   "platform": "x",
+   "handle": "McHenryCampaign",
+   "person": "Patrick McHenry",
+   "group": "republicans"
+  },
+  {
+   "file": "x_MikeCrapo.csv",
+   "sha256": "817b750476c2cd85b521a6407a04c1c01dfe438197add5f1e96eb7103e8a6106",
+   "platform": "x",
+   "handle": "MikeCrapo",
+   "person": "Mike Crapo",
+   "group": "republicans"
+  },
+  {
+   "file": "x_PatRoberts.csv",
+   "sha256": "9b806fcf03929e097ae9afd860c3816e626263836997289c88f3567fcf01361c",
+   "platform": "x",
+   "handle": "PatRoberts",
+   "person": "Pat Roberts",
+   "group": "republicans"
+  },
+  {
+   "file": "x_PatToomey.csv",
+   "sha256": "d7c71bbcf2785bad0d5273f880957f0dcbb44fd8567b716977c6fd92528fd852",
+   "platform": "x",
+   "handle": "PatToomey",
+   "person": "Pat Toomey",
+   "group": "republicans"
+  },
+  {
+   "file": "x_PatrickMcHenry.csv",
+   "sha256": "ea9de8d9464ade604f9d8b2474f6e72d2d08324ce3d6dd4c21851a4126082106",
+   "platform": "x",
+   "handle": "PatrickMcHenry",
+   "person": "Patrick McHenry",
+   "group": "republicans"
+  },
+  {
+   "file": "x_RepJeffries.csv",
+   "sha256": "522da0622509d2d63a6b14ab7f63ae90469afffeb8636045e13f8421d4d6b3fa",
+   "platform": "x",
+   "handle": "RepJeffries",
+   "person": "Hakeem Jeffries",
+   "group": "democrats"
+  },
+  {
+   "file": "x_RepMaxineWaters.csv",
+   "sha256": "c6cf18deebab9dfb8d76175b26c776af47023056e5707813b6eb03189f6f9c98",
+   "platform": "x",
+   "handle": "RepMaxineWaters",
+   "person": "Maxine Waters",
+   "group": "democrats"
+  },
+  {
+   "file": "x_SRCC.csv",
+   "sha256": "0372eed1c58bbcd56d992920d8a1de3c18aa89ca09c2a6b43bc99af64c8082be",
+   "platform": "x",
+   "handle": "SRCC",
+   "person": "Mitch McConnell",
+   "group": "republicans"
+  },
+  {
+   "file": "x_SenLummis.csv",
+   "sha256": "c72eaeb4d664dd787813dbdecb1a20fde9bb0f282c52cce7926147f0d641629f",
+   "platform": "x",
+   "handle": "SenLummis",
+   "person": "Cynthia Lummis",
+   "group": "republicans"
+  },
+  {
+   "file": "x_SenPatRoberts.csv",
+   "sha256": "b9220043f5ecbb689742e94a0b623ad4b06e1f52da2af183af25c362f1403701",
+   "platform": "x",
+   "handle": "SenPatRoberts",
+   "person": "Pat Roberts",
+   "group": "republicans"
+  },
+  {
+   "file": "x_SenSchumer.csv",
+   "sha256": "0067f6a2c18f5e5a6e0c1a0acddadacb51db692c974fa2040a745d8b03a6dfdd",
+   "platform": "x",
+   "handle": "SenSchumer",
+   "person": "Chuck Schumer",
+   "group": "democrats"
+  },
+  {
+   "file": "x_SenSherrodBrown.csv",
+   "sha256": "6d39543db8268be60a0b989fe0583ef56efaa9b63500d7a257f54f5272b3c57e",
+   "platform": "x",
+   "handle": "SenSherrodBrown",
+   "person": "Sherrod Brown",
+   "group": "democrats"
+  },
+  {
+   "file": "x_SenStabenow.csv",
+   "sha256": "7a090e7874862374254d639aec2cd7d5aa2190e8eb8d74eecc5daa91a58f59f9",
+   "platform": "x",
+   "handle": "SenStabenow",
+   "person": "Debbie Stabenow",
+   "group": "democrats"
+  },
+  {
+   "file": "x_SenToomey.csv",
+   "sha256": "6475ee3e3adb645aa17c5218a4b8fa27102572cc6b440c266088d52dbb05072d",
+   "platform": "x",
+   "handle": "SenToomey",
+   "person": "Pat Toomey",
+   "group": "republicans"
+  },
+  {
+   "file": "x_SenWarren.csv",
+   "sha256": "bc5b05112bb1239bccf4e0237057770b82ac579eedd19e2722375e40fc7032d0",
+   "platform": "x",
+   "handle": "SenWarren",
+   "person": "Elizabeth Warren",
+   "group": "democrats"
+  },
+  {
+   "file": "x_SenatorHagerty.csv",
+   "sha256": "21f78dd5b739be4ff3839c1cb17f58c0c1b894b93806237366c72850945a7e04",
+   "platform": "x",
+   "handle": "SenatorHagerty",
+   "person": "Bill Hagerty",
+   "group": "republicans"
+  },
+  {
+   "file": "x_SenatorTimScott.csv",
+   "sha256": "d1a86b2a20950345e8b972024550ce13a6e76168e1f64fb5e227e3ae7d3fdaa1",
+   "platform": "x",
+   "handle": "SenatorTimScott",
+   "person": "Tim Scott",
+   "group": "republicans"
+  },
+  {
+   "file": "x_SherrodBrown.csv",
+   "sha256": "494e838b6984687685eeebf3792e5d88ebb821b54ffebc5ab99fdc5ba67903d7",
+   "platform": "x",
+   "handle": "SherrodBrown",
+   "person": "Sherrod Brown",
+   "group": "democrats"
+  },
+  {
+   "file": "x_StenyHoyer.csv",
+   "sha256": "374d7e02c07b21db587be0fe3e6c3c5616f7006a69026c44ab74752cc55c8ee0",
+   "platform": "x",
+   "handle": "StenyHoyer",
+   "person": "Steny Hoyer",
+   "group": "democrats"
+  },
+  {
+   "file": "x_SteveScalise.csv",
+   "sha256": "cf6e3ae9c7fd90dd80f0ca83f62b19cf1df06e8e37ccb7a7300de2657bd6685f",
+   "platform": "x",
+   "handle": "SteveScalise",
+   "person": "Steve Scalise",
+   "group": "republicans"
+  },
+  {
+   "file": "x_SteveScaliseGOP.csv",
+   "sha256": "0eadad9a1ac427c7d51f51e5a9a16f92334967b276de40592405143c4ff0c75a",
+   "platform": "x",
+   "handle": "SteveScaliseGOP",
+   "person": "Steve Scalise",
+   "group": "republicans"
+  },
+  {
+   "file": "x_Team_Mitch.csv",
+   "sha256": "c7fdcf7eb6904851b7a9d6b8730305105e39d9472a5a974c4824583a26d83970",
+   "platform": "x",
+   "handle": "Team_Mitch",
+   "person": "Mitch McConnell",
+   "group": "republicans"
+  },
+  {
+   "file": "x_TimScottSC.csv",
+   "sha256": "85827ba73c00e6b35489d364eb21f4f49f3c1d3d3e76fd85b0a53f397044851a",
+   "platform": "x",
+   "handle": "TimScottSC",
+   "person": "Tim Scott",
+   "group": "republicans"
+  },
+  {
+   "file": "x_chuckschumer.csv",
+   "sha256": "dda888269d0063f855fe051efd26a602c6af2cc9053a1ce39debdfe3bba2b65f",
+   "platform": "x",
+   "handle": "chuckschumer",
+   "person": "Chuck Schumer",
+   "group": "democrats"
+  },
+  {
+   "file": "x_crapoforsenate.csv",
+   "sha256": "3ad5e588db24f045d6ead8bb3f6897af7a395ff189d29e5585841d24f7a41735",
+   "platform": "x",
+   "handle": "crapoforsenate",
+   "person": "Mike Crapo",
+   "group": "republicans"
+  },
+  {
+   "file": "x_ewarren.csv",
+   "sha256": "e21f7d1774b0b890608c2c184177d1df30c490a38f57dcfcf82f808beab89ffb",
+   "platform": "x",
+   "handle": "ewarren",
+   "person": "Elizabeth Warren",
+   "group": "democrats"
+  },
+  {
+   "file": "x_hakeemjeffries.csv",
+   "sha256": "8907b7ae6e08da0b7b828afaf39cb4d8e25e5d7bca4a0026f45a97a7f9d92503",
+   "platform": "x",
+   "handle": "hakeemjeffries",
+   "person": "Hakeem Jeffries",
+   "group": "democrats"
+  },
+  {
+   "file": "x_kevinomccarthy.csv",
+   "sha256": "1b4db9497277ee3f84785baaa0cc93813335f1b127e9c2ffead61c18296dd180",
+   "platform": "x",
+   "handle": "kevinomccarthy",
+   "person": "Kevin McCarthy",
+   "group": "republicans"
+  },
+  {
+   "file": "x_realDonaldTrump.csv",
+   "sha256": "42c3abaad0aa7e626cd31bc4a6e860a1272d654f1293bf759c8ed8a59c4819a7",
+   "platform": "x",
+   "handle": "realDonaldTrump",
+   "person": "Donald Trump",
+   "group": "trump_family"
+  },
+  {
+   "file": "x_repdavidscott.csv",
+   "sha256": "d0723fd37d132316eda60cc668061e66a0e4c1a83d81d6ba5ab951dab0082cea",
+   "platform": "x",
+   "handle": "repdavidscott",
+   "person": "David Scott",
+   "group": "democrats"
+  },
+  {
+   "file": "x_stabenow.csv",
+   "sha256": "4eb8d01282743bf0a6d5ccf0dc00acb24f96c6598394e59a81957fa03e785821",
+   "platform": "x",
+   "handle": "stabenow",
+   "person": "Debbie Stabenow",
+   "group": "democrats"
+  },
+  {
+   "file": "x_votetimscott.csv",
+   "sha256": "e91edc6306dc6b2ba708ebaaed3caaf0201e58361a68f0448f8ddb0184183a36",
+   "platform": "x",
+   "handle": "votetimscott",
+   "person": "Tim Scott",
+   "group": "republicans"
+  }
+ ],
+ "skipped": [],
+ "main": {
+  "people": {
+   "Bill Hagerty": {
+    "n": 12,
+    "raw": -0.6230480798880885,
+    "se": 4.647917651157221,
+    "raw_lo": -9.054235050656853,
+    "raw_hi": 8.255359314957623,
+    "p": 0.9061093890610938,
+    "q": 0.9061093890610937,
+    "shrunk": -0.9764703819664552,
+    "shrunk_lo": -3.081056181112511,
+    "shrunk_hi": 1.1281154171796004,
+    "factor": 0.053370869564767096,
+    "rank": 3,
+    "rank_lo": 1,
+    "rank_hi": 5
+   },
+   "Cynthia Lummis": {
+    "n": 12,
+    "raw": -7.245172976735593,
+    "se": 4.20313331964513,
+    "raw_lo": -15.573589563064004,
+    "raw_hi": 0.04894426441406389,
+    "p": 0.0047995200479952005,
+    "q": 0.023997600239976002,
+    "shrunk": -1.3994241735546467,
+    "shrunk_lo": -3.4916052810701395,
+    "shrunk_hi": 0.6927569339608459,
+    "factor": 0.06449708371625144,
+    "rank": 5,
+    "rank_lo": 1,
+    "rank_hi": 5
+   },
+   "Donald Trump": {
+    "n": 775,
+    "raw": -0.33725915471661755,
+    "se": 0.2712666285407122,
+    "raw_lo": -0.8580124633003627,
+    "raw_hi": 0.21295959083756458,
+    "p": 0.17618238176182383,
+    "q": 0.22022797720227977,
+    "shrunk": -0.3748127065794,
+    "shrunk_lo": -0.8911272034712298,
+    "shrunk_hi": 0.1415017903124297,
+    "factor": 0.943026194072296,
+    "rank": 1,
+    "rank_lo": 1,
+    "rank_hi": 4
+   },
+   "Hakeem Jeffries": {
+    "n": 21,
+    "raw": -3.2729846970980105,
+    "se": 2.479458422357649,
+    "raw_lo": -7.7684300079944615,
+    "raw_hi": 1.6045004017570554,
+    "p": 0.09459054094590541,
+    "q": 0.200979902009799,
+    "shrunk": -1.3728503063134592,
+    "shrunk_lo": -3.349030778683159,
+    "shrunk_hi": 0.6033301660562407,
+    "factor": 0.16535883508940308,
+    "rank": 4,
+    "rank_lo": 1,
+    "rank_hi": 5
+   },
+   "Mitch McConnell": {
+    "n": 10,
+    "raw": 5.39762525933714,
+    "se": 7.431468774475339,
+    "raw_lo": -5.656215644520969,
+    "raw_hi": 20.980489400462446,
+    "p": 0.12058794120587941,
+    "q": 0.200979902009799,
+    "shrunk": -0.8584239375244043,
+    "shrunk_lo": -2.9980591309780786,
+    "shrunk_hi": 1.2812112559292699,
+    "factor": 0.021578338821232293,
+    "rank": 2,
+    "rank_lo": 1,
+    "rank_hi": 4
+   }
+  },
+  "prior": {
+   "applied": true,
+   "J": 5,
+   "m": -0.9963963011876731,
+   "tau2": 1.2179831040195879
+  },
+  "listed": {
+   "Chuck Schumer": {
+    "n": 7,
+    "mean": -1.9087269925817563,
+    "lo": -16.866230267116883,
+    "hi": 17.022857247684186
+   },
+   "David Scott": {
+    "n": 2,
+    "mean": -3.6875947029367393,
+    "lo": -5.04764367961255,
+    "hi": -2.3275457262609285
+   },
+   "Debbie Stabenow": {
+    "n": 2,
+    "mean": -3.8936935908474206,
+    "lo": -5.6598094102792,
+    "hi": -2.127577771415641
+   },
+   "Elizabeth Warren": {
+    "n": 1,
+    "mean": -9.414092050287406,
+    "lo": null,
+    "hi": null
+   },
+   "Eric Trump": {
+    "n": 3,
+    "mean": -1.397341943966131,
+    "lo": -3.209742632961491,
+    "hi": 1.0615552014636753
+   },
+   "Glenn Thompson": {
+    "n": 3,
+    "mean": 4.284927007693138,
+    "lo": -17.747797184872834,
+    "hi": 35.125446428001474
+   },
+   "John Boozman": {
+    "n": 2,
+    "mean": -4.301115687657562,
+    "lo": -4.712053984723964,
+    "hi": -3.8901773905911607
+   },
+   "Kamala Harris": {
+    "n": 0,
+    "mean": null,
+    "lo": null,
+    "hi": null
+   },
+   "Kevin McCarthy": {
+    "n": 9,
+    "mean": 5.799327068737757,
+    "lo": -1.9992556369300323,
+    "hi": 15.809485918795163
+   },
+   "Maxine Waters": {
+    "n": 5,
+    "mean": -0.5874149271091348,
+    "lo": -3.5406263585972058,
+    "hi": 2.967135756040843
+   },
+   "Mike Conaway": {
+    "n": 0,
+    "mean": null,
+    "lo": null,
+    "hi": null
+   },
+   "Mike Crapo": {
+    "n": 3,
+    "mean": -6.099514860131674,
+    "lo": -10.994829596801628,
+    "hi": -3.5057744520888665
+   },
+   "Pat Roberts": {
+    "n": 0,
+    "mean": null,
+    "lo": null,
+    "hi": null
+   },
+   "Pat Toomey": {
+    "n": 1,
+    "mean": 16.310382313457026,
+    "lo": null,
+    "hi": null
+   },
+   "Patrick McHenry": {
+    "n": 0,
+    "mean": null,
+    "lo": null,
+    "hi": null
+   },
+   "Sherrod Brown": {
+    "n": 0,
+    "mean": null,
+    "lo": null,
+    "hi": null
+   },
+   "Steny Hoyer": {
+    "n": 6,
+    "mean": 3.762794628865368,
+    "lo": -1.6171209477708386,
+    "hi": 8.60659984239385
+   },
+   "Steve Scalise": {
+    "n": 1,
+    "mean": -12.02361123207579,
+    "lo": null,
+    "hi": null
+   },
+   "Tim Scott": {
+    "n": 9,
+    "mean": -1.9018666928905306,
+    "lo": -12.090339942127953,
+    "hi": 11.983013051290932
+   }
+  }
+ },
+ "without_1010": {
+  "people": {
+   "Bill Hagerty": {
+    "n": 12,
+    "raw": -0.6230480798880885,
+    "se": 4.647917651157221,
+    "raw_lo": -9.054235050656853,
+    "raw_hi": 8.255359314957623,
+    "p": 0.9027097290270973,
+    "q": 0.9027097290270973,
+    "shrunk": -0.9449033504717037,
+    "shrunk_lo": -3.069489301308397,
+    "shrunk_hi": 1.1796826003649894,
+    "factor": 0.054390070044961526,
+    "rank": 3,
+    "rank_lo": 1,
+    "rank_hi": 5
+   },
+   "Cynthia Lummis": {
+    "n": 12,
+    "raw": -7.245172976735593,
+    "se": 4.20313331964513,
+    "raw_lo": -15.573589563064004,
+    "raw_hi": 0.04894426441406389,
+    "p": 0.0051994800519948,
+    "q": 0.025997400259974,
+    "shrunk": -1.3762154081661433,
+    "shrunk_lo": -3.488041795770031,
+    "shrunk_hi": 0.7356109794377446,
+    "factor": 0.06571400708965705,
+    "rank": 5,
+    "rank_lo": 1,
+    "rank_hi": 5
+   },
+   "Donald Trump": {
+    "n": 768,
+    "raw": -0.2822522406988715,
+    "se": 0.2729300315492464,
+    "raw_lo": -0.8138106453567908,
+    "raw_hi": 0.26327369141650675,
+    "p": 0.23417658234176583,
+    "q": 0.29272072792720727,
+    "shrunk": -0.3207774469760073,
+    "shrunk_lo": -0.840372512090293,
+    "shrunk_hi": 0.19881761813827836,
+    "factor": 0.9434420774460147,
+    "rank": 1,
+    "rank_lo": 1,
+    "rank_hi": 4
+   },
+   "Hakeem Jeffries": {
+    "n": 21,
+    "raw": -3.2729846970980105,
+    "se": 2.479458422357649,
+    "raw_lo": -7.7684300079944615,
+    "raw_hi": 1.6045004017570554,
+    "p": 0.09879012098790121,
+    "q": 0.19231410192314102,
+    "shrunk": -1.3517394166443593,
+    "shrunk_lo": -3.3444501327566325,
+    "shrunk_hi": 0.6409712994679138,
+    "factor": 0.16813677371838398,
+    "rank": 4,
+    "rank_lo": 1,
+    "rank_hi": 5
+   },
+   "Mitch McConnell": {
+    "n": 10,
+    "raw": 5.39762525933714,
+    "se": 7.431468774475339,
+    "raw_lo": -5.656215644520969,
+    "raw_hi": 20.980489400462446,
+    "p": 0.11538846115388461,
+    "q": 0.19231410192314102,
+    "shrunk": -0.8234443010063848,
+    "shrunk_lo": -2.984105715056957,
+    "shrunk_hi": 1.3372171130441874,
+    "factor": 0.0220045238315002,
+    "rank": 2,
+    "rank_lo": 1,
+    "rank_hi": 4
+   }
+  },
+  "prior": {
+   "applied": true,
+   "J": 5,
+   "m": -0.9634159846529197,
+   "tau2": 1.2425802421759968
+  },
+  "listed": {
+   "Chuck Schumer": {
+    "n": 7,
+    "mean": -1.9087269925817563,
+    "lo": -16.866230267116883,
+    "hi": 17.022857247684186
+   },
+   "David Scott": {
+    "n": 2,
+    "mean": -3.6875947029367393,
+    "lo": -5.04764367961255,
+    "hi": -2.3275457262609285
+   },
+   "Debbie Stabenow": {
+    "n": 2,
+    "mean": -3.8936935908474206,
+    "lo": -5.6598094102792,
+    "hi": -2.127577771415641
+   },
+   "Elizabeth Warren": {
+    "n": 1,
+    "mean": -9.414092050287406,
+    "lo": null,
+    "hi": null
+   },
+   "Eric Trump": {
+    "n": 3,
+    "mean": -1.397341943966131,
+    "lo": -3.209742632961491,
+    "hi": 1.0615552014636753
+   },
+   "Glenn Thompson": {
+    "n": 3,
+    "mean": 4.284927007693138,
+    "lo": -17.747797184872834,
+    "hi": 35.125446428001474
+   },
+   "John Boozman": {
+    "n": 2,
+    "mean": -4.301115687657562,
+    "lo": -4.712053984723964,
+    "hi": -3.8901773905911607
+   },
+   "Kamala Harris": {
+    "n": 0,
+    "mean": null,
+    "lo": null,
+    "hi": null
+   },
+   "Kevin McCarthy": {
+    "n": 9,
+    "mean": 5.799327068737757,
+    "lo": -1.9992556369300323,
+    "hi": 15.809485918795163
+   },
+   "Maxine Waters": {
+    "n": 5,
+    "mean": -0.5874149271091348,
+    "lo": -3.5406263585972058,
+    "hi": 2.967135756040843
+   },
+   "Mike Conaway": {
+    "n": 0,
+    "mean": null,
+    "lo": null,
+    "hi": null
+   },
+   "Mike Crapo": {
+    "n": 3,
+    "mean": -6.099514860131674,
+    "lo": -10.994829596801628,
+    "hi": -3.5057744520888665
+   },
+   "Pat Roberts": {
+    "n": 0,
+    "mean": null,
+    "lo": null,
+    "hi": null
+   },
+   "Pat Toomey": {
+    "n": 1,
+    "mean": 16.310382313457026,
+    "lo": null,
+    "hi": null
+   },
+   "Patrick McHenry": {
+    "n": 0,
+    "mean": null,
+    "lo": null,
+    "hi": null
+   },
+   "Sherrod Brown": {
+    "n": 0,
+    "mean": null,
+    "lo": null,
+    "hi": null
+   },
+   "Steny Hoyer": {
+    "n": 6,
+    "mean": 3.762794628865368,
+    "lo": -1.6171209477708386,
+    "hi": 8.60659984239385
+   },
+   "Steve Scalise": {
+    "n": 1,
+    "mean": -12.02361123207579,
+    "lo": null,
+    "hi": null
+   },
+   "Tim Scott": {
+    "n": 9,
+    "mean": -1.9018666928905306,
+    "lo": -12.090339942127953,
+    "hi": 11.983013051290932
+   }
+  }
+ },
+ "topics": {
+  "crypto": {
+   "people": {},
+   "prior": {
+    "applied": false,
+    "m": null,
+    "tau2": null,
+    "J": 0
+   },
+   "listed": {
+    "Bill Hagerty": {
+     "n": 0,
+     "mean": null,
+     "lo": null,
+     "hi": null
+    },
+    "Chuck Schumer": {
+     "n": 0,
+     "mean": null,
+     "lo": null,
+     "hi": null
+    },
+    "Cynthia Lummis": {
+     "n": 0,
+     "mean": null,
+     "lo": null,
+     "hi": null
+    },
+    "David Scott": {
+     "n": 0,
+     "mean": null,
+     "lo": null,
+     "hi": null
+    },
+    "Debbie Stabenow": {
+     "n": 0,
+     "mean": null,
+     "lo": null,
+     "hi": null
+    },
+    "Donald Trump": {
+     "n": 4,
+     "mean": 10.535229404052005,
+     "lo": 0.8327425115818694,
+     "hi": 20.831266421228374
+    },
+    "Elizabeth Warren": {
+     "n": 0,
+     "mean": null,
+     "lo": null,
+     "hi": null
+    },
+    "Eric Trump": {
+     "n": 0,
+     "mean": null,
+     "lo": null,
+     "hi": null
+    },
+    "Glenn Thompson": {
+     "n": 0,
+     "mean": null,
+     "lo": null,
+     "hi": null
+    },
+    "Hakeem Jeffries": {
+     "n": 0,
+     "mean": null,
+     "lo": null,
+     "hi": null
+    },
+    "John Boozman": {
+     "n": 0,
+     "mean": null,
+     "lo": null,
+     "hi": null
+    },
+    "Kamala Harris": {
+     "n": 0,
+     "mean": null,
+     "lo": null,
+     "hi": null
+    },
+    "Kevin McCarthy": {
+     "n": 0,
+     "mean": null,
+     "lo": null,
+     "hi": null
+    },
+    "Maxine Waters": {
+     "n": 0,
+     "mean": null,
+     "lo": null,
+     "hi": null
+    },
+    "Mike Conaway": {
+     "n": 0,
+     "mean": null,
+     "lo": null,
+     "hi": null
+    },
+    "Mike Crapo": {
+     "n": 0,
+     "mean": null,
+     "lo": null,
+     "hi": null
+    },
+    "Mitch McConnell": {
+     "n": 0,
+     "mean": null,
+     "lo": null,
+     "hi": null
+    },
+    "Pat Roberts": {
+     "n": 0,
+     "mean": null,
+     "lo": null,
+     "hi": null
+    },
+    "Pat Toomey": {
+     "n": 0,
+     "mean": null,
+     "lo": null,
+     "hi": null
+    },
+    "Patrick McHenry": {
+     "n": 0,
+     "mean": null,
+     "lo": null,
+     "hi": null
+    },
+    "Sherrod Brown": {
+     "n": 0,
+     "mean": null,
+     "lo": null,
+     "hi": null
+    },
+    "Steny Hoyer": {
+     "n": 0,
+     "mean": null,
+     "lo": null,
+     "hi": null
+    },
+    "Steve Scalise": {
+     "n": 0,
+     "mean": null,
+     "lo": null,
+     "hi": null
+    },
+    "Tim Scott": {
+     "n": 0,
+     "mean": null,
+     "lo": null,
+     "hi": null
+    }
+   }
+  },
+  "tariffs": {
+   "people": {
+    "Donald Trump": {
+     "n": 30,
+     "raw": 2.4783940616999165,
+     "se": 1.6906628364554461,
+     "raw_lo": -0.5956367624155559,
+     "raw_hi": 5.997024638304505,
+     "p": 0.2515748425157484,
+     "q": 0.2515748425157484,
+     "shrunk": 2.4783940616999165,
+     "shrunk_lo": -0.8353050977527579,
+     "shrunk_hi": 5.792093221152591,
+     "factor": 1.0,
+     "rank": 1,
+     "rank_lo": 1,
+     "rank_hi": 1
+    }
+   },
+   "prior": {
+    "applied": false,
+    "J": 1,
+    "m": null,
+    "tau2": null
+   },
+   "listed": {
+    "Bill Hagerty": {
+     "n": 0,
+     "mean": null,
+     "lo": null,
+     "hi": null
+    },
+    "Chuck Schumer": {
+     "n": 0,
+     "mean": null,
+     "lo": null,
+     "hi": null
+    },
+    "Cynthia Lummis": {
+     "n": 0,
+     "mean": null,
+     "lo": null,
+     "hi": null
+    },
+    "David Scott": {
+     "n": 0,
+     "mean": null,
+     "lo": null,
+     "hi": null
+    },
+    "Debbie Stabenow": {
+     "n": 0,
+     "mean": null,
+     "lo": null,
+     "hi": null
+    },
+    "Elizabeth Warren": {
+     "n": 0,
+     "mean": null,
+     "lo": null,
+     "hi": null
+    },
+    "Eric Trump": {
+     "n": 0,
+     "mean": null,
+     "lo": null,
+     "hi": null
+    },
+    "Glenn Thompson": {
+     "n": 0,
+     "mean": null,
+     "lo": null,
+     "hi": null
+    },
+    "Hakeem Jeffries": {
+     "n": 0,
+     "mean": null,
+     "lo": null,
+     "hi": null
+    },
+    "John Boozman": {
+     "n": 0,
+     "mean": null,
+     "lo": null,
+     "hi": null
+    },
+    "Kamala Harris": {
+     "n": 0,
+     "mean": null,
+     "lo": null,
+     "hi": null
+    },
+    "Kevin McCarthy": {
+     "n": 0,
+     "mean": null,
+     "lo": null,
+     "hi": null
+    },
+    "Maxine Waters": {
+     "n": 0,
+     "mean": null,
+     "lo": null,
+     "hi": null
+    },
+    "Mike Conaway": {
+     "n": 0,
+     "mean": null,
+     "lo": null,
+     "hi": null
+    },
+    "Mike Crapo": {
+     "n": 0,
+     "mean": null,
+     "lo": null,
+     "hi": null
+    },
+    "Mitch McConnell": {
+     "n": 0,
+     "mean": null,
+     "lo": null,
+     "hi": null
+    },
+    "Pat Roberts": {
+     "n": 0,
+     "mean": null,
+     "lo": null,
+     "hi": null
+    },
+    "Pat Toomey": {
+     "n": 0,
+     "mean": null,
+     "lo": null,
+     "hi": null
+    },
+    "Patrick McHenry": {
+     "n": 0,
+     "mean": null,
+     "lo": null,
+     "hi": null
+    },
+    "Sherrod Brown": {
+     "n": 0,
+     "mean": null,
+     "lo": null,
+     "hi": null
+    },
+    "Steny Hoyer": {
+     "n": 0,
+     "mean": null,
+     "lo": null,
+     "hi": null
+    },
+    "Steve Scalise": {
+     "n": 0,
+     "mean": null,
+     "lo": null,
+     "hi": null
+    },
+    "Tim Scott": {
+     "n": 0,
+     "mean": null,
+     "lo": null,
+     "hi": null
+    }
+   }
+  },
+  "fed": {
+   "people": {},
+   "prior": {
+    "applied": false,
+    "m": null,
+    "tau2": null,
+    "J": 0
+   },
+   "listed": {
+    "Bill Hagerty": {
+     "n": 0,
+     "mean": null,
+     "lo": null,
+     "hi": null
+    },
+    "Chuck Schumer": {
+     "n": 0,
+     "mean": null,
+     "lo": null,
+     "hi": null
+    },
+    "Cynthia Lummis": {
+     "n": 0,
+     "mean": null,
+     "lo": null,
+     "hi": null
+    },
+    "David Scott": {
+     "n": 0,
+     "mean": null,
+     "lo": null,
+     "hi": null
+    },
+    "Debbie Stabenow": {
+     "n": 0,
+     "mean": null,
+     "lo": null,
+     "hi": null
+    },
+    "Donald Trump": {
+     "n": 9,
+     "mean": 4.357765075535798,
+     "lo": -2.6362019653337847,
+     "hi": 12.908975740048238
+    },
+    "Elizabeth Warren": {
+     "n": 0,
+     "mean": null,
+     "lo": null,
+     "hi": null
+    },
+    "Eric Trump": {
+     "n": 0,
+     "mean": null,
+     "lo": null,
+     "hi": null
+    },
+    "Glenn Thompson": {
+     "n": 0,
+     "mean": null,
+     "lo": null,
+     "hi": null
+    },
+    "Hakeem Jeffries": {
+     "n": 0,
+     "mean": null,
+     "lo": null,
+     "hi": null
+    },
+    "John Boozman": {
+     "n": 0,
+     "mean": null,
+     "lo": null,
+     "hi": null
+    },
+    "Kamala Harris": {
+     "n": 0,
+     "mean": null,
+     "lo": null,
+     "hi": null
+    },
+    "Kevin McCarthy": {
+     "n": 0,
+     "mean": null,
+     "lo": null,
+     "hi": null
+    },
+    "Maxine Waters": {
+     "n": 0,
+     "mean": null,
+     "lo": null,
+     "hi": null
+    },
+    "Mike Conaway": {
+     "n": 0,
+     "mean": null,
+     "lo": null,
+     "hi": null
+    },
+    "Mike Crapo": {
+     "n": 0,
+     "mean": null,
+     "lo": null,
+     "hi": null
+    },
+    "Mitch McConnell": {
+     "n": 0,
+     "mean": null,
+     "lo": null,
+     "hi": null
+    },
+    "Pat Roberts": {
+     "n": 0,
+     "mean": null,
+     "lo": null,
+     "hi": null
+    },
+    "Pat Toomey": {
+     "n": 0,
+     "mean": null,
+     "lo": null,
+     "hi": null
+    },
+    "Patrick McHenry": {
+     "n": 0,
+     "mean": null,
+     "lo": null,
+     "hi": null
+    },
+    "Sherrod Brown": {
+     "n": 0,
+     "mean": null,
+     "lo": null,
+     "hi": null
+    },
+    "Steny Hoyer": {
+     "n": 0,
+     "mean": null,
+     "lo": null,
+     "hi": null
+    },
+    "Steve Scalise": {
+     "n": 0,
+     "mean": null,
+     "lo": null,
+     "hi": null
+    },
+    "Tim Scott": {
+     "n": 0,
+     "mean": null,
+     "lo": null,
+     "hi": null
+    }
+   }
+  },
+  "other": {
+   "people": {
+    "Bill Hagerty": {
+     "n": 12,
+     "raw": -0.6230480798880885,
+     "se": 4.647917651157221,
+     "raw_lo": -9.054235050656853,
+     "raw_hi": 8.255359314957623,
+     "p": 0.9061093890610938,
+     "q": 0.9061093890610937,
+     "shrunk": -1.1178469698703923,
+     "shrunk_lo": -3.146154241664955,
+     "shrunk_hi": 0.9104603019241704,
+     "factor": 0.04957223534331159,
+     "rank": 3,
+     "rank_lo": 1,
+     "rank_hi": 5
+    },
+    "Cynthia Lummis": {
+     "n": 12,
+     "raw": -7.245172976735593,
+     "se": 4.20313331964513,
+     "raw_lo": -15.573589563064004,
+     "raw_hi": 0.04894426441406389,
+     "p": 0.0047995200479952005,
+     "q": 0.023997600239976002,
+     "shrunk": -1.5094815401643804,
+     "shrunk_lo": -3.526677632479173,
+     "shrunk_hi": 0.5077145521504121,
+     "factor": 0.059956705652081006,
+     "rank": 5,
+     "rank_lo": 1,
+     "rank_hi": 5
+    },
+    "Donald Trump": {
+     "n": 732,
+     "raw": -0.5697929918748721,
+     "se": 0.2697601341291123,
+     "raw_lo": -1.0827096531519336,
+     "raw_hi": -0.032979329024359474,
+     "p": 0.05799420057994201,
+     "q": 0.144985501449855,
+     "shrunk": -0.6046064269284256,
+     "shrunk_lo": -1.1170476321426355,
+     "shrunk_hi": -0.0921652217142156,
+     "factor": 0.9393347897179178,
+     "rank": 1,
+     "rank_lo": 1,
+     "rank_hi": 4
+    },
+    "Hakeem Jeffries": {
+     "n": 21,
+     "raw": -3.2729846970980105,
+     "se": 2.479458422357649,
+     "raw_lo": -7.7684300079944615,
+     "raw_hi": 1.6045004017570554,
+     "p": 0.09459054094590541,
+     "q": 0.15073492650734927,
+     "shrunk": -1.4734745207581947,
+     "shrunk_lo": -3.386099604999111,
+     "shrunk_hi": 0.4391505634827213,
+     "factor": 0.15489374910391326,
+     "rank": 4,
+     "rank_lo": 1,
+     "rank_hi": 5
+    },
+    "Mitch McConnell": {
+     "n": 10,
+     "raw": 5.39762525933714,
+     "se": 7.431468774475339,
+     "raw_lo": -5.656215644520969,
+     "raw_hi": 20.980489400462446,
+     "p": 0.12058794120587941,
+     "q": 0.15073492650734927,
+     "shrunk": -1.012863536000605,
+     "shrunk_lo": -3.0724896895074956,
+     "shrunk_hi": 1.0467626175062854,
+     "factor": 0.019994720541150125,
+     "rank": 2,
+     "rank_lo": 1,
+     "rank_hi": 4
+    }
+   },
+   "prior": {
+    "applied": true,
+    "J": 5,
+    "m": -1.1436545987443996,
+    "tau2": 1.1267724968697443
+   },
+   "listed": {
+    "Chuck Schumer": {
+     "n": 7,
+     "mean": -1.9087269925817563,
+     "lo": -16.866230267116883,
+     "hi": 17.022857247684186
+    },
+    "David Scott": {
+     "n": 2,
+     "mean": -3.6875947029367393,
+     "lo": -5.04764367961255,
+     "hi": -2.3275457262609285
+    },
+    "Debbie Stabenow": {
+     "n": 2,
+     "mean": -3.8936935908474206,
+     "lo": -5.6598094102792,
+     "hi": -2.127577771415641
+    },
+    "Elizabeth Warren": {
+     "n": 1,
+     "mean": -9.414092050287406,
+     "lo": null,
+     "hi": null
+    },
+    "Eric Trump": {
+     "n": 3,
+     "mean": -1.397341943966131,
+     "lo": -3.209742632961491,
+     "hi": 1.0615552014636753
+    },
+    "Glenn Thompson": {
+     "n": 3,
+     "mean": 4.284927007693138,
+     "lo": -17.747797184872834,
+     "hi": 35.125446428001474
+    },
+    "John Boozman": {
+     "n": 2,
+     "mean": -4.301115687657562,
+     "lo": -4.712053984723964,
+     "hi": -3.8901773905911607
+    },
+    "Kamala Harris": {
+     "n": 0,
+     "mean": null,
+     "lo": null,
+     "hi": null
+    },
+    "Kevin McCarthy": {
+     "n": 9,
+     "mean": 5.799327068737757,
+     "lo": -1.9992556369300323,
+     "hi": 15.809485918795163
+    },
+    "Maxine Waters": {
+     "n": 5,
+     "mean": -0.5874149271091348,
+     "lo": -3.5406263585972058,
+     "hi": 2.967135756040843
+    },
+    "Mike Conaway": {
+     "n": 0,
+     "mean": null,
+     "lo": null,
+     "hi": null
+    },
+    "Mike Crapo": {
+     "n": 3,
+     "mean": -6.099514860131674,
+     "lo": -10.994829596801628,
+     "hi": -3.5057744520888665
+    },
+    "Pat Roberts": {
+     "n": 0,
+     "mean": null,
+     "lo": null,
+     "hi": null
+    },
+    "Pat Toomey": {
+     "n": 1,
+     "mean": 16.310382313457026,
+     "lo": null,
+     "hi": null
+    },
+    "Patrick McHenry": {
+     "n": 0,
+     "mean": null,
+     "lo": null,
+     "hi": null
+    },
+    "Sherrod Brown": {
+     "n": 0,
+     "mean": null,
+     "lo": null,
+     "hi": null
+    },
+    "Steny Hoyer": {
+     "n": 6,
+     "mean": 3.762794628865368,
+     "lo": -1.6171209477708386,
+     "hi": 8.60659984239385
+    },
+    "Steve Scalise": {
+     "n": 1,
+     "mean": -12.02361123207579,
+     "lo": null,
+     "hi": null
+    },
+    "Tim Scott": {
+     "n": 9,
+     "mean": -1.9018666928905306,
+     "lo": -12.090339942127953,
+     "hi": 11.983013051290932
+    }
+   }
+  }
+ },
+ "pre": {
+  "Bill Hagerty": {
+   "n": 12,
+   "mean": -2.472077231671593,
+   "median": -5.388451361314454,
+   "lo": -8.929770124323795,
+   "hi": 5.793609294260636,
+   "p": 0.37276272372762725,
+   "plac_mean": 0.05547962850444483,
+   "post_minus_pre": 1.8490291517835045,
+   "pmp_lo": -3.507238588798505,
+   "pmp_hi": 6.456903748234891,
+   "elevated": false
+  },
+  "Chuck Schumer": {
+   "n": 7,
+   "mean": -2.4803504797591494,
+   "median": -1.8689999640486885,
+   "lo": -10.366808629817418,
+   "hi": 5.965196554198111,
+   "p": 0.5321467853214679,
+   "plac_mean": -0.05150983543545857,
+   "post_minus_pre": 0.5716234871773926,
+   "pmp_lo": -7.487965851441195,
+   "pmp_hi": 12.092308359606546,
+   "elevated": false
+  },
+  "Cynthia Lummis": {
+   "n": 12,
+   "mean": -6.050934793931552,
+   "median": -2.793345271300043,
+   "lo": -13.149850507315918,
+   "hi": 1.3238491270620651,
+   "p": 0.013398660133986601,
+   "plac_mean": 0.0056200365992179115,
+   "post_minus_pre": -1.1942381828040427,
+   "pmp_lo": -6.180008896463426,
+   "pmp_hi": 3.1947794462461463,
+   "elevated": false
+  },
+  "David Scott": {
+   "n": 2,
+   "mean": -5.258036995445394,
+   "median": -5.258036995445394,
+   "lo": -5.292622501644263,
+   "hi": -5.223451489246526,
+   "p": 0.34456554344565543,
+   "plac_mean": -0.1965895163228889,
+   "post_minus_pre": 1.570442292508655,
+   "pmp_lo": 0.1758078096339757,
+   "pmp_hi": 2.9650767753833343,
+   "elevated": false
+  },
+  "Debbie Stabenow": {
+   "n": 2,
+   "mean": -8.991341669716814,
+   "median": -8.991341669716814,
+   "lo": -12.511190307867674,
+   "hi": -5.471493031565952,
+   "p": 0.0887911208879112,
+   "plac_mean": 0.028781690336616355,
+   "post_minus_pre": 5.097648078869392,
+   "pmp_lo": -0.1883163787132478,
+   "pmp_hi": 10.383612536452032,
+   "elevated": false
+  },
+  "Donald Trump": {
+   "n": 775,
+   "mean": 0.7357232305083771,
+   "median": -0.962947771008418,
+   "lo": -0.313289409976602,
+   "hi": 2.2515624738859112,
+   "p": 0.18198180181981802,
+   "plac_mean": 0.2140488481689204,
+   "post_minus_pre": -1.0729823852249945,
+   "pmp_lo": -2.4418218320528244,
+   "pmp_hi": -0.1226598572023198,
+   "elevated": false
+  },
+  "Elizabeth Warren": {
+   "n": 1,
+   "mean": -2.9241674440655636,
+   "median": -2.9241674440655636,
+   "lo": null,
+   "hi": null,
+   "p": 0.7457254274572542,
+   "plac_mean": 0.22807117104115915,
+   "post_minus_pre": -6.489924606221843,
+   "pmp_lo": null,
+   "pmp_hi": null,
+   "elevated": false
+  },
+  "Eric Trump": {
+   "n": 3,
+   "mean": -7.077379816359644,
+   "median": -6.166626984034565,
+   "lo": -13.445973953829567,
+   "hi": -1.6195385112148033,
+   "p": 0.11478852114788521,
+   "plac_mean": 0.16383352676436894,
+   "post_minus_pre": 5.680037872393513,
+   "pmp_lo": -1.5902041217466873,
+   "pmp_hi": 14.507529155293241,
+   "elevated": false
+  },
+  "Glenn Thompson": {
+   "n": 3,
+   "mean": -0.8485621086540261,
+   "median": -3.838640874116342,
+   "lo": -9.402472824039695,
+   "hi": 10.695427372193956,
+   "p": 0.9943005699430058,
+   "plac_mean": 0.1805520942496259,
+   "post_minus_pre": 5.133489116347165,
+   "pmp_lo": -13.909156310756492,
+   "pmp_hi": 24.430019055807517,
+   "elevated": false
+  },
+  "Hakeem Jeffries": {
+   "n": 21,
+   "mean": -1.5231944252465686,
+   "median": -2.2082329938022767,
+   "lo": -6.052142145909051,
+   "hi": 3.555719532427004,
+   "p": 0.5163483651634837,
+   "plac_mean": 0.037351280574697165,
+   "post_minus_pre": -1.749790271851442,
+   "pmp_lo": -5.368253943732059,
+   "pmp_hi": 1.8199027945576154,
+   "elevated": false
+  },
+  "John Boozman": {
+   "n": 2,
+   "mean": 2.1702037703504757,
+   "median": 2.1702037703504757,
+   "lo": 0.8955375585098206,
+   "hi": 3.444869982191131,
+   "p": 0.5287471252874713,
+   "plac_mean": -0.14486709919199345,
+   "post_minus_pre": -6.471319458008038,
+   "pmp_lo": -8.156923966915095,
+   "pmp_hi": -4.785714949100981,
+   "elevated": false
+  },
+  "Kamala Harris": {
+   "n": 0,
+   "mean": null,
+   "median": null,
+   "lo": null,
+   "hi": null,
+   "p": null,
+   "post_minus_pre": null,
+   "pmp_lo": null,
+   "pmp_hi": null,
+   "elevated": false
+  },
+  "Kevin McCarthy": {
+   "n": 9,
+   "mean": 1.4758755339490177,
+   "median": -0.806817927646474,
+   "lo": -4.4410163678801196,
+   "hi": 7.901251480528558,
+   "p": 0.5963403659634037,
+   "plac_mean": 0.23596247617409466,
+   "post_minus_pre": 4.323451534788738,
+   "pmp_lo": -4.585389087411793,
+   "pmp_hi": 13.591078011760473,
+   "elevated": false
+  },
+  "Maxine Waters": {
+   "n": 5,
+   "mean": -2.4485913689490273,
+   "median": -2.1446677409289103,
+   "lo": -3.488176574687111,
+   "hi": -1.4090061632109434,
+   "p": 0.5789421057894211,
+   "plac_mean": 0.15550044586649964,
+   "post_minus_pre": 1.8611764418398926,
+   "pmp_lo": -1.0666470724158816,
+   "pmp_hi": 4.919135088346583,
+   "elevated": false
+  },
+  "Mike Conaway": {
+   "n": 0,
+   "mean": null,
+   "median": null,
+   "lo": null,
+   "hi": null,
+   "p": null,
+   "post_minus_pre": null,
+   "pmp_lo": null,
+   "pmp_hi": null,
+   "elevated": false
+  },
+  "Mike Crapo": {
+   "n": 3,
+   "mean": -1.0710571981516968,
+   "median": -0.36111150310212636,
+   "lo": -3.8774014246165223,
+   "hi": 1.0253413332635581,
+   "p": 0.9613038696130387,
+   "plac_mean": 0.19629632367146196,
+   "post_minus_pre": -5.028457661979979,
+   "pmp_lo": -7.117428172185104,
+   "pmp_hi": -3.14466294898674,
+   "elevated": false
+  },
+  "Mitch McConnell": {
+   "n": 10,
+   "mean": 11.97582506206707,
+   "median": -5.713134265065389,
+   "lo": -7.722654328119181,
+   "hi": 45.27323773806809,
+   "p": 0.015598440155984402,
+   "plac_mean": -0.20959671494096366,
+   "post_minus_pre": -6.578199802729928,
+   "pmp_lo": -25.89322153725423,
+   "pmp_hi": 5.509844463129207,
+   "elevated": true
+  },
+  "Pat Roberts": {
+   "n": 0,
+   "mean": null,
+   "median": null,
+   "lo": null,
+   "hi": null,
+   "p": null,
+   "post_minus_pre": null,
+   "pmp_lo": null,
+   "pmp_hi": null,
+   "elevated": false
+  },
+  "Pat Toomey": {
+   "n": 1,
+   "mean": 14.146573149847363,
+   "median": 14.146573149847363,
+   "lo": null,
+   "hi": null,
+   "p": 0.11798820117988201,
+   "plac_mean": 0.10626635643879336,
+   "post_minus_pre": 2.1638091636096632,
+   "pmp_lo": null,
+   "pmp_hi": null,
+   "elevated": false
+  },
+  "Patrick McHenry": {
+   "n": 0,
+   "mean": null,
+   "median": null,
+   "lo": null,
+   "hi": null,
+   "p": null,
+   "post_minus_pre": null,
+   "pmp_lo": null,
+   "pmp_hi": null,
+   "elevated": false
+  },
+  "Sherrod Brown": {
+   "n": 0,
+   "mean": null,
+   "median": null,
+   "lo": null,
+   "hi": null,
+   "p": null,
+   "post_minus_pre": null,
+   "pmp_lo": null,
+   "pmp_hi": null,
+   "elevated": false
+  },
+  "Steny Hoyer": {
+   "n": 6,
+   "mean": 1.7661320292689862,
+   "median": 1.902379573742282,
+   "lo": -3.3259449171571895,
+   "hi": 6.8466308602409995,
+   "p": 0.5417458254174583,
+   "plac_mean": 0.14970446771771476,
+   "post_minus_pre": 1.9966625995963814,
+   "pmp_lo": -2.884520500328667,
+   "pmp_hi": 6.67766572596436,
+   "elevated": false
+  },
+  "Steve Scalise": {
+   "n": 1,
+   "mean": -15.366128733377112,
+   "median": -15.366128733377112,
+   "lo": null,
+   "hi": null,
+   "p": 0.039396060393960604,
+   "plac_mean": -0.2547106097558901,
+   "post_minus_pre": 3.3425175013013213,
+   "pmp_lo": null,
+   "pmp_hi": null,
+   "elevated": false
+  },
+  "Tim Scott": {
+   "n": 9,
+   "mean": -4.461850595977091,
+   "median": -5.879024575601866,
+   "lo": -12.50899483308563,
+   "hi": 6.812732714057846,
+   "p": 0.1321867813218678,
+   "plac_mean": -0.027075440428226558,
+   "post_minus_pre": 2.55998390308656,
+   "pmp_lo": -1.9245476072795453,
+   "pmp_hi": 6.854339370167947,
+   "elevated": false
+  }
+ },
+ "separate": {},
+ "secondary": {
+  "Bill Hagerty": {
+   "BTCUSDT absret": {
+    "n": 12,
+    "mean": 0.40170682791914053,
+    "lo": -11.364685253361381,
+    "hi": 13.652918542535117
+   },
+   "ETHUSDT rv": {
+    "n": 12,
+    "mean": 2.7429464653916384,
+    "lo": -10.217969432003809,
+    "hi": 18.250547927650558
+   },
+   "SOLUSDT rv": {
+    "n": 12,
+    "mean": 24.77940767402914,
+    "lo": -8.866302362245257,
+    "hi": 64.73735609406998
+   }
+  },
+  "Chuck Schumer": {
+   "BTCUSDT absret": {
+    "n": 7,
+    "mean": 6.032468060379169,
+    "lo": -8.302057037990654,
+    "hi": 26.08979663413216
+   },
+   "ETHUSDT rv": {
+    "n": 7,
+    "mean": 11.62872699711541,
+    "lo": -6.527351029002902,
+    "hi": 40.00530743604549
+   },
+   "SOLUSDT rv": {
+    "n": 6,
+    "mean": 5.0288913516052665,
+    "lo": -20.862786885270605,
+    "hi": 35.76688191197278
+   }
+  },
+  "Cynthia Lummis": {
+   "BTCUSDT absret": {
+    "n": 12,
+    "mean": -5.496094747920961,
+    "lo": -12.252341877479058,
+    "hi": 0.9548129177075578
+   },
+   "ETHUSDT rv": {
+    "n": 12,
+    "mean": -8.687153511673143,
+    "lo": -18.632821326422594,
+    "hi": 0.9922381433433438
+   },
+   "SOLUSDT rv": {
+    "n": 11,
+    "mean": -4.642460775428674,
+    "lo": -20.359178628314794,
+    "hi": 13.748637817007104
+   }
+  },
+  "David Scott": {
+   "BTCUSDT absret": {
+    "n": 2,
+    "mean": -1.9237186858748112,
+    "lo": -3.946764082810887,
+    "hi": 0.09932671106126456
+   },
+   "ETHUSDT rv": {
+    "n": 2,
+    "mean": 4.059445703840971,
+    "lo": 3.881920438697316,
+    "hi": 4.236970968984625
+   },
+   "SOLUSDT rv": {
+    "n": 1,
+    "mean": 6.628841519091949,
+    "lo": null,
+    "hi": null
+   }
+  },
+  "Debbie Stabenow": {
+   "BTCUSDT absret": {
+    "n": 2,
+    "mean": -11.947244723962934,
+    "lo": -17.043545759663953,
+    "hi": -6.850943688261914
+   },
+   "ETHUSDT rv": {
+    "n": 2,
+    "mean": -5.868881343996662,
+    "lo": -7.9088581615237,
+    "hi": -3.828904526469625
+   },
+   "SOLUSDT rv": {
+    "n": 2,
+    "mean": -8.52314066215335,
+    "lo": -13.972487755947899,
+    "hi": -3.073793568358802
+   }
+  },
+  "Donald Trump": {
+   "BTCUSDT absret": {
+    "n": 775,
+    "mean": -0.2166763347104643,
+    "lo": -0.8624403081904722,
+    "hi": 0.4343903786919118
+   },
+   "ETHUSDT rv": {
+    "n": 775,
+    "mean": 0.28950235133924446,
+    "lo": -0.5724608019039967,
+    "hi": 1.1772449641703262
+   },
+   "SOLUSDT rv": {
+    "n": 751,
+    "mean": 0.05141684007258237,
+    "lo": -1.1696512900999119,
+    "hi": 1.3376849202627046
+   }
+  },
+  "Elizabeth Warren": {
+   "BTCUSDT absret": {
+    "n": 1,
+    "mean": -3.83399104217915,
+    "lo": null,
+    "hi": null
+   },
+   "ETHUSDT rv": {
+    "n": 1,
+    "mean": -9.802662231746059,
+    "lo": null,
+    "hi": null
+   },
+   "SOLUSDT rv": {
+    "n": 1,
+    "mean": -12.564820807079055,
+    "lo": null,
+    "hi": null
+   }
+  },
+  "Eric Trump": {
+   "BTCUSDT absret": {
+    "n": 3,
+    "mean": 1.7914385021030765,
+    "lo": -3.1271836546176406,
+    "hi": 11.455496834215714
+   },
+   "ETHUSDT rv": {
+    "n": 3,
+    "mean": -2.1587222872345806,
+    "lo": -2.9480470622425172,
+    "hi": -1.0928888493669948
+   },
+   "SOLUSDT rv": {
+    "n": 3,
+    "mean": -8.347376812504377,
+    "lo": -8.723439441571252,
+    "hi": -8.047058711834696
+   }
+  },
+  "Glenn Thompson": {
+   "BTCUSDT absret": {
+    "n": 3,
+    "mean": -7.857883200224651,
+    "lo": -14.182020484590339,
+    "hi": -1.01002864646307
+   },
+   "ETHUSDT rv": {
+    "n": 3,
+    "mean": 4.9798667806507195,
+    "lo": -13.72338946289753,
+    "hi": 33.54233075412273
+   },
+   "SOLUSDT rv": {
+    "n": 3,
+    "mean": 13.54307984772121,
+    "lo": -14.526388358084425,
+    "hi": 58.16103853661533
+   }
+  },
+  "Hakeem Jeffries": {
+   "BTCUSDT absret": {
+    "n": 21,
+    "mean": -4.342579248069133,
+    "lo": -10.060400778783334,
+    "hi": 1.4405273187361847
+   },
+   "ETHUSDT rv": {
+    "n": 21,
+    "mean": -3.077154704170804,
+    "lo": -8.253238599061945,
+    "hi": 2.5483811321188026
+   },
+   "SOLUSDT rv": {
+    "n": 20,
+    "mean": 1.8596439506733031,
+    "lo": -5.879714018102242,
+    "hi": 10.66215112634849
+   }
+  },
+  "John Boozman": {
+   "BTCUSDT absret": {
+    "n": 2,
+    "mean": -3.937600401690653,
+    "lo": -4.955654205639348,
+    "hi": -2.9195465977419577
+   },
+   "ETHUSDT rv": {
+    "n": 2,
+    "mean": -2.3044518757923056,
+    "lo": -6.555596214222376,
+    "hi": 1.946692462637765
+   },
+   "SOLUSDT rv": {
+    "n": 2,
+    "mean": -7.395332521088163,
+    "lo": -7.757986881282434,
+    "hi": -7.032678160893891
+   }
+  },
+  "Kamala Harris": {
+   "BTCUSDT absret": {
+    "n": 0,
+    "mean": null,
+    "lo": null,
+    "hi": null
+   },
+   "ETHUSDT rv": {
+    "n": 0,
+    "mean": null,
+    "lo": null,
+    "hi": null
+   },
+   "SOLUSDT rv": {
+    "n": 0,
+    "mean": null,
+    "lo": null,
+    "hi": null
+   }
+  },
+  "Kevin McCarthy": {
+   "BTCUSDT absret": {
+    "n": 9,
+    "mean": 4.996562104458268,
+    "lo": -5.245401217402023,
+    "hi": 17.680146985054456
+   },
+   "ETHUSDT rv": {
+    "n": 9,
+    "mean": 4.305738816338387,
+    "lo": -1.351519141372839,
+    "hi": 10.73672603487799
+   },
+   "SOLUSDT rv": {
+    "n": 8,
+    "mean": 11.146685115662585,
+    "lo": -5.631561376479613,
+    "hi": 30.23159923369635
+   }
+  },
+  "Maxine Waters": {
+   "BTCUSDT absret": {
+    "n": 5,
+    "mean": 1.3890277685424812,
+    "lo": -1.4645194097050571,
+    "hi": 4.685813519002897
+   },
+   "ETHUSDT rv": {
+    "n": 5,
+    "mean": -1.0438442774341965,
+    "lo": -3.829667249709746,
+    "hi": 2.252386127091087
+   },
+   "SOLUSDT rv": {
+    "n": 0,
+    "mean": null,
+    "lo": null,
+    "hi": null
+   }
+  },
+  "Mike Conaway": {
+   "BTCUSDT absret": {
+    "n": 0,
+    "mean": null,
+    "lo": null,
+    "hi": null
+   },
+   "ETHUSDT rv": {
+    "n": 0,
+    "mean": null,
+    "lo": null,
+    "hi": null
+   },
+   "SOLUSDT rv": {
+    "n": 0,
+    "mean": null,
+    "lo": null,
+    "hi": null
+   }
+  },
+  "Mike Crapo": {
+   "BTCUSDT absret": {
+    "n": 3,
+    "mean": -3.423098024463325,
+    "lo": -3.8076242880878066,
+    "hi": -3.0676585427383998
+   },
+   "ETHUSDT rv": {
+    "n": 3,
+    "mean": -6.6412055130131575,
+    "lo": -14.636769126675409,
+    "hi": 5.0271638856131915
+   },
+   "SOLUSDT rv": {
+    "n": 3,
+    "mean": -10.155732728092696,
+    "lo": -20.014610563181492,
+    "hi": 3.7385705475388136
+   }
+  },
+  "Mitch McConnell": {
+   "BTCUSDT absret": {
+    "n": 10,
+    "mean": 11.144044146989248,
+    "lo": -7.628430945794207,
+    "hi": 38.90133042425594
+   },
+   "ETHUSDT rv": {
+    "n": 10,
+    "mean": 5.098583715643531,
+    "lo": -9.664574080359488,
+    "hi": 23.563167781333085
+   },
+   "SOLUSDT rv": {
+    "n": 9,
+    "mean": 14.682450717309102,
+    "lo": -4.144208838378847,
+    "hi": 34.272512958728036
+   }
+  },
+  "Pat Roberts": {
+   "BTCUSDT absret": {
+    "n": 0,
+    "mean": null,
+    "lo": null,
+    "hi": null
+   },
+   "ETHUSDT rv": {
+    "n": 0,
+    "mean": null,
+    "lo": null,
+    "hi": null
+   },
+   "SOLUSDT rv": {
+    "n": 0,
+    "mean": null,
+    "lo": null,
+    "hi": null
+   }
+  },
+  "Pat Toomey": {
+   "BTCUSDT absret": {
+    "n": 1,
+    "mean": 0.49203409940855636,
+    "lo": null,
+    "hi": null
+   },
+   "ETHUSDT rv": {
+    "n": 1,
+    "mean": 42.29861919722536,
+    "lo": null,
+    "hi": null
+   },
+   "SOLUSDT rv": {
+    "n": 1,
+    "mean": 8.539646227561114,
+    "lo": null,
+    "hi": null
+   }
+  },
+  "Patrick McHenry": {
+   "BTCUSDT absret": {
+    "n": 0,
+    "mean": null,
+    "lo": null,
+    "hi": null
+   },
+   "ETHUSDT rv": {
+    "n": 0,
+    "mean": null,
+    "lo": null,
+    "hi": null
+   },
+   "SOLUSDT rv": {
+    "n": 0,
+    "mean": null,
+    "lo": null,
+    "hi": null
+   }
+  },
+  "Sherrod Brown": {
+   "BTCUSDT absret": {
+    "n": 0,
+    "mean": null,
+    "lo": null,
+    "hi": null
+   },
+   "ETHUSDT rv": {
+    "n": 0,
+    "mean": null,
+    "lo": null,
+    "hi": null
+   },
+   "SOLUSDT rv": {
+    "n": 0,
+    "mean": null,
+    "lo": null,
+    "hi": null
+   }
+  },
+  "Steny Hoyer": {
+   "BTCUSDT absret": {
+    "n": 6,
+    "mean": 0.4231873824304572,
+    "lo": -6.496222225343275,
+    "hi": 6.480364528486739
+   },
+   "ETHUSDT rv": {
+    "n": 6,
+    "mean": -1.2219990858996055,
+    "lo": -4.334407879641515,
+    "hi": 2.2138364981761884
+   },
+   "SOLUSDT rv": {
+    "n": 5,
+    "mean": 43.885130949640065,
+    "lo": -11.451923323186936,
+    "hi": 148.0825994149995
+   }
+  },
+  "Steve Scalise": {
+   "BTCUSDT absret": {
+    "n": 1,
+    "mean": -1.5301521243976222,
+    "lo": null,
+    "hi": null
+   },
+   "ETHUSDT rv": {
+    "n": 1,
+    "mean": -16.18152618631125,
+    "lo": null,
+    "hi": null
+   },
+   "SOLUSDT rv": {
+    "n": 1,
+    "mean": 25.108468730061325,
+    "lo": null,
+    "hi": null
+   }
+  },
+  "Tim Scott": {
+   "BTCUSDT absret": {
+    "n": 9,
+    "mean": 6.94191226186072,
+    "lo": -7.8084271677217165,
+    "hi": 29.70519370680773
+   },
+   "ETHUSDT rv": {
+    "n": 9,
+    "mean": -6.217995656805442,
+    "lo": -17.06083618386688,
+    "hi": 6.459457108929654
+   },
+   "SOLUSDT rv": {
+    "n": 6,
+    "mean": -4.481047563376366,
+    "lo": -31.75699381915256,
+    "hi": 28.71421634266849
+   }
+  }
+ },
+ "coverage": {
+  "Bill Hagerty": {
+   "group": "republicans",
+   "files": [
+    "x_BillHagertyTN.csv",
+    "x_SenatorHagerty.csv"
+   ],
+   "posts": 8397,
+   "kinds": {
+    "original": 6575,
+    "repost": 380,
+    "quote": 1430,
+    "reply": 12
+   },
+   "first": "2021-01-03T15:01:00Z",
+   "last": "2023-07-11T19:42:14Z",
+   "events": 7297,
+   "in_period": 7297,
+   "clean_v1": 4732,
+   "overlap": 2966,
+   "clean": 2935,
+   "analysable": 12,
+   "pool": 6237,
+   "dropped_local": 2923,
+   "window_ok": 2935,
+   "mean_n_ctrl": 7.083333333333333,
+   "pool_local": 6237,
+   "analysable_own": 217,
+   "dropped_own": 2718
+  },
+  "Chuck Schumer": {
+   "group": "democrats",
+   "files": [
+    "x_SenSchumer.csv",
+    "x_chuckschumer.csv"
+   ],
+   "posts": 8695,
+   "kinds": {
+    "original": 5650,
+    "quote": 927,
+    "repost": 2065,
+    "reply": 53
+   },
+   "first": "2020-01-01T00:24:40Z",
+   "last": "2023-07-11T20:09:14Z",
+   "events": 6343,
+   "in_period": 6343,
+   "clean_v1": 3548,
+   "overlap": 3288,
+   "clean": 1820,
+   "analysable": 7,
+   "pool": 6041,
+   "dropped_local": 1813,
+   "window_ok": 1820,
+   "mean_n_ctrl": 6.714285714285714,
+   "pool_local": 6041,
+   "analysable_own": 469,
+   "dropped_own": 1351
+  },
+  "Cynthia Lummis": {
+   "group": "republicans",
+   "files": [
+    "x_CynthiaMLummis.csv",
+    "x_SenLummis.csv"
+   ],
+   "posts": 3581,
+   "kinds": {
+    "quote": 739,
+    "original": 1630,
+    "repost": 1084,
+    "reply": 128
+   },
+   "first": "2021-01-03T05:00:59Z",
+   "last": "2023-07-11T20:20:25Z",
+   "events": 2070,
+   "in_period": 2070,
+   "clean_v1": 1669,
+   "overlap": 1115,
+   "clean": 793,
+   "analysable": 12,
+   "pool": 5577,
+   "dropped_local": 781,
+   "window_ok": 793,
+   "mean_n_ctrl": 7.0,
+   "pool_local": 5577,
+   "analysable_own": 344,
+   "dropped_own": 449
+  },
+  "David Scott": {
+   "group": "democrats",
+   "files": [
+    "x_Electdavidscott.csv",
+    "x_repdavidscott.csv"
+   ],
+   "posts": 1127,
+   "kinds": {
+    "original": 773,
+    "repost": 321,
+    "quote": 26,
+    "reply": 7
+   },
+   "first": "2020-01-02T15:00:21Z",
+   "last": "2023-07-04T14:16:23Z",
+   "events": 727,
+   "in_period": 727,
+   "clean_v1": 698,
+   "overlap": 424,
+   "clean": 297,
+   "analysable": 2,
+   "pool": 5497,
+   "dropped_local": 295,
+   "window_ok": 297,
+   "mean_n_ctrl": 7.5,
+   "pool_local": 5497,
+   "analysable_own": 226,
+   "dropped_own": 71
+  },
+  "Debbie Stabenow": {
+   "group": "democrats",
+   "files": [
+    "x_SenStabenow.csv",
+    "x_stabenow.csv"
+   ],
+   "posts": 3974,
+   "kinds": {
+    "original": 2919,
+    "quote": 624,
+    "repost": 423,
+    "reply": 8
+   },
+   "first": "2020-01-01T16:41:52Z",
+   "last": "2023-07-11T16:34:22Z",
+   "events": 3183,
+   "in_period": 3183,
+   "clean_v1": 2784,
+   "overlap": 1641,
+   "clean": 1376,
+   "analysable": 2,
+   "pool": 5700,
+   "dropped_local": 1374,
+   "window_ok": 1376,
+   "mean_n_ctrl": 7.0,
+   "pool_local": 5700,
+   "analysable_own": 558,
+   "dropped_own": 818
+  },
+  "Donald Trump": {
+   "group": "trump_family",
+   "files": [
+    "truth_realDonaldTrump.csv",
+    "x_realDonaldTrump.csv"
+   ],
+   "posts": 47867,
+   "kinds": {
+    "repost": 11840,
+    "original": 35579,
+    "quote": 435,
+    "reply": 13
+   },
+   "first": "2020-01-01T00:09:42Z",
+   "last": "2026-11-17T03:07:24Z",
+   "events": 19111,
+   "in_period": 18980,
+   "clean_v1": 9102,
+   "overlap": 2429,
+   "clean": 7908,
+   "analysable": 775,
+   "pool": 7124,
+   "dropped_local": 7133,
+   "window_ok": 7908,
+   "mean_n_ctrl": 6.527741935483871,
+   "pool_local": 7124,
+   "analysable_own": 1061,
+   "dropped_own": 6847
+  },
+  "Elizabeth Warren": {
+   "group": "democrats",
+   "files": [
+    "x_SenWarren.csv",
+    "x_ewarren.csv"
+   ],
+   "posts": 12004,
+   "kinds": {
+    "original": 8692,
+    "repost": 1779,
+    "quote": 1343,
+    "reply": 190
+   },
+   "first": "2020-01-01T00:05:10Z",
+   "last": "2023-07-11T19:32:13Z",
+   "events": 8205,
+   "in_period": 8204,
+   "clean_v1": 5156,
+   "overlap": 3937,
+   "clean": 2714,
+   "analysable": 1,
+   "pool": 6435,
+   "dropped_local": 2713,
+   "window_ok": 2714,
+   "mean_n_ctrl": 8.0,
+   "pool_local": 6435,
+   "analysable_own": 209,
+   "dropped_own": 2505
+  },
+  "Eric Trump": {
+   "group": "trump_family",
+   "files": [
+    "x_EricTrump.csv"
+   ],
+   "posts": 87,
+   "kinds": {
+    "quote": 19,
+    "original": 68
+   },
+   "first": "2023-01-17T00:03:10Z",
+   "last": "2023-10-25T17:50:52Z",
+   "events": 82,
+   "in_period": 82,
+   "clean_v1": 65,
+   "overlap": 25,
+   "clean": 45,
+   "analysable": 3,
+   "pool": 5222,
+   "dropped_local": 42,
+   "window_ok": 45,
+   "mean_n_ctrl": 6.333333333333333,
+   "pool_local": 5222,
+   "analysable_own": 45,
+   "dropped_own": 0
+  },
+  "Glenn Thompson": {
+   "group": "republicans",
+   "files": [
+    "x_CongressmanGT.csv",
+    "x_GT_TeamGT.csv"
+   ],
+   "posts": 1450,
+   "kinds": {
+    "original": 1024,
+    "reply": 7,
+    "repost": 213,
+    "quote": 206
+   },
+   "first": "2020-01-03T17:33:40Z",
+   "last": "2023-07-07T18:43:14Z",
+   "events": 1154,
+   "in_period": 1154,
+   "clean_v1": 956,
+   "overlap": 645,
+   "clean": 432,
+   "analysable": 3,
+   "pool": 5343,
+   "dropped_local": 429,
+   "window_ok": 432,
+   "mean_n_ctrl": 6.333333333333333,
+   "pool_local": 5343,
+   "analysable_own": 323,
+   "dropped_own": 109
+  },
+  "Hakeem Jeffries": {
+   "group": "democrats",
+   "files": [
+    "x_RepJeffries.csv",
+    "x_hakeemjeffries.csv"
+   ],
+   "posts": 2276,
+   "kinds": {
+    "original": 1938,
+    "repost": 283,
+    "quote": 55
+   },
+   "first": "2020-01-01T16:07:57Z",
+   "last": "2023-07-11T12:56:19Z",
+   "events": 1985,
+   "in_period": 1985,
+   "clean_v1": 1899,
+   "overlap": 807,
+   "clean": 1147,
+   "analysable": 21,
+   "pool": 5430,
+   "dropped_local": 1126,
+   "window_ok": 1147,
+   "mean_n_ctrl": 6.571428571428571,
+   "pool_local": 5430,
+   "analysable_own": 629,
+   "dropped_own": 518
+  },
+  "John Boozman": {
+   "group": "republicans",
+   "files": [
+    "x_Boozman4AR.csv",
+    "x_JohnBoozman.csv"
+   ],
+   "posts": 5284,
+   "kinds": {
+    "original": 2757,
+    "repost": 1868,
+    "quote": 619,
+    "reply": 40
+   },
+   "first": "2020-01-01T06:00:00Z",
+   "last": "2023-07-11T20:25:31Z",
+   "events": 3178,
+   "in_period": 3178,
+   "clean_v1": 2743,
+   "overlap": 1790,
+   "clean": 1228,
+   "analysable": 2,
+   "pool": 5868,
+   "dropped_local": 1226,
+   "window_ok": 1228,
+   "mean_n_ctrl": 7.5,
+   "pool_local": 5868,
+   "analysable_own": 336,
+   "dropped_own": 892
+  },
+  "Kamala Harris": {
+   "group": "democrats",
+   "files": [
+    "x_KamalaHarris.csv"
+   ],
+   "posts": 2793,
+   "kinds": {
+    "original": 1930,
+    "quote": 298,
+    "repost": 534,
+    "reply": 31
+   },
+   "first": "2020-01-01T18:27:45Z",
+   "last": "2021-01-18T23:47:06Z",
+   "events": 2180,
+   "in_period": 2180,
+   "clean_v1": 1933,
+   "overlap": 1024,
+   "clean": 1050,
+   "analysable": 0,
+   "pool": 5580,
+   "dropped_local": 1050,
+   "window_ok": 1050,
+   "mean_n_ctrl": null,
+   "pool_local": 5580,
+   "analysable_own": 60,
+   "dropped_own": 990
+  },
+  "Kevin McCarthy": {
+   "group": "republicans",
+   "files": [
+    "x_GOPLeader.csv",
+    "x_kevinomccarthy.csv"
+   ],
+   "posts": 11051,
+   "kinds": {
+    "original": 3414,
+    "repost": 7334,
+    "quote": 253,
+    "reply": 50
+   },
+   "first": "2020-01-01T13:26:11Z",
+   "last": "2023-07-11T18:31:05Z",
+   "events": 3430,
+   "in_period": 3430,
+   "clean_v1": 2794,
+   "overlap": 1787,
+   "clean": 1397,
+   "analysable": 9,
+   "pool": 6128,
+   "dropped_local": 1388,
+   "window_ok": 1397,
+   "mean_n_ctrl": 7.111111111111111,
+   "pool_local": 6128,
+   "analysable_own": 367,
+   "dropped_own": 1030
+  },
+  "Maxine Waters": {
+   "group": "democrats",
+   "files": [
+    "x_MaxineWaters.csv",
+    "x_RepMaxineWaters.csv"
+   ],
+   "posts": 654,
+   "kinds": {
+    "original": 518,
+    "repost": 112,
+    "reply": 15,
+    "quote": 9
+   },
+   "first": "2020-01-03T17:17:52Z",
+   "last": "2023-07-04T19:53:36Z",
+   "events": 365,
+   "in_period": 365,
+   "clean_v1": 305,
+   "overlap": 170,
+   "clean": 165,
+   "analysable": 5,
+   "pool": 5197,
+   "dropped_local": 160,
+   "window_ok": 165,
+   "mean_n_ctrl": 6.8,
+   "pool_local": 5197,
+   "analysable_own": 161,
+   "dropped_own": 4
+  },
+  "Mike Conaway": {
+   "group": "republicans",
+   "files": [
+    "x_ConawayTX11.csv"
+   ],
+   "posts": 118,
+   "kinds": {
+    "original": 51,
+    "quote": 10,
+    "repost": 54,
+    "reply": 3
+   },
+   "first": "2020-01-15T21:35:08Z",
+   "last": "2020-12-09T19:35:27Z",
+   "events": 53,
+   "in_period": 53,
+   "clean_v1": 46,
+   "overlap": 32,
+   "clean": 18,
+   "analysable": 0,
+   "pool": 5257,
+   "dropped_local": 18,
+   "window_ok": 18,
+   "mean_n_ctrl": null,
+   "pool_local": 5257,
+   "analysable_own": 18,
+   "dropped_own": 0
+  },
+  "Mike Crapo": {
+   "group": "republicans",
+   "files": [
+    "x_MikeCrapo.csv",
+    "x_crapoforsenate.csv"
+   ],
+   "posts": 2993,
+   "kinds": {
+    "original": 1763,
+    "repost": 1061,
+    "reply": 8,
+    "quote": 161
+   },
+   "first": "2020-01-01T15:30:20Z",
+   "last": "2023-07-11T20:26:17Z",
+   "events": 1501,
+   "in_period": 1501,
+   "clean_v1": 1338,
+   "overlap": 889,
+   "clean": 542,
+   "analysable": 3,
+   "pool": 5464,
+   "dropped_local": 539,
+   "window_ok": 542,
+   "mean_n_ctrl": 7.0,
+   "pool_local": 5464,
+   "analysable_own": 278,
+   "dropped_own": 264
+  },
+  "Mitch McConnell": {
+   "group": "republicans",
+   "files": [
+    "x_LeaderMcConnell.csv",
+    "x_McConnellPress.csv",
+    "x_SRCC.csv",
+    "x_Team_Mitch.csv"
+   ],
+   "posts": 10610,
+   "kinds": {
+    "original": 6286,
+    "repost": 3648,
+    "quote": 585,
+    "reply": 91
+   },
+   "first": "2020-01-01T01:16:31Z",
+   "last": "2023-07-11T20:17:55Z",
+   "events": 5148,
+   "in_period": 5148,
+   "clean_v1": 2634,
+   "overlap": 3003,
+   "clean": 1179,
+   "analysable": 10,
+   "pool": 5783,
+   "dropped_local": 1169,
+   "window_ok": 1179,
+   "mean_n_ctrl": 7.0,
+   "pool_local": 5783,
+   "analysable_own": 343,
+   "dropped_own": 836
+  },
+  "Pat Roberts": {
+   "group": "republicans",
+   "files": [
+    "x_PatRoberts.csv",
+    "x_SenPatRoberts.csv"
+   ],
+   "posts": 593,
+   "kinds": {
+    "original": 336,
+    "repost": 197,
+    "quote": 60
+   },
+   "first": "2020-01-01T14:03:52Z",
+   "last": "2021-01-02T19:20:13Z",
+   "events": 329,
+   "in_period": 329,
+   "clean_v1": 297,
+   "overlap": 205,
+   "clean": 110,
+   "analysable": 0,
+   "pool": 5279,
+   "dropped_local": 110,
+   "window_ok": 110,
+   "mean_n_ctrl": null,
+   "pool_local": 5279,
+   "analysable_own": 82,
+   "dropped_own": 28
+  },
+  "Pat Toomey": {
+   "group": "republicans",
+   "files": [
+    "x_PatToomey.csv",
+    "x_SenToomey.csv"
+   ],
+   "posts": 1138,
+   "kinds": {
+    "original": 870,
+    "quote": 146,
+    "repost": 118,
+    "reply": 4
+   },
+   "first": "2020-01-01T05:02:00Z",
+   "last": "2023-01-02T22:24:15Z",
+   "events": 626,
+   "in_period": 626,
+   "clean_v1": 593,
+   "overlap": 360,
+   "clean": 246,
+   "analysable": 1,
+   "pool": 5280,
+   "dropped_local": 245,
+   "window_ok": 246,
+   "mean_n_ctrl": 6.0,
+   "pool_local": 5280,
+   "analysable_own": 224,
+   "dropped_own": 22
+  },
+  "Patrick McHenry": {
+   "group": "republicans",
+   "files": [
+    "x_McHenryCampaign.csv",
+    "x_PatrickMcHenry.csv"
+   ],
+   "posts": 1880,
+   "kinds": {
+    "original": 1466,
+    "quote": 302,
+    "repost": 102,
+    "reply": 10
+   },
+   "first": "2020-01-01T05:00:10Z",
+   "last": "2023-07-11T16:47:46Z",
+   "events": 1658,
+   "in_period": 1658,
+   "clean_v1": 1481,
+   "overlap": 930,
+   "clean": 654,
+   "analysable": 0,
+   "pool": 5564,
+   "dropped_local": 654,
+   "window_ok": 654,
+   "mean_n_ctrl": null,
+   "pool_local": 5564,
+   "analysable_own": 367,
+   "dropped_own": 287
+  },
+  "Sherrod Brown": {
+   "group": "democrats",
+   "files": [
+    "x_SenSherrodBrown.csv",
+    "x_SherrodBrown.csv"
+   ],
+   "posts": 3280,
+   "kinds": {
+    "original": 1977,
+    "quote": 450,
+    "repost": 810,
+    "reply": 43
+   },
+   "first": "2020-01-01T14:35:00Z",
+   "last": "2023-07-11T18:56:35Z",
+   "events": 2067,
+   "in_period": 2067,
+   "clean_v1": 1854,
+   "overlap": 1185,
+   "clean": 807,
+   "analysable": 0,
+   "pool": 5513,
+   "dropped_local": 807,
+   "window_ok": 807,
+   "mean_n_ctrl": null,
+   "pool_local": 5513,
+   "analysable_own": 374,
+   "dropped_own": 433
+  },
+  "Steny Hoyer": {
+   "group": "democrats",
+   "files": [
+    "x_LeaderHoyer.csv",
+    "x_StenyHoyer.csv"
+   ],
+   "posts": 7088,
+   "kinds": {
+    "original": 5648,
+    "repost": 797,
+    "quote": 635,
+    "reply": 8
+   },
+   "first": "2020-01-01T05:50:06Z",
+   "last": "2023-07-10T18:01:10Z",
+   "events": 4816,
+   "in_period": 4816,
+   "clean_v1": 3006,
+   "overlap": 2588,
+   "clean": 1481,
+   "analysable": 6,
+   "pool": 5818,
+   "dropped_local": 1475,
+   "window_ok": 1481,
+   "mean_n_ctrl": 7.0,
+   "pool_local": 5818,
+   "analysable_own": 588,
+   "dropped_own": 893
+  },
+  "Steve Scalise": {
+   "group": "republicans",
+   "files": [
+    "x_SteveScalise.csv",
+    "x_SteveScaliseGOP.csv"
+   ],
+   "posts": 4784,
+   "kinds": {
+    "original": 1721,
+    "repost": 2862,
+    "quote": 191,
+    "reply": 10
+   },
+   "first": "2020-01-01T15:34:40Z",
+   "last": "2023-07-11T14:52:59Z",
+   "events": 1788,
+   "in_period": 1788,
+   "clean_v1": 1592,
+   "overlap": 989,
+   "clean": 732,
+   "analysable": 1,
+   "pool": 5783,
+   "dropped_local": 731,
+   "window_ok": 732,
+   "mean_n_ctrl": 6.0,
+   "pool_local": 5783,
+   "analysable_own": 292,
+   "dropped_own": 440
+  },
+  "Tim Scott": {
+   "group": "republicans",
+   "files": [
+    "x_SenatorTimScott.csv",
+    "x_TimScottSC.csv",
+    "x_votetimscott.csv"
+   ],
+   "posts": 6754,
+   "kinds": {
+    "original": 5411,
+    "repost": 978,
+    "quote": 323,
+    "reply": 42
+   },
+   "first": "2020-01-01T05:00:00Z",
+   "last": "2023-07-11T20:00:00Z",
+   "events": 5132,
+   "in_period": 5132,
+   "clean_v1": 3733,
+   "overlap": 2608,
+   "clean": 1902,
+   "analysable": 9,
+   "pool": 5992,
+   "dropped_local": 1893,
+   "window_ok": 1902,
+   "mean_n_ctrl": 6.777777777777778,
+   "pool_local": 5992,
+   "analysable_own": 417,
+   "dropped_own": 1485
+  }
+ },
+ "answer": "No politician's posts are distinguishable from random times: none of the 5 ranked politicians has an FDR q below 0.05 with a positive effect on BTC realized volatility in the 5 minutes after a post.",
+ "deviation_sha256": "7fc16189f475bd7f3a0d7912c7a8dadc7f8e30f086b77fe2593cfe663b969cda",
+ "controls": "local",
+ "pmp": {
+  "people": {
+   "Bill Hagerty": {
+    "n": 12,
+    "raw": 1.8490291517835045,
+    "se": 2.6599094800646776,
+    "raw_lo": -3.507238588798505,
+    "raw_hi": 6.456903748234891,
+    "p": 0.48655134486551344,
+    "q": 0.6081891810818918,
+    "shrunk": -1.0306545400257339,
+    "shrunk_lo": -1.0306545400257339,
+    "shrunk_hi": -1.0306545400257339,
+    "factor": 0.0,
+    "rank": 1,
+    "rank_lo": 1,
+    "rank_hi": 4
+   },
+   "Cynthia Lummis": {
+    "n": 12,
+    "raw": -1.1942381828040427,
+    "se": 2.549069314877116,
+    "raw_lo": -6.180008896463426,
+    "raw_hi": 3.1947794462461463,
+    "p": 0.6287371262873712,
+    "q": 0.6287371262873712,
+    "shrunk": -1.0306545400257339,
+    "shrunk_lo": -1.0306545400257339,
+    "shrunk_hi": -1.0306545400257339,
+    "factor": 0.0,
+    "rank": 1,
+    "rank_lo": 1,
+    "rank_hi": 5
+   },
+   "Donald Trump": {
+    "n": 775,
+    "raw": -1.0729823852249945,
+    "se": 0.5972811417403135,
+    "raw_lo": -2.4418218320528244,
+    "raw_hi": -0.1226598572023198,
+    "p": 0.0037996200379962005,
+    "q": 0.018998100189981004,
+    "shrunk": -1.0306545400257339,
+    "shrunk_lo": -1.0306545400257339,
+    "shrunk_hi": -1.0306545400257339,
+    "factor": 0.0,
+    "rank": 1,
+    "rank_lo": 1,
+    "rank_hi": 5
+   },
+   "Hakeem Jeffries": {
+    "n": 21,
+    "raw": -1.749790271851442,
+    "se": 1.9072144840845906,
+    "raw_lo": -5.368253943732059,
+    "raw_hi": 1.8199027945576154,
+    "p": 0.3571642835716428,
+    "q": 0.595273805952738,
+    "shrunk": -1.0306545400257339,
+    "shrunk_lo": -1.0306545400257339,
+    "shrunk_hi": -1.0306545400257339,
+    "factor": 0.0,
+    "rank": 1,
+    "rank_lo": 1,
+    "rank_hi": 5
+   },
+   "Mitch McConnell": {
+    "n": 10,
+    "raw": -6.578199802729928,
+    "se": 9.20387535127316,
+    "raw_lo": -25.89322153725423,
+    "raw_hi": 5.509844463129207,
+    "p": 0.048995100489951,
+    "q": 0.12248775122487751,
+    "shrunk": -1.0306545400257339,
+    "shrunk_lo": -1.0306545400257339,
+    "shrunk_hi": -1.0306545400257339,
+    "factor": 0.0,
+    "rank": 1,
+    "rank_lo": 1,
+    "rank_hi": 5
+   }
+  },
+  "prior": {
+   "applied": true,
+   "J": 5,
+   "m": -1.0306545400257339,
+   "tau2": 0.0
+  },
+  "listed": {
+   "Chuck Schumer": {
+    "n": 7,
+    "mean": 0.5716234871773926,
+    "lo": -7.487965851441195,
+    "hi": 12.092308359606546
+   },
+   "David Scott": {
+    "n": 2,
+    "mean": 1.570442292508655,
+    "lo": 0.1758078096339757,
+    "hi": 2.9650767753833343
+   },
+   "Debbie Stabenow": {
+    "n": 2,
+    "mean": 5.097648078869392,
+    "lo": -0.1883163787132478,
+    "hi": 10.383612536452032
+   },
+   "Elizabeth Warren": {
+    "n": 1,
+    "mean": -6.489924606221843,
+    "lo": null,
+    "hi": null
+   },
+   "Eric Trump": {
+    "n": 3,
+    "mean": 5.680037872393513,
+    "lo": -1.5902041217466873,
+    "hi": 14.507529155293241
+   },
+   "Glenn Thompson": {
+    "n": 3,
+    "mean": 5.133489116347165,
+    "lo": -13.909156310756492,
+    "hi": 24.430019055807517
+   },
+   "John Boozman": {
+    "n": 2,
+    "mean": -6.471319458008038,
+    "lo": -8.156923966915095,
+    "hi": -4.785714949100981
+   },
+   "Kamala Harris": {
+    "n": 0,
+    "mean": null,
+    "lo": null,
+    "hi": null
+   },
+   "Kevin McCarthy": {
+    "n": 9,
+    "mean": 4.323451534788738,
+    "lo": -4.585389087411793,
+    "hi": 13.591078011760473
+   },
+   "Maxine Waters": {
+    "n": 5,
+    "mean": 1.8611764418398926,
+    "lo": -1.0666470724158816,
+    "hi": 4.919135088346583
+   },
+   "Mike Conaway": {
+    "n": 0,
+    "mean": null,
+    "lo": null,
+    "hi": null
+   },
+   "Mike Crapo": {
+    "n": 3,
+    "mean": -5.028457661979979,
+    "lo": -7.117428172185104,
+    "hi": -3.14466294898674
+   },
+   "Pat Roberts": {
+    "n": 0,
+    "mean": null,
+    "lo": null,
+    "hi": null
+   },
+   "Pat Toomey": {
+    "n": 1,
+    "mean": 2.1638091636096632,
+    "lo": null,
+    "hi": null
+   },
+   "Patrick McHenry": {
+    "n": 0,
+    "mean": null,
+    "lo": null,
+    "hi": null
+   },
+   "Sherrod Brown": {
+    "n": 0,
+    "mean": null,
+    "lo": null,
+    "hi": null
+   },
+   "Steny Hoyer": {
+    "n": 6,
+    "mean": 1.9966625995963814,
+    "lo": -2.884520500328667,
+    "hi": 6.67766572596436
+   },
+   "Steve Scalise": {
+    "n": 1,
+    "mean": 3.3425175013013213,
+    "lo": null,
+    "hi": null
+   },
+   "Tim Scott": {
+    "n": 9,
+    "mean": 2.55998390308656,
+    "lo": -1.9245476072795453,
+    "hi": 6.854339370167947
+   }
+  }
+ },
+ "pmp_without_1010": {
+  "people": {
+   "Bill Hagerty": {
+    "n": 12,
+    "raw": 1.8490291517835045,
+    "se": 2.6599094800646776,
+    "raw_lo": -3.507238588798505,
+    "raw_hi": 6.456903748234891,
+    "p": 0.47455254474552544,
+    "q": 0.5931906809319067,
+    "shrunk": -1.0343769884502159,
+    "shrunk_lo": -1.0343769884502159,
+    "shrunk_hi": -1.0343769884502159,
+    "factor": 0.0,
+    "rank": 1,
+    "rank_lo": 1,
+    "rank_hi": 4
+   },
+   "Cynthia Lummis": {
+    "n": 12,
+    "raw": -1.1942381828040427,
+    "se": 2.549069314877116,
+    "raw_lo": -6.180008896463426,
+    "raw_hi": 3.1947794462461463,
+    "p": 0.6395360463953604,
+    "q": 0.6395360463953604,
+    "shrunk": -1.0343769884502159,
+    "shrunk_lo": -1.0343769884502159,
+    "shrunk_hi": -1.0343769884502159,
+    "factor": 0.0,
+    "rank": 1,
+    "rank_lo": 1,
+    "rank_hi": 5
+   },
+   "Donald Trump": {
+    "n": 768,
+    "raw": -1.0782581356549767,
+    "se": 0.6026647439427988,
+    "raw_lo": -2.4289130469561924,
+    "raw_hi": -0.11905980830885736,
+    "p": 0.0047995200479952005,
+    "q": 0.023997600239976002,
+    "shrunk": -1.0343769884502159,
+    "shrunk_lo": -1.0343769884502159,
+    "shrunk_hi": -1.0343769884502159,
+    "factor": 0.0,
+    "rank": 1,
+    "rank_lo": 1,
+    "rank_hi": 5
+   },
+   "Hakeem Jeffries": {
+    "n": 21,
+    "raw": -1.749790271851442,
+    "se": 1.9072144840845906,
+    "raw_lo": -5.368253943732059,
+    "raw_hi": 1.8199027945576154,
+    "p": 0.3621637836216378,
+    "q": 0.5931906809319067,
+    "shrunk": -1.0343769884502159,
+    "shrunk_lo": -1.0343769884502159,
+    "shrunk_hi": -1.0343769884502159,
+    "factor": 0.0,
+    "rank": 1,
+    "rank_lo": 1,
+    "rank_hi": 5
+   },
+   "Mitch McConnell": {
+    "n": 10,
+    "raw": -6.578199802729928,
+    "se": 9.20387535127316,
+    "raw_lo": -25.89322153725423,
+    "raw_hi": 5.509844463129207,
+    "p": 0.054394560543945605,
+    "q": 0.135986401359864,
+    "shrunk": -1.0343769884502159,
+    "shrunk_lo": -1.0343769884502159,
+    "shrunk_hi": -1.0343769884502159,
+    "factor": 0.0,
+    "rank": 1,
+    "rank_lo": 1,
+    "rank_hi": 5
+   }
+  },
+  "prior": {
+   "applied": true,
+   "J": 5,
+   "m": -1.0343769884502159,
+   "tau2": 0.0
+  },
+  "listed": {
+   "Chuck Schumer": {
+    "n": 7,
+    "mean": 0.5716234871773926,
+    "lo": -7.487965851441195,
+    "hi": 12.092308359606546
+   },
+   "David Scott": {
+    "n": 2,
+    "mean": 1.570442292508655,
+    "lo": 0.1758078096339757,
+    "hi": 2.9650767753833343
+   },
+   "Debbie Stabenow": {
+    "n": 2,
+    "mean": 5.097648078869392,
+    "lo": -0.1883163787132478,
+    "hi": 10.383612536452032
+   },
+   "Elizabeth Warren": {
+    "n": 1,
+    "mean": -6.489924606221843,
+    "lo": null,
+    "hi": null
+   },
+   "Eric Trump": {
+    "n": 3,
+    "mean": 5.680037872393513,
+    "lo": -1.5902041217466873,
+    "hi": 14.507529155293241
+   },
+   "Glenn Thompson": {
+    "n": 3,
+    "mean": 5.133489116347165,
+    "lo": -13.909156310756492,
+    "hi": 24.430019055807517
+   },
+   "John Boozman": {
+    "n": 2,
+    "mean": -6.471319458008038,
+    "lo": -8.156923966915095,
+    "hi": -4.785714949100981
+   },
+   "Kamala Harris": {
+    "n": 0,
+    "mean": null,
+    "lo": null,
+    "hi": null
+   },
+   "Kevin McCarthy": {
+    "n": 9,
+    "mean": 4.323451534788738,
+    "lo": -4.585389087411793,
+    "hi": 13.591078011760473
+   },
+   "Maxine Waters": {
+    "n": 5,
+    "mean": 1.8611764418398926,
+    "lo": -1.0666470724158816,
+    "hi": 4.919135088346583
+   },
+   "Mike Conaway": {
+    "n": 0,
+    "mean": null,
+    "lo": null,
+    "hi": null
+   },
+   "Mike Crapo": {
+    "n": 3,
+    "mean": -5.028457661979979,
+    "lo": -7.117428172185104,
+    "hi": -3.14466294898674
+   },
+   "Pat Roberts": {
+    "n": 0,
+    "mean": null,
+    "lo": null,
+    "hi": null
+   },
+   "Pat Toomey": {
+    "n": 1,
+    "mean": 2.1638091636096632,
+    "lo": null,
+    "hi": null
+   },
+   "Patrick McHenry": {
+    "n": 0,
+    "mean": null,
+    "lo": null,
+    "hi": null
+   },
+   "Sherrod Brown": {
+    "n": 0,
+    "mean": null,
+    "lo": null,
+    "hi": null
+   },
+   "Steny Hoyer": {
+    "n": 6,
+    "mean": 1.9966625995963814,
+    "lo": -2.884520500328667,
+    "hi": 6.67766572596436
+   },
+   "Steve Scalise": {
+    "n": 1,
+    "mean": 3.3425175013013213,
+    "lo": null,
+    "hi": null
+   },
+   "Tim Scott": {
+    "n": 9,
+    "mean": 2.55998390308656,
+    "lo": -1.9245476072795453,
+    "hi": 6.854339370167947
+   }
+  }
+ },
+ "pmp_topics": {
+  "crypto": {
+   "people": {},
+   "prior": {
+    "applied": false,
+    "m": null,
+    "tau2": null,
+    "J": 0
+   },
+   "listed": {
+    "Bill Hagerty": {
+     "n": 0,
+     "mean": null,
+     "lo": null,
+     "hi": null
+    },
+    "Chuck Schumer": {
+     "n": 0,
+     "mean": null,
+     "lo": null,
+     "hi": null
+    },
+    "Cynthia Lummis": {
+     "n": 0,
+     "mean": null,
+     "lo": null,
+     "hi": null
+    },
+    "David Scott": {
+     "n": 0,
+     "mean": null,
+     "lo": null,
+     "hi": null
+    },
+    "Debbie Stabenow": {
+     "n": 0,
+     "mean": null,
+     "lo": null,
+     "hi": null
+    },
+    "Donald Trump": {
+     "n": 4,
+     "mean": 1.770296522788433,
+     "lo": -20.13602153582736,
+     "hi": 19.330024744605417
+    },
+    "Elizabeth Warren": {
+     "n": 0,
+     "mean": null,
+     "lo": null,
+     "hi": null
+    },
+    "Eric Trump": {
+     "n": 0,
+     "mean": null,
+     "lo": null,
+     "hi": null
+    },
+    "Glenn Thompson": {
+     "n": 0,
+     "mean": null,
+     "lo": null,
+     "hi": null
+    },
+    "Hakeem Jeffries": {
+     "n": 0,
+     "mean": null,
+     "lo": null,
+     "hi": null
+    },
+    "John Boozman": {
+     "n": 0,
+     "mean": null,
+     "lo": null,
+     "hi": null
+    },
+    "Kamala Harris": {
+     "n": 0,
+     "mean": null,
+     "lo": null,
+     "hi": null
+    },
+    "Kevin McCarthy": {
+     "n": 0,
+     "mean": null,
+     "lo": null,
+     "hi": null
+    },
+    "Maxine Waters": {
+     "n": 0,
+     "mean": null,
+     "lo": null,
+     "hi": null
+    },
+    "Mike Conaway": {
+     "n": 0,
+     "mean": null,
+     "lo": null,
+     "hi": null
+    },
+    "Mike Crapo": {
+     "n": 0,
+     "mean": null,
+     "lo": null,
+     "hi": null
+    },
+    "Mitch McConnell": {
+     "n": 0,
+     "mean": null,
+     "lo": null,
+     "hi": null
+    },
+    "Pat Roberts": {
+     "n": 0,
+     "mean": null,
+     "lo": null,
+     "hi": null
+    },
+    "Pat Toomey": {
+     "n": 0,
+     "mean": null,
+     "lo": null,
+     "hi": null
+    },
+    "Patrick McHenry": {
+     "n": 0,
+     "mean": null,
+     "lo": null,
+     "hi": null
+    },
+    "Sherrod Brown": {
+     "n": 0,
+     "mean": null,
+     "lo": null,
+     "hi": null
+    },
+    "Steny Hoyer": {
+     "n": 0,
+     "mean": null,
+     "lo": null,
+     "hi": null
+    },
+    "Steve Scalise": {
+     "n": 0,
+     "mean": null,
+     "lo": null,
+     "hi": null
+    },
+    "Tim Scott": {
+     "n": 0,
+     "mean": null,
+     "lo": null,
+     "hi": null
+    }
+   }
+  },
+  "tariffs": {
+   "people": {
+    "Donald Trump": {
+     "n": 30,
+     "raw": -0.4180506944261752,
+     "se": 1.3812142059875647,
+     "raw_lo": -2.9842481162876617,
+     "raw_hi": 2.2966693122677855,
+     "p": 0.8603139686031397,
+     "q": 0.8603139686031397,
+     "shrunk": -0.4180506944261752,
+     "shrunk_lo": -3.125230538161802,
+     "shrunk_hi": 2.2891291493094514,
+     "factor": 1.0,
+     "rank": 1,
+     "rank_lo": 1,
+     "rank_hi": 1
+    }
+   },
+   "prior": {
+    "applied": false,
+    "J": 1,
+    "m": null,
+    "tau2": null
+   },
+   "listed": {
+    "Bill Hagerty": {
+     "n": 0,
+     "mean": null,
+     "lo": null,
+     "hi": null
+    },
+    "Chuck Schumer": {
+     "n": 0,
+     "mean": null,
+     "lo": null,
+     "hi": null
+    },
+    "Cynthia Lummis": {
+     "n": 0,
+     "mean": null,
+     "lo": null,
+     "hi": null
+    },
+    "David Scott": {
+     "n": 0,
+     "mean": null,
+     "lo": null,
+     "hi": null
+    },
+    "Debbie Stabenow": {
+     "n": 0,
+     "mean": null,
+     "lo": null,
+     "hi": null
+    },
+    "Elizabeth Warren": {
+     "n": 0,
+     "mean": null,
+     "lo": null,
+     "hi": null
+    },
+    "Eric Trump": {
+     "n": 0,
+     "mean": null,
+     "lo": null,
+     "hi": null
+    },
+    "Glenn Thompson": {
+     "n": 0,
+     "mean": null,
+     "lo": null,
+     "hi": null
+    },
+    "Hakeem Jeffries": {
+     "n": 0,
+     "mean": null,
+     "lo": null,
+     "hi": null
+    },
+    "John Boozman": {
+     "n": 0,
+     "mean": null,
+     "lo": null,
+     "hi": null
+    },
+    "Kamala Harris": {
+     "n": 0,
+     "mean": null,
+     "lo": null,
+     "hi": null
+    },
+    "Kevin McCarthy": {
+     "n": 0,
+     "mean": null,
+     "lo": null,
+     "hi": null
+    },
+    "Maxine Waters": {
+     "n": 0,
+     "mean": null,
+     "lo": null,
+     "hi": null
+    },
+    "Mike Conaway": {
+     "n": 0,
+     "mean": null,
+     "lo": null,
+     "hi": null
+    },
+    "Mike Crapo": {
+     "n": 0,
+     "mean": null,
+     "lo": null,
+     "hi": null
+    },
+    "Mitch McConnell": {
+     "n": 0,
+     "mean": null,
+     "lo": null,
+     "hi": null
+    },
+    "Pat Roberts": {
+     "n": 0,
+     "mean": null,
+     "lo": null,
+     "hi": null
+    },
+    "Pat Toomey": {
+     "n": 0,
+     "mean": null,
+     "lo": null,
+     "hi": null
+    },
+    "Patrick McHenry": {
+     "n": 0,
+     "mean": null,
+     "lo": null,
+     "hi": null
+    },
+    "Sherrod Brown": {
+     "n": 0,
+     "mean": null,
+     "lo": null,
+     "hi": null
+    },
+    "Steny Hoyer": {
+     "n": 0,
+     "mean": null,
+     "lo": null,
+     "hi": null
+    },
+    "Steve Scalise": {
+     "n": 0,
+     "mean": null,
+     "lo": null,
+     "hi": null
+    },
+    "Tim Scott": {
+     "n": 0,
+     "mean": null,
+     "lo": null,
+     "hi": null
+    }
+   }
+  },
+  "fed": {
+   "people": {},
+   "prior": {
+    "applied": false,
+    "m": null,
+    "tau2": null,
+    "J": 0
+   },
+   "listed": {
+    "Bill Hagerty": {
+     "n": 0,
+     "mean": null,
+     "lo": null,
+     "hi": null
+    },
+    "Chuck Schumer": {
+     "n": 0,
+     "mean": null,
+     "lo": null,
+     "hi": null
+    },
+    "Cynthia Lummis": {
+     "n": 0,
+     "mean": null,
+     "lo": null,
+     "hi": null
+    },
+    "David Scott": {
+     "n": 0,
+     "mean": null,
+     "lo": null,
+     "hi": null
+    },
+    "Debbie Stabenow": {
+     "n": 0,
+     "mean": null,
+     "lo": null,
+     "hi": null
+    },
+    "Donald Trump": {
+     "n": 9,
+     "mean": 5.406028451880688,
+     "lo": 1.3892991987046535,
+     "hi": 11.250936588497067
+    },
+    "Elizabeth Warren": {
+     "n": 0,
+     "mean": null,
+     "lo": null,
+     "hi": null
+    },
+    "Eric Trump": {
+     "n": 0,
+     "mean": null,
+     "lo": null,
+     "hi": null
+    },
+    "Glenn Thompson": {
+     "n": 0,
+     "mean": null,
+     "lo": null,
+     "hi": null
+    },
+    "Hakeem Jeffries": {
+     "n": 0,
+     "mean": null,
+     "lo": null,
+     "hi": null
+    },
+    "John Boozman": {
+     "n": 0,
+     "mean": null,
+     "lo": null,
+     "hi": null
+    },
+    "Kamala Harris": {
+     "n": 0,
+     "mean": null,
+     "lo": null,
+     "hi": null
+    },
+    "Kevin McCarthy": {
+     "n": 0,
+     "mean": null,
+     "lo": null,
+     "hi": null
+    },
+    "Maxine Waters": {
+     "n": 0,
+     "mean": null,
+     "lo": null,
+     "hi": null
+    },
+    "Mike Conaway": {
+     "n": 0,
+     "mean": null,
+     "lo": null,
+     "hi": null
+    },
+    "Mike Crapo": {
+     "n": 0,
+     "mean": null,
+     "lo": null,
+     "hi": null
+    },
+    "Mitch McConnell": {
+     "n": 0,
+     "mean": null,
+     "lo": null,
+     "hi": null
+    },
+    "Pat Roberts": {
+     "n": 0,
+     "mean": null,
+     "lo": null,
+     "hi": null
+    },
+    "Pat Toomey": {
+     "n": 0,
+     "mean": null,
+     "lo": null,
+     "hi": null
+    },
+    "Patrick McHenry": {
+     "n": 0,
+     "mean": null,
+     "lo": null,
+     "hi": null
+    },
+    "Sherrod Brown": {
+     "n": 0,
+     "mean": null,
+     "lo": null,
+     "hi": null
+    },
+    "Steny Hoyer": {
+     "n": 0,
+     "mean": null,
+     "lo": null,
+     "hi": null
+    },
+    "Steve Scalise": {
+     "n": 0,
+     "mean": null,
+     "lo": null,
+     "hi": null
+    },
+    "Tim Scott": {
+     "n": 0,
+     "mean": null,
+     "lo": null,
+     "hi": null
+    }
+   }
+  },
+  "other": {
+   "people": {
+    "Bill Hagerty": {
+     "n": 12,
+     "raw": 1.8490291517835045,
+     "se": 2.6599094800646776,
+     "raw_lo": -3.507238588798505,
+     "raw_hi": 6.456903748234891,
+     "p": 0.48655134486551344,
+     "q": 0.6081891810818918,
+     "shrunk": -1.126644225441219,
+     "shrunk_lo": -1.126644225441219,
+     "shrunk_hi": -1.126644225441219,
+     "factor": 0.0,
+     "rank": 1,
+     "rank_lo": 1,
+     "rank_hi": 4
+    },
+    "Cynthia Lummis": {
+     "n": 12,
+     "raw": -1.1942381828040427,
+     "se": 2.549069314877116,
+     "raw_lo": -6.180008896463426,
+     "raw_hi": 3.1947794462461463,
+     "p": 0.6287371262873712,
+     "q": 0.6287371262873712,
+     "shrunk": -1.126644225441219,
+     "shrunk_lo": -1.126644225441219,
+     "shrunk_hi": -1.126644225441219,
+     "factor": 0.0,
+     "rank": 1,
+     "rank_lo": 1,
+     "rank_hi": 5
+    },
+    "Donald Trump": {
+     "n": 732,
+     "raw": -1.1950208604845156,
+     "se": 0.6259513963672589,
+     "raw_lo": -2.618388905625628,
+     "raw_hi": -0.2072543920681909,
+     "p": 0.001999800019998,
+     "q": 0.00999900009999,
+     "shrunk": -1.126644225441219,
+     "shrunk_lo": -1.126644225441219,
+     "shrunk_hi": -1.126644225441219,
+     "factor": 0.0,
+     "rank": 1,
+     "rank_lo": 1,
+     "rank_hi": 5
+    },
+    "Hakeem Jeffries": {
+     "n": 21,
+     "raw": -1.749790271851442,
+     "se": 1.9072144840845906,
+     "raw_lo": -5.368253943732059,
+     "raw_hi": 1.8199027945576154,
+     "p": 0.3571642835716428,
+     "q": 0.595273805952738,
+     "shrunk": -1.126644225441219,
+     "shrunk_lo": -1.126644225441219,
+     "shrunk_hi": -1.126644225441219,
+     "factor": 0.0,
+     "rank": 1,
+     "rank_lo": 1,
+     "rank_hi": 5
+    },
+    "Mitch McConnell": {
+     "n": 10,
+     "raw": -6.578199802729928,
+     "se": 9.20387535127316,
+     "raw_lo": -25.89322153725423,
+     "raw_hi": 5.509844463129207,
+     "p": 0.048995100489951,
+     "q": 0.12248775122487751,
+     "shrunk": -1.126644225441219,
+     "shrunk_lo": -1.126644225441219,
+     "shrunk_hi": -1.126644225441219,
+     "factor": 0.0,
+     "rank": 1,
+     "rank_lo": 1,
+     "rank_hi": 5
+    }
+   },
+   "prior": {
+    "applied": true,
+    "J": 5,
+    "m": -1.126644225441219,
+    "tau2": 0.0
+   },
+   "listed": {
+    "Chuck Schumer": {
+     "n": 7,
+     "mean": 0.5716234871773926,
+     "lo": -7.487965851441195,
+     "hi": 12.092308359606546
+    },
+    "David Scott": {
+     "n": 2,
+     "mean": 1.570442292508655,
+     "lo": 0.1758078096339757,
+     "hi": 2.9650767753833343
+    },
+    "Debbie Stabenow": {
+     "n": 2,
+     "mean": 5.097648078869392,
+     "lo": -0.1883163787132478,
+     "hi": 10.383612536452032
+    },
+    "Elizabeth Warren": {
+     "n": 1,
+     "mean": -6.489924606221843,
+     "lo": null,
+     "hi": null
+    },
+    "Eric Trump": {
+     "n": 3,
+     "mean": 5.680037872393513,
+     "lo": -1.5902041217466873,
+     "hi": 14.507529155293241
+    },
+    "Glenn Thompson": {
+     "n": 3,
+     "mean": 5.133489116347165,
+     "lo": -13.909156310756492,
+     "hi": 24.430019055807517
+    },
+    "John Boozman": {
+     "n": 2,
+     "mean": -6.471319458008038,
+     "lo": -8.156923966915095,
+     "hi": -4.785714949100981
+    },
+    "Kamala Harris": {
+     "n": 0,
+     "mean": null,
+     "lo": null,
+     "hi": null
+    },
+    "Kevin McCarthy": {
+     "n": 9,
+     "mean": 4.323451534788738,
+     "lo": -4.585389087411793,
+     "hi": 13.591078011760473
+    },
+    "Maxine Waters": {
+     "n": 5,
+     "mean": 1.8611764418398926,
+     "lo": -1.0666470724158816,
+     "hi": 4.919135088346583
+    },
+    "Mike Conaway": {
+     "n": 0,
+     "mean": null,
+     "lo": null,
+     "hi": null
+    },
+    "Mike Crapo": {
+     "n": 3,
+     "mean": -5.028457661979979,
+     "lo": -7.117428172185104,
+     "hi": -3.14466294898674
+    },
+    "Pat Roberts": {
+     "n": 0,
+     "mean": null,
+     "lo": null,
+     "hi": null
+    },
+    "Pat Toomey": {
+     "n": 1,
+     "mean": 2.1638091636096632,
+     "lo": null,
+     "hi": null
+    },
+    "Patrick McHenry": {
+     "n": 0,
+     "mean": null,
+     "lo": null,
+     "hi": null
+    },
+    "Sherrod Brown": {
+     "n": 0,
+     "mean": null,
+     "lo": null,
+     "hi": null
+    },
+    "Steny Hoyer": {
+     "n": 6,
+     "mean": 1.9966625995963814,
+     "lo": -2.884520500328667,
+     "hi": 6.67766572596436
+    },
+    "Steve Scalise": {
+     "n": 1,
+     "mean": 3.3425175013013213,
+     "lo": null,
+     "hi": null
+    },
+    "Tim Scott": {
+     "n": 9,
+     "mean": 2.55998390308656,
+     "lo": -1.9245476072795453,
+     "hi": 6.854339370167947
+    }
+   }
+  }
+ },
+ "answer_pmp": "No politician's posts are distinguishable from random times: none of the 5 ranked politicians has an FDR q below 0.05 with a positive effect (extra BTC realized volatility in the 5 minutes after a post over the 5 minutes before it).",
+ "sensitivity_own": {
+  "main": {
+   "people": {
+    "Bill Hagerty": {
+     "n": 217,
+     "raw": 0.3032879124470147,
+     "se": 1.1674845686565962,
+     "raw_lo": -1.7599042855275389,
+     "raw_hi": 2.7685505658530754,
+     "p": 0.5807419258074192,
+     "q": 0.9014750698843159,
+     "shrunk": 0.05257382002885064,
+     "shrunk_lo": 0.05257382002885064,
+     "shrunk_hi": 0.05257382002885064,
+     "factor": 0.0,
+     "rank": 1,
+     "rank_lo": 1,
+     "rank_hi": 23
+    },
+    "Chuck Schumer": {
+     "n": 469,
+     "raw": 1.468128235771917,
+     "se": 1.204313911802054,
+     "raw_lo": -0.6608943713032381,
+     "raw_hi": 4.112866418800667,
+     "p": 0.017198280171982803,
+     "q": 0.2951704829517048,
+     "shrunk": 0.05257382002885064,
+     "shrunk_lo": 0.05257382002885064,
+     "shrunk_hi": 0.05257382002885064,
+     "factor": 0.0,
+     "rank": 1,
+     "rank_lo": 1,
+     "rank_hi": 17
+    },
+    "Cynthia Lummis": {
+     "n": 344,
+     "raw": 0.22843030516718707,
+     "se": 0.7183739438337974,
+     "raw_lo": -1.1289295238860333,
+     "raw_hi": 1.6430689458969583,
+     "p": 0.6937306269373062,
+     "q": 0.9014750698843159,
+     "shrunk": 0.05257382002885064,
+     "shrunk_lo": 0.05257382002885064,
+     "shrunk_hi": 0.05257382002885064,
+     "factor": 0.0,
+     "rank": 1,
+     "rank_lo": 1,
+     "rank_hi": 21
+    },
+    "David Scott": {
+     "n": 226,
+     "raw": -1.6528817289505795,
+     "se": 1.054759913658275,
+     "raw_lo": -3.64073266843601,
+     "raw_hi": 0.47461518333419733,
+     "p": 0.0245975402459754,
+     "q": 0.2951704829517048,
+     "shrunk": 0.05257382002885064,
+     "shrunk_lo": 0.05257382002885064,
+     "shrunk_hi": 0.05257382002885064,
+     "factor": 0.0,
+     "rank": 1,
+     "rank_lo": 1,
+     "rank_hi": 24
+    },
+    "Debbie Stabenow": {
+     "n": 558,
+     "raw": -0.4139122769950207,
+     "se": 0.7394077896080673,
+     "raw_lo": -1.8022582734233052,
+     "raw_hi": 1.126971544598785,
+     "p": 0.6459354064593541,
+     "q": 0.9014750698843159,
+     "shrunk": 0.05257382002885064,
+     "shrunk_lo": 0.05257382002885064,
+     "shrunk_hi": 0.05257382002885064,
+     "factor": 0.0,
+     "rank": 1,
+     "rank_lo": 1,
+     "rank_hi": 23
+    },
+    "Donald Trump": {
+     "n": 1061,
+     "raw": 0.054725077904523446,
+     "se": 0.32898770262768506,
+     "raw_lo": -0.5632120662343014,
+     "raw_hi": 0.7070592274240202,
+     "p": 0.7713228677132287,
+     "q": 0.9014750698843159,
+     "shrunk": 0.05257382002885064,
+     "shrunk_lo": 0.05257382002885064,
+     "shrunk_hi": 0.05257382002885064,
+     "factor": 0.0,
+     "rank": 1,
+     "rank_lo": 1,
+     "rank_hi": 20
+    },
+    "Elizabeth Warren": {
+     "n": 209,
+     "raw": 0.8777877213364484,
+     "se": 1.032461406032559,
+     "raw_lo": -1.067976004473307,
+     "raw_hi": 2.9573253146820506,
+     "p": 0.25077492250774924,
+     "q": 0.5015498450154985,
+     "shrunk": 0.05257382002885064,
+     "shrunk_lo": 0.05257382002885064,
+     "shrunk_hi": 0.05257382002885064,
+     "factor": 0.0,
+     "rank": 1,
+     "rank_lo": 1,
+     "rank_hi": 20
+    },
+    "Eric Trump": {
+     "n": 45,
+     "raw": 0.19841719622561094,
+     "se": 0.9207867042452271,
+     "raw_lo": -1.6180673537151242,
+     "raw_hi": 2.009628056520371,
+     "p": 0.8471152884711529,
+     "q": 0.9014750698843159,
+     "shrunk": 0.05257382002885064,
+     "shrunk_lo": 0.05257382002885064,
+     "shrunk_hi": 0.05257382002885064,
+     "factor": 0.0,
+     "rank": 1,
+     "rank_lo": 1,
+     "rank_hi": 22
+    },
+    "Glenn Thompson": {
+     "n": 323,
+     "raw": 0.3626979898944144,
+     "se": 0.8098732946176198,
+     "raw_lo": -1.209554311370942,
+     "raw_hi": 1.9623615719956131,
+     "p": 0.7561243875612439,
+     "q": 0.9014750698843159,
+     "shrunk": 0.05257382002885064,
+     "shrunk_lo": 0.05257382002885064,
+     "shrunk_hi": 0.05257382002885064,
+     "factor": 0.0,
+     "rank": 1,
+     "rank_lo": 1,
+     "rank_hi": 21
+    },
+    "Hakeem Jeffries": {
+     "n": 629,
+     "raw": -0.14311877251106705,
+     "se": 0.7218201340508962,
+     "raw_lo": -1.5226950226978693,
+     "raw_hi": 1.316430439069115,
+     "p": 0.7809219078092191,
+     "q": 0.9014750698843159,
+     "shrunk": 0.05257382002885064,
+     "shrunk_lo": 0.05257382002885064,
+     "shrunk_hi": 0.05257382002885064,
+     "factor": 0.0,
+     "rank": 1,
+     "rank_lo": 1,
+     "rank_hi": 23
+    },
+    "John Boozman": {
+     "n": 336,
+     "raw": 1.1186723999483708,
+     "se": 1.0767071780458324,
+     "raw_lo": -0.8857790759519308,
+     "raw_hi": 3.303071171904683,
+     "p": 0.1725827417258274,
+     "q": 0.4602206446022064,
+     "shrunk": 0.05257382002885064,
+     "shrunk_lo": 0.05257382002885064,
+     "shrunk_hi": 0.05257382002885064,
+     "factor": 0.0,
+     "rank": 1,
+     "rank_lo": 1,
+     "rank_hi": 19
+    },
+    "Kamala Harris": {
+     "n": 60,
+     "raw": 0.1981838937531701,
+     "se": 2.6094959195531433,
+     "raw_lo": -4.329296362724287,
+     "raw_hi": 5.744029516218503,
+     "p": 0.8251174882511749,
+     "q": 0.9014750698843159,
+     "shrunk": 0.05257382002885064,
+     "shrunk_lo": 0.05257382002885064,
+     "shrunk_hi": 0.05257382002885064,
+     "factor": 0.0,
+     "rank": 1,
+     "rank_lo": 1,
+     "rank_hi": 23
+    },
+    "Kevin McCarthy": {
+     "n": 367,
+     "raw": 1.2312315194155279,
+     "se": 0.6418555715197934,
+     "raw_lo": 0.01714105928576675,
+     "raw_hi": 2.508884119427398,
+     "p": 0.058994100589941006,
+     "q": 0.3311668833116688,
+     "shrunk": 0.05257382002885064,
+     "shrunk_lo": 0.05257382002885064,
+     "shrunk_hi": 0.05257382002885064,
+     "factor": 0.0,
+     "rank": 1,
+     "rank_lo": 1,
+     "rank_hi": 13
+    },
+    "Maxine Waters": {
+     "n": 161,
+     "raw": -1.5061148722774982,
+     "se": 0.941433822606871,
+     "raw_lo": -3.259797514499165,
+     "raw_hi": 0.37632533619657915,
+     "p": 0.10718928107189281,
+     "q": 0.36750610653220395,
+     "shrunk": 0.05257382002885064,
+     "shrunk_lo": 0.05257382002885064,
+     "shrunk_hi": 0.05257382002885064,
+     "factor": 0.0,
+     "rank": 1,
+     "rank_lo": 1,
+     "rank_hi": 24
+    },
+    "Mike Conaway": {
+     "n": 18,
+     "raw": -4.296380739434533,
+     "se": 1.9762238109512442,
+     "raw_lo": -8.0853808233852,
+     "raw_hi": -0.7043260200033185,
+     "p": 0.0903909609039096,
+     "q": 0.36156384361563837,
+     "shrunk": 0.05257382002885064,
+     "shrunk_lo": 0.05257382002885064,
+     "shrunk_hi": 0.05257382002885064,
+     "factor": 0.0,
+     "rank": 1,
+     "rank_lo": 1,
+     "rank_hi": 24
+    },
+    "Mike Crapo": {
+     "n": 278,
+     "raw": 1.2199241597046298,
+     "se": 0.9568825997692241,
+     "raw_lo": -0.6195963360657404,
+     "raw_hi": 3.2155268091146807,
+     "p": 0.12258774122587741,
+     "q": 0.36776322367763226,
+     "shrunk": 0.05257382002885064,
+     "shrunk_lo": 0.05257382002885064,
+     "shrunk_hi": 0.05257382002885064,
+     "factor": 0.0,
+     "rank": 1,
+     "rank_lo": 1,
+     "rank_hi": 17
+    },
+    "Mitch McConnell": {
+     "n": 343,
+     "raw": 0.001216438207940671,
+     "se": 1.102568093927183,
+     "raw_lo": -2.0908318428375057,
+     "raw_hi": 2.210107081087659,
+     "p": 0.8639136086391361,
+     "q": 0.9014750698843159,
+     "shrunk": 0.05257382002885064,
+     "shrunk_lo": 0.05257382002885064,
+     "shrunk_hi": 0.05257382002885064,
+     "factor": 0.0,
+     "rank": 1,
+     "rank_lo": 1,
+     "rank_hi": 23
+    },
+    "Pat Roberts": {
+     "n": 82,
+     "raw": 1.5377585101019366,
+     "se": 3.888667737045407,
+     "raw_lo": -4.373935464936914,
+     "raw_hi": 10.193935743093027,
+     "p": 0.2283771622837716,
+     "q": 0.49827744498277443,
+     "shrunk": 0.05257382002885064,
+     "shrunk_lo": 0.05257382002885064,
+     "shrunk_hi": 0.05257382002885064,
+     "factor": 0.0,
+     "rank": 1,
+     "rank_lo": 1,
+     "rank_hi": 24
+    },
+    "Pat Toomey": {
+     "n": 224,
+     "raw": 1.7520373509817546,
+     "se": 2.347682617634066,
+     "raw_lo": -2.0916196140366567,
+     "raw_hi": 6.979842331914224,
+     "p": 0.068993100689931,
+     "q": 0.3311668833116688,
+     "shrunk": 0.05257382002885064,
+     "shrunk_lo": 0.05257382002885064,
+     "shrunk_hi": 0.05257382002885064,
+     "factor": 0.0,
+     "rank": 1,
+     "rank_lo": 1,
+     "rank_hi": 22
+    },
+    "Patrick McHenry": {
+     "n": 367,
+     "raw": 0.29611340235124745,
+     "se": 0.8512851264618994,
+     "raw_lo": -1.2893851716152982,
+     "raw_hi": 2.01744632783524,
+     "p": 0.6163383661633837,
+     "q": 0.9014750698843159,
+     "shrunk": 0.05257382002885064,
+     "shrunk_lo": 0.05257382002885064,
+     "shrunk_hi": 0.05257382002885064,
+     "factor": 0.0,
+     "rank": 1,
+     "rank_lo": 1,
+     "rank_hi": 21
+    },
+    "Sherrod Brown": {
+     "n": 374,
+     "raw": -0.7388819303754216,
+     "se": 0.7844363958657381,
+     "raw_lo": -2.249366964919893,
+     "raw_hi": 0.8564457460898928,
+     "p": 0.22397760223977603,
+     "q": 0.49827744498277443,
+     "shrunk": 0.05257382002885064,
+     "shrunk_lo": 0.05257382002885064,
+     "shrunk_hi": 0.05257382002885064,
+     "factor": 0.0,
+     "rank": 1,
+     "rank_lo": 1,
+     "rank_hi": 24
+    },
+    "Steny Hoyer": {
+     "n": 588,
+     "raw": 0.3370390081313704,
+     "se": 0.6870016816672655,
+     "raw_lo": -0.9048554413475165,
+     "raw_hi": 1.7473843443330526,
+     "p": 0.5001499850014999,
+     "q": 0.9014750698843159,
+     "shrunk": 0.05257382002885064,
+     "shrunk_lo": 0.05257382002885064,
+     "shrunk_hi": 0.05257382002885064,
+     "factor": 0.0,
+     "rank": 1,
+     "rank_lo": 1,
+     "rank_hi": 20
+    },
+    "Steve Scalise": {
+     "n": 292,
+     "raw": -1.2911248712959977,
+     "se": 0.7532722036954723,
+     "raw_lo": -2.725626478081409,
+     "raw_hi": 0.21920250036682926,
+     "p": 0.042995700429957005,
+     "q": 0.3311668833116688,
+     "shrunk": 0.05257382002885064,
+     "shrunk_lo": 0.05257382002885064,
+     "shrunk_hi": 0.05257382002885064,
+     "factor": 0.0,
+     "rank": 1,
+     "rank_lo": 1,
+     "rank_hi": 24
+    },
+    "Tim Scott": {
+     "n": 417,
+     "raw": 0.026071791449308854,
+     "se": 0.921280229278109,
+     "raw_lo": -1.7173072799711397,
+     "raw_hi": 1.8519738667439394,
+     "p": 0.9531046895310469,
+     "q": 0.9531046895310468,
+     "shrunk": 0.05257382002885064,
+     "shrunk_lo": 0.05257382002885064,
+     "shrunk_hi": 0.05257382002885064,
+     "factor": 0.0,
+     "rank": 1,
+     "rank_lo": 1,
+     "rank_hi": 22
+    }
+   },
+   "prior": {
+    "applied": true,
+    "J": 24,
+    "m": 0.05257382002885064,
+    "tau2": 0.0
+   },
+   "listed": {}
+  },
+  "pmp": {
+   "people": {
+    "Bill Hagerty": {
+     "n": 217,
+     "raw": 0.6466740299468756,
+     "se": 1.2453761652982367,
+     "raw_lo": -1.764237839651275,
+     "raw_hi": 3.1627435556481074,
+     "p": 0.32656734326567344,
+     "q": 0.7343265673432656,
+     "shrunk": -0.20069545953544426,
+     "shrunk_lo": -0.20069545953544426,
+     "shrunk_hi": -0.20069545953544426,
+     "factor": 0.0,
+     "rank": 1,
+     "rank_lo": 1,
+     "rank_hi": 20
+    },
+    "Chuck Schumer": {
+     "n": 469,
+     "raw": 0.14142429676048685,
+     "se": 0.8043711667058531,
+     "raw_lo": -1.3920149671450146,
+     "raw_hi": 1.756249162632577,
+     "p": 0.7863213678632137,
+     "q": 0.8355164483551644,
+     "shrunk": -0.20069545953544426,
+     "shrunk_lo": -0.20069545953544426,
+     "shrunk_hi": -0.20069545953544426,
+     "factor": 0.0,
+     "rank": 1,
+     "rank_lo": 1,
+     "rank_hi": 21
+    },
+    "Cynthia Lummis": {
+     "n": 344,
+     "raw": 0.2699935091415469,
+     "se": 0.6592913994005887,
+     "raw_lo": -0.97420906190915,
+     "raw_hi": 1.539352754072541,
+     "p": 0.6583341665833417,
+     "q": 0.8065593440655935,
+     "shrunk": -0.20069545953544426,
+     "shrunk_lo": -0.20069545953544426,
+     "shrunk_hi": -0.20069545953544426,
+     "factor": 0.0,
+     "rank": 1,
+     "rank_lo": 1,
+     "rank_hi": 20
+    },
+    "David Scott": {
+     "n": 226,
+     "raw": -0.16489062253805142,
+     "se": 1.0190059193344099,
+     "raw_lo": -2.134683883496868,
+     "raw_hi": 1.8689728096880298,
+     "p": 0.6721327867213278,
+     "q": 0.8065593440655935,
+     "shrunk": -0.20069545953544426,
+     "shrunk_lo": -0.20069545953544426,
+     "shrunk_hi": -0.20069545953544426,
+     "factor": 0.0,
+     "rank": 1,
+     "rank_lo": 1,
+     "rank_hi": 22
+    },
+    "Debbie Stabenow": {
+     "n": 558,
+     "raw": 0.2324759074009008,
+     "se": 0.6657067273110391,
+     "raw_lo": -1.1103486158881781,
+     "raw_hi": 1.5345611362630474,
+     "p": 0.4383561643835616,
+     "q": 0.7343265673432656,
+     "shrunk": -0.20069545953544426,
+     "shrunk_lo": -0.20069545953544426,
+     "shrunk_hi": -0.20069545953544426,
+     "factor": 0.0,
+     "rank": 1,
+     "rank_lo": 1,
+     "rank_hi": 20
+    },
+    "Donald Trump": {
+     "n": 1061,
+     "raw": -0.9155723957367886,
+     "se": 0.5050011122965791,
+     "raw_lo": -2.0395919073125137,
+     "raw_hi": -0.05662677249008479,
+     "p": 0.0225977402259774,
+     "q": 0.263973602639736,
+     "shrunk": -0.20069545953544426,
+     "shrunk_lo": -0.20069545953544426,
+     "shrunk_hi": -0.20069545953544426,
+     "factor": 0.0,
+     "rank": 1,
+     "rank_lo": 1,
+     "rank_hi": 24
+    },
+    "Elizabeth Warren": {
+     "n": 209,
+     "raw": 0.6436430386764473,
+     "se": 0.8042618014310929,
+     "raw_lo": -0.9096897608223681,
+     "raw_hi": 2.254786404266347,
+     "p": 0.31216878312168783,
+     "q": 0.7343265673432656,
+     "shrunk": -0.20069545953544426,
+     "shrunk_lo": -0.20069545953544426,
+     "shrunk_hi": -0.20069545953544426,
+     "factor": 0.0,
+     "rank": 1,
+     "rank_lo": 1,
+     "rank_hi": 19
+    },
+    "Eric Trump": {
+     "n": 45,
+     "raw": 0.26622907070102236,
+     "se": 0.9320886730319939,
+     "raw_lo": -1.5264834456862566,
+     "raw_hi": 2.0672814028265396,
+     "p": 0.8355164483551645,
+     "q": 0.8355164483551644,
+     "shrunk": -0.20069545953544426,
+     "shrunk_lo": -0.20069545953544426,
+     "shrunk_hi": -0.20069545953544426,
+     "factor": 0.0,
+     "rank": 1,
+     "rank_lo": 1,
+     "rank_hi": 21
+    },
+    "Glenn Thompson": {
+     "n": 323,
+     "raw": 0.6635514239697036,
+     "se": 0.7496403510421065,
+     "raw_lo": -0.7785115249786401,
+     "raw_hi": 2.1355655681381176,
+     "p": 0.42175782421757824,
+     "q": 0.7343265673432656,
+     "shrunk": -0.20069545953544426,
+     "shrunk_lo": -0.20069545953544426,
+     "shrunk_hi": -0.20069545953544426,
+     "factor": 0.0,
+     "rank": 1,
+     "rank_lo": 1,
+     "rank_hi": 18
+    },
+    "Hakeem Jeffries": {
+     "n": 629,
+     "raw": 0.08603070665052531,
+     "se": 0.6111599877445498,
+     "raw_lo": -1.132692029187503,
+     "raw_hi": 1.2694933854778132,
+     "p": 0.8275172482751725,
+     "q": 0.8355164483551644,
+     "shrunk": -0.20069545953544426,
+     "shrunk_lo": -0.20069545953544426,
+     "shrunk_hi": -0.20069545953544426,
+     "factor": 0.0,
+     "rank": 1,
+     "rank_lo": 1,
+     "rank_hi": 21
+    },
+    "John Boozman": {
+     "n": 336,
+     "raw": 0.3204714340105651,
+     "se": 0.964306023881249,
+     "raw_lo": -1.5288172002168685,
+     "raw_hi": 2.2170217569147628,
+     "p": 0.815918408159184,
+     "q": 0.8355164483551644,
+     "shrunk": -0.20069545953544426,
+     "shrunk_lo": -0.20069545953544426,
+     "shrunk_hi": -0.20069545953544426,
+     "factor": 0.0,
+     "rank": 1,
+     "rank_lo": 1,
+     "rank_hi": 21
+    },
+    "Kamala Harris": {
+     "n": 60,
+     "raw": 0.6544330964650804,
+     "se": 2.1340743937126843,
+     "raw_lo": -3.5611859101856465,
+     "raw_hi": 4.77825131163078,
+     "p": 0.6277372262773723,
+     "q": 0.8065593440655935,
+     "shrunk": -0.20069545953544426,
+     "shrunk_lo": -0.20069545953544426,
+     "shrunk_hi": -0.20069545953544426,
+     "factor": 0.0,
+     "rank": 1,
+     "rank_lo": 1,
+     "rank_hi": 20
+    },
+    "Kevin McCarthy": {
+     "n": 367,
+     "raw": 1.1875144003664373,
+     "se": 0.6501957148560401,
+     "raw_lo": -0.0837148062861793,
+     "raw_hi": 2.459266688586506,
+     "p": 0.032996700329967,
+     "q": 0.263973602639736,
+     "shrunk": -0.20069545953544426,
+     "shrunk_lo": -0.20069545953544426,
+     "shrunk_hi": -0.20069545953544426,
+     "factor": 0.0,
+     "rank": 1,
+     "rank_lo": 1,
+     "rank_hi": 11
+    },
+    "Maxine Waters": {
+     "n": 161,
+     "raw": -1.444196451124896,
+     "se": 1.0372045513425914,
+     "raw_lo": -3.4570164140232493,
+     "raw_hi": 0.5301287225877303,
+     "p": 0.15998400159984003,
+     "q": 0.7223277672232776,
+     "shrunk": -0.20069545953544426,
+     "shrunk_lo": -0.20069545953544426,
+     "shrunk_hi": -0.20069545953544426,
+     "factor": 0.0,
+     "rank": 1,
+     "rank_lo": 1,
+     "rank_hi": 24
+    },
+    "Mike Conaway": {
+     "n": 18,
+     "raw": -2.7945446374500715,
+     "se": 1.9188049235403934,
+     "raw_lo": -6.511501138439932,
+     "raw_hi": 0.7558524458140631,
+     "p": 0.26277372262773724,
+     "q": 0.7343265673432656,
+     "shrunk": -0.20069545953544426,
+     "shrunk_lo": -0.20069545953544426,
+     "shrunk_hi": -0.20069545953544426,
+     "factor": 0.0,
+     "rank": 1,
+     "rank_lo": 1,
+     "rank_hi": 24
+    },
+    "Mike Crapo": {
+     "n": 278,
+     "raw": -0.5967203259939483,
+     "se": 0.884806015151769,
+     "raw_lo": -2.300844186765068,
+     "raw_hi": 1.1400917211766315,
+     "p": 0.46495350464953505,
+     "q": 0.7343265673432656,
+     "shrunk": -0.20069545953544426,
+     "shrunk_lo": -0.20069545953544426,
+     "shrunk_hi": -0.20069545953544426,
+     "factor": 0.0,
+     "rank": 1,
+     "rank_lo": 1,
+     "rank_hi": 23
+    },
+    "Mitch McConnell": {
+     "n": 343,
+     "raw": -0.25382257582920514,
+     "se": 0.8532474901474354,
+     "raw_lo": -1.939956454432838,
+     "raw_hi": 1.3999475305888667,
+     "p": 0.6325367463253675,
+     "q": 0.8065593440655935,
+     "shrunk": -0.20069545953544426,
+     "shrunk_lo": -0.20069545953544426,
+     "shrunk_hi": -0.20069545953544426,
+     "factor": 0.0,
+     "rank": 1,
+     "rank_lo": 1,
+     "rank_hi": 23
+    },
+    "Pat Roberts": {
+     "n": 82,
+     "raw": 1.094072567853486,
+     "se": 2.4397803089438064,
+     "raw_lo": -3.535637150896598,
+     "raw_hi": 6.1313877229891105,
+     "p": 0.37396260373962603,
+     "q": 0.7343265673432656,
+     "shrunk": -0.20069545953544426,
+     "shrunk_lo": -0.20069545953544426,
+     "shrunk_hi": -0.20069545953544426,
+     "factor": 0.0,
+     "rank": 1,
+     "rank_lo": 1,
+     "rank_hi": 20
+    },
+    "Pat Toomey": {
+     "n": 224,
+     "raw": -0.9840239520684483,
+     "se": 1.279879428868756,
+     "raw_lo": -3.349002742505587,
+     "raw_hi": 1.6541573849005977,
+     "p": 0.3143685631436856,
+     "q": 0.7343265673432656,
+     "shrunk": -0.20069545953544426,
+     "shrunk_lo": -0.20069545953544426,
+     "shrunk_hi": -0.20069545953544426,
+     "factor": 0.0,
+     "rank": 1,
+     "rank_lo": 1,
+     "rank_hi": 24
+    },
+    "Patrick McHenry": {
+     "n": 367,
+     "raw": -0.49688250964262715,
+     "se": 0.7491716380417214,
+     "raw_lo": -1.9607509345801355,
+     "raw_hi": 0.9815720108753888,
+     "p": 0.48955104489551043,
+     "q": 0.7343265673432656,
+     "shrunk": -0.20069545953544426,
+     "shrunk_lo": -0.20069545953544426,
+     "shrunk_hi": -0.20069545953544426,
+     "factor": 0.0,
+     "rank": 1,
+     "rank_lo": 1,
+     "rank_hi": 23
+    },
+    "Sherrod Brown": {
+     "n": 374,
+     "raw": -0.43172982556448636,
+     "se": 0.8136012917146831,
+     "raw_lo": -2.050232046560618,
+     "raw_hi": 1.1797519847069988,
+     "p": 0.34596540345965404,
+     "q": 0.7343265673432656,
+     "shrunk": -0.20069545953544426,
+     "shrunk_lo": -0.20069545953544426,
+     "shrunk_hi": -0.20069545953544426,
+     "factor": 0.0,
+     "rank": 1,
+     "rank_lo": 1,
+     "rank_hi": 23
+    },
+    "Steny Hoyer": {
+     "n": 588,
+     "raw": -1.0330038953964784,
+     "se": 0.7423643987132182,
+     "raw_lo": -2.5789879186629188,
+     "raw_hi": 0.39950704388378544,
+     "p": 0.0443955604439556,
+     "q": 0.2663733626637336,
+     "shrunk": -0.20069545953544426,
+     "shrunk_lo": -0.20069545953544426,
+     "shrunk_hi": -0.20069545953544426,
+     "factor": 0.0,
+     "rank": 1,
+     "rank_lo": 1,
+     "rank_hi": 24
+    },
+    "Steve Scalise": {
+     "n": 292,
+     "raw": -1.634404106718014,
+     "se": 0.6872776853248487,
+     "raw_lo": -2.999453964979286,
+     "raw_hi": -0.2867672512005459,
+     "p": 0.009999000099990002,
+     "q": 0.23997600239976002,
+     "shrunk": -0.20069545953544426,
+     "shrunk_lo": -0.20069545953544426,
+     "shrunk_hi": -0.20069545953544426,
+     "factor": 0.0,
+     "rank": 1,
+     "rank_lo": 1,
+     "rank_hi": 24
+    },
+    "Tim Scott": {
+     "n": 417,
+     "raw": -0.7102916729600727,
+     "se": 1.0951489206828129,
+     "raw_lo": -3.0300869001961637,
+     "raw_hi": 1.20373222788877,
+     "p": 0.1805819418058194,
+     "q": 0.7223277672232776,
+     "shrunk": -0.20069545953544426,
+     "shrunk_lo": -0.20069545953544426,
+     "shrunk_hi": -0.20069545953544426,
+     "factor": 0.0,
+     "rank": 1,
+     "rank_lo": 1,
+     "rank_hi": 22
+    }
+   },
+   "prior": {
+    "applied": true,
+    "J": 24,
+    "m": -0.20069545953544426,
+    "tau2": 0.0
+   },
+   "listed": {}
+  }
+ },
+ "control_distance": {
+  "Bill Hagerty": {
+   "n": 1233,
+   "mean_abs_weeks": 10.194647201946472,
+   "max_abs_weeks_p90": 25.0,
+   "share_later": 0.4488037307380373,
+   "local_kept": 12
+  },
+  "Chuck Schumer": {
+   "n": 1533,
+   "mean_abs_weeks": 8.438070776255708,
+   "max_abs_weeks_p90": 23.0,
+   "share_later": 0.5179386823222439,
+   "local_kept": 7
+  },
+  "Cynthia Lummis": {
+   "n": 770,
+   "mean_abs_weeks": 7.499512987012987,
+   "max_abs_weeks_p90": 20.0,
+   "share_later": 0.48993506493506495,
+   "local_kept": 12
+  },
+  "David Scott": {
+   "n": 293,
+   "mean_abs_weeks": 5.569112627986348,
+   "max_abs_weeks_p90": 12.0,
+   "share_later": 0.5049061433447098,
+   "local_kept": 2
+  },
+  "Debbie Stabenow": {
+   "n": 1358,
+   "mean_abs_weeks": 7.394698085419735,
+   "max_abs_weeks_p90": 19.0,
+   "share_later": 0.49802098674521356,
+   "local_kept": 2
+  },
+  "Donald Trump": {
+   "n": 6352,
+   "mean_abs_weeks": 9.62111342884131,
+   "max_abs_weeks_p90": 24.0,
+   "share_later": 0.4949425377833753,
+   "local_kept": 775
+  },
+  "Elizabeth Warren": {
+   "n": 1187,
+   "mean_abs_weeks": 10.030381213142375,
+   "max_abs_weeks_p90": 25.0,
+   "share_later": 0.5664490311710194,
+   "local_kept": 1
+  },
+  "Eric Trump": {
+   "n": 45,
+   "mean_abs_weeks": 4.65,
+   "max_abs_weeks_p90": 9.0,
+   "share_later": 0.4930555555555556,
+   "local_kept": 3
+  },
+  "Glenn Thompson": {
+   "n": 432,
+   "mean_abs_weeks": 5.77734375,
+   "max_abs_weeks_p90": 14.0,
+   "share_later": 0.5234375,
+   "local_kept": 3
+  },
+  "Hakeem Jeffries": {
+   "n": 1136,
+   "mean_abs_weeks": 6.782515404929577,
+   "max_abs_weeks_p90": 18.0,
+   "share_later": 0.5050616197183099,
+   "local_kept": 21
+  },
+  "John Boozman": {
+   "n": 997,
+   "mean_abs_weeks": 8.529526078234705,
+   "max_abs_weeks_p90": 23.0,
+   "share_later": 0.5127256770310933,
+   "local_kept": 2
+  },
+  "Kamala Harris": {
+   "n": 526,
+   "mean_abs_weeks": 11.492989543726235,
+   "max_abs_weeks_p90": 25.0,
+   "share_later": 0.6783507604562737,
+   "local_kept": 0
+  },
+  "Kevin McCarthy": {
+   "n": 1185,
+   "mean_abs_weeks": 8.245305907172996,
+   "max_abs_weeks_p90": 22.0,
+   "share_later": 0.519409282700422,
+   "local_kept": 9
+  },
+  "Maxine Waters": {
+   "n": 165,
+   "mean_abs_weeks": 4.779545454545454,
+   "max_abs_weeks_p90": 9.0,
+   "share_later": 0.509090909090909,
+   "local_kept": 5
+  },
+  "Mike Conaway": {
+   "n": 18,
+   "mean_abs_weeks": 4.885416666666667,
+   "max_abs_weeks_p90": 10.0,
+   "share_later": 0.5104166666666666,
+   "local_kept": 0
+  },
+  "Mike Crapo": {
+   "n": 537,
+   "mean_abs_weeks": 6.637918994413408,
+   "max_abs_weeks_p90": 16.0,
+   "share_later": 0.5032588454376163,
+   "local_kept": 3
+  },
+  "Mitch McConnell": {
+   "n": 964,
+   "mean_abs_weeks": 8.067103215767634,
+   "max_abs_weeks_p90": 22.0,
+   "share_later": 0.5217193983402489,
+   "local_kept": 10
+  },
+  "Pat Roberts": {
+   "n": 110,
+   "mean_abs_weeks": 5.8875,
+   "max_abs_weeks_p90": 15.100000000000009,
+   "share_later": 0.5448863636363637,
+   "local_kept": 0
+  },
+  "Pat Toomey": {
+   "n": 246,
+   "mean_abs_weeks": 5.122967479674797,
+   "max_abs_weeks_p90": 11.0,
+   "share_later": 0.5053353658536586,
+   "local_kept": 1
+  },
+  "Patrick McHenry": {
+   "n": 646,
+   "mean_abs_weeks": 6.3832236842105265,
+   "max_abs_weeks_p90": 15.0,
+   "share_later": 0.5129643962848297,
+   "local_kept": 0
+  },
+  "Sherrod Brown": {
+   "n": 783,
+   "mean_abs_weeks": 6.853607918263091,
+   "max_abs_weeks_p90": 17.0,
+   "share_later": 0.5211526181353767,
+   "local_kept": 0
+  },
+  "Steny Hoyer": {
+   "n": 1339,
+   "mean_abs_weeks": 7.396611277072442,
+   "max_abs_weeks_p90": 20.0,
+   "share_later": 0.5184372666168783,
+   "local_kept": 6
+  },
+  "Steve Scalise": {
+   "n": 666,
+   "mean_abs_weeks": 7.480198948948949,
+   "max_abs_weeks_p90": 20.0,
+   "share_later": 0.5311561561561562,
+   "local_kept": 1
+  },
+  "Tim Scott": {
+   "n": 1402,
+   "mean_abs_weeks": 8.87259272467903,
+   "max_abs_weeks_p90": 23.0,
+   "share_later": 0.511858059914408,
+   "local_kept": 9
+  }
+ },
+ "negative_control": "not in the data yet"
+}

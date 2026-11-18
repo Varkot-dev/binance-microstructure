@@ -913,21 +913,41 @@ def _cell(r: dict | None) -> str:
     return f"{r['rank']} ({r['rank_lo']} to {r['rank_hi']}) | {_f(r['shrunk'])} | {_p(r['q'])}"
 
 
+def _raw_cell(r: dict | None, listed: dict | None = None) -> str:
+    if r is not None:
+        return f"{r['n']:,} | {_f(r['raw'])} {_ci_s(r['raw_lo'], r['raw_hi'])} | {_p(r['q'])}"
+    v = listed or {}
+    return f"{v.get('n', 0):,} | {_f(v.get('mean'))} (not ranked) | "
+
+
+def _views(primary: dict, local: dict) -> list[tuple[str, dict]]:
+    return [("primary", primary["main"]), ("local", local["main"]), ("pmp", local["pmp"]),
+            ("local, own-only", local["sensitivity_own"]["main"]),
+            ("pmp, own-only", local["sensitivity_own"]["pmp"])]
+
+
+def _order(primary: dict) -> list[str]:
+    P = primary["main"]["people"]
+    return sorted(set(P) | set(primary["main"].get("listed", {})),
+                  key=lambda k: (P[k]["rank"] if k in P else 999, k))
+
+
 def side_by_side(primary: dict, local: dict) -> list[str]:
-    """Primary (global controls) next to local controls and post minus pre."""
-    P, Lc, M = primary["main"]["people"], local["main"]["people"], local["pmp"]["people"]
+    """Primary (global controls) next to the local-control views, in primary rank order.
+    Raw effects are shown for the local views because their shrinkage can collapse to the
+    prior (tau^2 = 0), which ties every rank."""
+    P = primary["main"]["people"]
     cov = local["coverage"]
-    names = sorted(set(P) | set(Lc) | set(M),
-                   key=lambda k: (Lc[k]["rank"] if k in Lc else 999, k))
-    out = [("| person | primary rank (interval) | primary shrunken | primary q | local rank "
-            "(interval) | local shrunken | local q | post-minus-pre rank (interval) | "
-            "post-minus-pre shrunken | post-minus-pre q | events primary / local / dropped |"),
-           "|---|---|---|---|---|---|---|---|---|---|---|"]
-    for k in names:
-        c = cov.get(k, {})
-        n_p = P[k]["n"] if k in P else primary["coverage"].get(k, {}).get("analysable", 0)
-        out.append(f"| {k} | {_cell(P.get(k))} | {_cell(Lc.get(k))} | {_cell(M.get(k))} | "
-                   f"{n_p:,} / {c.get('analysable', 0):,} / {c.get('dropped_local', 0):,} |")
+    views = _views(primary, local)[1:]
+    out = [("| person | primary rank (interval) | primary shrunken | primary q | "
+            + " | ".join(f"{t} events | {t} raw [95% CI] | {t} q" for t, _ in views)
+            + " | dropped (local) |"),
+           "|---|---|---|---|" + "---|---|---|" * len(views) + "---|"]
+    for k in _order(primary):
+        cells = " | ".join(_raw_cell(rk["people"].get(k), rk.get("listed", {}).get(k))
+                           for _, rk in views)
+        out.append(f"| {k} | {_cell(P.get(k))} | {cells} | "
+                   f"{cov.get(k, {}).get('dropped_local', 0):,} |")
     return out
 
 
@@ -968,10 +988,14 @@ def report_local(res: dict, primary: dict) -> str:
           f"Post minus pre: {res['answer_pmp']}", "",
           f"Primary answer, for comparison: {primary['answer']}", "",
           "## Side by side", "",
-          ("Rank (rank interval), shrunken effect in bps, BH q. Sorted by the local rank. "
-           "Events: analysable clean events in the primary run / under local controls / "
-           "clean events with a complete window dropped for having fewer than 6 local "
-           "controls."), ""]
+          ("In primary rank order. Primary: rank (rank interval), shrunken effect in bps, BH "
+           "q. Local views: analysable events, raw effect in bps with 95% bootstrap CI, BH q "
+           "(raw, because the local shrinkage fits tau^2 = 0 and pulls everyone to the "
+           "prior, which ties all ranks). local = any tracked person's post excluded from "
+           "controls (the deviation's rule); pmp = post minus pre with those controls; "
+           "own-only = the pre-specified sensitivity excluding only the person's own posts. "
+           "Dropped = clean events with a complete window but fewer than 6 local controls."),
+          ""]
     L += side_by_side(primary, res)
     for title, rk in (("Primary (global controls)", primary["main"]),
                       ("Local controls", res["main"]), ("Post minus pre (local)", res["pmp"]),
@@ -1043,49 +1067,45 @@ def report_local(res: dict, primary: dict) -> str:
 
 
 def plot_local(res: dict, primary: dict, path: Path) -> None:
+    """Raw effects with 95% bootstrap CIs, people in primary rank order."""
     import matplotlib
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
 
-    P, Lc, M = primary["main"]["people"], res["main"]["people"], res["pmp"]["people"]
-    names = sorted(set(P) | set(Lc) | set(M),
-                   key=lambda k: (Lc[k]["rank"] if k in Lc else 999, k))
+    names = _order(primary)
+    v = dict(_views(primary, res))
+    panels = [("Abnormal BTC rv, minutes +1 to +5",
+               [("primary (global controls)", v["primary"], "#9a9890"),
+                ("local, any tracked post excluded", v["local"], "#2a78d6"),
+                ("local, own posts excluded", v["local, own-only"], "#1baf7a")]),
+              ("Post minus pre (removes the volatility level)",
+               [("local, any tracked post excluded", v["pmp"], "#2a78d6"),
+                ("local, own posts excluded", v["pmp, own-only"], "#1baf7a")])]
     n = max(len(names), 1)
-    fig, axes = plt.subplots(1, 2, figsize=(11, 2.4 + 0.42 * n), sharey=True)
-    ax = axes[0]
-    for i, k in enumerate(names):
-        for rk, dy, col, lab in ((P, -0.14, "#9a9890", "primary (global controls)"),
-                                 (Lc, 0.14, "#2a78d6", "local controls")):
-            r = rk.get(k)
-            if r is None:
-                continue
-            ax.plot([r["shrunk_lo"], r["shrunk_hi"]], [i + dy] * 2, color=col, lw=2)
-            ax.plot(r["shrunk"], i + dy, "o", color=col, ms=6,
-                    label=lab if i == next(j for j, x in enumerate(names) if x in rk) else None)
-    ax.set_title("Abnormal BTC rv, minutes +1 to +5", loc="left", fontsize=11, pad=24)
-    ax.set_xlabel("shrunken effect, 95% posterior (bps)")
-    ax2 = axes[1]
-    first = True
-    for i, k in enumerate(names):
-        r = M.get(k)
-        if r is None:
-            continue
-        ax2.plot([r["shrunk_lo"], r["shrunk_hi"]], [i] * 2, color="#eb6834", lw=2)
-        ax2.plot(r["shrunk"], i, "o", color="#eb6834", ms=6,
-                 label="post minus pre, local controls" if first else None)
-        first = False
-    ax2.set_title("Post minus pre (removes the volatility level)", loc="left", fontsize=11,
-                  pad=24)
-    ax2.set_xlabel("shrunken effect, 95% posterior (bps)")
-    axes[0].set_yticks(range(n), names)
+    fig, axes = plt.subplots(1, 2, figsize=(12, 2.6 + 0.42 * n), sharey=True)
+    for ax, (title, series) in zip(axes, panels, strict=True):
+        for si, (lab, rk, col) in enumerate(series):
+            dy = (si - (len(series) - 1) / 2) * 0.22
+            first = True
+            for i, k in enumerate(names):
+                r = rk["people"].get(k)
+                if r is None:
+                    continue
+                ax.plot([r["raw_lo"], r["raw_hi"]], [i + dy] * 2, color=col, lw=1.8)
+                ax.plot(r["raw"], i + dy, "o", color=col, ms=5, label=lab if first else None)
+                first = False
+        ax.set_title(title, loc="left", fontsize=11, pad=34)
+        ax.set_xlabel("raw effect, 95% bootstrap CI (bps); people with 10+ events")
+        ax.axvline(0, color="#52514e", lw=0.8)
+        ax.spines[["top", "right"]].set_visible(False)
+        ax.grid(axis="x", color="#e6e5e0", lw=0.6)
+        ax.legend(frameon=False, fontsize=8, loc="lower left", bbox_to_anchor=(0, 1.0),
+                  ncol=2)
+    axes[0].set_yticks(range(n), [f"{k} ({i + 1})" for i, k in enumerate(names)])
     axes[0].invert_yaxis()
-    for a in axes:
-        a.axvline(0, color="#52514e", lw=0.8)
-        a.spines[["top", "right"]].set_visible(False)
-        a.grid(axis="x", color="#e6e5e0", lw=0.6)
-        a.legend(frameon=False, fontsize=8, loc="lower left", bbox_to_anchor=(0, 1.0), ncol=2)
-    fig.suptitle("Post-hoc robustness check (not pre-registered): local control windows",
-                 x=0.01, ha="left", fontsize=10, color="#52514e")
+    fig.suptitle("Post-hoc robustness check (not pre-registered): local control windows; "
+                 "people in primary rank order", x=0.01, ha="left", fontsize=10,
+                 color="#52514e")
     fig.tight_layout()
     fig.savefig(path, dpi=140)
     plt.close(fig)
