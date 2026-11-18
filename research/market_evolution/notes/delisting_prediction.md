@@ -14,18 +14,78 @@ Binance policy and on the academic papers below is therefore **[S]**. Before any
 into the Q15/Q16 write-up, check the quoted wording against the original page. The archive
 facts in section 6 are **[V]**: I computed them from the archive this session.
 
+## Verification pass (2026-11-17, second session)
+
+What was checked. www.binance.com was reachable for a short window. The Binance pages cited
+below were read in full through Binance's JSON endpoint
+(`https://www.binance.com/bapi/composite/v1/public/cms/article/detail/query?articleCode=<code>`;
+human page `https://www.binance.com/en/support/announcement/<code>`), and Binance's full "Delisting" title list
+(catalogId 161, 446 titles back to 2022-02) and 4,000 "Latest Binance News" titles were
+downloaded. The academy glossary pages, Binance Square, the news sites and all paper hosts
+were not opened (proxy refused arxiv.org and, after the window, binance.com itself).
+
+What changed.
+- **Official delisting criteria found, and they apply to futures too** [V]. "Important
+  Notice on Binance Listing Information & Requirements" (published 2025-04-25,
+  https://www.binance.com/en/support/announcement/d378c2176ac841bb8eae68f63d4c4845) has a section "Delisting Criteria
+  (Applicable to Listing on Spot, Futures, and Alpha Featuring)", quoted in section 1. Its
+  market wording is "Consistently low trading activity or poor market depth" and
+  "Significant crashes, or pump-and-dump behavior", not "sustained low trading activity or
+  repeated major price crashes" (that phrasing, from a blog guide, is [unverified]).
+- **The 2025-07-04 notice lists 11 factors, not 8** [V]: it adds community engagement and
+  transparency, token supply or tokenomics changes, ownership or core team changes, and
+  "Community sentiments". It also says the token's futures contracts were **not** affected
+  ("users may continue trading"), so a spot delisting notice does not always end the
+  perpetual.
+- **Monitoring Tag meaning corrected** [V]. The 2023-07-26 notice
+  (https://www.binance.com/en/support/announcement/b0f241491d0e4d75aa2f8752b7bf8af5, published 2023-07-26 03:00) defines it as
+  applying to tokens that "exhibit notably higher volatility and risks compared to other
+  listed tokens", not as "at risk of no longer meeting the listing criteria" (that is the
+  later glossary wording, still [S]). The first set had 26 tokens (AKRO, AMB, ARK, BTS,
+  CREAM, DREP, ELF, FTT, GFT, JASMY, LINA, LOOM, MLN, MULTI, OAX, OMG, OOKI, PERL, PNT,
+  REN, SNM, SRM, TORN, VGX, WRX, YFII). The tag is shown on Spot and Margin pages and gates
+  spot and margin trading behind a quiz every 90 days; the notice says nothing about futures.
+- **Tag reviews are monthly** [V]: the Delisting Guidelines FAQ says additions and removals
+  "will be completed in the first week of every month". 28 dated Monitoring Tag notices
+  exist from 2023-07 to 2026-10 in Binance's lists [V title], so the tag history can be
+  collected from titles alone.
+- Monero: tagged in the 2024-01-04 extension (ANT, FIRO, KP3R, MDX, MOB, REEF, VAI, XMR, ZEC,
+  ZEN) [V title].
+- Vote to Delist: first batch started 2025-03-21; results and the 14-token delisting for
+  2025-04-16 announced 2025-04-08; second batch started 2025-04-10 [V title for all three].
+- Futures mechanics [V]: settlement at a stated time; new positions blocked 30 minutes before
+  (08:30 for a 09:00 settlement) in the XEM/ORBS/LOOM, REEF, DEFI/MEMEFI and 2025-12-05
+  notices; insurance fund not used in the final hour, with liquidations as a single IOC
+  order and then ADL (2025-08-11 and 2025-12-05 notices). REEFUSDT had its margin tiers cut
+  on 2025-01-15 07:30, a week before its 2025-01-22 09:00 settlement. Futures delisting
+  notices give no reasons.
+- MATIC: the Binance notice says MATICUSDT and MATICUSDC settled 2024-09-04 09:00 [V],
+  matching the archive; the "2024-09-09" secondary date is wrong.
+- A public JSON endpoint for announcement lists exists and works (section 9) [V]; the
+  publication timestamp of each notice is in it, so true announcement dates can be collected.
+
+Still unverified: the Binance Academy glossary wording, the Binance Square "futures review
+criteria" repost, all news-sourced numbers (price drops, 26.3% median, Yang and Kwon
+figures), every academic citation in section 5 (no paper host reachable), and the
+Whale Alert wording for the January 2026 batch.
+
 ## Summary
 
-- Binance's stated delisting criteria are qualitative and the same for every token: team
-  commitment, development activity, trading volume and liquidity, network stability and
-  security, responsiveness to due diligence, regulation, and evidence of fraud or negligence
-  [S]. Futures notices name a smaller set (trading volume and liquidity, network safety,
-  regulation, fraud), and some 2026 notices add "extreme volatility" and a lack of insurance
-  fund support [S]. Binance publishes no numeric thresholds [S].
-- A visible warning layer exists. The **Monitoring Tag** (since 2023-07-26) marks tokens "at
-  risk" of no longer meeting the listing criteria. **Vote to Delist** (since March 2025) lets
-  users vote on tagged tokens [S]. Being tagged does not mean a token will be delisted, and
-  there is no fixed timeline [S].
+- Binance's stated delisting criteria are qualitative and, since the 2025-04-25 listing
+  notice, explicitly the same for Spot, Futures and Alpha: team and governance, "Consistently
+  low trading activity or poor market depth", "Significant crashes, or pump-and-dump
+  behavior", manipulation, community sentiment, network security, tokenomics, regulation, and
+  fraud or negligence [V]. Individual futures delisting notices give no reasons [V]; a
+  Binance Square repost names a smaller set (trading volume and liquidity, network safety,
+  regulation, fraud), and some 2026 notices reportedly add "extreme volatility" and a lack of
+  insurance fund support [S]. Binance publishes no numeric thresholds [V: none in the
+  criteria text].
+- A visible warning layer exists. The **Monitoring Tag** (since 2023-07-26 [V]) marks tokens
+  that "exhibit notably higher volatility and risks compared to other listed tokens" [V, the
+  launch notice]; later glossary wording describes them as at risk of no longer meeting
+  listing criteria [S]. Reviews are monthly [V]. **Vote to Delist** (first batch 2025-03-21
+  [V title]) lets users vote on tagged tokens [S for mechanics]. Being tagged does not mean a
+  token will be delisted, and there is no fixed timeline [S].
 - **Futures usually die before spot, not after.** I matched the 160 dead USDT-M symbols in
   the local aggTrades inventory to Binance spot USDT pairs [V]. Where the spot USDT pair was
   delisted too, the perpetual's last trading day came 2 to 13 days *before* the spot pair's
@@ -51,45 +111,74 @@ facts in section 6 are **[V]**: I computed them from the archive this session.
 
 ## 1. Binance's official criteria (spot and general)
 
-All wording here comes from search snippets of Binance pages that I could not open [S].
+Verification pass: the three Binance pages below were opened in full; tags updated per item.
 
 - Delisting notices use a standard template. For example, "Binance Will Delist ALPHA, BSW,
   KMD, LEVER, LTO on 2025-07-04"
   (https://www.binance.com/en/support/articles/173b2a63c03141009029407ecfebd14a) says that
   when a coin or token no longer meets Binance's standards, or the industry changes, Binance
-  conducts a more in-depth review and may delist it. The factors listed across notices are
-  [S]:
+  conducts a more in-depth review and may delist it. That notice lists 11 "updated metrics"
+  [V, read in full]:
   - "Commitment of team to project"
   - "Level and quality of development activity"
   - "Trading volume and liquidity"
   - "Stability and safety of network from attacks"
-  - "Level of public communication"
-  - "Responsiveness to periodic due diligence requests"
+  - "Level of public communication, community engagement, and transparency"
+  - "Responsiveness to our periodic due diligence requests"
   - "Evidence of unethical/fraudulent conduct or negligence"
   - "New regulatory requirements"
+  - "Material/unjustified increase in token supply or changes to tokenomics"
+  - "Impact from changes to the project's ownership structure or to the core team members"
+  - "Community sentiments"
+
+  The same notice says the futures contracts of these tokens were not affected: "the
+  contracts of the aforementioned token(s) trading is not affected and users may continue
+  trading" [V].
 
   Cointelegraph's account of the April 2025 batch lists the same set
   (https://cointelegraph.com/news/binance-delists-14-tokens-vote-to-delist-process) [S].
 - "Binance Delisting Guidelines & Frequently Asked Questions"
   (https://www.binance.com/au/support/faq/e5a9718ccb794acda1c48db5c71753e4) adds
-  legal/compliance risk ("tokens under global/regional regulatory issues"). It also states
-  that Binance "does not disclose any delisting decisions to external parties" before
-  announcing them [S].
+  legal/compliance risk ("tokens under global/regional regulatory issues"), project
+  going-concern risk, market risk ("Poor liquidity, low market capitalization") and ethical
+  risk. It also states that Binance "does not disclose any delisting decisions to external
+  parties", and that Monitoring Tag additions or removals "will be completed in the first week
+  of every month" [V, read in full; published 2022-12-19, since updated].
 - "Important Notice on Binance Listing Information & Requirements"
-  (https://www.binance.com/en/support/announcement/d378c2176ac841bb8eae68f63d4c4845) and a
-  Binance blog guide on ongoing evaluation give categories for periodic review. They cover
-  team and governance (abandoned development, weak updates, poor communication) and market
-  health ("sustained low trading activity or repeated major price crashes without valid
-  cause"), plus market-making balance, order book depth and price stability [S]. The
-  "sustained low trading activity" and "repeated major price crashes" wording is the closest
-  Binance comes to naming quantities a model can measure.
+  (https://www.binance.com/en/support/announcement/d378c2176ac841bb8eae68f63d4c4845,
+  published 2025-04-25, last updated 2025-05-14) has a section "Delisting Criteria
+  (Applicable to Listing on Spot, Futures, and Alpha Featuring)" stating that "The following
+  criteria apply to all delisting decisions across Spot, Futures, and Alpha markets" [V]:
+  1. Team and Governance: lack of ongoing development or abandoned; insufficient or
+     low-quality updates; poor communication and transparency; no response to due diligence
+     requests; significant disruptive changes in team or ownership.
+  2. Market Performance and Trading Activity: "Trading Volume and Liquidity: Consistently low
+     trading activity or poor market depth"; "Price Stability: Significant crashes, or
+     pump-and-dump behavior"; "Market Manipulation: Evidence or suspicion of price
+     manipulation or fraudulent trading practices"; "Community Sentiment: Sustained negative
+     feedback or loss of community trust".
+  3. Product and/or Network Security: network vulnerabilities or attacks; unjustified or
+     material token supply increases or tokenomics changes; unmet new regulatory
+     requirements; fraud, negligence or other unethical behaviour.
+
+  "Consistently low trading activity or poor market depth" and "Significant crashes" are the
+  closest Binance comes to naming quantities a model can measure [V wording, I use]. A Binance
+  blog guide reportedly words this as "sustained low trading activity or repeated major price
+  crashes without valid cause" [unverified: the guide was not opened, and the official notice
+  does not use this wording].
 
 ## 2. Monitoring Tag, Seed Tag, Vote to Delist
 
 - **Introduction.** "Introducing Seed Tags & Monitoring Tags for Tokens with High Volatility
   and Risks" (https://www.binance.com/en/support/announcement/b0f241491d0e4d75aa2f8752b7bf8af5)
-  launched both tags on 2023-07-26. The Seed Tag replaced the Innovation Zone, which dated
-  from mid-2020. The first Monitoring Tag set included AKRO, AMB, CREAM, FTT and ARK [S].
+  launched both tags on 2023-07-26 (published 03:00 UTC) [V]. The Seed Tag replaced the
+  Innovation Zone [V] (which dated from mid-2020 [S]). The first Monitoring Tag set had 26
+  tokens: AKRO, AMB, ARK, BTS, CREAM, DREP, ELF, FTT, GFT, JASMY, LINA, LOOM, MLN, MULTI, OAX,
+  OMG, OOKI, PERL, PNT, REN, SNM, SRM, TORN, VGX, WRX, YFII [V]. The notice defines the tag as
+  for tokens that "exhibit notably higher volatility and risks compared to other listed
+  tokens", lists the review criteria (the 2023 version of the factor list above, plus
+  "Network/smart contract stability" and "Contribution to a healthy and sustainable crypto
+  ecosystem"), and applies it on Spot and Margin only, with a quiz every 90 days [V].
   Before 2023-07-26 there was no tag history to use as a feature [I].
 - **Monitoring Tag definition.** The Binance Academy glossary
   (https://www.binance.com/en/academy/glossary/monitoring-tag) describes tagged tokens as
@@ -106,12 +195,15 @@ All wording here comes from search snippets of Binance pages that I could not op
 - **No fixed timeline.** No source gives a fixed time from tag to delisting, and the tag
   "does not automatically result in delisting" (BeInCrypto, Coinspeaker coverage) [S]. One
   well-reported case: Monero was tagged in early January 2024 and its delisting was announced
-  about a month later (The Block,
+  about a month later (XMR was in the 2024-01-04 Monitoring Tag extension [V title]; The Block,
   https://www.theblock.co/post/270282/binance-monitoring-tag-monero-zcash and
   https://www.theblock.co/post/276176/binance-delisting-monero) [S]. A "3 to 6 months from
   tag to delisting" figure circulates in an AI-generated Cryptorank summary. It is not
   supported anywhere and should not be used [S].
-- **Vote to Delist.** The first campaign was launched on Binance Square on 2025-03-21, for
+- **Vote to Delist.** [V title for the three dates: "Binance Will Start the First Batch of
+  Vote to Delist on 2025-03-21", results published 2025-04-08 announcing the 14-token
+  delisting on 2025-04-16, "Binance Introduces the 2nd Batch of Vote to Delist on
+  2025-04-10".] The first campaign was launched on Binance Square on 2025-03-21, for
   Monitoring Tag tokens. It required a KYC'd account holding 0.01 BNB. Binance said the
   results "will not be the sole factor". The 14 tokens delisted on 2025-04-16 (BADGER, BAL,
   BETA, CREAM, CTXC, ELF, FIRO, HARD, NULS, PROS, SNT, TROY, UFT, VIDT) followed this round.
@@ -141,28 +233,41 @@ All wording here comes from search snippets of Binance pages that I could not op
   settlement" at a stated UTC time, and the contract is delisted after settlement. New
   positions are blocked shortly before; one notice blocked them 30 minutes before. The
   insurance fund is not used in the final hour, so auto-deleveraging may apply. Leverage and
-  margin tiers are often cut before delisting. Sources: the XEM/ORBS/LOOM notice
+  margin tiers are often cut before delisting. Verification pass [V, all four notices read in
+  full]: new positions blocked 30 minutes before settlement in each of them; the final-hour
+  insurance-fund rule (single IOC liquidation order, then ADL) appears in the 2025-08-11 and
+  2025-12-05 notices; REEFUSDT tiers were cut 2025-01-15 07:30 for a 2025-01-22 09:00
+  settlement; none of the notices states a reason. Sources: the XEM/ORBS/LOOM notice
   https://www.binance.com/en/support/articles/cfe97d52a8c840d3ba631835b637e9e7, the
   DEFIUSDT/MEMEFI notice
   https://www.binance.com/en-AE/support/announcement/detail/21e399dcea734230a3c181daf5407b64,
-  and the REEFUSDT leverage-and-delist notice
-  https://www.binance.com/en/support/announcement/detail/572715f2d96e47769ebbb967c2a6e445 [S].
+  the REEFUSDT leverage-and-delist notice
+  https://www.binance.com/en/support/announcement/detail/572715f2d96e47769ebbb967c2a6e445, and
+  the 2025-12-05 multiple-perpetual notice
+  https://www.binance.com/en/support/announcement/746056ce732d43dda12c1e5ae1b7a059 [V].
   [I] A leverage or margin-tier cut announced in the weeks before a delisting is a possible
   leading indicator, if those announcements can be collected.
 - **Regulatory and product delistings** are a separate class. Examples are the 2023 BUSD
   pair perpetuals (The Block,
   https://www.theblock.co/post/226425/binance-futures-delisting-stepn-near-avalanche-perps)
   and token migrations such as MATIC to POL (Binance swap notice
-  https://www.binance.com/en/support/articles/6a6de383727f4659a3050f7982e1620f) [S]. These
-  are not driven by the coin's own trading and should be labelled separately [I]. One
-  discrepancy: secondary sources say the MATIC futures settled on 2024-09-09, but the archive
-  shows MATICUSDT's last trading day as 2024-09-04 [V].
+  https://www.binance.com/en/support/articles/6a6de383727f4659a3050f7982e1620f) [V for the
+  MATIC notice; BUSD: Binance notice
+  https://www.binance.com/en/support/announcement/d980d81501594f80b2903cdfe29f1166 settled
+  BTCBUSD and ETHBUSD on 2023-12-11 [V]]. These
+  are not driven by the coin's own trading and should be labelled separately [I]. Resolved
+  discrepancy: secondary sources said the MATIC futures settled on 2024-09-09, but the Binance
+  notice says MATICUSDT and MATICUSDC settled 2024-09-04 09:00 [V], matching the archive's
+  last trading day of 2024-09-04 [V].
 
 ## 4. Sequence and lead times
 
 - **Announcement to settlement.** Spot notices usually give about one to two weeks. For
-  example, the ALPHA, BSW, KMD, LEVER and LTO notice was dated 2025-06-26 for a 2025-07-04
-  delisting [S]. In combined notices, the futures settlement is set several days before the
+  example, the ALPHA, BSW, KMD, LEVER and LTO notice was published 2025-06-26 07:00 for a
+  2025-07-04 03:00 delisting [V]. Futures-only notices read in the verification pass were
+  published 5 to 10 days before settlement (XEM/ORBS/LOOM 2024-11-29 for 2024-12-09; REEF
+  2025-01-15 for 2025-01-22; DEFI/MEMEFI 2025-08-06 for 2025-08-11; multiple 2025-12-01 for
+  2025-12-05) [V]. In combined notices, the futures settlement is set several days before the
   spot date. In the March 2026 batch (A2Z, FORTH, HOOK, IDEX, LRC, NTRN, RDNT, SXP), futures
   settled 2026-03-24 and spot ended 2026-04-01 (Cryptorank, CoinGape, BeInCrypto) [S]. The
   archive agrees that A2ZUSDT, FORTHUSDT, HOOKUSDT, LRCUSDT, NTRNUSDT and RDNTUSDT perpetuals
@@ -262,10 +367,10 @@ non-ghost day.
 |---|---|---|---|---|
 | log quote volume, month t | "Trading volume and liquidity" is a stated criterion; volume is the core of every dead-coin definition | futures 1d klines (`quote_volume`), summed by month | lower volume, higher hazard | Binance notices [S]; Feder et al. 2018 [S] |
 | volume relative to its own running peak (vol_t / max vol up to t) | Feder/Gandal "1% of prior peak" abandonment rule; this is the falling-volume baseline in the README | 1d klines | lower ratio, higher hazard | Feder et al. 2018; Gandal et al. 2021 [S] |
-| 3-month volume change (log vol_t minus log vol_{t-3}) | Binance's "sustained low trading activity"; a decline in volume | 1d klines | more negative, higher hazard | Binance listing notice [S]; Fantazzini 2022 lagged volume [S] |
+| 3-month volume change (log vol_t minus log vol_{t-3}) | Binance's "Consistently low trading activity or poor market depth"; a decline in volume | 1d klines | more negative, higher hazard | Binance listing notice [V]; Fantazzini 2022 lagged volume [S] |
 | volume rank in the cross-section (percentile among live USDT perps that month) | Binance judges coins relative to others; removes market-wide cycles | 1d klines | lower rank, higher hazard | [I] |
 | number of trades (`count`) and average trade size | Liquidity and how many participants trade it; a cheap link to Q9-style trade-level features | 1d klines `count` | fewer trades, higher hazard; trade-size direction unclear | [I] |
-| 3- and 6-month return, drawdown from running max | "Repeated major price crashes without valid cause"; price decline is a predictor in the literature | 1d klines close | larger drawdown, higher hazard | Binance notice [S]; Yang AJFS summary [S] |
+| 3- and 6-month return, drawdown from running max | "Significant crashes, or pump-and-dump behavior" (official wording); price decline is a predictor in the literature | 1d klines close | larger drawdown, higher hazard | Binance listing notice [V]; Yang AJFS summary [S] |
 | realized volatility / mean daily range (high-low)/close | Fantazzini's daily-range models; "extreme volatility" cited in 2026 futures notices | 1d klines | higher, higher hazard | Fantazzini 2023 [S]; Whale Alert 2026 [S] |
 | price level / relative tick size | Very low-priced coins have coarse relative ticks and are often renamed with a 1000 prefix; links to Part A | 1d klines + exchangeInfo tick (Q4b/Q8) | unclear; probably higher hazard at sub-cent prices | [I] |
 | open interest (mean, trend) and OI / volume | Liquidity and how much leverage traders hold. A stated futures concern (insurance fund support) relates to how deep the contract is | daily `metrics` (`sum_open_interest_value`), around 2023-04 onward for many symbols | lower or falling OI, higher hazard | [I]; Whale Alert 2026 [S] |
@@ -274,8 +379,8 @@ non-ghost day.
 | mark/index premium dispersion | Basis noise means the underlying spot is thin across exchanges | premiumIndexKlines | higher, higher hazard | [I] |
 | age of the contract (months since first file) and listing cohort | Hazard varies with age and release cohort; new coins behave differently | inventory first month | early life and some cohorts have higher hazard | Gatabazi et al. 2022 [S]; Fantazzini 2022 [S] |
 | has a Binance spot USDT pair; spot pair already gone | Futures-only listings die without a spot event; the "spot first" cases are a known risk group | spot 1d klines inventory | no spot pair or spot gone, higher hazard | section 6 [V for counts, I for direction] |
-| Monitoring Tag status and months on tag (from 2023-07) | Binance's own public warning | announcements (manual or scraped) | tagged, higher hazard | Binance glossary [S] |
-| leverage / margin-tier cut in the past month | Often accompanies or comes before delisting | announcements | cut, higher hazard | Binance REEFUSDT notice [S]; [I] |
+| Monitoring Tag status and months on tag (from 2023-07) | Binance's own public warning; reviewed monthly | announcements (28 dated titles, scrapable from the bapi list endpoint) | tagged, higher hazard | Binance 2023-07-26 notice and delisting FAQ [V]; glossary [S] |
+| leverage / margin-tier cut in the past month | Often accompanies or comes before delisting | announcements | cut, higher hazard | Binance REEFUSDT notice [V: tiers cut 7 days before settlement, in the same notice, so it is not an advance signal there]; [I] |
 | market-wide state (BTC 3-month return, count of delistings last quarter) | Binance delists in batches; review batches cluster in bear phases (news describes the 2026 batches as "crypto winter") | 1d klines BTC; own label history | bear phase, higher hazard | FXStreet 2026 [S]; [I] |
 | trade-level predictability, burstiness, trade size (Q9/Q14) | The open question in the README: does anything add beyond volume? | aggTrades (processed coins only) | unknown | README |
 
@@ -337,8 +442,12 @@ non-ghost day.
 
 - Binance publishes delisting notices in the "Delisting" category of its announcement
   center, and reposts them on Binance Square [S]. A public JSON endpoint behind the
-  announcement list exists (widely used by scrapers) [I: not tested; binance.com was
-  blocked]. Notice titles carry the settlement date in brackets, for example "(2025-12-05)",
+  announcement list exists and works [V, verification pass]:
+  `https://www.binance.com/bapi/composite/v1/public/cms/article/list/query?type=1&catalogId=161&pageNo=<n>&pageSize=50`
+  returns code, title and `releaseDate` (publication time, ms) for all 446 Delisting
+  notices (back to 2022-02); 72 titles contain "Futures Will Delist". Bodies come from
+  `.../cms/article/detail/query?articleCode=<code>`. Monitoring Tag notices are in
+  catalogId 49 (28 titles, 2023-07 to 2026-10). Notice titles carry the settlement date in brackets, for example "(2025-12-05)",
   but the publication timestamp is what is needed for feature cut-offs [S, I].
 - Practical fallbacks:
   - Use the settlement day from the archive [V], then assume the announcement came 7 to 14
@@ -348,31 +457,36 @@ non-ghost day.
   - Monitoring Tag additions and removals can be collected the same way, from 2023-07
     onward [I].
 - Network note: to scrape announcements, `www.binance.com` must be allowed in this cloud
-  environment's network settings. It is blocked now.
+  environment's network settings. It was reachable briefly in the verification pass and then
+  refused again.
 
 ## References
 
-Binance (all opened only through search snippets in this session) [S]:
+Binance (first session: search snippets only. Verification pass: items marked [V] were read
+in full through the bapi JSON endpoint):
 
 - Introducing Seed Tags & Monitoring Tags (2023-07):
-  https://www.binance.com/en/support/announcement/b0f241491d0e4d75aa2f8752b7bf8af5
+  https://www.binance.com/en/support/announcement/b0f241491d0e4d75aa2f8752b7bf8af5 [V]
 - Monitoring Tag glossary: https://www.binance.com/en/academy/glossary/monitoring-tag
 - Seed Tag glossary: https://www.binance.com/en/academy/glossary/seed-tag
-- Delisting Guidelines & FAQ: https://www.binance.com/au/support/faq/e5a9718ccb794acda1c48db5c71753e4
+- Delisting Guidelines & FAQ: https://www.binance.com/au/support/faq/e5a9718ccb794acda1c48db5c71753e4 [V]
 - Listing Information & Requirements notice:
-  https://www.binance.com/en/support/announcement/d378c2176ac841bb8eae68f63d4c4845
+  https://www.binance.com/en/support/announcement/d378c2176ac841bb8eae68f63d4c4845 [V]
 - Binance Will Delist ALPHA, BSW, KMD, LEVER, LTO on 2025-07-04:
-  https://www.binance.com/en/support/articles/173b2a63c03141009029407ecfebd14a
+  https://www.binance.com/en/support/articles/173b2a63c03141009029407ecfebd14a [V]
 - Futures delist XEMUSDT, ORBSUSDT, LOOMUSDT (2024-12-09):
-  https://www.binance.com/en/support/articles/cfe97d52a8c840d3ba631835b637e9e7
+  https://www.binance.com/en/support/articles/cfe97d52a8c840d3ba631835b637e9e7 [V]
 - Futures delist multiple perpetuals (2025-12-05):
-  https://www.binance.com/en/support/announcement/746056ce732d43dda12c1e5ae1b7a059
+  https://www.binance.com/en/support/announcement/746056ce732d43dda12c1e5ae1b7a059 [V]
 - Futures delist DEFIUSDT and MEMEFI (2025-08-11):
-  https://www.binance.com/en-AE/support/announcement/detail/21e399dcea734230a3c181daf5407b64
+  https://www.binance.com/en-AE/support/announcement/detail/21e399dcea734230a3c181daf5407b64 [V]
 - Futures delist and margin tier update REEFUSDT (2025-01-22):
-  https://www.binance.com/en/support/announcement/detail/572715f2d96e47769ebbb967c2a6e445
+  https://www.binance.com/en/support/announcement/detail/572715f2d96e47769ebbb967c2a6e445 [V]
 - Futures review criteria repost: https://www.binance.com/square/post/379632888348519
-- MATIC to POL swap: https://www.binance.com/en/support/articles/6a6de383727f4659a3050f7982e1620f
+- MATIC to POL swap: https://www.binance.com/en/support/articles/6a6de383727f4659a3050f7982e1620f [V]
+- BUSD delisting on Margin and Futures: https://www.binance.com/en/support/announcement/d980d81501594f80b2903cdfe29f1166 [V]
+- Monitoring Tag extension incl. XMR (2024-01-04): https://www.binance.com/en/support/announcement/fd710b5e647c480ab9fe2d87e3cd4b39 [V title]
+- Vote to Delist first batch (2025-03-21): https://www.binance.com/en/support/announcement/ed7591c973014ed487b339066292a5ee ; results (2025-04-08): https://www.binance.com/en/support/announcement/fac9c3e401da4cc8b604566fd261d70c ; second batch (2025-04-10): https://www.binance.com/en/support/announcement/562332a340474eda890417685ebbb26b [V title]
 
 News (all [S]):
 

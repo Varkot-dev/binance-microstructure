@@ -8,7 +8,7 @@ opened; **[I]** inference. Dates are UTC.
 
 ## Verification pass (2026-11-17, second session)
 
-What was checked. For a short window www.binance.com was reachable, and 34 announcements
+What was checked. For a short window www.binance.com was reachable, and 48 announcements
 were read in full through Binance's own JSON endpoint behind each announcement page
 (`https://www.binance.com/bapi/composite/v1/public/cms/article/detail/query?articleCode=<code>`,
 where `<code>` is the 32-character id at the end of each announcement URL; the human page is
@@ -17,7 +17,7 @@ where `<code>` is the 32-character id at the end of each announcement URL; the h
 "Delisting" (catalogId 161, 446 titles) categories were also downloaded from
 `https://www.binance.com/bapi/composite/v1/public/cms/article/list/query?type=1&catalogId=<id>&pageNo=<n>&pageSize=50`.
 After that, www.binance.com, developers.binance.com, arxiv.org and export.arxiv.org were
-refused again by the network proxy (HTTP 403 on CONNECT), so about 45 further notices whose
+refused again by the network proxy (HTTP 403 on CONNECT), so 46 further notices whose
 titles were found could not be opened. "[V title]" below means the title, code and
 publication time were read in Binance's own list, but the body was not. The 2024-09-20 batch
 was also re-checked in the data.binance.vision archive for the five contracts not checked
@@ -64,8 +64,8 @@ What changed.
 
 Still unverified: the regular USDT-M fee 0.02%/0.05% (FAQ 360033544231 not reachable); the
 2026-03-05 contract list (title V, body not opened; the archive check of all 12 still holds);
-the RPI symbol list and start time; MKR to SKY; AGIX/OCEAN merger time; the 2024-01-03 USDC-M
-launch time; XAU/XAG funding change; the 2026-08-13 REST lookback change; and every
+the RPI symbol list and start time; MKR to SKY; AGIX/OCEAN merger time; the initial USDC-M
+symbol list; XAU/XAG funding change; the 2026-08-13 REST lookback change; and every
 developers.binance.com claim (aggTrade definition, RPI fields).
 
 ## Summary
@@ -89,10 +89,10 @@ paying in BNB gives 10% off [S].
 
 **Answer to the SOLUSDT lead.** SOLUSDT (and SOLUSDC) went from tick 0.001 to 0.01 on
 **2024-10-14 at 06:30 UTC** ("Updates on Tick Size for SOL USDⓈ-M and COIN-M Futures
-Contracts (2024-10-14)") [S for the announcement, V for the date and minute in the data:
+Contracts (2024-10-14)", https://www.binance.com/en/support/announcement/8bfe2e9b86734cd08f3cbcdb82b79f51) [V for the announcement, V for the date and minute in the data:
 share of SOLUSDT trades on the 0.01 grid is 0.11 in every half hour up to 06:00 and 0.86 from
 06:30]. The announcement title names only SOL (USDⓈ-M SOLUSDT, SOLUSDC plus COIN-M), so
-there is no wider treated group in that announcement [S]. The doubling of trades per
+there is no wider treated group in that announcement [V]. The doubling of trades per
 aggTrade record for SOL is a **step at exactly this date** [V]: trades per record were 2.5
 to 2.7 on 2024-10-08 to 2024-10-12 and 5.2 to 5.3 on 2024-10-16 to 2024-10-20 (computed from
 first_trade_id and agg_trade_id differences between consecutive daily files). That is
@@ -111,39 +111,39 @@ has an extra quantity field excluding RPI; the archive CSV still has the same 7 
 
 | date (UTC) | contracts | change | measurable in aggTrades? | source | tag |
 |---|---|---|---|---|---|
-| 2023-02-10 06:30 | APTUSDT, OCEANUSDT (plus APTBUSD, COIN-M) | tick increased 10x (APT 0.0001 to 0.001, OCEAN 0.00001 to 0.0001); trades on new grid 0.12 to 0.97 (APT), 0.11 to 0.98 (OCEAN), day before vs day after | yes, price grid | binance.com/en/support/announcement/updates-on-tick-size-for-multiple-usd%E2%93%A2-m-and-coin-m-perpetual-futures-contracts-2023-02-03-98315efae83841a2bb71046d4bbae204 | [S] list, [V] data |
-| 2023-08-29 to 30 | AMBUSDT, HOOKUSDT, API3USDT, TRBUSDT, DODOXUSDT | tick cut 10x (e.g. TRB 0.01 to 0.001, API3 0.001 to 0.0001); distinct prices per day up 3x to 15x | yes | binance.com/en/support/announcement/updates-on-tick-size-for-multiple-usd%E2%93%A2-m-perpetual-futures-contracts-2023-08-29-8764f0d84e6b4c7abc97f036bb6f9ebc | [S] list, [V] data for 4 of 5 (DODOX not checked) |
-| 2023-08-13 10:30 | LPTUSDT | funding every 8h to every 4h | no (funding only) | binance.com/en/support/announcement/detail/ed3c7b7e35b546aeab635cb4a5b3ee80 | [S] |
-| 2023-09-06 10:00 | all USDT-M (API orders) | Self-Trade Prevention launched for USDⓈ-M via API (optional modes incl. EXPIRE_TAKER) | weakly (fewer self-matches) | binance.com/en-AE/support/announcement/binance-futures-launches-self-trade-prevention-stp-function-for-usd%E2%93%A2-margined-futures-on-api-32916877372243d69154c345200e34b8 | [S] |
-| 2023-10-09 08:30 and 2023-10-12 08:00 | ~15 to 20 small caps (lists differ between snippets: IMX, LPT, API3, YGG, UNFI, FLM, PERP, AMB, NMR, TRB, BLZ, DODO, STMX, CYBER, BIGTIME, LOOM, STRAX, ORBS, STPT, WAXP, BSV) | funding 8h to 4h; funding cap raised to +/-3% for contracts with max leverage 25x or below | no | binance.com/en/support/announcement/98d6b24d3e5c4f84a8ed04087997d8d0 ; FAQ 360033525031 | [S], lists need checking against fundingRate archive |
-| 2023-12-11 | last 4 BUSD-M perps (BTCBUSD, ETHBUSD, BNBBUSD, XRPBUSD) | BUSD-margined perps closed (last archive day 2023-12-11); BUSD removed from Multi-Assets at 2023-12-11 10:00 | indirectly (flow to USDT twins) | binance.com/en/support/announcement/d980d81501594f80b2903cdfe29f1166 | [V] archive last day, [S] announcement |
-| 2024-01-03 12:30 | BTC, ETH, BNB, SOL, XRP USDC-M perps | USDC-M perpetuals launched with promotional fees (0% maker); later extended to many symbols | indirectly (competing venue) | coingape report of Binance 2023-12-28 notice | [S] |
-| 2024-01-03 | all USDT-M | USDⓈ-M Liquidity Provider Program upgraded | no | binance.com/en/support/announcement/detail/f5d3200b65104308b8349cee59a2296e | [S] |
-| 2024-04-03 | USDC-M perps | limited-time USDC-M fee discount (0% maker, reduced taker), renewed repeatedly through at least 2026-02-10 | no | binance.com/en/support/announcement/fc7732cf48cd49cf95e53aa479ed4deb ; .../03180947641b414ebcb9a6c407fe80e2 | [S] |
-| 2024-06-21 06:30 | several USDT-M perps (list not found) | tick size update | yes | blockchain.news report | [S] |
+| 2023-02-10 06:30 | APTUSDT, OCEANUSDT (plus APTBUSD; COIN-M APTUSD, DOGEUSD, ADAUSD, BNBUSD) | tick increased 10x (APT 0.0001 to 0.001, OCEAN 0.00001 to 0.0001); trades on new grid 0.12 to 0.97 (APT), 0.11 to 0.98 (OCEAN), day before vs day after | yes, price grid | binance.com/en/support/announcement/updates-on-tick-size-for-multiple-usd%E2%93%A2-m-and-coin-m-perpetual-futures-contracts-2023-02-03-98315efae83841a2bb71046d4bbae204 (notice dated 2023-02-03, effective 2023-02-10 06:30) | [V] list and time, [V] data |
+| 2023-08-29 06:30 | AMBUSDT, HOOKUSDT, API3USDT, TRBUSDT, DODOXUSDT | tick cut 10x (e.g. TRB 0.01 to 0.001, API3 0.001 to 0.0001); distinct prices per day up 3x to 15x | yes | binance.com/en/support/announcement/updates-on-tick-size-for-multiple-usd%E2%93%A2-m-perpetual-futures-contracts-2023-08-29-8764f0d84e6b4c7abc97f036bb6f9ebc | [V] list and time (published 2023-08-23), [V] data for 4 of 5 (DODOX not checked) |
+| 2023-08-13 10:30 | LPTUSDT | funding every 8h to every 4h | no (funding only) | binance.com/en/support/announcement/detail/ed3c7b7e35b546aeab635cb4a5b3ee80 | [V] (also cap multiplier 0.75 to 1, cap +/-2.5%) |
+| 2023-09-06 10:00 | all USDT-M (API orders) | Self-Trade Prevention launched for USDⓈ-M via API (optional modes incl. EXPIRE_TAKER) | weakly (fewer self-matches) | binance.com/en-AE/support/announcement/binance-futures-launches-self-trade-prevention-stp-function-for-usd%E2%93%A2-margined-futures-on-api-32916877372243d69154c345200e34b8 | [V] (optional, API only, by 2023-09-06 10:00) |
+| 2023-10-09 08:30 (cap) and 2023-10-12 08:00 (interval) | 15 contracts: IMX, LPT, API3, HIFI, NMR, TRB, BLZ, DODO, STMX, CYBER, YGG, UNFI, FLM, PERP, AMB (corrected; earlier snippet lists added BIGTIME, LOOM, STRAX, ORBS, STPT, WAXP, BSV, which are not in this notice) | funding 8h to 4h; funding cap raised to +/-3% for all contracts with max leverage 25x or below | no | binance.com/en/support/announcement/98d6b24d3e5c4f84a8ed04087997d8d0 (published 2023-09-28) | [V] list and times; still check against fundingRate archive |
+| 2023-12-11 | last 4 BUSD-M perps (BTCBUSD, ETHBUSD, BNBBUSD, XRPBUSD) | BUSD-margined perps closed (last archive day 2023-12-11); BUSD removed from Multi-Assets at 2023-12-11 10:00 | indirectly (flow to USDT twins) | binance.com/en/support/announcement/d980d81501594f80b2903cdfe29f1166 | [V] archive last day; [V] notice: margin tiers cut 2023-11-24 14:00, BTCBUSD and ETHBUSD settled 2023-12-11 (05:30 close-only, 06:00 settlement); Multi-Assets time [S] |
+| 2024-01-03 12:30 | BTC, ETH, BNB, SOL, XRP USDC-M perps | USDC-M perpetuals launched with promotional fees (0% maker); later extended to many symbols | indirectly (competing venue) | coingape report of Binance 2023-12-28 notice; the LP notice https://www.binance.com/en/support/announcement/f5d3200b65104308b8349cee59a2296e confirms USDC-margined contracts from 2024-01-03 12:30 | [V] date and time, [S] symbol list |
+| 2024-01-03 | all USDT-M | USDⓈ-M Liquidity Provider Program upgraded | no | binance.com/en/support/announcement/detail/f5d3200b65104308b8349cee59a2296e | [V] (maker rebates -0.003% to -0.005% USDT-M by tier) |
+| 2024-04-03 12:30 | USDC-M perps | limited-time USDC-M fee discount (0% maker, 0.017% taker in the first round), renewed repeatedly; the 2025-12-10 08:00 update runs "until further notice" (regular user 0% maker, 0.04% taker) | no | binance.com/en/support/announcement/fc7732cf48cd49cf95e53aa479ed4deb ; .../03180947641b414ebcb9a6c407fe80e2 | [V] |
+| 2024-06-20 (corrected from 06-21; time not confirmed) | several USDT-M perps (list not read) | tick size update | yes | https://www.binance.com/en/support/announcement/50df6c9af8f14d09937a01956779d2a3 (published 2024-06-20 04:00) | [V title], list [unverified]: body not opened |
 | 2024-06-25 | AGIXUSDT, OCEANUSDT (FETUSDT kept, became ASI) | ASI merger: AGIX and OCEAN settled and delisted (last archive day 2024-06-25) | contract ends | blockchain.news, beincrypto; Binance page not reached | [V] archive dates, [S] time (09:00 vs 12:00 disputed) |
-| 2024-07-16 09:00 / 2024-07-26 10:00 | RNDRUSDT to RENDERUSDT | rename: RNDR settled 07-16, RENDER listed 07-26 (4h funding, +/-2% cap) | new symbol, 10-day gap | binance.com/en/support/announcement/d1f2ae8d99b24439a7a900caa9bb6b3b | [V] archive dates, [S] times |
-| 2024-07-30 | USDT-M and USDC-M | Taker Program update (taker discounts up to 20%); further updates 2025-01-28, 2025-08-12 | no | binance.com/en/support/announcement/detail/612bf21438b34bdb825cf56d2c9c7554 | [S] |
-| 2024-09-04 09:00 / 2024-09-13 | MATICUSDT to POLUSDT | rename: MATIC settled 09-04, POL listed (Binance tweet 2024-09-12 or 13 at 12:15; first archive day 2024-09-13) | new symbol, 9-day gap | binance.com/en/support/articles/6a6de383727f4659a3050f7982e1620f | [V] archive dates, [S] times |
-| 2024-09-20 06:30 | JOEUSDT, KEYUSDT, ILVUSDT, GLMUSDT, ETHFIUSDT, ZROUSDT, RPLUSDT | tick cut 10x; JOE switch at 06:30 [V]; distinct prices up 6x to 26x | yes | binance.com/en-AE/support/announcement/detail/fa192e78242d4d96be9562ab7d76a10a | [S] list, [V] data for 6 of 7 |
-| 2024-10-14 06:30 | SOLUSDT, SOLUSDC (+ COIN-M) | tick increased 0.001 to 0.01; trades per aggTrade 2.6 to 5.2 | yes, strongly | binance.com/en/support/announcement/8bfe2e9b86734cd08f3cbcdb82b79f51 | [S] announcement, [V] data |
-| 2024-11-04 and 2024-11-28 | several USDT-M perps (lists not found) | tick size updates | yes | blockchain.news reports | [S] |
-| 2024-11-29 | 1000WHYUSDT, 1000CHEEMSUSDT | tick 0.00001 to 0.000001 (snippet says 0.000001 to 0.0000001; the data show the former) | yes | search snippet of a binance.com notice | [S] list, [V] data |
-| 2024-12-10 | all futures | STP mandatory for all users, default EXPIRE_MAKER | yes, self-trades vanish (market-wide, no control group) | binance.com/en/support/announcement/detail/7803d494fa654f749fbc0a22a17372e3 | [S] |
+| 2024-07-16 09:00 / 2024-07-26 10:00 | RNDRUSDT to RENDERUSDT | rename: RNDR settled 07-16, RENDER listed 07-26 (4h funding, +/-2% cap) | new symbol, 10-day gap | binance.com/en/support/announcement/d1f2ae8d99b24439a7a900caa9bb6b3b | [V] archive dates; [V] RNDRUSDT settlement 2024-07-16 09:00; RENDERUSDT listing time [S] (separate notice) |
+| 2024-07-30 00:00 | USDT-M and USDC-M | Taker Program update (taker discounts up to 20%, tiers 10/15/20%); further updates 2025-01-28 00:00 (up to 20%) and 2025-08-12 07:00 (tiers 10/14/18%, lower thresholds). The program itself launched 2022-07-19 and is renewed roughly quarterly | no | binance.com/en/support/announcement/detail/612bf21438b34bdb825cf56d2c9c7554 ; https://www.binance.com/en/support/announcement/1d115917f1e24f83b93c8adfc41708ef ; https://www.binance.com/en/support/announcement/bec831262e4b4a49b021e6f4030921be | [V] |
+| 2024-09-04 09:00 / 2024-09-13 | MATICUSDT to POLUSDT | rename: MATIC settled 09-04, POL listed (Binance tweet 2024-09-12 or 13 at 12:15; first archive day 2024-09-13) | new symbol, 9-day gap | binance.com/en/support/articles/6a6de383727f4659a3050f7982e1620f | [V] archive dates; [V] MATICUSDT and MATICUSDC settlement 2024-09-04 09:00 (new positions blocked from 08:30); POLUSDT listing time [S] |
+| 2024-09-20 06:30 | 12 contracts (corrected from 7): APTUSDT, ASTRUSDT, JOEUSDT, KEYUSDT, XVGUSDT, BIGTIMEUSDT, ILVUSDT, GLMUSDT, ETHFIUSDT, TURBOUSDT, ZROUSDT, RPLUSDT | tick cut 10x; JOE switch at 06:30 [V]; distinct prices up 6x to 26x (first 7), 3x to 16x (APT, ASTR, XVG, BIGTIME, TURBO) | yes | binance.com/en-AE/support/announcement/detail/fa192e78242d4d96be9562ab7d76a10a (published 2024-09-19 02:00; APT row amended same day) | [V] list and time, [V] data for all 12 |
+| 2024-10-14 06:30 | SOLUSDT, SOLUSDC (+ COIN-M) | tick increased 0.001 to 0.01; trades per aggTrade 2.6 to 5.2 | yes, strongly | binance.com/en/support/announcement/8bfe2e9b86734cd08f3cbcdb82b79f51 (published 2024-10-01) | [V] announcement, [V] data |
+| 2024-11-04 and 2024-11-28 | several USDT-M perps (lists not read) | tick size updates | yes | https://www.binance.com/en/support/announcement/f9baa987cd944e75b3e06c297bca05f7 ; https://www.binance.com/en/support/announcement/8a4a0a76026a472b841162860d10d8cd | [V title], lists [unverified]: bodies not opened |
+| 2024-11-29 | 1000WHYUSDT, 1000CHEEMSUSDT | tick 0.00001 to 0.000001 (snippet says 0.000001 to 0.0000001; the data show the former) | yes | https://www.binance.com/en/support/announcement/0d330d9e556e44c68dacbc902306c907 (published 2024-11-29 05:00) | [V title], [V] data; tick values in notice not read |
+| 2024-12-10 | all futures | STP mandatory for all users from 06:00 (rollout about 24h), default EXPIRE_MAKER; STP NONE rejected; self-trades can still occur between pre- and post-change orders | yes, self-trades vanish (market-wide, no control group) | binance.com/en/support/announcement/detail/7803d494fa654f749fbc0a22a17372e3 | [V] |
 | 2025-01-01 | spot only | spot archive timestamps in microseconds; futures stay in ms | futures unaffected (checked 2026-10-01 file: 13-digit ms) | github.com/binance/binance-public-data README | [V] |
-| 2025-01-06 09:00 / 2025-01-16 | FTMUSDT to SUSDT | rename: FTM settled 01-06; SUSDT first archive day 2025-01-16 (SONICUSDT, listed 2025-01-08, is a different project) | new symbol, 10-day gap | binance.com/en/support/announcement/aec6fcbc84b749eeab6690e6bcac2f3d | [V] archive dates, [S] time |
-| 2025 (various) | contracts hitting the funding cap | rule: funding interval auto-shortened to 1h after a cap/floor settlement, without announcement; e.g. 2025-05-02 batch, 2025-07-22 five contracts back to 4h | no | binance.com/en/support/announcement/3243c81a35bd4f0c86a37315c3dc96cc | [S] |
-| 2025-04-02 | multiple USDT-M perps | order price cap/floor ratio changes | weakly (extreme prints) | binance.com/en/support/announcement/7bc0d0e0625a46e2995181ef8408d765 | [S] |
-| 2025-05-21 09:00 / 2025-05-28 08:00 | EOSUSDT to AUSDT (Vaulta) | rename: EOS settled 05-21, A listed 05-28 (4h funding) | new symbol, 7-day gap | binance.com/en/support/announcement/1e89a9ca957c4b0ca7502e60b993e201 | [V] archive dates, [S] times |
-| 2025-09-08 / 2025-09-09 | MKRUSDT to SKYUSDT | rename (1 MKR = 24,000 SKY): last MKR archive day 09-08, first SKY 09-09; Binance notice not found | new symbol, also a price-scale change | archive only | [V] archive dates |
-| 2025-09-19 07:00 | AVNTUSDT, SUIUSDC and others | tick increased (AVNT 0.00001 to 0.0001) | yes | binance.com/en/square/post/09-17-2025-binance-to-adjust-tick-size-for-usd-m-perpetual-futures-contracts-29789849203537 | [S] |
-| 2025-09-18 | all perps | funding formula and mark price calculation update | no | binance.com/en-AE/support/announcement/detail/c00588a7e8504b3eb28d02a2da00530b | [S] |
-| 2025-10-17, 2025-10-27, 2025-12-08, 2025-12-15, 2025-12-22 (07:00) | batches incl. BASUSDT, CLOUSDT (10-17); EVAAUSDT, XPINUSDT, TACUSDT (10-27) | tick changes | yes | binance.com/en-AE/support/announcement/detail/fd11627dc39046b791b7504a2f08e3fc ; .../baee5eb8aa8447c0810512b9da108f0a ; .../1cd08ee9bafd40a2a94e8dfc58408f82 | [S] |
-| 2025-11-18 (API) / 2025-11-20 (launch) | selected USDT-M symbols (permissionSets contains RPI; list not found) | RPI (Retail Price Improvement) orders: post-only, match only against web/app (non-API) takers, filled after non-RPI at same price, hidden from standard depth; separate rpiDepth (2025-11-25); own RPI fee | partly: RPI fills are in aggTrades untagged | developers.binance.com change log (via GitHub issue nautechsystems/nautilus_trader#4805); chaincatcher report | [S] |
+| 2025-01-06 09:00 / 2025-01-16 | FTMUSDT to SUSDT | rename: FTM settled 01-06; SUSDT first archive day 2025-01-16 (SONICUSDT, listed 2025-01-08, is a different project) | new symbol, 10-day gap | binance.com/en/support/announcement/aec6fcbc84b749eeab6690e6bcac2f3d | [V] archive dates; [V] FTMUSDT settlement 2025-01-06 09:00 |
+| 2025 (various) | contracts hitting the funding cap | rule: funding interval auto-shortened to 1h after a cap/floor settlement, without announcement; e.g. 2025-05-02 batch, 2025-07-22 five contracts back to 4h | no | binance.com/en/support/announcement/3243c81a35bd4f0c86a37315c3dc96cc | [V] rule (effective 2025-05-02 08:00: after a settlement at the cap/floor, 8h or 4h becomes 1h); 2025-07-22 example [S] |
+| 2025-04-02 06:00 | SIRENUSDT, BROCCOLIF3BUSDT, PLUMEUSDT, WALUSDT, VIRTUALUSDT, 1000WHYUSDT | order price cap/floor ratio 15% to 50% (limit and market) | weakly (extreme prints) | binance.com/en/support/announcement/7bc0d0e0625a46e2995181ef8408d765 | [V] |
+| 2025-05-21 09:00 / 2025-05-28 08:00 | EOSUSDT to AUSDT (Vaulta) | rename: EOS settled 05-21, A listed 05-28 (4h funding) | new symbol, 7-day gap | binance.com/en/support/announcement/1e89a9ca957c4b0ca7502e60b993e201 | [V] archive dates; [V] EOSUSDT settlement 2025-05-21 09:00; AUSDT futures listing time [S] |
+| 2025-09-08 / 2025-09-09 | MKRUSDT to SKYUSDT | rename (1 MKR = 24,000 SKY): last MKR archive day 09-08, first SKY 09-09; Binance notice not found (no MKR or SKY swap title in the 4,000 latest "Latest Binance News" titles or the Delisting list) | new symbol, also a price-scale change | archive only | [V] archive dates; announcement [unverified]: not found |
+| 2025-09-19 07:00 | AVNTUSDT, SUIUSDC and others | tick increased (AVNT 0.00001 to 0.0001) | yes | binance.com/en/square/post/09-17-2025-binance-to-adjust-tick-size-for-usd-m-perpetual-futures-contracts-29789849203537 ; official notice https://www.binance.com/en/support/announcement/01535c3f5c7842189883d4108efdd055 (published 2025-09-17 02:00) | [V title], list [S] |
+| 2025-09-18 08:01 | all perps | funding formula rescaled by funding interval (F = [P + clamp(0.01% - P, 0.05%, -0.05%)] / (8/N)) and mark price calculation update | no | binance.com/en-AE/support/announcement/detail/c00588a7e8504b3eb28d02a2da00530b | [V] |
+| 2025-10-17, 2025-10-27, 2025-12-08, 2025-12-15, 2025-12-22 (07:00) | 10-17: BASUSDT, CLOUSDT only (both increases) [V]; 10-27: EVAAUSDT, XPINUSDT, TACUSDT [S]; 12-15: KERNEL, LINEA, BERA, SONIC, WCT, ZETA, MANTA (all cuts) [V]; 12-22: USELESS, NOM, EVAA, SLP, WAXP, POWR, SCR, AT, VTHO, VANRY, STABLE (all cuts) [V]; 12-08 list not read | tick changes | yes | binance.com/en-AE/support/announcement/detail/fd11627dc39046b791b7504a2f08e3fc ; .../baee5eb8aa8447c0810512b9da108f0a ; .../1cd08ee9bafd40a2a94e8dfc58408f82 ; 10-27: https://www.binance.com/en/support/announcement/f9dd6ab751f3499cb88f236549c8ef23 ; 12-08: https://www.binance.com/en/support/announcement/d9d73edb19864da1b1b25393f8263513 | [V] for 10-17, 12-15, 12-22 (all 07:00); [V title] for 10-27 and 12-08 |
+| 2025-11-18 (API) / 2025-11-20 (launch) | selected USDT-M symbols (permissionSets contains RPI; list not found) | RPI (Retail Price Improvement) orders: post-only, match only against web/app (non-API) takers, filled after non-RPI at same price, hidden from standard depth; separate rpiDepth (2025-11-25); own RPI fee | partly: RPI fills are in aggTrades untagged | official notice "Binance Futures Launches Retail Price Improvement (RPI) Orders", https://www.binance.com/en/support/announcement/d0ed1c8add7848c8b3e5a87bbabf6300 (published 2025-11-18 09:00); developers.binance.com change log (via GitHub issue nautechsystems/nautilus_trader#4805); chaincatcher report | [V title, publication 2025-11-18]; start date 2025-11-20, mechanics and symbol list [S]: body not opened |
 | 2026-01 | XAUUSDT, XAGUSDT | funding 4h to 8h | no | search snippet | [S] |
-| 2026-03-05 07:00 | MYXUSDT, GRIFFAINUSDT, 4USDT, AUSDT, MIRAUSDT, SCRTUSDT, HEIUSDT, DRIFTUSDT, ZKCUSDT, A2ZUSDT, LAYERUSDT, LISTAUSDT | tick cut 10x on 12 cheap contracts (relative tick before about 10 to 13 bps); MYX switch at 07:00 [V]; distinct prices up 5x to 12x | yes, strongly | bloomingbit report of Binance notice | [S] list, [V] data for all 12 |
+| 2026-03-05 07:00 | MYXUSDT, GRIFFAINUSDT, 4USDT, AUSDT, MIRAUSDT, SCRTUSDT, HEIUSDT, DRIFTUSDT, ZKCUSDT, A2ZUSDT, LAYERUSDT, LISTAUSDT | tick cut 10x on 12 cheap contracts (relative tick before about 10 to 13 bps); MYX switch at 07:00 [V]; distinct prices up 5x to 12x | yes, strongly | official notice "Updates on Tick Size for Multiple USDⓈ-M Perpetual Futures Contracts (2026-03-05)", https://www.binance.com/en/support/announcement/f0e08ccaf57d4cc8a719b67337706763 (published 2026-03-02 06:00); bloomingbit report | [V title and date], list [S] (body not opened), [V] data for all 12 |
 | 2026-04-28 | BOBUSDT | last archive day (1000000BOBUSDT trades from 2025-06) | contract ends | archive | [V] |
-| 2026-06-04, 2026-06-08 06:30; 2026-08-06; 2026-10-15 06:30; 2026-10-22 | batches (Aug incl. MOVEUSDT, COOKIEUSDT, AXSUSDT; Oct 15 seven contracts) | tick changes | yes | news reports | [S] |
+| 2026-06-04, 2026-06-08 06:30; 2026-08-06 06:30; 2026-10-15 06:30; 2026-10-22 06:30 | 08-06: MOVE, COOKIE, AVNT, ZK, MAV, CKB, VANA, AXS (all cuts) [V]; 10-15: APR, XPIN, ROBO, BEAT, RUM, FLNC, CSOPSAMSUNG2L (all cuts) [V]; 10-22: BILL, IDOL, ESPORTS (cuts), BR, AGT (increases) [V]; 06-04/06-08 list not read | tick changes | yes | https://www.binance.com/en/support/announcement/be5c80d75197412b86d0faa1c5efd146 ; https://www.binance.com/en/support/announcement/7157d432816e455dbf9fe7f3e452b0cf ; https://www.binance.com/en/support/announcement/84b9812b7a88404baedec318c5d60b37 ; https://www.binance.com/en/support/announcement/fcf3698a42104ba2b52e5c475d155321 | [V] for 08-06, 10-15, 10-22; [V title] for 06-04/06-08 |
 | 2026-08-13 | all | REST /fapi/v1/aggTrades lookback 24h to 48h | no (API only) | developers.binance.com change log | [S] |
 
 Notes on the table:
@@ -168,27 +168,52 @@ Notes on the table:
    tick and volume that were not in the list. Clean prediction from Q4b/Q8: sign
    predictability and trades per aggTrade should fall for treated coins. Caveat: these are
    weak coins (selection on price decline), so match controls on price trend.
-2. **2024-09-20 06:30 tick cut on 7 contracts** (JOE, KEY, ILV, GLM, ETHFI, ZRO, RPL), 6
-   verified in data. Mid-sized coins, a year before the March 2026 batch, so it gives an
-   independent replication in a different market regime.
+2. **2024-09-20 06:30 tick cut on 12 contracts** (APT, ASTR, JOE, KEY, XVG, BIGTIME, ILV,
+   GLM, ETHFI, TURBO, ZRO, RPL; corrected from 7 in the verification pass), all 12 verified
+   in the notice and in the data. Mid-sized coins, a year before the March 2026 batch, so it
+   gives an independent replication in a different market regime, and the treated group is
+   as large as the March 2026 one. APTUSDT had the opposite change on 2023-02-10, so it
+   gives a within-contract reversal.
 3. **2024-10-14 06:30 SOLUSDT tick increase.** Only one treated contract, but a large liquid
    one, inside the Q10 panel, with an opposite-sign treatment (coarser grid). It already
    explains SOL's jump in trades per aggTrade (2.6 to 5.2) and must be controlled for in the
-   Q10 panel; as an event study use the other 9 Q10 symbols, whose ticks did not change, as
-   controls (single treated unit, so use synthetic control or permutation inference).
+   Q10 panel; as an event study use the other 9 Q10 symbols as controls (single treated
+   unit, so use synthetic control or permutation inference). Verification pass caveat: "whose
+   ticks did not change" is not established. At least 12 tick batches in the Q10 window have
+   unread contract lists (see the appendix); check each against the Q10 symbols, or check the
+   price grid of each Q10 symbol in the archive, before using them as controls [I].
 4. **2023-08-29 tick cut (5 contracts) and 2023-02-10 tick increase (APT, OCEAN).** Small
    groups but early in the sample, giving opposite-direction treatments before the 2025
-   rise; pooling all verified batches (about 30 contracts, both directions) into one stacked
-   event study is the strongest design.
+   rise; pooling all verified batches (now about 35 contracts, both directions) into one
+   stacked event study is the strongest design. The appendix shows 67 USDT-M tick notices in
+   2023 to 2026, so the pool can grow a lot once their bodies are read.
 5. **Funding interval switches (2023-10 batches, 8h to 4h).** Clear dates and a named subset
-   of about 15 to 20 small caps, but the treatment acts on funding, not on the trading
+   of 15 small caps (list verified in the notice), but the treatment acts on funding, not on the trading
    mechanism, so it is a placebo-style test: predictability should not change. Verify the
    lists from the archive's fundingRate files before use.
 
 Not recommended: fee promotions (market-wide or USDC-only), STP default (market-wide, no
-controls), RPI (symbol list not found; untagged in aggTrades, but worth a second look if the
+controls), RPI (launch notice found, published 2025-11-18, but its symbol list not read; untagged in aggTrades, but worth a second look if the
 eligible list can be recovered from exchangeInfo permissionSets), and renames (a new symbol
 after a 7 to 10 day gap is a different market, not a treatment).
 
 Sources that could not be opened this session: www.binance.com and developers.binance.com
 (blocked by the sandbox network); allowing them would turn most [S] rows into [V].
+(Verification pass: www.binance.com was reachable briefly, see the section at the top;
+developers.binance.com was never reachable.)
+
+## Appendix: all USDT-M futures tick-size notices, 2023-01 to 2026-11 [V title]
+
+From Binance's own announcement list (catalogId 49, read in the verification pass). Format:
+date in the title (usually the effective date; for 2023-02-03 it is the publication date and
+the change took effect 2023-02-10) (publication date, article code). Each notice is at
+`https://www.binance.com/en/support/announcement/<code>`. Bodies read [V]: 98315efa,
+8764f0d8, fa192e78, 8bfe2e9b, fd11627d, baee5eb8, 1cd08ee9, be5c80d7, 7157d432, 84b9812b,
+plus 313d5923, 83351356, f74b3070, 731403f0, 82a93632, 1fa92e04, 6138b61b, 2b19fead,
+4688df6f, 95224ce8, 77a8571f (contract lists parsed but not copied into the table above).
+All others: title only. Spot-only and options tick notices are excluded.
+
+- 2023 (4): 2023-02-03 (pub 2023-02-03, 98315efae83841a2bb71046d4bbae204); 2023-04-26 (pub 2023-04-26, 33ddfb48e3f44c56a3131f9f0fd145a2; BNXUSDT); 2023-06-05 (pub 2023-05-26, bdb9b2ed43524fe4afeeb41b19481900); 2023-08-29 (pub 2023-08-23, 8764f0d84e6b4c7abc97f036bb6f9ebc)
+- 2024 (11): 2024-02-05 (pub 2024-01-29, cb9bf7716ffb4bbb944b2d858af5a639); 2024-03-19 (pub 2024-03-18, 98e6086608424b21a5a385f30ffebd15); 2024-04-11 (pub 2024-04-10, c58b0b29e87e425f95bb3036ad851770); 2024-05-08 (pub 2024-05-06, aa2bfe791cca4fbc9db2764249b19592); 2024-06-20 (pub 2024-06-20, 50df6c9af8f14d09937a01956779d2a3); 2024-07-25 (pub 2024-07-24, 08f043a4f20d4f0290817ece13b3d7f4); 2024-09-20 (pub 2024-09-19, fa192e78242d4d96be9562ab7d76a10a); 2024-10-14 (pub 2024-10-01, 8bfe2e9b86734cd08f3cbcdb82b79f51; SOL); 2024-11-04 (pub 2024-11-01, f9baa987cd944e75b3e06c297bca05f7); 2024-11-28 (pub 2024-11-27, 8a4a0a76026a472b841162860d10d8cd); 2024-11-29 (pub 2024-11-29, 0d330d9e556e44c68dacbc902306c907; 1000WHY, 1000CHEEMS)
+- 2025 (22): 2025-03-25 (pub 2025-03-24, aa26fca9dc2d47e5a978e9442aa627a7; LINAUSDT, plus min trade amount); 2025-04-17 (pub 2025-04-16, cb6f7e88fed2459a8de11d55a69bef58); 2025-06-12 (pub 2025-06-05, fed6c0cbecb84685a157fed45da638ad); 2025-08-01 (pub 2025-07-27, cf3f3712e01843cf8616551013341612); 2025-08-04 (pub 2025-08-01, 9ae525699b9f41ceac480d24f0c7e8e6; postponement); 2025-08-11 (pub 2025-08-07, 59caa67040004b68ba2e9ff2d1800132); 2025-08-25 (pub 2025-08-20, 697d02491af24cc6a7249c81fdac7281); 2025-09-02 (pub 2025-09-02, 4661056f7d5845568ada26a1861fd4d8; SOMIUSDT); 2025-09-03 (pub 2025-09-01, 0f7995f922734628892b4b66d9d62e1a); 2025-09-10 (pub 2025-09-10, c4e5c6581cc04aeeb41ca03a7756de07); 2025-09-19 (pub 2025-09-17, 01535c3f5c7842189883d4108efdd055); 2025-10-08 (pub 2025-10-06, d901cffcd4a745b5a1151697109571a8); 2025-10-10 (pub 2025-10-08, a1e0bd9e7e124105ad10fdcfa923ce42); 2025-10-17 (pub 2025-10-16, fd11627dc39046b791b7504a2f08e3fc); 2025-10-27 (pub 2025-10-24, f9dd6ab751f3499cb88f236549c8ef23); 2025-10-31 (pub 2025-10-29, 47ee5d503df340d1b077023862d33ae8); 2025-11-07 (pub 2025-11-05, 21a1b8c2e3404cbcb6c89b6a78d5aa0f); 2025-11-20 (pub 2025-11-18, 6ca4596f6725408d8403da3793caeeeb); 2025-11-27 (pub 2025-11-25, aa023c2359ff49729690dd6b0fd14f79); 2025-12-08 (pub 2025-12-05, d9d73edb19864da1b1b25393f8263513); 2025-12-15 (pub 2025-12-12, baee5eb8aa8447c0810512b9da108f0a); 2025-12-22 (pub 2025-12-18, 1cd08ee9bafd40a2a94e8dfc58408f82)
+- 2026 (30): 2026-01-28 (pub 2026-01-27, 2fe0af37c46c41debabf8cd9b4ebd642; plus min trade amount); 2026-02-09 (pub 2026-02-03, 093b607141f84dff8379f17fcf6db7b8); 2026-02-12 (pub 2026-02-09, 5bb4a627791043cc9fa5a083de3111c3); 2026-02-27 (pub 2026-02-25, 5f7fa3af3efa43cdae0716427defb95b); 2026-03-05 (pub 2026-03-02, f0e08ccaf57d4cc8a719b67337706763); 2026-03-18/2026-03-19 (pub 2026-03-16, fb7a1674c55c43a4a018ac56de1afee3); 2026-04-02/2026-04-07 (pub 2026-03-31, 74de1917c41548108f9b799658fa3f3f); 2026-04-06 (pub 2026-04-02, 6dbc37d4df4b42cd91b3ca768ec547dd); no date in title (pub 2026-04-10, 3208154ca9544e22a999808c06f26cd7); 2026-04-21/2026-04-22 (pub 2026-04-17, b0cea42f963f43e79f3ff35e4b166668); 2026-04-27/2026-04-29 (pub 2026-04-25, bb0c704f3ca344c7a8741c551dd624ce); 2026-06-04/2026-06-08 (pub 2026-06-03, fcf3698a42104ba2b52e5c475d155321); 2026-06-06 (pub 2026-06-05, d38329a5dd4843c584ed2cc0784166f9); 2026-06-10/2026-06-12 (pub 2026-06-09, 3d7ade5e0521477cbe75ca92a913c211); 2026-06-13 (pub 2026-06-12, 6baee79f009c4f39b8aa62d8a09a24df); 2026-06-17 (pub 2026-06-16, 60b48c91060a42df97240dba45cca2e9); 2026-07-07/2026-07-08 (pub 2026-07-06, 313d5923733d4fdd9db339966bebe227); 2026-07-09 (pub 2026-07-08, 83351356ed4c4c80ab9a609e77dd20f2); 2026-07-21/2026-07-22 (pub 2026-07-20, f74b3070321a4cdaaea15f9dd8ceb0e8); 2026-07-30 (pub 2026-07-29, 731403f07ae7487b907bef649bdda4d6); 2026-08-06 (pub 2026-08-05, be5c80d75197412b86d0faa1c5efd146); 2026-08-15 (pub 2026-08-14, 82a93632adbd4d0cb42bbf24c9b35400); 2026-08-18 (pub 2026-08-17, 1fa92e0498854e28872d5364b7fbba0b); 2026-08-24 (pub 2026-08-21, 6138b61bc47340e2969a9080bf1cd539); 2026-09-17 (pub 2026-09-16, 2b19feada63c4f97b05322298f4121cb); 2026-10-15 (pub 2026-10-14, 7157d432816e455dbf9fe7f3e452b0cf); 2026-10-22 (pub 2026-10-21, 84b9812b7a88404baedec318c5d60b37); 2026-10-28 (pub 2026-10-27, 4688df6f250848478383acf772a7424c); 2026-11-11 (pub 2026-11-10, 95224ce8010046e790f1558283a8a4cf); 2026-11-18 (pub 2026-11-17, 77a8571f886c4f1ea665420330b96f58)

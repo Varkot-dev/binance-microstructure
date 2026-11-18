@@ -32,12 +32,16 @@ not change, and the two parts together separate those.
 `e0_what_changed.py` on the 10 Q10 symbols x 5 months (`e0_what_changed.json`). Ten
 symbols, so these are leads, not conclusions.
 
-- **The change in accuracy moves with two drivers:** the sign repeat rate (r = +0.53)
-  and the number of raw prints per aggressor event (r = +0.51), across 40 within-symbol
-  changes from 2023-06. Typical trade size in USD moves the other way (r = -0.34):
-  trades got smaller where accuracy rose. Activity alone barely matters (r = +0.08).
-  The repeat-rate link is partly mechanical (a higher repeat rate makes the next sign
-  easier to guess), so it describes the change rather than explaining it.
+- **The change in accuracy moves with smaller trades.** Across 40 within-symbol changes
+  from 2023-06, accuracy rises where the median trade size in USD falls (r = -0.41) and
+  the share of trades under $1,000 rises (r = +0.40). It also moves with the sign repeat
+  rate (r = +0.53), but that link is largely mechanical (a higher repeat rate makes the
+  next sign easier to guess), so it describes the change rather than explaining it.
+  Activity (r = +0.08) and raw prints per event (r = +0.13) barely matter.
+- **Correction (week 0 rerun).** The first run read the monthly file and the daily files
+  for some 2023 days, so those days counted twice. That inflated prints per event and
+  trade size in 2023 and made prints per event look like a driver (r = +0.51). The
+  corrected run reads one file per month; the numbers above are from it.
 - **A possible measurement artifact to rule out first.** For SOL and DOGE the raw data
   changed shape: about 2.8 to 3 trades per aggTrade record in 2023 against about 6 in
   2025 to 2026, and far fewer records sharing a millisecond (SOL 27% to 3%). For BTC it

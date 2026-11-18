@@ -1,0 +1,936 @@
+symbol,life,n_lives,first_trade_day,last_trade_day,n_trading_days,calendar_days,missing_days,alive_at_end,status,successor,gap_days,rename_candidates,last_day_zip_bytes,last_day_rows,evidence
+0GUSDT,1,1,2025-09-17,2026-11-16,426,426,0,1,alive,,,,418749,,trades within 3 days of archive end
+1000000BOBUSDT,1,1,2025-06-05,2026-10-05,488,488,0,0,delisted,,,,5909194,,stopped trading; not in the Q14 rename/merge/index lists
+1000000MOGUSDT,1,1,2024-11-07,2026-11-16,740,740,0,1,alive,,,,114257,,trades within 3 days of archive end
+1000BONKUSDT,1,1,2023-11-22,2026-11-16,1091,1091,0,1,alive,,,,635719,,trades within 3 days of archive end
+1000BTTCUSDT,1,1,2022-01-26,2022-04-11,76,76,0,0,delisted,,,,76989,,stopped trading; not in the Q14 rename/merge/index lists
+1000CATUSDT,1,1,2024-10-21,2026-11-16,757,757,0,1,alive,,,,263580,,trades within 3 days of archive end
+1000CHEEMSUSDT,1,1,2024-11-25,2026-11-16,722,722,0,1,alive,,,,710131,,trades within 3 days of archive end
+1000FLOKIUSDT,1,1,2023-05-06,2026-11-16,1291,1291,0,1,alive,,,,368608,,trades within 3 days of archive end
+1000LUNCUSDT,1,1,2022-09-09,2026-11-16,1530,1530,0,1,alive,,,,359550,,trades within 3 days of archive end
+1000PEPEUSDT,1,1,2023-05-05,2026-11-16,1292,1292,0,1,alive,,,,8115411,,trades within 3 days of archive end
+1000RATSUSDT,1,1,2023-12-15,2026-11-16,1068,1068,0,1,alive,,,,255937,,trades within 3 days of archive end
+1000SATSUSDT,1,1,2023-12-12,2026-11-16,1071,1071,0,1,alive,,,,122789,,trades within 3 days of archive end
+1000SHIBUSDT,1,1,2021-05-10,2026-11-16,2017,2017,0,1,alive,,,,737243,,trades within 3 days of archive end
+1000WHYUSDT,1,1,2024-11-25,2026-03-17,478,478,0,0,delisted,,,,157442,,stopped trading; not in the Q14 rename/merge/index lists
+1000XECUSDT,1,1,2021-09-17,2026-11-16,1887,1887,0,1,alive,,,,333729,,trades within 3 days of archive end
+1000XUSDT,1,1,2024-11-13,2025-11-14,367,367,0,0,delisted,,,,182235,,stopped trading; not in the Q14 rename/merge/index lists
+1INCHUSDT,1,1,2020-12-25,2026-11-16,2153,2153,0,1,alive,,,,310565,,trades within 3 days of archive end
+1MBABYDOGEUSDT,1,1,2024-09-16,2026-11-16,792,792,0,1,alive,,,,145491,,trades within 3 days of archive end
+2ZUSDT,1,1,2025-10-02,2026-11-16,411,411,0,1,alive,,,,205563,,trades within 3 days of archive end
+42USDT,1,1,2025-10-27,2026-01-30,96,96,0,0,delisted,,,"我踏马来了USDT (starts 2026-01-21, close 0.0298 vs 0.028384, ratio 1.05)",1880967,,stopped trading; not in the Q14 rename/merge/index lists
+4USDT,1,1,2025-10-08,2026-11-16,405,405,0,1,alive,,,,685860,,trades within 3 days of archive end
+A2ZUSDT,1,1,2025-07-30,2026-03-24,238,238,0,0,delisted,,,,5613409,,stopped trading; not in the Q14 rename/merge/index lists
+AAOIUSDT,1,1,2026-06-08,2026-11-16,162,162,0,1,alive,,,,1282283,,trades within 3 days of archive end
+AAPLUSDT,1,1,2026-04-06,2026-11-16,225,225,0,1,alive,,,,953110,,trades within 3 days of archive end
+AAVEUSDT,1,1,2020-10-16,2026-11-16,2223,2223,0,1,alive,,,,1796913,,trades within 3 days of archive end
+ABBVUSDT,1,1,2026-10-26,2026-11-16,22,22,0,1,alive,,,,31011,,trades within 3 days of archive end
+ACEUSDT,1,1,2023-12-18,2026-11-16,1065,1065,0,1,alive,,,,730979,,trades within 3 days of archive end
+ACHUSDT,1,1,2023-02-22,2026-11-16,1364,1364,0,1,alive,,,,339048,,trades within 3 days of archive end
+ACNUSDT,1,1,2026-09-29,2026-11-16,49,49,0,1,alive,,,,23051,,trades within 3 days of archive end
+ACTUSDT,1,1,2024-11-11,2026-11-16,736,736,0,1,alive,,,,601597,,trades within 3 days of archive end
+ACUUSDT,1,1,2026-01-21,2026-11-16,300,300,0,1,alive,,,,221076,,trades within 3 days of archive end
+ACXUSDT,1,1,2024-12-06,2026-08-07,610,610,0,0,delisted,,,,358147,,stopped trading; not in the Q14 rename/merge/index lists
+ADAUSDT,1,1,2020-01-31,2026-11-16,2482,2482,0,1,alive,,,,1007818,,trades within 3 days of archive end
+ADBEUSDT,1,1,2026-06-11,2026-11-16,159,159,0,1,alive,,,,348324,,trades within 3 days of archive end
+AERGOUSDT,1,1,2024-09-10,2026-07-23,663,682,19,0,delisted,,,,603455,,stopped trading; not in the Q14 rename/merge/index lists
+AEROUSDT,1,1,2024-12-04,2026-11-16,713,713,0,1,alive,,,,958220,,trades within 3 days of archive end
+AEVOUSDT,1,1,2024-03-13,2026-11-16,979,979,0,1,alive,,,,200966,,trades within 3 days of archive end
+AGIXUSDT,1,1,2023-02-16,2024-06-25,496,496,0,0,merged,FETUSDT,-525,,1189723,,"merged into FET, ASI alliance 2024 (Q14 list); successor already trading since 2023-01-17"
+AGLDUSDT,1,1,2023-07-29,2026-11-16,1207,1207,0,1,alive,,,,134519,,trades within 3 days of archive end
+AGPUUSDT,1,1,2026-09-18,2026-11-16,60,60,0,1,alive,,,,180897,,trades within 3 days of archive end
+AGTUSDT,1,1,2025-05-20,2026-11-16,546,546,0,1,alive,,,,1924123,,trades within 3 days of archive end
+AI16ZUSDT,1,1,2025-01-02,2025-11-06,309,309,0,0,delisted,,,"SENTUSDT (starts 2025-11-14, close 0.06168 vs 0.0645, ratio 0.956)",1584228,,stopped trading; not in the Q14 rename/merge/index lists; ignored zero-price artifact file(s) on 2025-12-10
+AIAUSDT,1,2,2025-09-18,2025-12-11,85,85,0,0,reused-symbol,AIAUSDT,40,"ZKPUSDT (starts 2025-12-21, close 0.1736 vs 0.16192, ratio 1.07); IRUSDT (starts 2025-12-21, close 0.1736 vs 0.19156, ratio 0.906)",1370456,,symbol trades again after a gap of more than 30 days (life 2 starts 2026-01-20); close 0.1736 at end vs 0.24658 at restart (ratio 0.704)
+AIAUSDT,2,2,2026-01-20,2026-11-16,301,301,0,1,alive,,,,328483,,trades within 3 days of archive end
+AIGENSYNUSDT,1,1,2026-04-29,2026-11-16,202,202,0,1,alive,,,,236689,,trades within 3 days of archive end
+AINUSDT,1,1,2025-07-10,2026-11-16,495,495,0,1,alive,,,,1398147,,trades within 3 days of archive end
+AIOTUSDT,1,1,2025-04-30,2026-11-16,566,566,0,1,alive,,,,6858532,,trades within 3 days of archive end
+AIOUSDT,1,1,2025-08-13,2026-11-16,461,461,0,1,alive,,,,337824,,trades within 3 days of archive end
+AIUSDT,1,1,2024-01-08,2026-04-28,842,842,0,0,delisted,,,,297012,20995,stopped trading; not in the Q14 rename/merge/index lists
+AIXBTUSDT,1,1,2024-12-20,2026-11-16,697,697,0,1,alive,,,,127945,,trades within 3 days of archive end
+AKAMUSDT,1,1,2026-10-06,2026-11-16,42,42,0,1,alive,,,,22262,,trades within 3 days of archive end
+AKEUSDT,1,1,2025-09-26,2026-11-16,417,417,0,1,alive,,,,23209884,,trades within 3 days of archive end
+AKROUSDT,1,1,2021-01-19,2022-05-27,494,494,0,0,delisted,,,,165312,10767,stopped trading; not in the Q14 rename/merge/index lists
+AKTUSDT,1,1,2024-11-18,2026-11-16,729,729,0,1,alive,,,,450754,,trades within 3 days of archive end
+ALABUSDT,1,1,2026-06-22,2026-11-16,148,148,0,1,alive,,,,892722,,trades within 3 days of archive end
+ALCHUSDT,1,1,2025-01-07,2026-11-16,679,679,0,1,alive,,,,209261,,trades within 3 days of archive end
+ALGOUSDT,1,1,2020-06-16,2026-11-16,2345,2345,0,1,alive,,,,729326,,trades within 3 days of archive end
+ALICEUSDT,1,1,2021-03-16,2026-11-16,2072,2072,0,1,alive,,,,113582,,trades within 3 days of archive end
+ALLOUSDT,1,1,2025-11-11,2026-11-16,371,371,0,1,alive,,,,941496,,trades within 3 days of archive end
+ALLUSDT,1,1,2025-08-06,2026-11-16,468,468,0,1,alive,,,,61234,,trades within 3 days of archive end
+ALPACAUSDT,1,1,2024-08-22,2025-04-30,252,252,0,0,delisted,,,"ALPINEUSDT (starts 2025-05-06, close 1.19 vs 1.1172, ratio 1.07)",70452950,,stopped trading; not in the Q14 rename/merge/index lists
+ALPHAUSDT,1,1,2020-11-23,2025-09-23,1766,1766,0,0,delisted,,,,7165242,,stopped trading; not in the Q14 rename/merge/index lists
+ALPINEUSDT,1,1,2025-05-06,2026-11-16,560,560,0,1,alive,,,,505296,,trades within 3 days of archive end
+ALTUSDT,1,1,2024-01-25,2026-11-16,1027,1027,0,1,alive,,,,574662,,trades within 3 days of archive end
+AMATUSDT,1,1,2026-06-08,2026-11-16,162,162,0,1,alive,,,,697663,,trades within 3 days of archive end
+AMBUSDT,1,1,2023-03-30,2025-02-21,695,695,0,0,delisted,,,,1488122,,stopped trading; not in the Q14 rename/merge/index lists
+AMCUSDT,1,1,2026-09-18,2026-11-16,60,60,0,1,alive,,,,93993,,trades within 3 days of archive end
+AMDUSDT,1,1,2026-05-06,2026-11-16,195,195,0,1,alive,,,,6297775,,trades within 3 days of archive end
+AMGNUSDT,1,1,2026-10-29,2026-11-16,19,19,0,1,alive,,,,16728,,trades within 3 days of archive end
+AMZNUSDT,1,1,2026-02-09,2026-11-16,281,281,0,1,alive,,,,720784,,trades within 3 days of archive end
+ANCUSDT,1,1,2022-03-08,2022-05-13,67,67,0,0,delisted,,,,2171162,,stopped trading; not in the Q14 rename/merge/index lists
+ANETUSDT,1,1,2026-09-18,2026-11-16,60,60,0,1,alive,,,,59143,,trades within 3 days of archive end
+ANIMEUSDT,1,1,2025-01-23,2026-11-16,663,663,0,1,alive,,,,180124,,trades within 3 days of archive end
+ANKRUSDT,1,1,2021-01-26,2026-11-16,2121,2121,0,1,alive,,,,193151,,trades within 3 days of archive end
+ANTHROPICUSDT,1,1,2026-06-02,2026-11-16,168,168,0,1,alive,,,,3206039,,trades within 3 days of archive end
+ANTUSDT,1,1,2021-12-27,2024-04-01,827,827,0,0,delisted,,,,160911,,stopped trading; not in the Q14 rename/merge/index lists
+APEUSDT,1,1,2022-03-17,2026-11-16,1706,1706,0,1,alive,,,,235128,,trades within 3 days of archive end
+API3USDT,1,1,2022-02-22,2026-11-16,1729,1729,0,1,alive,,,,253053,,trades within 3 days of archive end
+APLDUSDT,1,1,2026-09-18,2026-11-16,60,60,0,1,alive,,,,68034,,trades within 3 days of archive end
+APPUSDT,1,1,2026-07-10,2026-11-16,130,130,0,1,alive,,,,387664,,trades within 3 days of archive end
+APRUSDT,1,1,2025-10-23,2026-11-16,390,390,0,1,alive,,,,630195,,trades within 3 days of archive end
+APTUSDT,1,1,2022-10-19,2026-11-16,1490,1490,0,1,alive,,,,1268997,,trades within 3 days of archive end
+ARBUSDT,1,1,2023-03-23,2026-11-16,1335,1335,0,1,alive,,,,2237661,,trades within 3 days of archive end
+ARCUSDT,1,1,2025-01-17,2026-11-16,669,669,0,1,alive,,,,496786,,trades within 3 days of archive end
+ARIAUSDT,1,1,2025-09-03,2026-11-16,440,440,0,1,alive,,,,12932896,,trades within 3 days of archive end
+ARKMUSDT,1,1,2023-07-28,2026-11-16,1208,1208,0,1,alive,,,,135972,,trades within 3 days of archive end
+ARKUSDT,1,1,2023-09-19,2026-11-16,1155,1155,0,1,alive,,,,292768,,trades within 3 days of archive end
+ARMUSDT,1,1,2026-05-26,2026-11-16,175,175,0,1,alive,,,,1267232,,trades within 3 days of archive end
+ARPAUSDT,1,1,2021-10-19,2026-11-16,1855,1855,0,1,alive,,,,330285,,trades within 3 days of archive end
+ARUSDT,1,1,2021-09-28,2026-11-16,1876,1876,0,1,alive,,,,379254,,trades within 3 days of archive end
+ARXUSDT,1,1,2026-06-23,2026-11-16,147,147,0,1,alive,,,,219091,,trades within 3 days of archive end
+ASMLUSDT,1,1,2026-06-11,2026-11-16,159,159,0,1,alive,,,,244543,,trades within 3 days of archive end
+ASRUSDT,1,1,2025-05-06,2026-11-16,560,560,0,1,alive,,,,180563,,trades within 3 days of archive end
+ASTERUSDT,1,1,2025-09-19,2026-11-16,424,424,0,1,alive,,,,3588864,,trades within 3 days of archive end
+ASTRUSDT,1,1,2023-02-14,2026-11-16,1372,1372,0,1,alive,,,,170985,,trades within 3 days of archive end
+ASTSUSDT,1,1,2026-06-01,2026-11-16,169,169,0,1,alive,,,,404473,,trades within 3 days of archive end
+ATAUSDT,1,1,2021-08-31,2026-05-19,1723,1723,0,0,delisted,,,,170209,,stopped trading; not in the Q14 rename/merge/index lists
+ATHUSDT,1,1,2025-04-02,2026-11-16,594,594,0,1,alive,,,,240815,,trades within 3 days of archive end
+ATOMUSDT,1,1,2020-02-07,2026-11-16,2475,2475,0,1,alive,,,,364305,,trades within 3 days of archive end
+ATUSDT,1,1,2025-10-29,2026-11-16,384,384,0,1,alive,,,,545942,,trades within 3 days of archive end
+AUCTIONUSDT,1,1,2023-12-15,2026-11-16,1068,1068,0,1,alive,,,,134286,,trades within 3 days of archive end
+AUDIOUSDT,1,1,2021-08-19,2024-05-16,1002,1002,0,0,delisted,,,,97465,,stopped trading; not in the Q14 rename/merge/index lists
+AUSDT,1,1,2025-05-28,2026-11-16,538,538,0,1,alive,,,,367309,,trades within 3 days of archive end
+AVAAIUSDT,1,1,2025-01-17,2026-11-16,669,669,0,1,alive,,,,564853,,trades within 3 days of archive end
+AVAUSDT,1,1,2024-12-13,2026-11-16,704,704,0,1,alive,,,,574379,,trades within 3 days of archive end
+AVAXUSDT,1,1,2020-09-23,2026-11-16,2246,2246,0,1,alive,,,,1680874,,trades within 3 days of archive end
+AVGOUSDT,1,1,2026-04-20,2026-11-16,211,211,0,1,alive,,,,2017211,,trades within 3 days of archive end
+AVNTUSDT,1,1,2025-09-09,2026-11-16,434,434,0,1,alive,,,,721701,,trades within 3 days of archive end
+AWEUSDT,1,1,2025-05-21,2026-11-16,545,545,0,1,alive,,,,175136,,trades within 3 days of archive end
+AXLUSDT,1,1,2024-03-01,2026-11-16,991,991,0,1,alive,,,,232211,,trades within 3 days of archive end
+AXSUSDT,1,1,2020-11-20,2026-11-16,2188,2188,0,1,alive,,,,524610,,trades within 3 days of archive end
+AXTIUSDT,1,1,2026-06-08,2026-11-16,162,162,0,1,alive,,,,1105628,,trades within 3 days of archive end
+AZTECUSDT,1,1,2026-02-11,2026-11-16,279,279,0,1,alive,,,,123806,,trades within 3 days of archive end
+B2USDT,1,1,2025-05-06,2026-11-16,560,560,0,1,alive,,,,255106,,trades within 3 days of archive end
+B3USDT,1,1,2025-02-13,2026-04-28,440,440,0,0,delisted,,,,311811,,stopped trading; not in the Q14 rename/merge/index lists
+BABAUSDT,1,1,2026-04-20,2026-11-16,211,211,0,1,alive,,,,448112,,trades within 3 days of archive end
+BABYUSDT,1,1,2025-04-05,2026-11-16,591,591,0,1,alive,,,,152079,,trades within 3 days of archive end
+BACUSDT,1,1,2026-10-21,2026-11-16,27,27,0,1,alive,,,,36876,,trades within 3 days of archive end
+BADGERUSDT,1,1,2023-11-09,2025-04-14,523,523,0,0,delisted,,,,203205,,stopped trading; not in the Q14 rename/merge/index lists
+BAKEUSDT,1,1,2021-05-19,2025-10-03,1599,1599,0,0,delisted,,,,577158,,stopped trading; not in the Q14 rename/merge/index lists
+BALUSDT,1,1,2020-09-01,2025-04-14,1687,1687,0,0,delisted,,,,56445,,stopped trading; not in the Q14 rename/merge/index lists
+BANANAS31USDT,1,1,2025-03-22,2026-11-16,605,605,0,1,alive,,,,1181353,,trades within 3 days of archive end
+BANANAUSDT,1,1,2024-08-15,2026-11-16,824,824,0,1,alive,,,,149921,,trades within 3 days of archive end
+BANDUSDT,1,1,2020-07-29,2026-11-16,2302,2302,0,1,alive,,,,193208,,trades within 3 days of archive end
+BANKUSDT,1,1,2025-04-18,2026-11-16,578,578,0,1,alive,,,,364534,,trades within 3 days of archive end
+BANUSDT,1,1,2024-11-18,2026-11-16,729,729,0,1,alive,,,,180764,,trades within 3 days of archive end
+BARDUSDT,1,1,2025-09-18,2026-11-16,425,425,0,1,alive,,,,1237864,,trades within 3 days of archive end
+BASEDUSDT,1,1,2026-03-30,2026-11-16,232,232,0,1,alive,,,,1096184,,trades within 3 days of archive end
+BASUSDT,1,1,2025-08-26,2026-11-16,448,448,0,1,alive,,,,317781,,trades within 3 days of archive end
+BATUSDT,1,1,2020-02-13,2026-11-16,2469,2469,0,1,alive,,,,898131,,trades within 3 days of archive end
+BBUSDT,1,1,2024-05-13,2026-11-16,918,918,0,1,alive,,,,395900,,trades within 3 days of archive end
+BBXUSDT,1,1,2026-06-01,2026-11-16,169,169,0,1,alive,,,,149632,,trades within 3 days of archive end
+BCHUSDT,1,1,2019-12-31,2026-11-16,2513,2513,0,1,alive,,,,1774133,,trades within 3 days of archive end
+BDXNUSDT,1,1,2025-06-03,2026-03-17,288,288,0,0,delisted,,,,828815,,stopped trading; not in the Q14 rename/merge/index lists
+BEAMXUSDT,1,1,2023-11-17,2026-11-16,1096,1096,0,1,alive,,,,1072778,,trades within 3 days of archive end
+BEATUSDT,1,1,2025-11-12,2026-11-16,370,370,0,1,alive,,,,735653,,trades within 3 days of archive end
+BELUSDT,1,1,2020-11-18,2026-11-16,2190,2190,0,1,alive,,,,222394,,trades within 3 days of archive end
+BERAUSDT,1,1,2025-02-06,2026-11-16,649,649,0,1,alive,,,,459837,,trades within 3 days of archive end
+BEUSDT,1,1,2026-05-26,2026-11-16,175,175,0,1,alive,,,,2292464,,trades within 3 days of archive end
+BICOUSDT,1,1,2023-09-28,2026-11-16,1146,1146,0,1,alive,,,,131264,,trades within 3 days of archive end
+BIDUSDT,1,1,2025-03-20,2026-01-21,308,308,0,0,delisted,,,,303446,,stopped trading; not in the Q14 rename/merge/index lists
+BIGTIMEUSDT,1,1,2023-10-12,2026-11-16,1132,1132,0,1,alive,,,,235646,,trades within 3 days of archive end
+BILLUSDT,1,1,2026-05-07,2026-11-16,194,194,0,1,alive,,,,395876,,trades within 3 days of archive end
+BIOUSDT,1,1,2025-01-03,2026-11-16,683,683,0,1,alive,,,,296625,,trades within 3 days of archive end
+BIRBUSDT,1,1,2026-01-29,2026-11-16,292,292,0,1,alive,,,,2591359,,trades within 3 days of archive end
+BITOUSDT,1,1,2026-07-27,2026-11-16,113,113,0,1,alive,,,,26412,,trades within 3 days of archive end
+BLESSUSDT,1,1,2025-09-23,2026-11-16,420,420,0,1,alive,,,,39533047,,trades within 3 days of archive end
+BLUAIUSDT,1,1,2025-10-21,2026-11-16,392,392,0,1,alive,,,,483724,,trades within 3 days of archive end
+BLUEBIRDUSDT,1,1,2022-11-02,2024-03-26,511,511,0,0,index,,,,169621,,Binance index perpetual (Q14 list)
+BLURUSDT,1,1,2023-04-28,2026-11-16,1299,1299,0,1,alive,,,,660631,,trades within 3 days of archive end
+BLZUSDT,1,1,2020-09-17,2024-12-23,1559,1559,0,0,delisted,,,,485202,,stopped trading; not in the Q14 rename/merge/index lists
+BMNRUSDT,1,1,2026-06-11,2026-11-16,159,159,0,1,alive,,,,453053,,trades within 3 days of archive end
+BMTUSDT,1,1,2025-03-17,2026-11-16,610,610,0,1,alive,,,,666772,,trades within 3 days of archive end
+BNBUSDT,1,1,2020-02-10,2026-11-16,2472,2472,0,1,alive,,,,3754576,,trades within 3 days of archive end
+BNCUSDT,1,1,2026-07-09,2026-11-16,131,131,0,1,alive,,,,312768,,trades within 3 days of archive end
+BNTUSDT,1,1,2023-08-10,2026-11-16,1195,1195,0,1,alive,,,,134631,,trades within 3 days of archive end
+BNXUSDT,1,1,2022-04-01,2025-03-17,1072,1082,10,0,renamed,FORMUSDT,2,,7391516,,token rename or migration (Q14 list)
+BOBUSDT,1,1,2025-11-21,2026-04-28,159,159,0,0,delisted,,,,319047,,stopped trading; not in the Q14 rename/merge/index lists
+BOMEUSDT,1,1,2024-03-16,2026-11-16,976,976,0,1,alive,,,,725367,,trades within 3 days of archive end
+BONDUSDT,1,1,2023-10-15,2024-12-16,429,429,0,0,delisted,,,"FARTCOINUSDT (starts 2024-12-20, close 1.069 vs 1.055, ratio 1.01); ACXUSDT (starts 2024-12-06, close 1.069 vs 1.0849, ratio 0.985)",355529,,stopped trading; not in the Q14 rename/merge/index lists
+BOTUSDT,1,1,2026-07-09,2026-11-16,131,131,0,1,alive,,,,213927,,trades within 3 days of archive end
+BRETTUSDT,1,1,2024-08-20,2026-11-16,819,819,0,1,alive,,,,184713,,trades within 3 days of archive end
+BREVUSDT,1,1,2025-12-30,2026-11-16,322,322,0,1,alive,,,,307362,,trades within 3 days of archive end
+BRKBUSDT,1,1,2026-05-18,2026-11-16,183,183,0,1,alive,,,,151545,,trades within 3 days of archive end
+BROCCOLI714USDT,1,1,2025-03-21,2026-11-16,606,606,0,1,alive,,,,249700,,trades within 3 days of archive end
+BROCCOLIF3BUSDT,1,1,2025-03-21,2026-11-16,606,606,0,1,alive,,,,197239,,trades within 3 days of archive end
+BRUSDT,1,1,2025-03-21,2026-11-16,606,606,0,1,alive,,,,658574,,trades within 3 days of archive end
+BSBUSDT,1,1,2026-03-25,2026-11-16,237,237,0,1,alive,,,,385141,,trades within 3 days of archive end
+BSPUSDT,1,1,2026-07-02,2026-11-16,138,138,0,1,alive,,,,180762,,trades within 3 days of archive end
+BSVUSDT,1,1,2023-10-20,2026-11-16,1124,1124,0,1,alive,,,,80608,,trades within 3 days of archive end
+BSWUSDT,1,1,2024-09-05,2025-09-15,376,376,0,0,delisted,,,,2045847,,stopped trading; not in the Q14 rename/merge/index lists
+BTCDOMUSDT,1,1,2021-06-21,2026-11-16,1975,1975,0,1,alive,,,,225982,,trades within 3 days of archive end
+BTCSTUSDT,1,1,2021-03-04,2021-03-12,9,9,0,0,delisted,,,,30596,,stopped trading; not in the Q14 rename/merge/index lists
+BTCUSDT,1,1,2019-12-31,2026-11-16,2513,2513,0,1,alive,,,,23117356,,trades within 3 days of archive end
+BTRUSDT,1,1,2025-08-27,2026-11-16,447,447,0,1,alive,,,,364579,,trades within 3 days of archive end
+BTSUSDT,1,1,2021-02-01,2022-08-18,564,564,0,0,delisted,,,,128284,,stopped trading; not in the Q14 rename/merge/index lists
+BTTUSDT,1,1,2021-04-06,2022-01-14,284,284,0,0,delisted,,,,170125,,stopped trading; not in the Q14 rename/merge/index lists
+BTWUSDT,1,1,2026-06-04,2026-11-16,166,166,0,1,alive,,,,6703855,,trades within 3 days of archive end
+BULLAUSDT,1,1,2025-07-04,2026-11-16,501,501,0,1,alive,,,,6513987,,trades within 3 days of archive end
+BUSDT,1,1,2025-05-22,2026-11-16,544,544,0,1,alive,,,,171466,,trades within 3 days of archive end
+BWETUSDT,1,1,2026-09-29,2026-11-16,49,49,0,1,alive,,,,286703,,trades within 3 days of archive end
+BXUSDT,1,1,2026-06-08,2026-11-16,162,162,0,1,alive,,,,162548,,trades within 3 days of archive end
+BYDUSDT,1,1,2026-09-07,2026-11-16,71,71,0,1,alive,,,,26710,,trades within 3 days of archive end
+BZRXUSDT,1,1,2020-09-05,2021-12-19,471,471,0,0,delisted,,,,41119,,stopped trading; not in the Q14 rename/merge/index lists
+BZUSDT,1,1,2026-04-01,2026-11-16,230,230,0,1,alive,,,,1091001,,trades within 3 days of archive end
+C98USDT,1,1,2021-08-24,2026-11-16,1911,1911,0,1,alive,,,,137527,,trades within 3 days of archive end
+CAKEUSDT,1,1,2023-11-02,2026-11-16,1111,1111,0,1,alive,,,,888797,,trades within 3 days of archive end
+CAPUSDT,1,1,2026-06-27,2026-11-16,143,143,0,1,alive,,,,1932119,,trades within 3 days of archive end
+CARVUSDT,1,1,2025-08-07,2026-11-16,467,467,0,1,alive,,,,152390,,trades within 3 days of archive end
+CATIUSDT,1,1,2024-09-20,2026-11-16,788,788,0,1,alive,,,,167393,,trades within 3 days of archive end
+CATUSDT,1,1,2026-07-02,2026-11-16,138,138,0,1,alive,,,,130120,,trades within 3 days of archive end
+CBRSUSDT,1,1,2026-05-19,2026-11-16,182,182,0,1,alive,,,,2005390,,trades within 3 days of archive end
+CCUSDT,1,1,2025-10-31,2026-11-16,382,382,0,1,alive,,,,667147,,trades within 3 days of archive end
+CEGUSDT,1,1,2026-10-21,2026-11-16,27,27,0,1,alive,,,,29994,,trades within 3 days of archive end
+CELOUSDT,1,1,2021-09-27,2026-11-16,1877,1877,0,1,alive,,,,348766,,trades within 3 days of archive end
+CELRUSDT,1,1,2021-03-29,2026-11-16,2059,2059,0,1,alive,,,,190133,,trades within 3 days of archive end
+CETUSUSDT,1,1,2024-11-06,2026-11-16,741,741,0,1,alive,,,,423003,,trades within 3 days of archive end
+CFGUSDT,1,1,2026-03-16,2026-11-16,246,246,0,1,alive,,,,96014,,trades within 3 days of archive end
+CFXUSDT,1,1,2023-02-20,2026-11-16,1366,1366,0,1,alive,,,,369041,,trades within 3 days of archive end
+CGPTUSDT,1,1,2024-12-20,2026-11-16,697,697,0,1,alive,,,,140633,,trades within 3 days of archive end
+CHESSUSDT,1,1,2024-08-29,2026-02-06,527,527,0,0,delisted,,,"SPACEUSDT (starts 2026-01-23, close 0.01865 vs 0.017653, ratio 1.06); FIGHTUSDT (starts 2026-01-23, close 0.01865 vs 0.020392, ratio 0.915)",2111254,,stopped trading; not in the Q14 rename/merge/index lists
+CHILLGUYUSDT,1,1,2024-11-27,2026-11-16,720,720,0,1,alive,,,,354815,,trades within 3 days of archive end
+CHIPUSDT,1,1,2026-04-16,2026-11-16,215,215,0,1,alive,,,,526581,,trades within 3 days of archive end
+CHRUSDT,1,1,2021-03-12,2026-11-16,2076,2076,0,1,alive,,,,201992,,trades within 3 days of archive end
+CHZUSDT,1,1,2021-01-21,2026-11-16,2126,2126,0,1,alive,,,,151988,,trades within 3 days of archive end
+CIENUSDT,1,1,2026-06-22,2026-11-16,148,148,0,1,alive,,,,283864,,trades within 3 days of archive end
+CKBUSDT,1,1,2023-02-28,2026-11-16,1358,1358,0,1,alive,,,,449058,,trades within 3 days of archive end
+CLANKERUSDT,1,1,2025-11-12,2026-11-16,370,370,0,1,alive,,,,241588,,trades within 3 days of archive end
+CLOUSDT,1,1,2025-10-14,2026-11-16,399,399,0,1,alive,,,,438453,,trades within 3 days of archive end
+CLUSDT,1,1,2026-04-01,2026-11-16,230,230,0,1,alive,,,,1267669,,trades within 3 days of archive end
+COAIUSDT,1,1,2025-09-25,2026-11-16,418,418,0,1,alive,,,,213140,,trades within 3 days of archive end
+COCOSUSDT,1,1,2023-02-21,2023-05-25,94,94,0,0,delisted,,,,243055,,stopped trading; not in the Q14 rename/merge/index lists
+COHRUSDT,1,1,2026-05-26,2026-11-16,175,175,0,1,alive,,,,1371321,,trades within 3 days of archive end
+COINUSDT,1,1,2026-02-09,2026-11-16,281,281,0,1,alive,,,,1753113,,trades within 3 days of archive end
+COLLECTUSDT,1,1,2025-12-31,2026-11-16,321,321,0,1,alive,,,,261828,,trades within 3 days of archive end
+COMBOUSDT,1,1,2023-06-02,2025-03-27,665,665,0,0,delisted,,,"SIRENUSDT (starts 2025-03-22, close 0.0695 vs 0.07646, ratio 0.909); BABYUSDT (starts 2025-04-05, close 0.0695 vs 0.06362, ratio 1.09)",267300,,stopped trading; not in the Q14 rename/merge/index lists
+COMMONUSDT,1,1,2025-10-27,2026-01-30,96,96,0,0,delisted,,,,363644,,stopped trading; not in the Q14 rename/merge/index lists
+COMPUSDT,1,1,2020-06-30,2026-11-16,2331,2331,0,1,alive,,,,226591,,trades within 3 days of archive end
+COOKIEUSDT,1,1,2025-01-07,2026-11-16,679,679,0,1,alive,,,,1158897,,trades within 3 days of archive end
+COPPERUSDT,1,1,2026-03-06,2026-11-16,256,256,0,1,alive,,,,180966,,trades within 3 days of archive end
+COSTUSDT,1,1,2026-06-09,2026-11-16,161,161,0,1,alive,,,,153339,,trades within 3 days of archive end
+COSUSDT,1,1,2024-09-30,2026-06-11,620,620,0,0,delisted,,,,138784,,stopped trading; not in the Q14 rename/merge/index lists
+COTIUSDT,1,1,2021-03-10,2026-11-16,2078,2078,0,1,alive,,,,687936,,trades within 3 days of archive end
+COWUSDT,1,1,2024-11-06,2026-11-16,741,741,0,1,alive,,,,147784,,trades within 3 days of archive end
+CRCLUSDT,1,1,2026-02-09,2026-11-16,281,281,0,1,alive,,,,1553805,,trades within 3 days of archive end
+CRDOUSDT,1,1,2026-06-08,2026-11-16,162,162,0,1,alive,,,,805191,,trades within 3 days of archive end
+CRMLUSDT,1,1,2026-09-29,2026-11-16,49,49,0,1,alive,,,,141816,,trades within 3 days of archive end
+CRMUSDT,1,1,2026-06-03,2026-11-16,167,167,0,1,alive,,,,70163,,trades within 3 days of archive end
+CROSSUSDT,1,1,2025-07-10,2026-11-16,495,495,0,1,alive,,,,4674904,,trades within 3 days of archive end
+CRVUSDT,1,1,2020-09-01,2026-11-16,2268,2268,0,1,alive,,,,581284,,trades within 3 days of archive end
+CRWDUSDT,1,1,2026-06-08,2026-11-16,162,162,0,1,alive,,,,249193,,trades within 3 days of archive end
+CRWVUSDT,1,1,2026-05-18,2026-11-16,183,183,0,1,alive,,,,1406289,,trades within 3 days of archive end
+CSCOUSDT,1,1,2026-05-15,2026-11-16,186,186,0,1,alive,,,,54047,,trades within 3 days of archive end
+CSOPSAMSUNG2LUSDT,1,1,2026-08-11,2026-11-16,98,98,0,1,alive,,,,496705,,trades within 3 days of archive end
+CSOPSKHYNIX2LUSDT,1,1,2026-08-11,2026-11-16,98,98,0,1,alive,,,,893835,,trades within 3 days of archive end
+CTKUSDT,1,2,2020-11-19,2024-04-01,1230,1230,0,0,reused-symbol,CTKUSDT,394,,459283,,symbol trades again after a gap of more than 30 days (life 2 starts 2025-04-30); close 1.0106 at end vs 0.4515 at restart (ratio 2.24)
+CTKUSDT,2,2,2025-04-30,2026-11-16,566,566,0,1,alive,,,,122983,,trades within 3 days of archive end
+CTRUSDT,1,1,2026-05-28,2026-11-16,173,173,0,1,alive,,,,395035,,trades within 3 days of archive end
+CTSIUSDT,1,1,2021-10-26,2026-11-16,1848,1848,0,1,alive,,,,191398,,trades within 3 days of archive end
+CTUSDT,1,1,2026-10-01,2026-11-16,47,47,0,1,alive,,,,874922,,trades within 3 days of archive end
+CUDISUSDT,1,1,2025-08-20,2026-01-30,164,164,0,0,delisted,,,"FIGHTUSDT (starts 2026-01-23, close 0.02006 vs 0.020392, ratio 0.984); INXUSDT (starts 2026-01-30, close 0.02006 vs 0.02123, ratio 0.945)",428516,,stopped trading; not in the Q14 rename/merge/index lists
+CUSDT,1,1,2025-07-15,2026-11-16,490,490,0,1,alive,,,,246673,,trades within 3 days of archive end
+CVCUSDT,1,2,2020-11-11,2022-11-29,749,749,0,0,reused-symbol,CVCUSDT,899,,283563,,symbol trades again after a gap of more than 30 days (life 2 starts 2025-05-16); close 0.10201 at end vs 0.13048 at restart (ratio 0.782)
+CVCUSDT,2,2,2025-05-16,2026-11-16,550,550,0,1,alive,,,,163493,,trades within 3 days of archive end
+CVNAUSDT,1,1,2026-09-28,2026-11-16,50,50,0,1,alive,,,,22196,,trades within 3 days of archive end
+CVXUSDT,1,2,2022-09-22,2024-05-14,601,601,0,0,reused-symbol,CVXUSDT,435,,113153,,symbol trades again after a gap of more than 30 days (life 2 starts 2025-07-23); close 2.374 at end vs 4.756 at restart (ratio 0.499)
+CVXUSDT,2,2,2025-07-23,2026-11-16,482,482,0,1,alive,,,,188372,,trades within 3 days of archive end
+CXMTUSDT,1,1,2026-08-18,2026-11-16,91,91,0,1,alive,,,,616034,,trades within 3 days of archive end
+CYBERUSDT,1,1,2023-08-21,2026-11-16,1184,1184,0,1,alive,,,,503255,,trades within 3 days of archive end
+CYPHUSDT,1,1,2026-09-18,2026-11-16,60,60,0,1,alive,,,,302034,,trades within 3 days of archive end
+CYSUSDT,1,1,2025-12-12,2026-11-16,340,340,0,1,alive,,,,166951,,trades within 3 days of archive end
+DAMUSDT,1,1,2025-08-18,2026-04-29,255,255,0,0,delisted,,,,6241695,,stopped trading; not in the Q14 rename/merge/index lists
+DARUSDT,1,1,2022-04-29,2024-12-26,973,973,0,0,renamed,DUSDT,14,,94974,,token rename or migration (Q14 list)
+DASHUSDT,1,1,2020-02-04,2026-11-16,2478,2478,0,1,alive,,,,783322,,trades within 3 days of archive end
+DATAIPUSDT,1,1,2026-07-03,2026-11-16,137,137,0,1,alive,,,,196892,,trades within 3 days of archive end
+DDOGUSDT,1,1,2026-09-02,2026-11-16,76,76,0,1,alive,,,,52820,,trades within 3 days of archive end
+DEEPUSDT,1,1,2025-04-22,2026-11-16,574,574,0,1,alive,,,,127263,,trades within 3 days of archive end
+DEFIUSDT,1,1,2020-08-28,2025-08-11,1810,1810,0,0,index,,,,106110,,Binance index perpetual (Q14 list)
+DEGENUSDT,1,1,2024-11-15,2026-04-28,530,530,0,0,delisted,,,,240110,,stopped trading; not in the Q14 rename/merge/index lists
+DEGOUSDT,1,1,2024-12-13,2026-04-21,495,495,0,0,delisted,,,,660814,,stopped trading; not in the Q14 rename/merge/index lists
+DELLUSDT,1,1,2026-06-03,2026-11-16,167,167,0,1,alive,,,,1181298,,trades within 3 days of archive end
+DENTUSDT,1,1,2021-03-24,2026-04-21,1855,1855,0,0,delisted,,,,1118388,,stopped trading; not in the Q14 rename/merge/index lists
+DEXEUSDT,1,1,2024-12-24,2026-11-16,693,693,0,1,alive,,,,155754,,trades within 3 days of archive end
+DFUSDT,1,1,2024-12-30,2026-02-06,404,404,0,0,delisted,,,,253508,,stopped trading; not in the Q14 rename/merge/index lists
+DGBUSDT,1,1,2021-04-21,2024-04-01,1077,1077,0,0,delisted,,,,848768,,stopped trading; not in the Q14 rename/merge/index lists
+DIAUSDT,1,1,2024-10-02,2026-11-16,776,776,0,1,alive,,,,108811,,trades within 3 days of archive end
+DISUSDT,1,1,2026-05-15,2026-11-16,186,186,0,1,alive,,,,46408,,trades within 3 days of archive end
+DJTUSDT,1,1,2026-08-25,2026-11-16,84,84,0,1,alive,,,,208006,,trades within 3 days of archive end
+DKNGUSDT,1,1,2026-06-10,2026-11-16,160,160,0,1,alive,,,,46275,,trades within 3 days of archive end
+DMCUSDT,1,1,2025-06-24,2026-01-21,212,212,0,0,delisted,,,,254718,,stopped trading; not in the Q14 rename/merge/index lists
+DODOUSDT,1,1,2021-02-19,2022-05-27,463,463,0,0,delisted,,,,219299,,stopped trading; not in the Q14 rename/merge/index lists
+DODOXUSDT,1,1,2023-08-08,2026-11-16,1197,1197,0,1,alive,,,,1842249,,trades within 3 days of archive end
+DOGEUSDT,1,1,2020-07-10,2026-11-16,2321,2321,0,1,alive,,,,2054451,,trades within 3 days of archive end
+DOGSUSDT,1,1,2024-08-26,2026-11-16,813,813,0,1,alive,,,,233405,,trades within 3 days of archive end
+DOLOUSDT,1,1,2025-05-01,2026-11-16,565,565,0,1,alive,,,,193322,,trades within 3 days of archive end
+DOODUSDT,1,1,2025-05-09,2026-11-16,557,557,0,1,alive,,,,309025,,trades within 3 days of archive end
+DOSUSDT,1,1,2026-08-11,2026-11-16,98,98,0,1,alive,,,,237354,,trades within 3 days of archive end
+DOTECOUSDT,1,1,2021-01-20,2021-02-19,31,31,0,0,delisted,,,,115948,,stopped trading; not in the Q14 rename/merge/index lists
+DOTUSDT,1,1,2020-08-22,2026-11-16,2278,2278,0,1,alive,,,,1328851,,trades within 3 days of archive end
+DRAMUSDT,1,1,2026-05-18,2026-11-16,183,183,0,1,alive,,,,1152022,,trades within 3 days of archive end
+DRIFTUSDT,1,1,2024-11-08,2026-11-16,739,739,0,1,alive,,,,181193,,trades within 3 days of archive end
+DUSDT,1,1,2025-01-09,2026-06-11,519,519,0,0,delisted,,,,265507,,stopped trading; not in the Q14 rename/merge/index lists
+DUSKUSDT,1,1,2022-01-07,2026-11-16,1775,1775,0,1,alive,,,,319521,,trades within 3 days of archive end
+DYDXUSDT,1,1,2021-09-10,2026-11-16,1894,1894,0,1,alive,,,,155013,,trades within 3 days of archive end
+DYMUSDT,1,1,2024-02-07,2026-11-16,1014,1014,0,1,alive,,,,227644,,trades within 3 days of archive end
+EBAYUSDT,1,1,2026-06-09,2026-11-16,161,161,0,1,alive,,,,28877,,trades within 3 days of archive end
+EDENUSDT,1,1,2025-09-30,2026-11-16,413,413,0,1,alive,,,,279263,,trades within 3 days of archive end
+EDGEUSDT,1,1,2026-03-19,2026-11-16,243,243,0,1,alive,,,,349484,,trades within 3 days of archive end
+EDUUSDT,1,1,2023-04-30,2026-11-16,1297,1297,0,1,alive,,,,257783,,trades within 3 days of archive end
+EGLDUSDT,1,1,2020-09-14,2026-11-16,2255,2255,0,1,alive,,,,238838,,trades within 3 days of archive end
+EIDOUSDT,1,1,2026-10-26,2026-11-16,22,22,0,1,alive,,,,10622,,trades within 3 days of archive end
+EIGENUSDT,1,1,2024-10-01,2026-11-16,777,777,0,1,alive,,,,323439,,trades within 3 days of archive end
+ELSAUSDT,1,1,2026-01-22,2026-11-16,299,299,0,1,alive,,,,431638,,trades within 3 days of archive end
+ENAUSDT,1,1,2024-04-02,2026-11-16,959,959,0,1,alive,,,,3365518,,trades within 3 days of archive end
+ENJUSDT,1,1,2020-09-29,2026-11-16,2240,2240,0,1,alive,,,,154568,,trades within 3 days of archive end
+ENSOUSDT,1,1,2025-10-14,2026-11-16,399,399,0,1,alive,,,,265761,,trades within 3 days of archive end
+ENSUSDT,1,1,2021-11-30,2026-11-16,1813,1813,0,1,alive,,,,444844,,trades within 3 days of archive end
+EOSUSDT,1,1,2020-01-08,2025-05-21,1961,1961,0,0,renamed,AUSDT,7,"AUSDT (starts 2025-05-28, close 0.746 vs 0.75848, ratio 0.984)",216160,,token rename or migration (Q14 list)
+EPICUSDT,1,1,2025-03-13,2026-10-20,587,587,0,0,delisted,,,,1630289,,stopped trading; not in the Q14 rename/merge/index lists
+EPTUSDT,1,1,2025-04-21,2026-01-30,285,285,0,0,delisted,,,,1286724,,stopped trading; not in the Q14 rename/merge/index lists
+EQTUSDT,1,1,2026-10-26,2026-11-16,22,22,0,1,alive,,,,11965,,trades within 3 days of archive end
+ERAUSDT,1,1,2025-07-17,2026-11-16,488,488,0,1,alive,,,,1653257,,trades within 3 days of archive end
+ESPORTSUSDT,1,1,2025-07-29,2026-11-16,476,476,0,1,alive,,,,1443904,,trades within 3 days of archive end
+ESPUSDT,1,1,2026-02-10,2026-11-16,280,280,0,1,alive,,,,335894,,trades within 3 days of archive end
+ETCUSDT,1,1,2020-01-16,2026-11-16,2497,2497,0,1,alive,,,,546893,,trades within 3 days of archive end
+ETHFIUSDT,1,1,2024-03-18,2026-11-16,974,974,0,1,alive,,,,1103290,,trades within 3 days of archive end
+ETHUSDT,1,1,2019-12-31,2026-11-16,2513,2513,0,1,alive,,,,22316648,,trades within 3 days of archive end
+ETHWUSDT,1,1,2023-11-28,2026-11-16,1085,1085,0,1,alive,,,,129761,,trades within 3 days of archive end
+EULUSDT,1,1,2025-10-13,2026-11-16,400,400,0,1,alive,,,,347896,,trades within 3 days of archive end
+EVAAUSDT,1,1,2025-10-03,2026-11-16,410,410,0,1,alive,,,,79601193,,trades within 3 days of archive end
+EWJUSDT,1,1,2026-03-19,2026-11-16,243,243,0,1,alive,,,,63079,,trades within 3 days of archive end
+EWTUSDT,1,1,2026-06-01,2026-11-16,169,169,0,1,alive,,,,138170,,trades within 3 days of archive end
+EWYUSDT,1,1,2026-03-16,2026-11-16,246,246,0,1,alive,,,,1875450,,trades within 3 days of archive end
+EWZSUSDT,1,1,2026-10-29,2026-11-16,19,19,0,1,alive,,,,56575,,trades within 3 days of archive end
+EWZUSDT,1,1,2026-06-10,2026-11-16,160,160,0,1,alive,,,,74433,,trades within 3 days of archive end
+FARTCOINUSDT,1,1,2024-12-20,2026-11-16,697,697,0,1,alive,,,,365048,,trades within 3 days of archive end
+FETUSDT,1,1,2023-01-17,2026-11-16,1400,1400,0,1,alive,,,,545676,,trades within 3 days of archive end
+FFUSDT,1,1,2025-09-29,2026-11-16,414,414,0,1,alive,,,,1519003,,trades within 3 days of archive end
+FHEUSDT,1,1,2025-04-12,2026-11-16,584,584,0,1,alive,,,,181793,,trades within 3 days of archive end
+FIDAUSDT,1,1,2024-09-19,2026-11-16,789,789,0,1,alive,,,,561466,,trades within 3 days of archive end
+FIGHTUSDT,1,1,2026-01-23,2026-11-16,298,298,0,1,alive,,,,215255,,trades within 3 days of archive end
+FILUSDT,1,1,2020-10-16,2026-11-16,2223,2223,0,1,alive,,,,1644936,,trades within 3 days of archive end
+FIOUSDT,1,1,2024-09-20,2026-04-15,573,573,0,0,delisted,,,,736923,52797,stopped trading; not in the Q14 rename/merge/index lists
+FISUSDT,1,1,2025-04-25,2025-12-10,230,230,0,0,delisted,,,"RLSUSDT (starts 2025-12-02, close 0.02681 vs 0.028638, ratio 0.936)",664522,48266,stopped trading; not in the Q14 rename/merge/index lists
+FLEXUSDT,1,1,2026-07-02,2026-11-16,138,138,0,1,alive,,,,90450,,trades within 3 days of archive end
+FLMUSDT,1,1,2020-09-29,2025-11-21,1880,1880,0,0,delisted,,,,350194,,stopped trading; not in the Q14 rename/merge/index lists
+FLNCUSDT,1,1,2026-05-18,2026-11-16,183,183,0,1,alive,,,,351358,,trades within 3 days of archive end
+FLOCKUSDT,1,1,2025-09-09,2026-11-16,434,434,0,1,alive,,,,329042,,trades within 3 days of archive end
+FLOWUSDT,1,1,2022-02-10,2026-11-16,1741,1741,0,1,alive,,,,327332,,trades within 3 days of archive end
+FLUIDUSDT,1,1,2025-09-24,2026-11-16,419,419,0,1,alive,,,,132151,,trades within 3 days of archive end
+FLUXUSDT,1,1,2024-09-03,2026-11-16,805,805,0,1,alive,,,,181702,,trades within 3 days of archive end
+FOGOUSDT,1,1,2026-01-10,2026-11-16,311,311,0,1,alive,,,,279554,,trades within 3 days of archive end
+FOLKSUSDT,1,1,2025-11-06,2026-11-16,376,376,0,1,alive,,,,302356,,trades within 3 days of archive end
+FOOTBALLUSDT,1,1,2022-09-01,2024-03-26,573,573,0,0,index,,,,280705,,Binance index perpetual (Q14 list)
+FORMUSDT,1,1,2025-03-19,2026-11-16,608,608,0,1,alive,,,,208716,,trades within 3 days of archive end
+FORTHUSDT,1,1,2025-04-08,2026-03-24,351,351,0,0,delisted,,,,142281,,stopped trading; not in the Q14 rename/merge/index lists
+FRAXUSDT,1,1,2026-01-15,2026-11-16,306,306,0,1,alive,,,,100247,,trades within 3 days of archive end
+FRHCUSDT,1,1,2026-11-12,2026-11-16,5,5,0,1,alive,,,,50900,,trades within 3 days of archive end
+FRONTUSDT,1,1,2023-09-22,2024-08-23,337,337,0,0,delisted,,,,431626,,stopped trading; not in the Q14 rename/merge/index lists
+FTMUSDT,1,1,2020-09-24,2025-01-06,1566,1566,0,0,renamed,SUSDT,10,"SUSDT (starts 2025-01-16, close 0.7702 vs 0.7831, ratio 0.984); BIOUSDT (starts 2025-01-03, close 0.7702 vs 0.8147, ratio 0.945)",781608,,token rename or migration (Q14 list)
+FTTUSDT,1,1,2022-04-15,2022-11-14,214,214,0,0,delisted,,,,3176852,,stopped trading; not in the Q14 rename/merge/index lists
+FUNUSDT,1,1,2025-03-31,2026-04-15,381,381,0,0,delisted,,,,400402,,stopped trading; not in the Q14 rename/merge/index lists
+FUSDT,1,1,2025-06-18,2026-11-16,517,517,0,1,alive,,,,224673,,trades within 3 days of archive end
+FWDIUSDT,1,1,2026-07-09,2026-11-16,131,131,0,1,alive,,,,163297,,trades within 3 days of archive end
+FXSUSDT,1,1,2023-01-20,2026-01-06,1083,1083,0,0,renamed,FRAXUSDT,9,,274100,,token rename or migration (Q14 list)
+GALAUSDT,1,1,2021-09-18,2026-11-16,1886,1886,0,1,alive,,,,511672,,trades within 3 days of archive end
+GALUSDT,1,1,2022-05-05,2024-07-11,799,799,0,0,renamed,GUSDT,35,,2728450,,token rename or migration (Q14 list)
+GASUSDT,1,1,2023-10-25,2026-11-16,1119,1119,0,1,alive,,,,84543,,trades within 3 days of archive end
+GDXUSDT,1,1,2026-08-17,2026-11-16,92,92,0,1,alive,,,,54578,,trades within 3 days of archive end
+GENIUSUSDT,1,1,2026-04-16,2026-11-16,215,215,0,1,alive,,,,313960,,trades within 3 days of archive end
+GEVUSDT,1,1,2026-07-10,2026-11-16,130,130,0,1,alive,,,,155909,,trades within 3 days of archive end
+GHSTUSDT,1,1,2024-09-23,2026-02-06,502,502,0,0,delisted,,,"ESPUSDT (starts 2026-02-10, close 0.0834 vs 0.07904, ratio 1.06)",207347,,stopped trading; not in the Q14 rename/merge/index lists
+GIGADEVUSDT,1,1,2026-08-03,2026-11-16,106,106,0,1,alive,,,,307076,,trades within 3 days of archive end
+GIGGLEUSDT,1,1,2025-10-09,2026-11-16,404,404,0,1,alive,,,,310937,,trades within 3 days of archive end
+GLMRUSDT,1,1,2023-09-26,2024-05-15,233,233,0,0,delisted,,,,223524,17140,stopped trading; not in the Q14 rename/merge/index lists
+GLMUSDT,1,1,2024-02-22,2026-11-16,999,999,0,1,alive,,,,232073,,trades within 3 days of archive end
+GLWUSDT,1,1,2026-06-11,2026-11-16,159,159,0,1,alive,,,,674888,,trades within 3 days of archive end
+GMEUSDT,1,1,2026-06-10,2026-11-16,160,160,0,1,alive,,,,51764,,trades within 3 days of archive end
+GMTUSDT,1,1,2022-03-15,2026-11-16,1708,1708,0,1,alive,,,,417107,,trades within 3 days of archive end
+GMXUSDT,1,1,2023-02-17,2026-11-16,1369,1369,0,1,alive,,,,370295,,trades within 3 days of archive end
+GOATUSDT,1,1,2024-10-24,2026-11-16,754,754,0,1,alive,,,,121494,,trades within 3 days of archive end
+GOOGLUSDT,1,1,2026-03-26,2026-11-16,236,236,0,1,alive,,,,2365178,,trades within 3 days of archive end
+GPROUSDT,1,1,2026-09-03,2026-11-16,75,75,0,1,alive,,,,59467,,trades within 3 days of archive end
+GPSUSDT,1,1,2025-02-17,2026-11-16,638,638,0,1,alive,,,,538525,,trades within 3 days of archive end
+GRAMUSDT,1,1,2026-07-02,2026-11-16,138,138,0,1,alive,,,,347200,,trades within 3 days of archive end
+GRASSUSDT,1,1,2024-11-08,2026-11-16,739,739,0,1,alive,,,,691285,,trades within 3 days of archive end
+GRIFFAINUSDT,1,1,2025-01-02,2026-11-16,684,684,0,1,alive,,,,408953,,trades within 3 days of archive end
+GRTUSDT,1,1,2020-12-19,2026-11-16,2159,2159,0,1,alive,,,,225293,,trades within 3 days of archive end
+GRVTUSDT,1,1,2026-07-31,2026-11-16,109,109,0,1,alive,,,,278155,,trades within 3 days of archive end
+GSUSDT,1,1,2026-07-29,2026-11-16,111,111,0,1,alive,,,,45208,,trades within 3 days of archive end
+GTCUSDT,1,1,2021-06-11,2026-11-16,1985,1985,0,1,alive,,,,926691,,trades within 3 days of archive end
+GTLBUSDT,1,1,2026-09-02,2026-11-16,76,76,0,1,alive,,,,30947,,trades within 3 days of archive end
+GUAUSDT,1,1,2025-12-21,2026-11-16,331,331,0,1,alive,,,,301707,,trades within 3 days of archive end
+GUNUSDT,1,1,2025-03-31,2026-11-16,596,596,0,1,alive,,,,446306,,trades within 3 days of archive end
+GUSDT,1,1,2024-08-15,2026-11-16,824,824,0,1,alive,,,,285927,,trades within 3 days of archive end
+GWEIUSDT,1,1,2026-01-29,2026-11-16,292,292,0,1,alive,,,,165910,,trades within 3 days of archive end
+HAEDALUSDT,1,1,2025-05-01,2026-11-16,565,565,0,1,alive,,,,306644,,trades within 3 days of archive end
+HANAUSDT,1,1,2025-09-26,2026-11-16,417,417,0,1,alive,,,,430295,,trades within 3 days of archive end
+HANMIUSDT,1,1,2026-08-14,2026-11-16,95,95,0,1,alive,,,,124027,,trades within 3 days of archive end
+HBARUSDT,1,1,2021-03-17,2026-11-16,2071,2071,0,1,alive,,,,872685,,trades within 3 days of archive end
+HDUSDT,1,1,2026-05-15,2026-11-16,186,186,0,1,alive,,,,38896,,trades within 3 days of archive end
+HEIUSDT,1,1,2025-02-13,2026-11-16,642,642,0,1,alive,,,,1302694,,trades within 3 days of archive end
+HEMIUSDT,1,1,2025-08-29,2026-11-16,445,445,0,1,alive,,,,326131,,trades within 3 days of archive end
+HFTUSDT,1,1,2023-04-06,2026-08-07,1220,1220,0,0,delisted,,,,12699202,,stopped trading; not in the Q14 rename/merge/index lists
+HIFIUSDT,1,1,2023-09-16,2025-10-03,749,749,0,0,delisted,,,,1993234,151642,stopped trading; not in the Q14 rename/merge/index lists
+HIGHUSDT,1,1,2023-02-07,2026-06-11,1221,1221,0,0,delisted,,,,242158,,stopped trading; not in the Q14 rename/merge/index lists
+HIMSUSDT,1,1,2026-06-09,2026-11-16,161,161,0,1,alive,,,,90552,,trades within 3 days of archive end
+HIPPOUSDT,1,1,2024-11-13,2026-04-08,512,512,0,0,delisted,,,,730294,,stopped trading; not in the Q14 rename/merge/index lists
+HIVEUSDT,1,1,2024-12-23,2026-11-16,694,694,0,1,alive,,,,154605,,trades within 3 days of archive end
+HK0625USDT,1,1,2026-09-01,2026-11-16,77,77,0,1,alive,,,,54900,,trades within 3 days of archive end
+HK0700USDT,1,1,2026-07-22,2026-11-16,118,118,0,1,alive,,,,316546,,trades within 3 days of archive end
+HK0992USDT,1,1,2026-09-07,2026-11-16,71,71,0,1,alive,,,,56529,,trades within 3 days of archive end
+HK1810USDT,1,1,2026-07-22,2026-11-16,118,118,0,1,alive,,,,121554,,trades within 3 days of archive end
+HMSTRUSDT,1,1,2024-09-26,2026-11-16,782,782,0,1,alive,,,,308566,,trades within 3 days of archive end
+HNTUSDT,1,1,2020-09-28,2023-03-20,904,904,0,0,delisted,,,"ARBUSDT (starts 2023-03-23, close 1.433 vs 1.3229, ratio 1.08)",395514,,stopped trading; not in the Q14 rename/merge/index lists
+HOLOUSDT,1,1,2025-09-11,2026-11-16,432,432,0,1,alive,,,,173487,,trades within 3 days of archive end
+HOMEUSDT,1,1,2025-06-10,2026-11-16,525,525,0,1,alive,,,,523723,,trades within 3 days of archive end
+HOODUSDT,1,1,2026-02-02,2026-11-16,288,288,0,1,alive,,,,1123467,,trades within 3 days of archive end
+HOOKUSDT,1,1,2023-01-23,2026-03-24,1157,1157,0,0,delisted,,,,252524,,stopped trading; not in the Q14 rename/merge/index lists
+HOTUSDT,1,1,2021-03-30,2026-11-16,2058,2058,0,1,alive,,,,498826,,trades within 3 days of archive end
+HPEUSDT,1,1,2026-06-08,2026-11-16,162,162,0,1,alive,,,,164286,,trades within 3 days of archive end
+HUMAUSDT,1,1,2025-05-26,2026-11-16,540,540,0,1,alive,,,,10623160,,trades within 3 days of archive end
+HUSDT,1,1,2025-06-25,2026-11-16,510,510,0,1,alive,,,,688137,,trades within 3 days of archive end
+HUTUSDT,1,1,2026-09-18,2026-11-16,60,60,0,1,alive,,,,68358,,trades within 3 days of archive end
+HYPERUSDT,1,1,2025-04-22,2026-11-16,574,574,0,1,alive,,,,212072,,trades within 3 days of archive end
+HYPEUSDT,1,1,2025-05-30,2026-11-16,536,536,0,1,alive,,,,10426213,,trades within 3 days of archive end
+HYUNDAIUSDT,1,1,2026-06-02,2026-11-16,168,168,0,1,alive,,,,187037,,trades within 3 days of archive end
+IBKRUSDT,1,1,2026-10-21,2026-11-16,27,27,0,1,alive,,,,93402,,trades within 3 days of archive end
+IBMUSDT,1,1,2026-06-03,2026-11-16,167,167,0,1,alive,,,,161762,,trades within 3 days of archive end
+ICNTUSDT,1,1,2025-07-03,2026-11-16,502,502,0,1,alive,,,,1003948,,trades within 3 days of archive end
+ICPUSDT,1,2,2021-05-11,2022-06-10,396,396,0,0,reused-symbol,ICPUSDT,109,,133432,,symbol trades again after a gap of more than 30 days (life 2 starts 2022-09-27); close 6.44 at end vs 6.102 at restart (ratio 1.06)
+ICPUSDT,2,2,2022-09-27,2026-11-16,1512,1512,0,1,alive,,,,1128355,,trades within 3 days of archive end
+ICXUSDT,1,1,2020-09-15,2026-08-26,2172,2172,0,0,delisted,,,,156336,,stopped trading; not in the Q14 rename/merge/index lists
+IDEXUSDT,1,1,2023-05-03,2024-05-15,379,379,0,0,delisted,,,,80228,,stopped trading; not in the Q14 rename/merge/index lists
+IDOLUSDT,1,1,2025-07-04,2026-11-16,501,501,0,1,alive,,,,3417507,,trades within 3 days of archive end
+IDUSDT,1,1,2023-03-23,2026-11-16,1335,1335,0,1,alive,,,,217792,,trades within 3 days of archive end
+ILVUSDT,1,1,2023-11-10,2026-11-16,1103,1103,0,1,alive,,,,130466,,trades within 3 days of archive end
+IMXUSDT,1,1,2022-02-11,2026-11-16,1740,1740,0,1,alive,,,,232612,,trades within 3 days of archive end
+INITUSDT,1,1,2025-04-16,2026-11-16,580,580,0,1,alive,,,,5821125,,trades within 3 days of archive end
+INJUSDT,1,1,2022-08-17,2026-11-16,1553,1553,0,1,alive,,,,2313344,,trades within 3 days of archive end
+INTCUSDT,1,1,2026-02-02,2026-11-16,288,288,0,1,alive,,,,1998357,,trades within 3 days of archive end
+INTWUSDT,1,1,2026-07-09,2026-11-16,131,131,0,1,alive,,,,2154691,,trades within 3 days of archive end
+INUSDT,1,1,2025-08-07,2026-11-16,467,467,0,1,alive,,,,255529,,trades within 3 days of archive end
+INXUSDT,1,1,2026-01-30,2026-11-16,291,291,0,1,alive,,,,265253,,trades within 3 days of archive end
+IONQUSDT,1,1,2026-08-28,2026-11-16,81,81,0,1,alive,,,,108389,,trades within 3 days of archive end
+IOSTUSDT,1,1,2020-02-21,2026-11-16,2461,2461,0,1,alive,,,,625360,,trades within 3 days of archive end
+IOTAUSDT,1,1,2020-02-12,2026-11-16,2470,2470,0,1,alive,,,,216103,,trades within 3 days of archive end
+IOTXUSDT,1,1,2021-08-12,2026-11-16,1923,1923,0,1,alive,,,,176886,,trades within 3 days of archive end
+IOUSDT,1,1,2024-06-11,2026-11-16,889,889,0,1,alive,,,,143135,,trades within 3 days of archive end
+IPUSDT,1,1,2025-02-13,2026-06-28,501,501,0,0,delisted,,,"DATAIPUSDT (starts 2026-07-03, close 0.3105 vs 0.3118, ratio 0.996); ARXUSDT (starts 2026-06-23, close 0.3105 vs 0.3287, ratio 0.945)",384641,,stopped trading; not in the Q14 rename/merge/index lists
+IRENUSDT,1,1,2026-06-03,2026-11-16,167,167,0,1,alive,,,,430388,,trades within 3 days of archive end
+IRUSDT,1,1,2025-12-21,2026-04-29,130,130,0,0,delisted,,,,1432324,,stopped trading; not in the Q14 rename/merge/index lists
+IRYSUSDT,1,1,2025-11-26,2026-11-16,356,356,0,1,alive,,,,382327,,trades within 3 days of archive end
+IWMUSDT,1,1,2026-06-08,2026-11-16,162,162,0,1,alive,,,,58940,,trades within 3 days of archive end
+JASMYUSDT,1,1,2022-04-20,2026-11-16,1672,1672,0,1,alive,,,,540969,,trades within 3 days of archive end
+JCTUSDT,1,1,2025-11-10,2026-11-16,372,372,0,1,alive,,,,7299412,,trades within 3 days of archive end
+JELLYJELLYUSDT,1,1,2025-03-26,2026-11-16,601,601,0,1,alive,,,,568749,,trades within 3 days of archive end
+JOEUSDT,1,1,2023-03-29,2026-11-16,1329,1329,0,1,alive,,,,213152,,trades within 3 days of archive end
+JPMUSDT,1,1,2026-05-18,2026-11-16,183,183,0,1,alive,,,,65747,,trades within 3 days of archive end
+JSTUSDT,1,1,2025-04-28,2026-11-16,568,568,0,1,alive,,,,722962,,trades within 3 days of archive end
+JTOUSDT,1,1,2023-12-08,2026-11-16,1075,1075,0,1,alive,,,,440730,,trades within 3 days of archive end
+JUPUSDT,1,1,2024-01-31,2026-11-16,1021,1021,0,1,alive,,,,775680,,trades within 3 days of archive end
+KAIAUSDT,1,1,2024-12-04,2026-11-16,713,713,0,1,alive,,,,251875,,trades within 3 days of archive end
+KAITOUSDT,1,1,2025-02-20,2026-11-16,635,635,0,1,alive,,,,355318,,trades within 3 days of archive end
+KASUSDT,1,1,2023-11-17,2026-11-16,1096,1096,0,1,alive,,,,318811,,trades within 3 days of archive end
+KATUSDT,1,1,2026-03-02,2026-11-16,260,260,0,1,alive,,,,238640,,trades within 3 days of archive end
+KAVAUSDT,1,1,2020-07-28,2026-11-16,2303,2303,0,1,alive,,,,3990394,,trades within 3 days of archive end
+KDAUSDT,1,1,2024-09-18,2025-11-06,415,415,0,0,delisted,,,,820306,59840,stopped trading; not in the Q14 rename/merge/index lists; ignored zero-price artifact file(s) on 2025-12-10
+KEEPUSDT,1,1,2021-06-22,2022-02-15,239,239,0,0,delisted,,,,105953,7870,stopped trading; not in the Q14 rename/merge/index lists
+KERNELUSDT,1,1,2025-04-14,2026-11-16,582,582,0,1,alive,,,,190531,,trades within 3 days of archive end
+KEYUSDT,1,1,2023-05-24,2024-12-03,560,560,0,0,delisted,,,,614921,,stopped trading; not in the Q14 rename/merge/index lists
+KGENUSDT,1,1,2025-10-07,2026-11-16,406,406,0,1,alive,,,,1066177,,trades within 3 days of archive end
+KITEUSDT,1,1,2025-10-29,2026-11-16,384,384,0,1,alive,,,,1302487,,trades within 3 days of archive end
+KLACUSDT,1,1,2026-06-22,2026-11-16,148,148,0,1,alive,,,,181761,,trades within 3 days of archive end
+KLAYUSDT,1,1,2021-10-12,2024-10-22,1107,1107,0,0,renamed,KAIAUSDT,43,,93544,,token rename or migration (Q14 list)
+KMNOUSDT,1,1,2024-12-20,2026-11-16,697,697,0,1,alive,,,,344967,,trades within 3 days of archive end
+KNCUSDT,1,1,2020-06-22,2026-11-16,2339,2339,0,1,alive,,,,86281,,trades within 3 days of archive end
+KODEX200USDT,1,1,2026-08-14,2026-11-16,95,95,0,1,alive,,,,27304,,trades within 3 days of archive end
+KOMAUSDT,1,1,2024-12-10,2026-11-16,707,707,0,1,alive,,,,512763,,trades within 3 days of archive end
+KORUUSDT,1,1,2026-06-22,2026-11-16,148,148,0,1,alive,,,,2161515,,trades within 3 days of archive end
+KOUSDT,1,1,2026-08-06,2026-11-16,103,103,0,1,alive,,,,88806,,trades within 3 days of archive end
+KSMUSDT,1,1,2020-10-14,2026-11-16,2225,2225,0,1,alive,,,,201840,,trades within 3 days of archive end
+KSTRUSDT,1,1,2026-07-02,2026-11-16,138,138,0,1,alive,,,,193184,,trades within 3 days of archive end
+KUAISHOUUSDT,1,1,2026-08-11,2026-11-16,98,98,0,1,alive,,,,41144,,trades within 3 days of archive end
+LABUSDT,1,1,2025-10-17,2026-11-16,396,396,0,1,alive,,,,608339,,trades within 3 days of archive end
+LAUSDT,1,1,2025-06-05,2026-11-16,530,530,0,1,alive,,,,337800,,trades within 3 days of archive end
+LAYERUSDT,1,1,2025-02-11,2026-11-16,644,644,0,1,alive,,,,241316,,trades within 3 days of archive end
+LDOUSDT,1,1,2022-09-22,2026-11-16,1517,1517,0,1,alive,,,,488485,,trades within 3 days of archive end
+LENDUSDT,1,1,2020-07-23,2020-10-09,79,79,0,0,delisted,,,,537311,,stopped trading; not in the Q14 rename/merge/index lists
+LEVERUSDT,1,1,2023-03-30,2025-09-03,889,889,0,0,delisted,,,,5509072,,stopped trading; not in the Q14 rename/merge/index lists
+LGELECTRONICSUSDT,1,1,2026-08-14,2026-11-16,95,95,0,1,alive,,,,103103,,trades within 3 days of archive end
+LIGHTUSDT,1,1,2025-09-27,2026-11-16,416,416,0,1,alive,,,,272957,,trades within 3 days of archive end
+LINAUSDT,1,1,2021-03-19,2025-03-27,1470,1470,0,0,delisted,,,,1539161,,stopped trading; not in the Q14 rename/merge/index lists
+LINEAUSDT,1,1,2025-09-01,2026-11-16,442,442,0,1,alive,,,,181102,,trades within 3 days of archive end
+LINKUSDT,1,1,2020-01-17,2026-11-16,2496,2496,0,1,alive,,,,1731779,,trades within 3 days of archive end
+LISTAUSDT,1,1,2024-06-20,2026-11-16,880,880,0,1,alive,,,,181356,,trades within 3 days of archive end
+LITEUSDT,1,1,2026-05-15,2026-11-16,186,186,0,1,alive,,,,3560807,,trades within 3 days of archive end
+LITUSDT,1,2,2021-02-18,2025-01-31,1444,1444,0,0,reused-symbol,LITUSDT,326,,39354,,symbol trades again after a gap of more than 30 days (life 2 starts 2025-12-23); close 0.592 at end vs 3.629 at restart (ratio 0.163)
+LITUSDT,2,2,2025-12-23,2026-11-16,329,329,0,1,alive,,,,14088187,,trades within 3 days of archive end
+LLYUSDT,1,1,2026-06-01,2026-11-16,169,169,0,1,alive,,,,276113,,trades within 3 days of archive end
+LOKAUSDT,1,1,2024-09-24,2025-07-21,301,301,0,0,delisted,,,"TAUSDT (starts 2025-07-21, close 0.11323 vs 0.1183, ratio 0.957)",928176,,stopped trading; not in the Q14 rename/merge/index lists
+LOOMUSDT,1,1,2023-10-11,2024-12-09,426,426,0,0,delisted,,,,595461,,stopped trading; not in the Q14 rename/merge/index lists
+LPTUSDT,1,1,2021-11-11,2026-11-16,1832,1832,0,1,alive,,,,126893,,trades within 3 days of archive end
+LQTYUSDT,1,1,2023-03-10,2026-11-16,1348,1348,0,1,alive,,,,153158,,trades within 3 days of archive end
+LRCUSDT,1,1,2020-10-19,2026-03-24,1983,1983,0,0,delisted,,,,178059,,stopped trading; not in the Q14 rename/merge/index lists
+LRCXUSDT,1,1,2026-06-22,2026-11-16,148,148,0,1,alive,,,,268197,,trades within 3 days of archive end
+LSKUSDT,1,1,2024-01-25,2026-11-16,1027,1027,0,1,alive,,,,1220502,,trades within 3 days of archive end
+LTCUSDT,1,1,2020-01-09,2026-11-16,2504,2504,0,1,alive,,,,806294,,trades within 3 days of archive end
+LUMIAUSDT,1,1,2024-12-18,2026-11-16,699,699,0,1,alive,,,,413759,,trades within 3 days of archive end
+LUNA2USDT,1,1,2022-09-10,2026-11-16,1529,1529,0,1,alive,,,,163990,,trades within 3 days of archive end
+LUNAUSDT,1,1,2021-01-28,2022-05-12,470,470,0,0,delisted,,,,84141022,,stopped trading; not in the Q14 rename/merge/index lists
+LYNUSDT,1,1,2025-10-06,2026-11-16,407,407,0,1,alive,,,,473781,,trades within 3 days of archive end
+LYTEUSDT,1,1,2026-08-17,2026-11-16,92,92,0,1,alive,,,,63004,,trades within 3 days of archive end
+MAGICUSDT,1,1,2023-01-25,2026-11-16,1392,1392,0,1,alive,,,,534325,,trades within 3 days of archive end
+MAGMAUSDT,1,1,2025-12-31,2026-11-16,321,321,0,1,alive,,,,2392445,,trades within 3 days of archive end
+MANAUSDT,1,1,2021-03-15,2026-11-16,2073,2073,0,1,alive,,,,394280,,trades within 3 days of archive end
+MANTAUSDT,1,1,2024-01-18,2026-11-16,1034,1034,0,1,alive,,,,330272,,trades within 3 days of archive end
+MANTRAUSDT,1,1,2026-03-04,2026-11-16,258,258,0,1,alive,,,,223301,,trades within 3 days of archive end
+MARAUSDT,1,1,2026-08-28,2026-11-16,81,81,0,1,alive,,,,70081,,trades within 3 days of archive end
+MARSCOINUSDT,1,1,2026-09-01,2026-11-16,77,77,0,1,alive,,,,733606,,trades within 3 days of archive end
+MASKUSDT,1,1,2021-08-27,2026-11-16,1908,1908,0,1,alive,,,,166168,,trades within 3 days of archive end
+MATICUSDT,1,1,2020-10-22,2024-09-04,1414,1414,0,0,renamed,POLUSDT,9,"UXLINKUSDT (starts 2024-09-15, close 0.3846 vs 0.3885, ratio 0.99); POLUSDT (starts 2024-09-13, close 0.3846 vs 0.4106, ratio 0.937)",678089,,token rename or migration (Q14 list)
+MAVIAUSDT,1,2,2024-02-21,2024-12-16,300,300,0,0,reused-symbol,MAVIAUSDT,100,"VIRTUALUSDT (starts 2024-12-10, close 1.4929 vs 1.5622, ratio 0.956)",309556,,symbol trades again after a gap of more than 30 days (life 2 starts 2025-03-26); close 1.4929 at end vs 0.4644 at restart (ratio 3.21)
+MAVIAUSDT,2,2,2025-03-26,2026-11-16,601,601,0,1,alive,,,,157173,,trades within 3 days of archive end
+MAVUSDT,1,1,2023-06-29,2026-11-16,1237,1237,0,1,alive,,,,298332,,trades within 3 days of archive end
+MBLUSDT,1,1,2023-11-14,2024-05-13,182,182,0,0,delisted,,,,169405,,stopped trading; not in the Q14 rename/merge/index lists
+MBOXUSDT,1,1,2024-08-28,2026-06-11,653,653,0,0,delisted,,,,204563,15679,stopped trading; not in the Q14 rename/merge/index lists
+MCDUSDT,1,1,2026-10-06,2026-11-16,42,42,0,1,alive,,,,149628,,trades within 3 days of archive end
+MDBUSDT,1,1,2026-09-02,2026-11-16,76,76,0,1,alive,,,,53267,,trades within 3 days of archive end
+MDTUSDT,1,2,2023-06-30,2024-05-16,322,322,0,0,reused-symbol,MDTUSDT,888,,469734,,symbol trades again after a gap of more than 30 days (life 2 starts 2026-10-21); close 0.06331 at end vs 93.3 at restart (ratio 0.000679)
+MDTUSDT,2,2,2026-10-21,2026-11-16,27,27,0,1,alive,,,,13323,,trades within 3 days of archive end
+MEGAUSDT,1,1,2026-01-30,2026-11-16,291,291,0,1,alive,,,,1053916,,trades within 3 days of archive end
+MEITUANUSDT,1,1,2026-08-11,2026-11-16,98,98,0,1,alive,,,,47487,,trades within 3 days of archive end
+MELANIAUSDT,1,1,2025-01-20,2026-11-16,666,666,0,1,alive,,,,241735,,trades within 3 days of archive end
+MELIUSDT,1,1,2026-10-29,2026-11-16,19,19,0,1,alive,,,,29106,,trades within 3 days of archive end
+MEMEFIUSDT,1,1,2025-04-25,2025-08-11,109,109,0,0,delisted,,,,1821983,126754,stopped trading; not in the Q14 rename/merge/index lists
+MEMEUSDT,1,1,2023-11-03,2026-11-16,1110,1110,0,1,alive,,,,404329,,trades within 3 days of archive end
+MERLUSDT,1,1,2025-05-29,2026-11-16,537,537,0,1,alive,,,,315203,,trades within 3 days of archive end
+METAUSDT,1,1,2026-03-26,2026-11-16,236,236,0,1,alive,,,,1771837,,trades within 3 days of archive end
+METISUSDT,1,1,2024-03-12,2026-11-16,980,980,0,1,alive,,,,185684,,trades within 3 days of archive end
+METUSDT,1,1,2025-10-11,2026-11-16,402,402,0,1,alive,,,,975832,,trades within 3 days of archive end
+MEUSDT,1,1,2024-12-10,2026-11-16,707,707,0,1,alive,,,,256225,,trades within 3 days of archive end
+MEWUSDT,1,1,2024-06-17,2026-11-16,883,883,0,1,alive,,,,166286,,trades within 3 days of archive end
+MILKUSDT,1,1,2025-05-06,2025-12-05,214,214,0,0,delisted,,,,213687,,stopped trading; not in the Q14 rename/merge/index lists
+MINAUSDT,1,1,2023-02-06,2026-11-16,1380,1380,0,1,alive,,,,422288,,trades within 3 days of archive end
+MINIMAXUSDT,1,1,2026-07-17,2026-11-16,123,123,0,1,alive,,,,547118,,trades within 3 days of archive end
+MIRAUSDT,1,1,2025-09-26,2026-11-16,417,417,0,1,alive,,,,176637,,trades within 3 days of archive end
+MITOUSDT,1,1,2025-08-28,2026-10-23,422,422,0,0,delisted,,,,93796,,stopped trading; not in the Q14 rename/merge/index lists
+MKRUSDT,1,1,2020-08-13,2025-09-08,1853,1853,0,0,renamed,SKYUSDT,1,,429041,,token rename or migration (Q14 list)
+MLNUSDT,1,1,2025-03-31,2026-05-19,415,415,0,0,delisted,,,,450118,,stopped trading; not in the Q14 rename/merge/index lists
+MMTUSDT,1,1,2025-11-04,2026-11-16,378,378,0,1,alive,,,,474159,,trades within 3 days of archive end
+MOCAUSDT,1,1,2024-12-16,2026-11-16,701,701,0,1,alive,,,,219610,,trades within 3 days of archive end
+MONUSDT,1,1,2025-10-10,2026-11-16,403,403,0,1,alive,,,,289465,,trades within 3 days of archive end
+MOODENGUSDT,1,1,2024-10-25,2026-11-16,753,753,0,1,alive,,,,203901,,trades within 3 days of archive end
+MOONSHOTUSDT,1,1,2026-09-22,2026-11-16,56,56,0,1,alive,,,,88919,,trades within 3 days of archive end
+MORPHOUSDT,1,1,2024-11-27,2026-11-16,720,720,0,1,alive,,,,1084753,,trades within 3 days of archive end
+MOVEUSDT,1,1,2024-12-09,2026-11-16,708,708,0,1,alive,,,,237801,,trades within 3 days of archive end
+MOVRUSDT,1,1,2023-12-26,2026-11-16,1057,1057,0,1,alive,,,,691698,,trades within 3 days of archive end
+MPUSDT,1,1,2026-09-29,2026-11-16,49,49,0,1,alive,,,,38910,,trades within 3 days of archive end
+MRKUSDT,1,1,2026-08-28,2026-11-16,81,81,0,1,alive,,,,52732,,trades within 3 days of archive end
+MRNAUSDT,1,1,2026-08-25,2026-11-16,84,84,0,1,alive,,,,792805,,trades within 3 days of archive end
+MRVLUSDT,1,1,2026-05-15,2026-11-16,186,186,0,1,alive,,,,2895396,,trades within 3 days of archive end
+MSFTUSDT,1,1,2026-04-20,2026-11-16,211,211,0,1,alive,,,,901433,,trades within 3 days of archive end
+MSTRUSDT,1,1,2026-02-09,2026-11-16,281,281,0,1,alive,,,,2971071,,trades within 3 days of archive end
+MSTUUSDT,1,1,2026-10-12,2026-11-16,36,36,0,1,alive,,,,681672,,trades within 3 days of archive end
+MTLUSDT,1,1,2021-03-31,2026-11-16,2057,2057,0,1,alive,,,,173626,,trades within 3 days of archive end
+MUBARAKUSDT,1,1,2025-03-17,2026-11-16,610,610,0,1,alive,,,,441970,,trades within 3 days of archive end
+MUSDT,1,1,2025-07-07,2026-11-16,498,498,0,1,alive,,,,231377,,trades within 3 days of archive end
+MUUSDT,1,1,2026-04-07,2026-11-16,224,224,0,1,alive,,,,14313939,,trades within 3 days of archive end
+MUUUSDT,1,1,2026-07-16,2026-11-16,124,124,0,1,alive,,,,1361155,,trades within 3 days of archive end
+MVLLUSDT,1,1,2026-06-29,2026-11-16,141,141,0,1,alive,,,,693136,,trades within 3 days of archive end
+MYROUSDT,1,1,2024-03-05,2025-11-14,620,620,0,0,delisted,,,,209133,14134,stopped trading; not in the Q14 rename/merge/index lists
+MYXUSDT,1,1,2025-06-18,2026-11-16,517,517,0,1,alive,,,,322390,,trades within 3 days of archive end
+NAORISUSDT,1,1,2025-07-31,2026-11-16,474,474,0,1,alive,,,,194571,,trades within 3 days of archive end
+NATGASUSDT,1,1,2026-04-01,2026-11-16,230,230,0,1,alive,,,,402599,,trades within 3 days of archive end
+NAVERUSDT,1,1,2026-08-14,2026-11-16,95,95,0,1,alive,,,,71572,,trades within 3 days of archive end
+NBISUSDT,1,1,2026-05-26,2026-11-16,175,175,0,1,alive,,,,3681868,,trades within 3 days of archive end
+NEARUSDT,1,1,2020-10-15,2026-11-16,2224,2224,0,1,alive,,,,1726130,,trades within 3 days of archive end
+NEIROETHUSDT,1,1,2024-09-06,2025-09-26,386,386,0,0,delisted,,,,2536132,,stopped trading; not in the Q14 rename/merge/index lists
+NEIROUSDT,1,1,2024-09-16,2026-11-16,792,792,0,1,alive,,,,561030,,trades within 3 days of archive end
+NEOUSDT,1,1,2020-02-17,2026-11-16,2465,2465,0,1,alive,,,,200071,,trades within 3 days of archive end
+NETUSDT,1,1,2026-08-17,2026-11-16,92,92,0,1,alive,,,,79769,,trades within 3 days of archive end
+NEWTUSDT,1,1,2025-06-19,2026-11-16,516,516,0,1,alive,,,,148316,,trades within 3 days of archive end
+NFLXUSDT,1,1,2026-06-09,2026-11-16,161,161,0,1,alive,,,,127892,,trades within 3 days of archive end
+NFPUSDT,1,1,2023-12-27,2026-07-02,919,919,0,0,delisted,,,,20582258,,stopped trading; not in the Q14 rename/merge/index lists
+NIGHTUSDT,1,1,2025-12-10,2026-11-16,342,342,0,1,alive,,,,1684836,,trades within 3 days of archive end
+NILUSDT,1,1,2025-03-24,2026-11-16,603,603,0,1,alive,,,,785325,,trades within 3 days of archive end
+NKEUSDT,1,1,2026-09-29,2026-11-16,49,49,0,1,alive,,,,61299,,trades within 3 days of archive end
+NKNUSDT,1,1,2021-04-09,2026-02-06,1765,1765,0,0,delisted,,,,221239,15026,stopped trading; not in the Q14 rename/merge/index lists
+NMRUSDT,1,1,2023-06-22,2026-11-16,1244,1244,0,1,alive,,,,364468,,trades within 3 days of archive end
+NOKUSDT,1,1,2026-06-01,2026-11-16,169,169,0,1,alive,,,,74669,,trades within 3 days of archive end
+NOMUSDT,1,1,2025-10-01,2026-11-16,412,412,0,1,alive,,,,530304,,trades within 3 days of archive end
+NOTUSDT,1,1,2024-05-16,2026-11-16,915,915,0,1,alive,,,,231465,,trades within 3 days of archive end
+NOWUSDT,1,1,2026-06-03,2026-11-16,167,167,0,1,alive,,,,231417,,trades within 3 days of archive end
+NTRNUSDT,1,1,2023-11-14,2026-03-24,862,862,0,0,delisted,,,,233404,,stopped trading; not in the Q14 rename/merge/index lists
+NULSUSDT,1,1,2024-08-26,2025-04-14,232,232,0,0,delisted,,,,100025,,stopped trading; not in the Q14 rename/merge/index lists
+NUUSDT,1,2,2021-10-21,2022-02-15,118,118,0,0,reused-symbol,NUUSDT,1731,,44609,3012,symbol trades again after a gap of more than 30 days (life 2 starts 2026-11-12); close 0.5265 at end vs 12.29 at restart (ratio 0.0428)
+NUUSDT,2,2,2026-11-12,2026-11-16,5,5,0,1,alive,,,,23888,,trades within 3 days of archive end
+NVDAUSDT,1,1,2026-03-26,2026-11-16,236,236,0,1,alive,,,,6485388,,trades within 3 days of archive end
+NVDLUSDT,1,1,2026-09-02,2026-11-16,76,76,0,1,alive,,,,567315,,trades within 3 days of archive end
+NVOUSDT,1,1,2026-06-01,2026-11-16,169,169,0,1,alive,,,,47713,,trades within 3 days of archive end
+NXPCUSDT,1,1,2025-05-15,2026-11-16,551,551,0,1,alive,,,,284353,,trades within 3 days of archive end
+OBOLUSDT,1,1,2025-05-07,2025-12-05,213,213,0,0,delisted,,,,143697,,stopped trading; not in the Q14 rename/merge/index lists
+OCEANUSDT,1,1,2020-11-03,2024-06-25,1331,1331,0,0,merged,FETUSDT,-525,,917236,66949,"merged into FET, ASI alliance 2024 (Q14 list); successor already trading since 2023-01-17"
+OGNUSDT,1,1,2021-04-01,2026-11-16,2056,2056,0,1,alive,,,,252747,,trades within 3 days of archive end
+OGUSDT,1,1,2025-05-12,2026-11-16,554,554,0,1,alive,,,,142941,,trades within 3 days of archive end
+OKLOUSDT,1,1,2026-09-28,2026-11-16,50,50,0,1,alive,,,,70707,,trades within 3 days of archive end
+OLUSDT,1,1,2025-06-25,2026-04-08,288,288,0,0,delisted,,,,223273,,stopped trading; not in the Q14 rename/merge/index lists
+OMGUSDT,1,1,2020-07-02,2025-01-31,1675,1675,0,0,delisted,,,,160460,10786,stopped trading; not in the Q14 rename/merge/index lists
+OMNIUSDT,1,1,2024-04-17,2025-09-22,524,524,0,0,delisted,,,,2388862,,stopped trading; not in the Q14 rename/merge/index lists
+OMUSDT,1,1,2024-02-13,2026-02-23,742,742,0,0,delisted,,,,985351,68544,stopped trading; not in the Q14 rename/merge/index lists
+ONDOUSDT,1,1,2024-01-20,2026-11-16,1032,1032,0,1,alive,,,,832384,,trades within 3 days of archive end
+ONDSUSDT,1,1,2026-06-03,2026-11-16,167,167,0,1,alive,,,,188017,,trades within 3 days of archive end
+ONEUSDT,1,1,2021-03-18,2026-11-16,2070,2070,0,1,alive,,,,2065433,,trades within 3 days of archive end
+ONGUSDT,1,1,2023-11-27,2026-11-16,1086,1086,0,1,alive,,,,346572,,trades within 3 days of archive end
+ONTUSDT,1,1,2020-02-11,2026-11-16,2471,2471,0,1,alive,,,,193225,,trades within 3 days of archive end
+ONUSDT,1,1,2025-10-24,2026-11-16,389,389,0,1,alive,,,,1087799,,trades within 3 days of archive end
+OPENAIUSDT,1,1,2026-05-26,2026-11-16,175,175,0,1,alive,,,,487098,,trades within 3 days of archive end
+OPENUSDT,1,1,2025-09-08,2026-11-16,435,435,0,1,alive,,,,144679,,trades within 3 days of archive end
+OPGUSDT,1,1,2026-04-22,2026-11-16,209,209,0,1,alive,,,,301633,,trades within 3 days of archive end
+OPNUSDT,1,1,2026-02-21,2026-11-16,269,269,0,1,alive,,,,206233,,trades within 3 days of archive end
+OPUSDT,1,1,2022-06-01,2026-11-16,1630,1630,0,1,alive,,,,1449063,,trades within 3 days of archive end
+ORBSUSDT,1,1,2023-10-17,2024-12-09,420,420,0,0,delisted,,,,214023,,stopped trading; not in the Q14 rename/merge/index lists
+ORCAUSDT,1,1,2024-12-06,2026-11-16,711,711,0,1,alive,,,,215652,,trades within 3 days of archive end
+ORCLUSDT,1,1,2026-05-15,2026-11-16,186,186,0,1,alive,,,,775163,,trades within 3 days of archive end
+ORDERUSDT,1,1,2025-09-26,2026-11-16,417,417,0,1,alive,,,,210849,,trades within 3 days of archive end
+ORDIUSDT,1,1,2023-11-07,2026-11-16,1106,1106,0,1,alive,,,,351837,,trades within 3 days of archive end
+OURAUSDT,1,1,2026-09-23,2026-11-16,55,55,0,1,alive,,,,5422,,trades within 3 days of archive end
+OUSDT,1,1,2026-06-24,2026-11-16,146,146,0,1,alive,,,,1367543,,trades within 3 days of archive end
+OXTUSDT,1,1,2023-08-11,2026-04-15,979,979,0,0,delisted,,,,146654,,stopped trading; not in the Q14 rename/merge/index lists
+OXYUSDT,1,1,2026-10-29,2026-11-16,19,19,0,1,alive,,,,32505,,trades within 3 days of archive end
+PANWUSDT,1,1,2026-07-21,2026-11-16,119,119,0,1,alive,,,,81276,,trades within 3 days of archive end
+PARTIUSDT,1,1,2025-03-25,2026-11-16,602,602,0,1,alive,,,,663640,,trades within 3 days of archive end
+PATHUSDT,1,1,2026-09-18,2026-11-16,60,60,0,1,alive,,,,18365,,trades within 3 days of archive end
+PAXGUSDT,1,1,2025-03-27,2026-11-16,600,600,0,1,alive,,,,929479,,trades within 3 days of archive end
+PAYPUSDT,1,1,2026-03-23,2026-11-16,239,239,0,1,alive,,,,61877,,trades within 3 days of archive end
+PDDUSDT,1,1,2026-08-28,2026-11-16,81,81,0,1,alive,,,,71261,,trades within 3 days of archive end
+PENDLEUSDT,1,1,2023-07-28,2026-11-16,1208,1208,0,1,alive,,,,896711,,trades within 3 days of archive end
+PENGUSDT,1,1,2026-07-21,2026-11-16,119,119,0,1,alive,,,,222927,,trades within 3 days of archive end
+PENGUUSDT,1,1,2024-12-17,2026-11-16,700,700,0,1,alive,,,,1091506,,trades within 3 days of archive end
+PEOPLEUSDT,1,1,2021-12-24,2026-11-16,1789,1789,0,1,alive,,,,447855,,trades within 3 days of archive end
+PERPUSDT,1,1,2023-03-06,2025-11-21,992,992,0,0,delisted,,,,149305,,stopped trading; not in the Q14 rename/merge/index lists
+PFEUSDT,1,1,2026-10-29,2026-11-16,19,19,0,1,alive,,,,18134,,trades within 3 days of archive end
+PHAROSUSDT,1,1,2026-05-14,2026-11-16,187,187,0,1,alive,,,,203437,,trades within 3 days of archive end
+PHAUSDT,1,1,2024-12-30,2026-11-16,687,687,0,1,alive,,,,750480,,trades within 3 days of archive end
+PHBUSDT,1,1,2023-02-16,2026-05-19,1189,1189,0,0,delisted,,,,450380,,stopped trading; not in the Q14 rename/merge/index lists
+PIEVERSEUSDT,1,1,2025-11-14,2026-11-16,368,368,0,1,alive,,,,5560403,,trades within 3 days of archive end
+PIPPINUSDT,1,1,2025-01-24,2026-11-16,662,662,0,1,alive,,,,159771,,trades within 3 days of archive end
+PIXELUSDT,1,1,2024-02-19,2026-11-16,1002,1002,0,1,alive,,,,254672,,trades within 3 days of archive end
+PLAYUSDT,1,1,2025-07-31,2026-11-16,474,474,0,1,alive,,,,627332,,trades within 3 days of archive end
+PLTRUSDT,1,1,2026-02-09,2026-11-16,281,281,0,1,alive,,,,864226,,trades within 3 days of archive end
+PLUMEUSDT,1,1,2025-03-21,2026-11-16,606,606,0,1,alive,,,,273202,,trades within 3 days of archive end
+PNUTUSDT,1,1,2024-11-11,2026-11-16,736,736,0,1,alive,,,,353165,,trades within 3 days of archive end
+POLUSDT,1,1,2024-09-13,2026-11-16,795,795,0,1,alive,,,,736695,,trades within 3 days of archive end
+POLYXUSDT,1,1,2023-10-25,2026-11-16,1119,1119,0,1,alive,,,,163895,,trades within 3 days of archive end
+PONKEUSDT,1,1,2024-11-04,2025-11-28,390,390,0,0,delisted,,,,89636,,stopped trading; not in the Q14 rename/merge/index lists
+PONSUSDT,1,1,2026-09-06,2026-11-16,72,72,0,1,alive,,,,510550,,trades within 3 days of archive end
+POPCATUSDT,1,1,2024-08-22,2026-11-16,817,817,0,1,alive,,,,335349,,trades within 3 days of archive end
+POPMARTUSDT,1,1,2026-07-23,2026-11-16,117,117,0,1,alive,,,,331270,,trades within 3 days of archive end
+PORT3USDT,1,1,2025-06-04,2025-11-23,173,173,0,0,delisted,,,,8076234,,stopped trading; not in the Q14 rename/merge/index lists
+PORTALUSDT,1,1,2024-02-29,2026-11-16,992,992,0,1,alive,,,,155700,,trades within 3 days of archive end
+POWERUSDT,1,1,2025-12-06,2026-11-16,346,346,0,1,alive,,,,982383,,trades within 3 days of archive end
+POWRUSDT,1,1,2023-10-27,2026-11-16,1117,1117,0,1,alive,,,,309729,,trades within 3 days of archive end
+PREDICTUSDT,1,1,2026-10-25,2026-11-16,23,23,0,1,alive,,,,198102,,trades within 3 days of archive end
+PRLUSDT,1,1,2026-04-01,2026-11-16,230,230,0,1,alive,,,,349658,,trades within 3 days of archive end
+PROMPTUSDT,1,1,2025-04-11,2026-10-05,543,543,0,0,delisted,,,,475346,,stopped trading; not in the Q14 rename/merge/index lists
+PROMUSDT,1,1,2025-01-15,2026-11-16,671,671,0,1,alive,,,,868161,,trades within 3 days of archive end
+PROVEUSDT,1,1,2025-08-05,2026-11-16,469,469,0,1,alive,,,,200354,,trades within 3 days of archive end
+PTBUSDT,1,1,2025-09-03,2026-10-23,416,416,0,0,delisted,,,,549222,,stopped trading; not in the Q14 rename/merge/index lists
+PUFFERUSDT,1,1,2025-06-04,2026-04-08,309,309,0,0,delisted,,,,971419,,stopped trading; not in the Q14 rename/merge/index lists
+PUMPBTCUSDT,1,1,2025-06-13,2026-10-05,480,480,0,0,delisted,,,,5028155,,stopped trading; not in the Q14 rename/merge/index lists
+PUMPUSDT,1,1,2025-04-12,2026-11-16,558,584,26,1,alive,,,,1332639,,trades within 3 days of archive end
+PUNDIXUSDT,1,1,2025-04-30,2026-11-16,566,566,0,1,alive,,,,197458,,trades within 3 days of archive end
+PYPLUSDT,1,1,2026-07-29,2026-11-16,111,111,0,1,alive,,,,20011,,trades within 3 days of archive end
+PYTHUSDT,1,1,2023-11-22,2026-11-16,1091,1091,0,1,alive,,,,837969,,trades within 3 days of archive end
+QCOMUSDT,1,1,2026-05-06,2026-11-16,195,195,0,1,alive,,,,907681,,trades within 3 days of archive end
+QNTUSDT,1,1,2022-10-20,2026-11-16,1489,1489,0,1,alive,,,,2052704,,trades within 3 days of archive end
+QNTXUSDT,1,1,2026-05-29,2026-11-16,172,172,0,1,alive,,,,160270,,trades within 3 days of archive end
+QQQUSDT,1,1,2026-04-06,2026-11-16,225,225,0,1,alive,,,,2134372,,trades within 3 days of archive end
+QTUMUSDT,1,1,2020-02-20,2026-11-16,2462,2462,0,1,alive,,,,291088,,trades within 3 days of archive end
+QUICKUSDT,1,1,2024-09-06,2025-11-28,449,449,0,0,delisted,,,,126293,,stopped trading; not in the Q14 rename/merge/index lists
+QUSDT,1,1,2025-09-02,2026-11-16,441,441,0,1,alive,,,,975039,,trades within 3 days of archive end
+RADUSDT,1,1,2023-05-10,2024-05-14,371,371,0,0,delisted,,,,157894,,stopped trading; not in the Q14 rename/merge/index lists
+RAMUSDT,1,1,2026-08-25,2026-11-16,84,84,0,1,alive,,,,661408,,trades within 3 days of archive end
+RAREUSDT,1,1,2024-08-15,2026-11-16,824,824,0,1,alive,,,,11320093,,trades within 3 days of archive end
+RAVEUSDT,1,1,2025-12-14,2026-11-16,338,338,0,1,alive,,,,143798,,trades within 3 days of archive end
+RAYSOLUSDT,1,1,2024-12-10,2026-11-16,707,707,0,1,alive,,,,1183550,,trades within 3 days of archive end
+RAYUSDT,1,1,2021-08-20,2022-11-15,453,453,0,0,delisted,,,,433830,,stopped trading; not in the Q14 rename/merge/index lists
+RDDTUSDT,1,1,2026-08-06,2026-11-16,103,103,0,1,alive,,,,81783,,trades within 3 days of archive end
+RDNTUSDT,1,1,2023-04-05,2026-03-24,1085,1085,0,0,delisted,,,,624296,,stopped trading; not in the Q14 rename/merge/index lists
+RDWUSDT,1,1,2026-10-12,2026-11-16,36,36,0,1,alive,,,,36597,,trades within 3 days of archive end
+RECALLUSDT,1,1,2025-10-15,2026-11-16,398,398,0,1,alive,,,,247040,,trades within 3 days of archive end
+REDUSDT,1,1,2025-03-06,2026-11-16,621,621,0,1,alive,,,,140578,,trades within 3 days of archive end
+REEFUSDT,1,1,2021-02-22,2025-01-22,1431,1431,0,0,delisted,,,,156376,10199,stopped trading; not in the Q14 rename/merge/index lists
+REIUSDT,1,1,2024-09-27,2025-12-10,440,440,0,0,delisted,,,,177050,,stopped trading; not in the Q14 rename/merge/index lists
+RENDERUSDT,1,1,2024-07-26,2026-11-16,844,844,0,1,alive,,,,356899,,trades within 3 days of archive end
+RENUSDT,1,1,2020-10-13,2024-12-03,1513,1513,0,0,delisted,,,,654795,44069,stopped trading; not in the Q14 rename/merge/index lists
+RESOLVUSDT,1,1,2025-06-10,2026-11-16,525,525,0,1,alive,,,,491428,,trades within 3 days of archive end
+REUSDT,1,1,2026-06-18,2026-11-16,152,152,0,1,alive,,,,404793,,trades within 3 days of archive end
+REZUSDT,1,1,2024-04-30,2026-11-16,931,931,0,1,alive,,,,461479,,trades within 3 days of archive end
+RIFUSDT,1,1,2023-10-21,2026-11-16,1123,1123,0,1,alive,,,,380447,,trades within 3 days of archive end
+RIVERUSDT,1,1,2025-10-17,2026-11-16,396,396,0,1,alive,,,,975657,,trades within 3 days of archive end
+RIVNUSDT,1,1,2026-06-10,2026-11-16,160,160,0,1,alive,,,,53408,,trades within 3 days of archive end
+RKLBUSDT,1,1,2026-05-18,2026-11-16,183,183,0,1,alive,,,,895008,,trades within 3 days of archive end
+RLCUSDT,1,1,2020-07-31,2026-11-16,2300,2300,0,1,alive,,,,400659,,trades within 3 days of archive end
+RLSUSDT,1,1,2025-12-02,2026-04-08,128,128,0,0,delisted,,,,596138,,stopped trading; not in the Q14 rename/merge/index lists
+RNDRUSDT,1,1,2023-02-03,2024-07-16,530,530,0,0,renamed,RENDERUSDT,10,"RENDERUSDT (starts 2024-07-26, close 6.6161 vs 6.782, ratio 0.976)",2468770,192610,token rename or migration (Q14 list)
+ROBOUSDT,1,1,2026-02-27,2026-11-16,263,263,0,1,alive,,,,367344,,trades within 3 days of archive end
+RONINUSDT,1,1,2024-02-06,2026-11-16,1015,1015,0,1,alive,,,,211603,,trades within 3 days of archive end
+ROSEUSDT,1,1,2021-12-31,2026-11-16,1782,1782,0,1,alive,,,,389803,,trades within 3 days of archive end
+RPLUSDT,1,1,2024-09-09,2026-11-16,799,799,0,1,alive,,,,140078,,trades within 3 days of archive end
+RSRUSDT,1,1,2020-10-19,2026-11-16,2220,2220,0,1,alive,,,,332746,,trades within 3 days of archive end
+RUMUSDT,1,1,2026-09-28,2026-11-16,50,50,0,1,alive,,,,125378,,trades within 3 days of archive end
+RUNEUSDT,1,1,2020-09-04,2026-11-16,2265,2265,0,1,alive,,,,677012,,trades within 3 days of archive end
+RVNUSDT,1,1,2021-02-23,2026-11-16,2093,2093,0,1,alive,,,,111032,,trades within 3 days of archive end
+RVVUSDT,1,1,2025-10-18,2026-02-10,116,116,0,0,delisted,,,,1444040,,stopped trading; not in the Q14 rename/merge/index lists
+SAFEUSDT,1,1,2024-10-25,2026-11-16,753,753,0,1,alive,,,,260055,,trades within 3 days of archive end
+SAGAUSDT,1,1,2024-04-09,2026-11-16,952,952,0,1,alive,,,,272527,,trades within 3 days of archive end
+SAHARAUSDT,1,1,2025-06-26,2026-11-16,509,509,0,1,alive,,,,404557,,trades within 3 days of archive end
+SAMSUNGEMUSDT,1,1,2026-08-14,2026-11-16,95,95,0,1,alive,,,,226184,,trades within 3 days of archive end
+SAMSUNGUSDT,1,1,2026-06-02,2026-11-16,168,168,0,1,alive,,,,2869742,,trades within 3 days of archive end
+SANDUSDT,1,1,2021-01-25,2026-11-16,2122,2122,0,1,alive,,,,544740,,trades within 3 days of archive end
+SANTOSUSDT,1,1,2024-10-28,2026-11-16,750,750,0,1,alive,,,,186420,,trades within 3 days of archive end
+SAPIENUSDT,1,1,2025-08-20,2026-11-16,454,454,0,1,alive,,,,277188,,trades within 3 days of archive end
+SCRTUSDT,1,1,2024-11-21,2026-08-26,644,644,0,0,delisted,,,,326311,,stopped trading; not in the Q14 rename/merge/index lists
+SCRUSDT,1,1,2024-10-22,2026-11-16,756,756,0,1,alive,,,,277381,,trades within 3 days of archive end
+SCUSDT,1,1,2021-04-12,2022-06-17,432,432,0,0,delisted,,,,267672,,stopped trading; not in the Q14 rename/merge/index lists
+SECZUSDT,1,1,2026-09-29,2026-11-16,49,49,0,1,alive,,,,73329,,trades within 3 days of archive end
+SEIUSDT,1,1,2023-08-17,2026-11-16,1188,1188,0,1,alive,,,,569105,,trades within 3 days of archive end
+SENTUSDT,1,1,2025-11-14,2026-11-16,368,368,0,1,alive,,,,422498,,trades within 3 days of archive end
+SFPUSDT,1,1,2021-02-24,2026-11-16,2092,2092,0,1,alive,,,,146715,,trades within 3 days of archive end
+SHAZUSDT,1,1,2026-07-21,2026-11-16,119,119,0,1,alive,,,,358922,,trades within 3 days of archive end
+SHELLUSDT,1,1,2025-02-17,2026-11-16,638,638,0,1,alive,,,,2709551,,trades within 3 days of archive end
+SHOPUSDT,1,1,2026-08-17,2026-11-16,92,92,0,1,alive,,,,85182,,trades within 3 days of archive end
+SIGNUSDT,1,1,2025-04-28,2026-11-16,568,568,0,1,alive,,,,368907,,trades within 3 days of archive end
+SIRENUSDT,1,1,2025-03-22,2026-11-16,605,605,0,1,alive,,,,426203,,trades within 3 days of archive end
+SKATEUSDT,1,1,2025-06-09,2025-12-10,185,185,0,0,delisted,,,,561525,39767,stopped trading; not in the Q14 rename/merge/index lists
+SKDDUSDT,1,1,2026-08-25,2026-11-16,84,84,0,1,alive,,,,1702920,,trades within 3 days of archive end
+SKHYNIXUSDT,1,1,2026-06-02,2026-11-16,168,168,0,1,alive,,,,13676012,,trades within 3 days of archive end
+SKHYUSDT,1,1,2026-07-10,2026-11-16,130,130,0,1,alive,,,,3686738,,trades within 3 days of archive end
+SKLUSDT,1,1,2020-12-08,2026-11-16,2170,2170,0,1,alive,,,,408105,,trades within 3 days of archive end
+SKRUSDT,1,1,2026-01-22,2026-11-16,299,299,0,1,alive,,,,8925811,,trades within 3 days of archive end
+SKUUUSDT,1,1,2026-08-25,2026-11-16,84,84,0,1,alive,,,,443718,,trades within 3 days of archive end
+SKYAIUSDT,1,1,2025-05-13,2026-11-16,553,553,0,1,alive,,,,888888,,trades within 3 days of archive end
+SKYUSDT,1,1,2025-09-09,2026-11-16,434,434,0,1,alive,,,,741834,,trades within 3 days of archive end
+SLERFUSDT,1,1,2024-11-21,2025-10-20,334,334,0,0,delisted,,,,1225201,,stopped trading; not in the Q14 rename/merge/index lists
+SLPUSDT,1,2,2023-10-31,2024-05-15,198,198,0,0,reused-symbol,SLPUSDT,434,,53037,3331,symbol trades again after a gap of more than 30 days (life 2 starts 2025-07-23); close 0.003515 at end vs 0.002293 at restart (ratio 1.53)
+SLPUSDT,2,2,2025-07-23,2026-11-16,482,482,0,1,alive,,,,402897,,trades within 3 days of archive end
+SLXUSDT,1,1,2026-06-01,2026-11-16,169,169,0,1,alive,,,,406148,,trades within 3 days of archive end
+SMCIUSDT,1,1,2026-06-22,2026-11-16,148,148,0,1,alive,,,,263308,,trades within 3 days of archive end
+SMHUSDT,1,1,2026-07-29,2026-11-16,111,111,0,1,alive,,,,313135,,trades within 3 days of archive end
+SMRUSDT,1,1,2026-10-29,2026-11-16,19,19,0,1,alive,,,,78352,,trades within 3 days of archive end
+SNDKUSDT,1,1,2026-04-07,2026-11-16,224,224,0,1,alive,,,,21400313,,trades within 3 days of archive end
+SNOWUSDT,1,1,2026-07-10,2026-11-16,130,130,0,1,alive,,,,68784,,trades within 3 days of archive end
+SNPSUSDT,1,1,2026-10-12,2026-11-16,36,36,0,1,alive,,,,29549,,trades within 3 days of archive end
+SNTUSDT,1,1,2023-11-02,2024-05-13,194,194,0,0,delisted,,,,904782,,stopped trading; not in the Q14 rename/merge/index lists
+SNXUSDT,1,1,2020-08-14,2026-11-16,2286,2286,0,1,alive,,,,171028,,trades within 3 days of archive end
+SNXXUSDT,1,1,2026-07-09,2026-11-16,131,131,0,1,alive,,,,4715405,,trades within 3 days of archive end
+SOFIUSDT,1,1,2026-07-21,2026-11-16,119,119,0,1,alive,,,,37760,,trades within 3 days of archive end
+SOLUSDT,1,1,2020-09-14,2026-11-16,2255,2255,0,1,alive,,,,3996083,,trades within 3 days of archive end
+SOLVUSDT,1,1,2025-01-17,2026-11-16,669,669,0,1,alive,,,,550543,,trades within 3 days of archive end
+SOMIUSDT,1,1,2025-08-25,2026-11-16,449,449,0,1,alive,,,,166132,,trades within 3 days of archive end
+SONICUSDT,1,1,2025-01-08,2026-11-16,678,678,0,1,alive,,,,104833,,trades within 3 days of archive end
+SONYUSDT,1,1,2026-06-22,2026-11-16,148,148,0,1,alive,,,,29212,,trades within 3 days of archive end
+SOONUSDT,1,1,2025-05-23,2026-11-16,543,543,0,1,alive,,,,265979,,trades within 3 days of archive end
+SOPHUSDT,1,1,2025-05-28,2026-11-16,538,538,0,1,alive,,,,3545360,,trades within 3 days of archive end
+SOXLUSDT,1,1,2026-05-15,2026-11-16,186,186,0,1,alive,,,,12085253,,trades within 3 days of archive end
+SOXSUSDT,1,1,2026-07-16,2026-11-16,124,124,0,1,alive,,,,6682605,,trades within 3 days of archive end
+SPACEUSDT,1,1,2026-01-23,2026-11-16,298,298,0,1,alive,,,,6232476,,trades within 3 days of archive end
+SPCXUSDT,1,1,2026-05-21,2026-11-16,180,180,0,1,alive,,,,3447643,,trades within 3 days of archive end
+SPELLUSDT,1,1,2022-09-06,2026-11-16,1533,1533,0,1,alive,,,,113660,,trades within 3 days of archive end
+SPKUSDT,1,1,2025-06-17,2026-11-16,518,518,0,1,alive,,,,162849,,trades within 3 days of archive end
+SPORTFUNUSDT,1,1,2026-01-16,2026-11-16,305,305,0,1,alive,,,,198597,,trades within 3 days of archive end
+SPXUSDT,1,1,2024-12-10,2026-11-16,707,707,0,1,alive,,,,397940,,trades within 3 days of archive end
+SPYUSDT,1,1,2026-04-06,2026-11-16,225,225,0,1,alive,,,,1044894,,trades within 3 days of archive end
+SQDUSDT,1,1,2025-06-11,2026-11-16,524,524,0,1,alive,,,,209951,,trades within 3 days of archive end
+SQQQUSDT,1,1,2026-06-29,2026-11-16,141,141,0,1,alive,,,,1103185,,trades within 3 days of archive end
+SRMUSDT,1,1,2020-09-05,2022-11-15,802,802,0,0,delisted,,,,3742133,,stopped trading; not in the Q14 rename/merge/index lists
+SSVUSDT,1,1,2023-02-24,2026-11-16,1362,1362,0,1,alive,,,,129994,,trades within 3 days of archive end
+STABLEUSDT,1,1,2025-11-06,2026-11-16,376,376,0,1,alive,,,,207639,,trades within 3 days of archive end
+STARUSDT,1,1,2026-05-14,2026-11-16,187,187,0,1,alive,,,,494142,,trades within 3 days of archive end
+STBLUSDT,1,1,2025-09-17,2026-11-16,426,426,0,1,alive,,,,154134,,trades within 3 days of archive end
+STEEMUSDT,1,1,2023-11-08,2026-11-16,1105,1105,0,1,alive,,,,172463,,trades within 3 days of archive end
+STGUSDT,1,1,2022-08-25,2026-09-24,1492,1492,0,0,delisted,,,,518250,,stopped trading; not in the Q14 rename/merge/index lists
+STMUSDT,1,1,2026-10-26,2026-11-16,22,22,0,1,alive,,,,33365,,trades within 3 days of archive end
+STMXUSDT,1,1,2021-03-22,2025-02-21,1433,1433,0,0,delisted,,,,43802,,stopped trading; not in the Q14 rename/merge/index lists
+STORJUSDT,1,1,2020-09-16,2026-08-26,2171,2171,0,0,delisted,,,,1537846,,stopped trading; not in the Q14 rename/merge/index lists
+STOUSDT,1,1,2025-04-12,2026-11-16,584,584,0,1,alive,,,,462333,,trades within 3 days of archive end
+STPTUSDT,1,1,2023-10-18,2024-05-13,209,209,0,0,delisted,,,,189024,,stopped trading; not in the Q14 rename/merge/index lists
+STRAXUSDT,1,1,2023-10-11,2024-03-15,157,157,0,0,delisted,,,,2087984,,stopped trading; not in the Q14 rename/merge/index lists
+STRCUSDT,1,1,2026-07-02,2026-11-16,138,138,0,1,alive,,,,155740,,trades within 3 days of archive end
+STRKUSDT,1,1,2024-02-20,2026-11-16,1001,1001,0,1,alive,,,,765148,,trades within 3 days of archive end
+STXUSDT,1,1,2023-02-21,2026-11-16,1365,1365,0,1,alive,,,,445998,,trades within 3 days of archive end
+STXXUSDT,1,1,2026-06-11,2026-11-16,159,159,0,1,alive,,,,511527,,trades within 3 days of archive end
+SUIUSDT,1,1,2023-05-03,2026-11-16,1294,1294,0,1,alive,,,,1818435,,trades within 3 days of archive end
+SUNUSDT,1,1,2024-08-22,2026-11-16,817,817,0,1,alive,,,,251618,,trades within 3 days of archive end
+SUPERUSDT,1,1,2023-11-26,2026-11-16,1087,1087,0,1,alive,,,,334886,,trades within 3 days of archive end
+SUSDT,1,1,2025-01-16,2026-11-16,670,670,0,1,alive,,,,464033,,trades within 3 days of archive end
+SUSHIUSDT,1,1,2020-09-04,2026-11-16,2265,2265,0,1,alive,,,,144129,,trades within 3 days of archive end
+SWARMSUSDT,1,1,2025-01-07,2026-11-16,679,679,0,1,alive,,,,438969,,trades within 3 days of archive end
+SWELLUSDT,1,1,2024-11-08,2025-11-28,386,386,0,0,delisted,,,,195515,,stopped trading; not in the Q14 rename/merge/index lists
+SXPUSDT,1,1,2020-07-21,2025-12-05,1964,1964,0,0,delisted,,,,707797,,stopped trading; not in the Q14 rename/merge/index lists
+SXTUSDT,1,1,2025-05-02,2026-11-16,564,564,0,1,alive,,,,421852,,trades within 3 days of archive end
+SYNUSDT,1,1,2024-08-16,2026-11-16,823,823,0,1,alive,,,,677632,,trades within 3 days of archive end
+SYRUPUSDT,1,1,2025-05-07,2026-11-16,559,559,0,1,alive,,,,779964,,trades within 3 days of archive end
+SYSUSDT,1,1,2024-08-19,2026-05-19,639,639,0,0,delisted,,,,300706,,stopped trading; not in the Q14 rename/merge/index lists
+TACUSDT,1,1,2025-07-15,2026-11-16,490,490,0,1,alive,,,,3154370,,trades within 3 days of archive end
+TAGUSDT,1,1,2025-07-25,2026-11-16,480,480,0,1,alive,,,,334176,,trades within 3 days of archive end
+TAIKOUSDT,1,1,2025-06-11,2026-11-16,524,524,0,1,alive,,,,198559,,trades within 3 days of archive end
+TAKEUSDT,1,1,2025-09-03,2026-11-16,440,440,0,1,alive,,,,279703,,trades within 3 days of archive end
+TANSSIUSDT,1,1,2025-07-09,2026-01-21,197,197,0,0,delisted,,,,1228162,,stopped trading; not in the Q14 rename/merge/index lists
+TAOUSDT,1,1,2024-04-11,2026-11-16,950,950,0,1,alive,,,,2794234,,trades within 3 days of archive end
+TAUSDT,1,1,2025-07-21,2026-11-16,484,484,0,1,alive,,,,979901,,trades within 3 days of archive end
+TBTUSDT,1,1,2026-07-27,2026-11-16,113,113,0,1,alive,,,,24756,,trades within 3 days of archive end
+TEAMUSDT,1,1,2026-09-02,2026-11-16,76,76,0,1,alive,,,,74356,,trades within 3 days of archive end
+TEMUSDT,1,1,2026-08-28,2026-11-16,81,81,0,1,alive,,,,155239,,trades within 3 days of archive end
+TENCENTUSDT,1,1,2026-07-22,2026-11-16,118,118,0,1,alive,,,,110116,,trades within 3 days of archive end
+TERUSDT,1,1,2026-07-02,2026-11-16,138,138,0,1,alive,,,,210119,,trades within 3 days of archive end
+THETAUSDT,1,1,2020-05-27,2026-11-16,2365,2365,0,1,alive,,,,193079,,trades within 3 days of archive end
+THEUSDT,1,1,2024-11-27,2026-11-16,720,720,0,1,alive,,,,295461,,trades within 3 days of archive end
+TIAUSDT,1,1,2023-10-31,2026-11-16,1113,1113,0,1,alive,,,,859988,,trades within 3 days of archive end
+TLMUSDT,1,2,2021-07-16,2022-06-09,329,329,0,0,reused-symbol,TLMUSDT,294,,119108,,symbol trades again after a gap of more than 30 days (life 2 starts 2023-03-30); close 0.0347 at end vs 0.01985 at restart (ratio 1.75)
+TLMUSDT,2,2,2023-03-30,2026-11-16,1328,1328,0,1,alive,,,,491332,,trades within 3 days of archive end
+TMFUSDT,1,1,2026-07-27,2026-11-16,113,113,0,1,alive,,,,35075,,trades within 3 days of archive end
+TNSRUSDT,1,1,2024-04-08,2026-11-16,953,953,0,1,alive,,,,210143,,trades within 3 days of archive end
+TOKENUSDT,1,1,2023-11-03,2025-12-05,764,764,0,0,delisted,,,,107705,,stopped trading; not in the Q14 rename/merge/index lists
+TOMOUSDT,1,1,2020-10-12,2023-11-14,1129,1129,0,0,delisted,,,"TWTUSDT (starts 2023-11-03, close 1.2792 vs 1.2221, ratio 1.05)",1170907,,stopped trading; not in the Q14 rename/merge/index lists
+TONUSDT,1,1,2024-03-01,2026-06-23,845,845,0,0,delisted,,,"GRAMUSDT (starts 2026-07-02, close 1.5901 vs 1.669, ratio 0.953)",2355712,,stopped trading; not in the Q14 rename/merge/index lists
+TOSHIUSDT,1,1,2025-09-17,2026-11-16,426,426,0,1,alive,,,,155917,,trades within 3 days of archive end
+TOWNSUSDT,1,1,2025-08-05,2026-11-16,469,469,0,1,alive,,,,180593,,trades within 3 days of archive end
+TQQQUSDT,1,1,2026-06-29,2026-11-16,141,141,0,1,alive,,,,1873593,,trades within 3 days of archive end
+TRADOORUSDT,1,1,2025-09-19,2026-11-16,424,424,0,1,alive,,,,303258,,trades within 3 days of archive end
+TRBUSDT,1,1,2020-09-03,2026-11-16,2266,2266,0,1,alive,,,,775138,,trades within 3 days of archive end
+TREEUSDT,1,1,2025-07-29,2026-11-16,476,476,0,1,alive,,,,245182,,trades within 3 days of archive end
+TRIAUSDT,1,1,2026-02-06,2026-11-16,284,284,0,1,alive,,,,436193,,trades within 3 days of archive end
+TROYUSDT,1,1,2024-10-31,2025-04-14,166,166,0,0,delisted,,,,167224,,stopped trading; not in the Q14 rename/merge/index lists
+TRUMPUSDT,1,1,2025-01-18,2026-11-16,668,668,0,1,alive,,,,683172,,trades within 3 days of archive end
+TRUSTUSDT,1,1,2025-11-05,2026-11-16,377,377,0,1,alive,,,,239502,,trades within 3 days of archive end
+TRUTHUSDT,1,1,2025-10-01,2026-11-16,412,412,0,1,alive,,,,545602,,trades within 3 days of archive end
+TRUUSDT,1,1,2023-03-07,2026-04-21,1142,1142,0,0,delisted,,,,960087,,stopped trading; not in the Q14 rename/merge/index lists
+TRXUSDT,1,1,2020-01-15,2026-11-16,2498,2498,0,1,alive,,,,1086428,,trades within 3 days of archive end
+TSLAUSDT,1,1,2026-01-28,2026-11-16,293,293,0,1,alive,,,,2426828,,trades within 3 days of archive end
+TSLLUSDT,1,1,2026-09-02,2026-11-16,76,76,0,1,alive,,,,75306,,trades within 3 days of archive end
+TSMUSDT,1,1,2026-04-06,2026-11-16,225,225,0,1,alive,,,,1187670,,trades within 3 days of archive end
+TSTUSDT,1,1,2025-02-09,2026-11-16,646,646,0,1,alive,,,,212906,,trades within 3 days of archive end
+TTWOUSDT,1,1,2026-07-02,2026-11-16,138,138,0,1,alive,,,,611215,,trades within 3 days of archive end
+TURBOUSDT,1,1,2024-05-30,2026-11-16,901,901,0,1,alive,,,,417250,,trades within 3 days of archive end
+TURTLEUSDT,1,1,2025-10-22,2026-11-16,391,391,0,1,alive,,,,164579,,trades within 3 days of archive end
+TUSDT,1,1,2023-02-01,2026-11-16,1385,1385,0,1,alive,,,,404722,,trades within 3 days of archive end
+TUTUSDT,1,1,2025-03-20,2026-11-16,607,607,0,1,alive,,,,212876,,trades within 3 days of archive end
+TWSTUSDT,1,1,2026-09-28,2026-11-16,50,50,0,1,alive,,,,155253,,trades within 3 days of archive end
+TWTUSDT,1,1,2023-11-03,2026-11-16,1110,1110,0,1,alive,,,,189774,,trades within 3 days of archive end
+TXNUSDT,1,1,2026-07-02,2026-11-16,138,138,0,1,alive,,,,133703,,trades within 3 days of archive end
+TZAUSDT,1,1,2026-07-16,2026-11-16,124,124,0,1,alive,,,,45146,,trades within 3 days of archive end
+UAIUSDT,1,1,2025-11-06,2026-11-16,376,376,0,1,alive,,,,1661719,,trades within 3 days of archive end
+UBERUSDT,1,1,2026-05-15,2026-11-16,186,186,0,1,alive,,,,58064,,trades within 3 days of archive end
+UBUSDT,1,1,2025-09-12,2026-11-16,431,431,0,1,alive,,,,378746,,trades within 3 days of archive end
+UMAUSDT,1,1,2023-05-10,2026-11-16,1287,1287,0,1,alive,,,,140974,,trades within 3 days of archive end
+UNFIUSDT,1,1,2021-02-19,2024-10-30,1350,1350,0,0,delisted,,,,487713,34752,stopped trading; not in the Q14 rename/merge/index lists
+UNHUSDT,1,1,2026-09-29,2026-11-16,49,49,0,1,alive,,,,24660,,trades within 3 days of archive end
+UNITREEUSDT,1,1,2026-08-19,2026-11-16,90,90,0,1,alive,,,,1370663,,trades within 3 days of archive end
+UNIUSDT,1,1,2020-09-18,2026-11-16,2251,2251,0,1,alive,,,,1626840,,trades within 3 days of archive end
+URNMUSDT,1,1,2026-06-09,2026-11-16,161,161,0,1,alive,,,,57678,,trades within 3 days of archive end
+USARUSDT,1,1,2026-05-06,2026-11-16,195,195,0,1,alive,,,,156943,,trades within 3 days of archive end
+USDBRLUSDT,1,1,2026-09-21,2026-11-16,57,57,0,1,alive,,,,513571,,trades within 3 days of archive end
+USDCUSDT,1,1,2023-03-12,2026-11-16,1346,1346,0,1,alive,,,,266142,,trades within 3 days of archive end
+USDEXUSDT,1,1,2026-10-06,2026-11-16,42,42,0,1,alive,,,,417486,,trades within 3 days of archive end
+USELESSUSDT,1,1,2025-08-15,2026-11-16,459,459,0,1,alive,,,,2303087,,trades within 3 days of archive end
+USTCUSDT,1,1,2023-11-27,2026-11-16,1086,1086,0,1,alive,,,,137155,,trades within 3 days of archive end
+USUALUSDT,1,1,2024-12-18,2026-11-16,699,699,0,1,alive,,,,586446,,trades within 3 days of archive end
+USUSDT,1,1,2025-12-12,2026-11-16,340,340,0,1,alive,,,,894557,,trades within 3 days of archive end
+UVXYUSDT,1,1,2026-06-11,2026-11-16,159,159,0,1,alive,,,,697347,,trades within 3 days of archive end
+UXLINKUSDT,1,1,2024-09-15,2025-09-26,377,377,0,0,delisted,,,,1113479,,stopped trading; not in the Q14 rename/merge/index lists
+VANAUSDT,1,1,2024-12-16,2026-11-16,701,701,0,1,alive,,,,243085,,trades within 3 days of archive end
+VANRYUSDT,1,1,2024-03-13,2026-08-07,878,878,0,0,delisted,,,,461446,31439,stopped trading; not in the Q14 rename/merge/index lists
+VELODROMEUSDT,1,1,2024-12-13,2026-10-28,685,685,0,0,delisted,,,,214143,,stopped trading; not in the Q14 rename/merge/index lists
+VELVETUSDT,1,1,2025-07-15,2026-11-16,490,490,0,1,alive,,,,583842,,trades within 3 days of archive end
+VETUSDT,1,1,2020-02-14,2026-11-16,2468,2468,0,1,alive,,,,480561,,trades within 3 days of archive end
+VFYUSDT,1,1,2025-09-30,2026-03-17,169,169,0,0,delisted,,,,326142,,stopped trading; not in the Q14 rename/merge/index lists
+VICUSDT,1,1,2025-03-12,2026-08-07,514,514,0,0,delisted,,,,670659,,stopped trading; not in the Q14 rename/merge/index lists
+VIDTUSDT,1,1,2024-08-23,2025-04-14,235,235,0,0,delisted,,,,339934,,stopped trading; not in the Q14 rename/merge/index lists
+VINEUSDT,1,1,2025-01-24,2026-04-28,460,460,0,0,delisted,,,,528286,,stopped trading; not in the Q14 rename/merge/index lists
+VIRTUALUSDT,1,1,2024-12-10,2026-11-16,707,707,0,1,alive,,,,653850,,trades within 3 days of archive end
+VKTXUSDT,1,1,2026-10-06,2026-11-16,42,42,0,1,alive,,,,37763,,trades within 3 days of archive end
+VOXELUSDT,1,1,2024-08-20,2025-12-10,478,478,0,0,delisted,,,,491455,,stopped trading; not in the Q14 rename/merge/index lists
+VRTUSDT,1,1,2026-07-10,2026-11-16,130,130,0,1,alive,,,,104250,,trades within 3 days of archive end
+VSTUSDT,1,1,2026-08-17,2026-11-16,92,92,0,1,alive,,,,67364,,trades within 3 days of archive end
+VTHOUSDT,1,1,2025-01-22,2026-11-16,664,664,0,1,alive,,,,309713,,trades within 3 days of archive end
+VUSDT,1,1,2026-05-18,2026-11-16,183,183,0,1,alive,,,,73188,,trades within 3 days of archive end
+VVVUSDT,1,1,2025-01-29,2026-11-16,657,657,0,1,alive,,,,3444590,,trades within 3 days of archive end
+WALUSDT,1,1,2025-03-27,2026-11-16,600,600,0,1,alive,,,,291728,,trades within 3 days of archive end
+WAVESUSDT,1,1,2020-08-12,2024-06-11,1400,1400,0,0,delisted,,,,1513942,,stopped trading; not in the Q14 rename/merge/index lists
+WAXPUSDT,1,1,2023-10-18,2026-11-16,1126,1126,0,1,alive,,,,134162,,trades within 3 days of archive end
+WCTUSDT,1,1,2025-04-15,2026-11-16,581,581,0,1,alive,,,,154157,,trades within 3 days of archive end
+WDCUSDT,1,1,2026-05-26,2026-11-16,175,175,0,1,alive,,,,1240694,,trades within 3 days of archive end
+WENUSDT,1,1,2026-07-09,2026-11-16,131,131,0,1,alive,,,,82464,,trades within 3 days of archive end
+WETUSDT,1,1,2025-12-10,2026-11-16,342,342,0,1,alive,,,,296328,,trades within 3 days of archive end
+WIFUSDT,1,1,2024-01-18,2026-11-16,1034,1034,0,1,alive,,,,303932,,trades within 3 days of archive end
+WLDUSDT,1,1,2023-07-24,2026-11-16,1212,1212,0,1,alive,,,,1138102,,trades within 3 days of archive end
+WLFIUSDT,1,1,2025-08-23,2026-11-16,451,451,0,1,alive,,,,665496,,trades within 3 days of archive end
+WMTUSDT,1,1,2026-05-18,2026-11-16,183,183,0,1,alive,,,,74808,,trades within 3 days of archive end
+WOOUSDT,1,1,2022-04-08,2026-11-16,1684,1684,0,1,alive,,,,120281,,trades within 3 days of archive end
+WUSDT,1,1,2024-04-03,2026-11-16,958,958,0,1,alive,,,,879731,,trades within 3 days of archive end
+XAGUSDT,1,1,2026-01-07,2026-11-16,314,314,0,1,alive,,,,1262886,,trades within 3 days of archive end
+XAIUSDT,1,1,2024-01-09,2026-11-16,1043,1043,0,1,alive,,,,226306,,trades within 3 days of archive end
+XANUSDT,1,1,2025-09-29,2026-11-16,414,414,0,1,alive,,,,312390,,trades within 3 days of archive end
+XAUTUSDT,1,1,2026-03-26,2026-11-16,236,236,0,1,alive,,,,837933,,trades within 3 days of archive end
+XAUUSDT,1,1,2025-12-11,2026-11-16,341,341,0,1,alive,,,,8029060,,trades within 3 days of archive end
+XBIUSDT,1,1,2026-07-09,2026-11-16,131,131,0,1,alive,,,,21536,,trades within 3 days of archive end
+XCNUSDT,1,1,2025-04-11,2025-11-21,225,225,0,0,delisted,,,,182656,,stopped trading; not in the Q14 rename/merge/index lists
+XEMUSDT,1,1,2021-03-03,2024-12-09,1378,1378,0,0,delisted,,,,123326,,stopped trading; not in the Q14 rename/merge/index lists
+XLEUSDT,1,1,2026-06-10,2026-11-16,160,160,0,1,alive,,,,36794,,trades within 3 days of archive end
+XLMUSDT,1,1,2020-01-20,2026-11-16,2493,2493,0,1,alive,,,,1555133,,trades within 3 days of archive end
+XMRUSDT,1,1,2020-02-03,2026-11-16,2479,2479,0,1,alive,,,,4704539,,trades within 3 days of archive end
+XNYUSDT,1,1,2025-08-13,2026-11-16,461,461,0,1,alive,,,,494284,,trades within 3 days of archive end
+XOMUSDT,1,1,2026-09-28,2026-11-16,50,50,0,1,alive,,,,449010,,trades within 3 days of archive end
+XPDUSDT,1,1,2026-01-30,2026-11-16,291,291,0,1,alive,,,,524147,,trades within 3 days of archive end
+XPINUSDT,1,1,2025-09-12,2026-11-16,431,431,0,1,alive,,,,662584,,trades within 3 days of archive end
+XPLUSDT,1,1,2025-08-22,2026-11-16,452,452,0,1,alive,,,,1573323,,trades within 3 days of archive end
+XPTUSDT,1,1,2026-01-30,2026-11-16,291,291,0,1,alive,,,,584498,,trades within 3 days of archive end
+XRPUSDT,1,1,2020-01-06,2026-11-16,2507,2507,0,1,alive,,,,3503066,,trades within 3 days of archive end
+XTZUSDT,1,1,2020-02-06,2026-11-16,2476,2476,0,1,alive,,,,183636,,trades within 3 days of archive end
+XVGUSDT,1,1,2023-07-05,2026-11-16,1231,1231,0,1,alive,,,,169010,,trades within 3 days of archive end
+XVSUSDT,1,1,2023-04-13,2026-11-16,1314,1314,0,1,alive,,,,138169,,trades within 3 days of archive end
+YALAUSDT,1,1,2025-08-07,2026-02-10,188,188,0,0,delisted,,,,1326500,,stopped trading; not in the Q14 rename/merge/index lists
+YBUSDT,1,1,2025-10-10,2026-11-16,403,403,0,1,alive,,,,277637,,trades within 3 days of archive end
+YFIIUSDT,1,1,2020-09-03,2022-04-12,587,587,0,0,delisted,,,,178219,,stopped trading; not in the Q14 rename/merge/index lists
+YFIUSDT,1,1,2020-08-31,2026-11-16,2269,2269,0,1,alive,,,,148921,,trades within 3 days of archive end
+YGGUSDT,1,1,2023-08-05,2026-11-16,1200,1200,0,1,alive,,,,131854,,trades within 3 days of archive end
+ZAMAUSDT,1,1,2026-01-09,2026-11-16,312,312,0,1,alive,,,,736218,,trades within 3 days of archive end
+ZBTUSDT,1,1,2025-10-17,2026-11-16,396,396,0,1,alive,,,,307100,,trades within 3 days of archive end
+ZCSHUSDT,1,1,2026-10-12,2026-11-16,36,36,0,1,alive,,,,90052,,trades within 3 days of archive end
+ZECUSDT,1,1,2020-02-05,2026-11-16,2477,2477,0,1,alive,,,,20805214,,trades within 3 days of archive end
+ZENUSDT,1,1,2020-11-24,2026-11-16,2184,2184,0,1,alive,,,,371539,,trades within 3 days of archive end
+ZEREBROUSDT,1,1,2025-01-02,2026-11-16,684,684,0,1,alive,,,,661406,,trades within 3 days of archive end
+ZESTUSDT,1,1,2026-06-04,2026-11-16,166,166,0,1,alive,,,,340745,,trades within 3 days of archive end
+ZETAUSDT,1,1,2024-02-02,2026-11-16,1019,1019,0,1,alive,,,,163911,,trades within 3 days of archive end
+ZHIPUUSDT,1,1,2026-07-17,2026-11-16,123,123,0,1,alive,,,,1406213,,trades within 3 days of archive end
+ZHONGJIUSDT,1,1,2026-08-14,2026-11-16,95,95,0,1,alive,,,,1344199,,trades within 3 days of archive end
+ZILUSDT,1,1,2020-06-18,2026-11-16,2343,2343,0,1,alive,,,,1532023,,trades within 3 days of archive end
+ZKCUSDT,1,1,2025-09-15,2026-11-16,428,428,0,1,alive,,,,169825,,trades within 3 days of archive end
+ZKJUSDT,1,1,2025-05-13,2026-04-29,352,352,0,0,delisted,,,,7060865,,stopped trading; not in the Q14 rename/merge/index lists
+ZKPUSDT,1,1,2025-12-21,2026-11-16,331,331,0,1,alive,,,,202869,,trades within 3 days of archive end
+ZKUSDT,1,1,2024-06-17,2026-11-16,883,883,0,1,alive,,,,669200,,trades within 3 days of archive end
+ZMUSDT,1,1,2026-06-10,2026-11-16,160,160,0,1,alive,,,,107953,,trades within 3 days of archive end
+ZORAUSDT,1,1,2025-07-25,2026-11-16,480,480,0,1,alive,,,,306817,,trades within 3 days of archive end
+ZRCUSDT,1,1,2025-07-29,2026-01-21,177,177,0,0,delisted,,,,236943,,stopped trading; not in the Q14 rename/merge/index lists
+ZROUSDT,1,1,2024-06-20,2026-11-16,880,880,0,1,alive,,,,3684605,,trades within 3 days of archive end
+ZRXUSDT,1,1,2020-06-24,2026-11-16,2337,2337,0,1,alive,,,,114027,,trades within 3 days of archive end
+ZSUSDT,1,1,2026-09-02,2026-11-16,76,76,0,1,alive,,,,22780,,trades within 3 days of archive end
+哈基米USDT,1,1,2026-09-06,2026-11-16,72,72,0,1,alive,,,,236115,,trades within 3 days of archive end
+币安人生USDT,1,1,2025-10-20,2026-11-16,393,393,0,1,alive,,,,332158,,trades within 3 days of archive end
+我踏马来了USDT,1,1,2026-01-21,2026-11-16,300,300,0,1,alive,,,,373947,,trades within 3 days of archive end
+牛来USDT,1,1,2026-08-30,2026-11-16,79,79,0,1,alive,,,,1383795,,trades within 3 days of archive end
+龙虾USDT,1,1,2026-03-11,2026-11-16,251,251,0,1,alive,,,,539114,,trades within 3 days of archive end

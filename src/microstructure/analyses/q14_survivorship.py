@@ -43,6 +43,7 @@ import json
 import math
 import shutil
 import time
+import zipfile
 from collections.abc import Callable
 from itertools import pairwise
 from pathlib import Path
@@ -112,7 +113,9 @@ GROUPS_2023 = {
     "renamed_merged": ("renamed", "merged"),
     "ended": ENDED_STATUSES,
 }
-GROUPS_2026 = {"survivors_2023": ("survivor", "survivor_gap"), "new_listings": ("new_listing",)}
+GROUPS_2026 = {"survivors_2023": ("survivor", "survivor_gap"), "new_listings": ("new_listing",),
+               # Listed, summarised and plotted, but not pooled with the crypto contracts.
+               "new_listings_equity": ("new_listing_equity",)}
 
 # --------------------------------------------------------------------------
 # Unit rules
@@ -130,6 +133,45 @@ MIN_TEST_ROWS = 10_000
 # the first event, so a month that starts late would shift the test block.
 MAX_MISSING_DAYS = 1
 LAST_MONTH_MAX_BACK = 3  # candidate months tried for the last complete month
+# Equity perpetuals. In 2026 Binance listed perpetuals on stock tokens, some on
+# reused crypto tickers (MDTUSDT trades near 93 from 2026-10-21). They follow
+# the US equity week, so they are flagged from the unit's own trade times and
+# kept out of the crypto new-listing group. Both signals are medians over
+# days, so a few burst days (a pump on five weekdays, as COTIUSDT had in
+# 2026-07) cannot flip them: the median weekend day against the median weekday
+# (about 0.7 to 1 for a crypto contract) and the median weekday share of events
+# in the US cash session (13:30 to 20:00 UTC in July; 6.5 / 24 = 0.27 for a
+# flat round-the-clock day). Timing alone does not separate the groups: BTCUSDT
+# has a weekend ratio of 0.53 and 1000XECUSDT 0.44 in 2026-07, while thinly
+# traded ETF contracts traded by crypto users on weekends reach 0.85 (EWZUSDT).
+# So the primary label is a review of the ticker names (NON_CRYPTO_BY_NAME) and
+# the timing screen uses strict cuts that flag no known crypto contract, as a
+# cross-check that catches non-crypto tickers the review did not recognise.
+EQUITY_WEEKEND_RATIO_MAX = 0.25
+EQUITY_US_SESSION_MIN = 0.60
+US_SESSION_UTC_MIN = (13 * 60 + 30, 20 * 60)  # EDT; the 2026-07 cross-section only
+SESSION_VERSION = 2
+# Primary label: sampled 2026-07 tickers recognised by name as non-crypto
+# underlyings (reviewed by hand; the report shows where it and the timing screen
+# agree). A unit is kept out of the crypto comparison if either flags it.
+NON_CRYPTO_BY_NAME = {
+    "COSTUSDT": "stock (Costco)", "UBERUSDT": "stock (Uber)", "SONYUSDT": "stock (Sony)",
+    "VUSDT": "stock (Visa)", "BRKBUSDT": "stock (Berkshire Hathaway B)",
+    "FLNCUSDT": "stock (Fluence Energy)", "ALABUSDT": "stock (Astera Labs)",
+    "ASMLUSDT": "stock (ASML)", "ASTSUSDT": "stock (AST SpaceMobile)",
+    "CRWVUSDT": "stock (CoreWeave)", "AMATUSDT": "stock (Applied Materials)",
+    "QCOMUSDT": "stock (Qualcomm)", "GOOGLUSDT": "stock (Alphabet)",
+    "CRCLUSDT": "stock (Circle)", "ARMUSDT": "stock (Arm Holdings)",
+    "SKHYNIXUSDT": "stock (SK hynix)", "URNMUSDT": "ETF (uranium miners)",
+    "QQQUSDT": "ETF (Nasdaq-100)", "SQQQUSDT": "ETF (inverse Nasdaq-100)",
+    "XAUUSDT": "commodity (gold)", "XPTUSDT": "commodity (platinum)",
+    "PAXGUSDT": "gold-backed token",
+    "AMDUSDT": "stock (AMD)", "AVGOUSDT": "stock (Broadcom)", "CIENUSDT": "stock (Ciena)",
+    "CRDOUSDT": "stock (Credo Technology)", "HPEUSDT": "stock (Hewlett Packard Enterprise)",
+    "JPMUSDT": "stock (JPMorgan Chase)", "METAUSDT": "stock (Meta Platforms)",
+    "SNDKUSDT": "stock (SanDisk)", "TSLAUSDT": "stock (Tesla)",
+    "EWYUSDT": "ETF (South Korea)", "EWZUSDT": "ETF (Brazil)", "IWMUSDT": "ETF (Russell 2000)",
+}
 N_BOOT = 2000
 SAMPLE_DECILES = 10
 SAMPLE_PER_DECILE = 10
@@ -336,6 +378,47 @@ def choose_last_full_month(candidates_desc: list[str], checked: dict[str, dict |
     return "none", None
 
 
+def session_profile(ts_ms: np.ndarray) -> dict:
+    """Weekly and intraday shape of a unit's trading, from its trade times.
+
+    weekend_ratio      median events on a UTC Saturday or Sunday over the median
+                       events on a weekday
+    us_session_median  median over weekdays of the share of the day's events in
+                       the US cash session
+    weekend_share and us_session_share are the plain monthly shares, for reference.
+    """
+    ts_ms = np.asarray(ts_ms, dtype=np.int64)
+    out = {"version": SESSION_VERSION, "weekend_share": None, "us_session_share": None,
+           "weekend_ratio": None, "us_session_median": None}
+    if ts_ms.size == 0:
+        return out
+    day = ts_ms // MS_PER_DAY
+    weekday = (day + 3) % 7                         # 1970-01-01 was a Thursday; Monday = 0
+    minute = (ts_ms % MS_PER_DAY) // 60_000
+    lo, hi = US_SESSION_UTC_MIN
+    in_us = (minute >= lo) & (minute < hi)
+    out["weekend_share"] = float((weekday >= 5).mean())
+    out["us_session_share"] = float((in_us & (weekday < 5)).mean())
+    days = np.arange(day.min(), day.max() + 1)
+    n = np.bincount(day - day.min(), minlength=days.size).astype(np.float64)
+    n_us = np.bincount(day - day.min(), weights=in_us, minlength=days.size)
+    wd = (days + 3) % 7
+    week, wkend = n[wd < 5], n[wd >= 5]
+    if week.size and np.median(week) > 0:
+        out["weekend_ratio"] = float(np.median(wkend) / np.median(week)) if wkend.size else None
+        busy = (wd < 5) & (n > 0)
+        out["us_session_median"] = float(np.median(n_us[busy] / n[busy]))
+    return out
+
+
+def is_equity_like(profile: dict | None) -> bool:
+    if not profile or profile.get("us_session_median") is None:
+        return False
+    low_weekend = (profile["weekend_ratio"] is not None
+                   and profile["weekend_ratio"] < EQUITY_WEEKEND_RATIO_MAX)
+    return low_weekend or profile["us_session_median"] >= EQUITY_US_SESSION_MIN
+
+
 def activity_counts(ts_ms: np.ndarray) -> dict:
     """Scoreable rows per block of Q9's split, as `SignDataset.rows` counts them."""
     ts_ms = np.asarray(ts_ms, dtype=np.int64)
@@ -437,12 +520,74 @@ def delete_if_created(ws: Workspace, p: Path) -> bool:
     return False
 
 
+# `ingest_agg_trades` holds the whole CSV in memory as bytes and then as text
+# columns, which needs over 13 GB for a 3.9 GB CSV (SKHYNIXUSDT 2026-07). Above
+# this uncompressed size the same schema is written by a streaming scan instead.
+STREAM_INGEST_BYTES = 1_500_000_000
+_AGG_COLS = ("agg_trade_id", "price", "qty", "first_trade_id", "last_trade_id", "ts_raw",
+             "is_buyer_maker")
+
+
+def ingest_agg_trades_streaming(zip_path: Path, out_dir: Path) -> Path:
+    """`ingest_agg_trades` for CSVs too large to hold in memory.
+
+    Same header sniffing, column casts, millisecond normalization and output
+    schema; the CSV is extracted next to the zip, scanned lazily and sunk to
+    parquet, then sorted by agg_trade_id only if it is not already (the dumps
+    are)."""
+    with zipfile.ZipFile(zip_path) as zf:
+        members = zf.namelist()
+        if len(members) != 1:
+            raise ValueError(f"{zip_path.name}: expected 1 member, got {len(members)}")
+        csv = Path(zf.extract(members[0], zip_path.parent / (zip_path.stem + "_csv")))
+    dest = out_dir / (zip_path.stem + ".parquet")
+    try:
+        with csv.open("rb") as fh:
+            first = fh.read(256).split(b",", 1)[0].split(b"\n", 1)[0]
+        has_header = not first.strip().strip(b'"').strip(b"'").lstrip(b"-").isdigit()
+        lf = pl.scan_csv(csv, has_header=has_header, infer_schema=False)
+        names = lf.collect_schema().names()
+        if len(names) < len(_AGG_COLS):
+            raise ValueError(f"{zip_path.name}: expected >= {len(_AGG_COLS)} cols, "
+                             f"got {len(names)}")
+        lf = lf.select(names[:len(_AGG_COLS)]).rename(dict(zip(names, _AGG_COLS, strict=False)))
+        ts = pl.col("ts_raw").cast(pl.Int64)
+        lf = lf.with_columns(
+            pl.col("agg_trade_id").cast(pl.Int64),
+            pl.col("first_trade_id").cast(pl.Int64),
+            pl.col("last_trade_id").cast(pl.Int64),
+            pl.col("is_buyer_maker").cast(pl.Utf8).str.to_lowercase().eq("true")
+            .alias("is_buyer_maker"),
+            pl.when(ts > 100_000_000_000_000).then(ts // 1000).otherwise(ts)
+            .cast(pl.Datetime("ms")).dt.replace_time_zone("UTC").alias("ts"),
+            pl.col("price").cast(pl.Float64),
+            pl.col("qty").cast(pl.Float64),
+        ).select("agg_trade_id", "price", "qty", "first_trade_id", "last_trade_id", "ts",
+                 "is_buyer_maker")
+        lf.sink_parquet(dest)
+    finally:
+        csv.unlink(missing_ok=True)
+        shutil.rmtree(csv.parent, ignore_errors=True)
+    ids = pl.read_parquet(dest, columns=["agg_trade_id"])["agg_trade_id"]
+    if not ids.is_sorted():
+        pl.read_parquet(dest).sort("agg_trade_id").write_parquet(dest)
+    return dest
+
+
+def _csv_bytes(zip_path: Path) -> int:
+    with zipfile.ZipFile(zip_path) as zf:
+        return sum(i.file_size for i in zf.infolist())
+
+
 def ingest_zip(ws: Workspace, zip_path: Path, symbol: str, period: str) -> Path:
     """Ingest into the normal parquet layout, verified before the final rename."""
     dest = parquet_path(ws.root, symbol, "aggTrades", period)
     dest.parent.mkdir(parents=True, exist_ok=True)
     ws.record_created(dest)
-    produced = ingest_agg_trades(zip_path, dest.parent)
+    if _csv_bytes(zip_path) > STREAM_INGEST_BYTES:
+        produced = ingest_agg_trades_streaming(zip_path, dest.parent)
+    else:
+        produced = ingest_agg_trades(zip_path, dest.parent)
     try:
         pl.scan_parquet(produced).select(pl.len()).collect()
     except Exception:
@@ -483,12 +628,14 @@ FINAL = ("ok", "skipped", "partial")
 
 def run_unit(ws: Workspace, symbol: str, period: str, fetch: Callable[[str, str], Path], *,
              fit: Callable[[Workspace, str, str], Path] | None = None,
-             keep_ladder: bool = False) -> dict:
+             keep_ladder: bool = False, need_session: bool = False) -> dict:
     """Process one symbol-month and write its status. Final statuses:
     ok (fitted), skipped (too few scoreable events), partial (incomplete
     month); failed is retried on the next run."""
     st = ws.read_status(symbol, period)
     if st and st["status"] in FINAL:
+        if need_session and (st.get("session") or {}).get("version") != SESSION_VERSION:
+            return backfill_session(ws, st, fetch)
         return st
     ws.ensure_snapshot()
     fit = fit or (lambda w, s, p: default_fit(w, s, p, keep_ladder))
@@ -506,6 +653,8 @@ def run_unit(ws: Workspace, symbol: str, period: str, fetch: Callable[[str, str]
         ts = load_events(ws.root, symbol, [period])["ts"].dt.epoch("ms").to_numpy()
         st["coverage"] = coverage(period, ts)
         st["counts"] = activity_counts(ts)
+        st["session"] = session_profile(ts)
+        st["equity_like"] = is_equity_like(st["session"])
         del ts
         reason = activity_reason(st["counts"])
         if not is_complete(st["coverage"]):
@@ -530,6 +679,27 @@ def run_unit(ws: Workspace, symbol: str, period: str, fetch: Callable[[str, str]
         st["seconds"] = round(time.time() - t0, 1)
         gc.collect()
     ws.write_status(st)
+    return st
+
+
+def backfill_session(ws: Workspace, st: dict, fetch: Callable[[str, str], Path]) -> dict:
+    """Add the session profile to a unit finished before it was recorded,
+    without refitting: fetch, ingest, read the trade times, clean up."""
+    symbol, period = st["symbol"], st["period"]
+    p = parquet_path(ws.root, symbol, "aggTrades", period)
+    zip_path: Path | None = None
+    try:
+        if not p.exists():
+            zip_path = fetch(symbol, period)
+            ingest_zip(ws, zip_path, symbol, period)
+        ts = load_events(ws.root, symbol, [period])["ts"].dt.epoch("ms").to_numpy()
+        st["session"] = session_profile(ts)
+        st["equity_like"] = is_equity_like(st["session"])
+        ws.write_status(st)
+    finally:
+        if zip_path is not None:
+            zip_path.unlink(missing_ok=True)
+        delete_if_created(ws, p)
     return st
 
 
@@ -605,7 +775,10 @@ def _next_period(ws: Workspace, task: dict) -> str | None:
     """The unit this task still needs processed, or None if the task is done."""
     if task["set"] != "last_month":
         st = ws.read_status(task["symbol"], task["period"])
-        return None if st and st["status"] in FINAL else task["period"]
+        done = st and st["status"] in FINAL and (
+            task["set"] != "cross_2026"
+            or (st.get("session") or {}).get("version") == SESSION_VERSION)
+        return None if done else task["period"]
     step, m = choose_last_full_month(task["candidates"], _checked(ws, task["symbol"],
                                                                    task["candidates"]))
     if step == "check":
@@ -646,7 +819,8 @@ def run_fit(ws: Workspace, universe: dict, sets: tuple[str, ...] = SETS,
                 ahead += 1
                 if not parquet_path(ws.root, t["symbol"], "aggTrades", q).exists():
                     pre.want(t["symbol"], q)
-            st = run_unit(ws, tasks[i]["symbol"], period, pre, keep_ladder=keep_ladders)
+            st = run_unit(ws, tasks[i]["symbol"], period, pre, keep_ladder=keep_ladders,
+                          need_session=tasks[i]["set"] == "cross_2026")
             done_now.append(st)
             print(f"[q14 fit] {tasks[i]['set']} {st['symbol']} {st['period']}: {st['status']}"
                   f"{' (' + st['reason'] + ')' if st['reason'] else ''} {st['seconds']}s",
@@ -887,11 +1061,18 @@ def build_result(ws: Workspace, n_boot: int = N_BOOT) -> dict:
         else:
             u.update(outcome=st["status"], reason=st["reason"], counts=st.get("counts"),
                      coverage=st.get("coverage"), reused_q9_cache=st.get("reused_q9_cache"))
+            if t["set"] == "cross_2026":
+                u["session"] = st.get("session")
+                u["equity_screen"] = is_equity_like(st.get("session"))
+                u["name_review"] = NON_CRYPTO_BY_NAME.get(sym)
+                u["equity_like"] = u["equity_screen"] or u["name_review"] is not None
+                if u["equity_like"]:
+                    u["status_2023"] = status = f"{status}_equity"
             if st["status"] == "ok":
                 rec = json.loads(ws.resolve(st["record"]).read_text())
                 u["metrics"] = unit_metrics(rec)
                 u["record"] = st["record"]
-        if status == "new_listing":
+        if status.startswith("new_listing"):
             u["decile"] = next(d["decile"] for d in sample if d["symbol"] == sym)
         units.append(u)
 
@@ -1013,6 +1194,18 @@ def build_result(ws: Workspace, n_boot: int = N_BOOT) -> dict:
             "q9_config": run_config(LINEAR_ORDER, TRAIN_CAP, None),
         },
         "units": units,
+        "equity_screen": {
+            "rule": {"weekend_ratio_below": EQUITY_WEEKEND_RATIO_MAX,
+                     "us_session_median_at_least": EQUITY_US_SESSION_MIN,
+                     "us_session_utc_minutes": list(US_SESSION_UTC_MIN)},
+            "flagged": [{"symbol": u["symbol"], "status": u["status_2023"],
+                         "outcome": u["outcome"], "by_screen": u["equity_screen"],
+                         "by_name": u["name_review"], **(u.get("session") or {})}
+                        for u in units if u["set"] == "cross_2026" and u.get("equity_like")],
+            "n_screened": sum(1 for u in units if u["set"] == "cross_2026"
+                              and u.get("session") is not None),
+            "n_cross_2026": sum(1 for u in units if u["set"] == "cross_2026"),
+        },
         "outcome_counts": counts,
         "last_month_resolution": last_month,
         "groups": {
