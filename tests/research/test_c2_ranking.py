@@ -163,3 +163,96 @@ def test_refuses_when_preregistration_changed(tmp_path):
 
 def test_committed_preregistration_matches_recorded_hash():
     assert c2.check_prereg() == c2.PREREG_SHA
+
+
+def test_addenda_listed_with_hash(tmp_path):
+    (tmp_path / "PREREGISTRATION_RANKING.md").write_text("main", encoding="utf-8")
+    (tmp_path / "PREREGISTRATION_ADDENDUM_X.md").write_text("add", encoding="utf-8")
+    got = c2.addenda(tmp_path)
+    assert [a["file"] for a in got] == ["PREREGISTRATION_ADDENDUM_X.md"]
+    assert got[0]["sha256"] == c2.sha256(tmp_path / "PREREGISTRATION_ADDENDUM_X.md")
+
+
+# ---------------------------------------------------------------- local controls (deviation)
+
+WEEK = 7 * 1440
+
+
+def test_committed_deviation_matches_recorded_hash():
+    assert c2.check_deviation() == c2.DEVIATION_SHA
+
+
+def test_local_controls_never_leave_the_four_week_band():
+    rng = np.random.default_rng(11)
+    n = 30 * WEEK
+    eligible = rng.random(n) < 0.7
+    anchors = rng.integers(0, n, 5000)
+    ctrl, enough = c2.pick_local_controls(anchors, eligible)
+    assert ctrl.shape == (anchors.size, 8)
+    has = ctrl >= 0
+    d = ctrl - anchors[:, None]
+    assert np.all(d[has] % WEEK == 0)
+    assert np.all((np.abs(d[has]) >= WEEK) & (np.abs(d[has]) <= 4 * WEEK))
+    assert np.all(eligible[ctrl[has]])
+    np.testing.assert_array_equal(enough, has.sum(axis=1) >= 6)
+    assert enough.any() and (~enough).any()
+    # near the sample edges fewer candidates exist, so fewer than 6 can be eligible
+    _, edge = c2.pick_local_controls(np.array([10, n - 10]), np.ones(n, bool))
+    assert not edge.any()
+
+
+def _prices(sd: np.ndarray, seed: int) -> tuple[dict, np.ndarray]:
+    r = np.random.default_rng(seed).normal(0.0, 1.0, sd.size) * sd
+    close = 100.0 * np.exp(np.cumsum(r) / 1e4)
+    vol = np.ones(sd.size)
+    arr = c2.c1.minute_arrays(close, vol, 0.5 * vol)
+    return arr, c2.c1.valid_mask(close)
+
+
+def _events(rng, lo_week: int, hi_week: int, k: int) -> np.ndarray:
+    ev = np.sort(rng.choice(np.arange(lo_week * WEEK, hi_week * WEEK, 120), k, replace=False))
+    return ev + rng.integers(0, 30, k)
+
+
+def test_calm_year_person_is_zero_with_local_but_negative_with_global_controls():
+    # calm weeks 0..11 (sd 2 bps per minute), volatile from week 12 (sd 10); the person
+    # posts only in weeks 4..7 and has no effect at all
+    n = 20 * WEEK
+    sd = np.where(np.arange(n) < 12 * WEEK, 2.0, 10.0)
+    arr, valid = _prices(sd, seed=5)
+    rng = np.random.default_rng(6)
+    ev = _events(rng, 4, 8, 150)
+    g = c2.person_run(arr, valid, ev, ev, None, False)
+    xg = g["ab"]["post5"]["rv"][g["ok"]]
+    busy = c2.c1.busy_mask(ev, n)
+    loc = c2.person_run_local(arr, valid, ev, busy, busy, None, False)
+    xl = loc["ab"]["post5"]["rv"][loc["ok"]]
+    assert xg.size > 100 and xl.size > 100
+    se_l = xl.std(ddof=1) / np.sqrt(xl.size)
+    assert xg.mean() < -3.0  # global controls reach into the volatile weeks
+    assert abs(xl.mean()) < max(0.5, 3 * se_l)  # local controls stay in the calm weeks
+
+
+def test_post_minus_pre_removes_a_planted_level_shift():
+    n = 12 * WEEK
+    base = np.full(n, 2.0)
+    rng = np.random.default_rng(9)
+    ev = _events(rng, 4, 8, 200)
+    level = base.copy()  # volatility level raised from -20 to +20 minutes: no post effect
+    for m in ev:
+        level[m - 20:m + 21] = 6.0
+    effect = level.copy()  # plus a real effect in minutes +1..+5 only
+    for m in ev:
+        effect[m + 1:m + 6] = 12.0
+    busy = c2.c1.busy_mask(ev, n)
+    out = {}
+    for name, sd in (("level", level), ("effect", effect)):
+        arr, valid = _prices(sd, seed=10)
+        run = c2.person_run_local(arr, valid, ev, busy, busy, None, False)
+        ab = {w: run["ab"][w]["rv"][run["ok"]] for w in ("post5", "pre5", "pmp")}
+        np.testing.assert_allclose(ab["pmp"], ab["post5"] - ab["pre5"])
+        out[name] = {w: (v.mean(), v.std(ddof=1) / np.sqrt(v.size)) for w, v in ab.items()}
+    lv = out["level"]
+    assert lv["post5"][0] > 5.0 and lv["pre5"][0] > 5.0  # the level shows up in both
+    assert abs(lv["pmp"][0]) < max(0.5, 3 * lv["pmp"][1])  # and cancels in the difference
+    assert out["effect"]["pmp"][0] > 5.0  # a real post effect survives
