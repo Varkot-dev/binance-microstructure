@@ -102,7 +102,7 @@ def write_index(path: Path, out_dir: Path = INDEX) -> Path:
     out_dir.mkdir(parents=True, exist_ok=True)
     out = out_dir / path.name
     with out.open("w", newline="", encoding="utf-8") as f:
-        w = csv.DictWriter(f, fieldnames=INDEX_COLUMNS, lineterminator="\n")
+        w = csv.DictWriter(f, fieldnames=INDEX_COLUMNS)
         w.writeheader()
         w.writerows(index_rows(rows))
     return out
@@ -599,7 +599,7 @@ def plot(res: dict, path: Path) -> None:
     sep = [(k, v) for k, v in res["separate"].items() if v.get("n")]
     labels = [k for k, _ in rows] + [f"{k} (separate)" for k, _ in sep]
     n = max(len(labels), 1)
-    fig, axes = plt.subplots(1, 2, figsize=(11, 1.6 + 0.45 * n), sharey=True)
+    fig, axes = plt.subplots(1, 2, figsize=(11, 2.2 + 0.45 * n), sharey=True)
     ax = axes[0]
     for i, (_, r) in enumerate(rows):
         ax.plot([r["raw_lo"], r["raw_hi"]], [i - 0.12] * 2, color="#9a9890", lw=2)
@@ -616,8 +616,9 @@ def plot(res: dict, path: Path) -> None:
     ax.set_yticks(range(len(labels)), labels)
     ax.invert_yaxis()
     ax.set_xlabel("abnormal BTC realized volatility, minutes +1 to +5 (bps)")
-    ax.set_title("Influence per post event", loc="left", fontsize=11)
-    ax.legend(frameon=False, fontsize=8, loc="lower right")
+    ax.set_title("Influence per post event", loc="left", fontsize=11, pad=24)
+    ax.legend(frameon=False, fontsize=8, loc="lower left", bbox_to_anchor=(0, 1.0),
+                 ncol=4)
     ax2 = axes[1]
     colors = {"crypto": "#2a78d6", "tariffs": "#eb6834", "fed": "#1baf7a", "other": "#9a9890"}
     names = labels
@@ -633,8 +634,9 @@ def plot(res: dict, path: Path) -> None:
                      label=TOPIC_NAMES[t] if i == 0 else None)
     ax2.axvline(0, color="#52514e", lw=0.8)
     ax2.set_xlabel("raw effect by topic (bps), people with 10+ events in the topic")
-    ax2.set_title("By topic", loc="left", fontsize=11)
-    ax2.legend(frameon=False, fontsize=8, loc="lower right")
+    ax2.set_title("By topic", loc="left", fontsize=11, pad=24)
+    ax2.legend(frameon=False, fontsize=8, loc="lower left", bbox_to_anchor=(0, 1.0),
+                  ncol=4)
     for a in axes:
         a.spines[["top", "right"]].set_visible(False)
         a.grid(axis="x", color="#e6e5e0", lw=0.6)
@@ -657,9 +659,10 @@ def report(res: dict) -> str:
     if res["skipped"]:
         L += [f"- skipped `{s['file']}`: {s['reason']}" for s in res["skipped"]]
     L += ["", "## Answer", "", f"**{res['answer']}**", ""]
-    if n_ranked < 2:
+    if n_ranked < 3:
         L += [(f"This run uses {len(res['files'])} post file(s) and ranks {n_ranked} "
-              "politician(s). It is a smoke test that proves the pipeline runs end to end "
+              "politician(s), fewer than the 3 needed for shrinkage. It is a smoke test that "
+              "proves the pipeline runs end to end "
               "(validation, events, overlap rule, controls, placebo, shrinkage, rank "
               "intervals, FDR, report); it is not yet a ranking. Re-run `index`, "
               "`analyze` and `report` when X post files arrive in `posts/`."), ""]
@@ -695,6 +698,8 @@ def report(res: dict) -> str:
                      f"{_ci_s(r['raw_lo'], r['raw_hi'])} | {_f(r['shrunk'])} | "
                      f"{r['rank_lo']} to {r['rank_hi']} | {_p(r['p'])} | {_p(r['q'])} |")
         for k, v in sorted(tk["listed"].items()):
+            if not v["n"]:
+                continue
             L.append(f"| {TOPIC_NAMES[t]} | {k} | {v['n']} | {_f(v['mean'])} (not ranked) "
                      "| | | | |")
     L += ["", "## Pre-window check (pre-registered)", "",
