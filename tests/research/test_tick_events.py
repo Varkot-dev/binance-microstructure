@@ -143,3 +143,12 @@ def test_waterfill_and_plan_days():
     assert bte.plan_days(sizes, 35, bte.DAY_PRIORITY) == [0, -1, 1]
     assert bte.plan_days(sizes, 5, bte.DAY_PRIORITY, min_days=(0, -1)) == [0, -1]
     assert sorted(bte.plan_days(sizes, math.inf, bte.DAY_PRIORITY)) == list(range(-10, 11))
+
+
+def test_regimes_match_rejects_a_split_without_a_change():
+    rng = np.random.default_rng(5)
+    bins = _day_bins(rng, 14, 1e-3, 1e-4)
+    assert bte.regimes_match(bins, 14, -3, -4)
+    flat = _day_bins(rng, 48, 1e-3, 1e-4)  # old tick all day
+    cp = bte.change_bin(flat, -3, -4)
+    assert not (0 < cp < 48 and bte.regimes_match(flat, cp, -3, -4))

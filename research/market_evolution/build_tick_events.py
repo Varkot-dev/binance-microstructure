@@ -61,8 +61,10 @@ CONTROL_WINDOW = 30  # days before and after an event with no tick change for co
 ACTIVITY_FACTOR = 2.0
 MAX_DAY_FILE = 300e6  # skip an aggTrades day file larger than this
 HARD_CAP = 1.95e9  # total bytes downloaded, all stages and runs
-TREATED_AGG_BUDGET = 0.95e9
-CONTROL_AGG_BUDGET = 0.20e9
+TREATED_AGG_BUDGET = 1.2e9
+NAMED_AGG_BUDGET = 0.7e9  # events named in the task: +/- 10 days, water-filled
+OTHER_DAY0_MAX = 5e6  # other contract-events: the change day only, if this small
+CONTROL_AGG_BUDGET = 0.30e9
 CONTROL_SAMPLE_MAX_FILE = 25e6
 CONTROLS_CHECKED_PER_TREATED = 6  # stability-checked candidates per treated contract
 CONTROLS_TRADE_SAMPLED_PER_TREATED = 1
@@ -331,6 +333,21 @@ def change_bin(bin_hists: list[dict[int, int]], old: int, new: int) -> int | Non
         return None
     k = np.array([sum(c for lv, c in h.items() if lv >= coarse) for h in bin_hists], dtype=float)
     return binomial_changepoint(n, k)
+
+
+def regimes_match(bin_hists: list[dict[int, int]], cp: int, old: int, new: int) -> bool:
+    """True if the bins before cp look like the old tick and those after like the new
+    one: the share on the coarser grid is at least TICK_SHARE exactly on the side whose
+    tick is the coarser one."""
+    coarse = max(old, new)
+
+    def share(hs):
+        n = sum(sum(h.values()) for h in hs)
+        k = sum(c for h in hs for lv, c in h.items() if lv >= coarse)
+        return k / n if n else float("nan")
+
+    before, after = share(bin_hists[:cp]), share(bin_hists[cp:])
+    return (before >= TICK_SHARE) == (old == coarse) and (after >= TICK_SHARE) == (new == coarse)
 
 
 def direction(old_exp: int, new_exp: int) -> str:
@@ -781,7 +798,8 @@ def attribute(changes: dict[str, list[dict]]) -> list[dict]:
                     ok = near or (named and abs((c - D).days) <= WINDOW)
                     if not ok:
                         continue
-                    key = (0 if named else 1, abs((c - D).days))
+                    undated = n.label.endswith("(undated)")
+                    key = (0 if named else 1, 1 if undated else 0, abs((c - D).days))
                     if best is None or key < best[0]:
                         best = (key, n, ds)
             rows.append({"symbol": sym, **ch, "notice": best[1].label if best else None,
@@ -846,8 +864,10 @@ def stage_treated() -> list[dict]:
     size_jobs = sorted(set(size_jobs))
     pmap(agg_size, size_jobs, "sizes")
     save_sizes()
-    plans = {}
-    totals = []
+    # Budget: the events named in the task get +/- WINDOW days, water-filled to
+    # NAMED_AGG_BUDGET; every other contract-event gets its change day only, when that
+    # file is at most OTHER_DAY0_MAX (the 30-minute timing), and klines for the rest.
+    plans, named_totals = {}, []
     for r in cands:
         a = _anchor(r)
         sizes = {}
@@ -856,20 +876,23 @@ def stage_treated() -> list[dict]:
             if s and s <= MAX_DAY_FILE:
                 sizes[off] = s
         plans[(r["notice"], r["symbol"])] = sizes
-        weight = 3.0 if _named_in_task(r) else 1.0
-        totals.append(sum(sizes.values()) / weight)
-    already = sum(json.loads(p.read_text()).get("zip_bytes", 0)
-                  for p in (CACHE / "agg").glob("*/*.json") if p.stat().st_size > 2)
-    cap = waterfill_cap(totals, max(TREATED_AGG_BUDGET - 0 * already, 1))
+        if _named_in_task(r):
+            named_totals.append(sum(sizes.values()))
+    cap = waterfill_cap(named_totals, NAMED_AGG_BUDGET)
     jobs = set()
     for r in cands:
         sizes = plans[(r["notice"], r["symbol"])]
-        c = cap * (3.0 if _named_in_task(r) else 1.0)
         a = _anchor(r)
-        for off in plan_days(sizes, c, DAY_PRIORITY, min_days=(0, -1)):
+        if _named_in_task(r):
+            offs = plan_days(sizes, cap, DAY_PRIORITY, min_days=(0,))
+        else:
+            offs = [0] if sizes.get(0, math.inf) <= OTHER_DAY0_MAX else []
+        for off in offs:
             jobs.add((r["symbol"], (a + dt.timedelta(off)).isoformat(), sizes[off]))
-    print(f"treated: cap {cap / 1e6:.1f} MB per contract-event, {len(jobs)} day files, "
+    print(f"treated: named cap {cap / 1e6:.1f} MB per contract-event, {len(jobs)} day files, "
           f"{sum(j[2] for j in jobs) / 1e6:.0f} MB planned", file=sys.stderr)
+    if sum(j[2] for j in jobs) > TREATED_AGG_BUDGET:
+        raise RuntimeError("treated aggTrades plan exceeds its budget")
     pmap(agg_day, sorted(jobs), "treated-agg")
     return cands
 
@@ -961,10 +984,11 @@ def evaluate(row: dict, extra_download: bool = True) -> dict:
     tm, tsrc = None, None
     cands_days = [days[s - 1], cday] if s > 0 else [cday]
     if extra_download:
-        for x in cands_days:
+        # the detected change day only, when the planned day was not it
+        for x in cands_days[-1:]:
             if x not in agg_days:
                 sz = agg_size(sym, x)
-                if sz and sz <= MAX_DAY_FILE:
+                if sz and sz <= OTHER_DAY0_MAX:
                     rec = agg_day(sym, x, sz)
                     if rec and rec["events"] >= 1:
                         agg_days[x] = rec
@@ -974,13 +998,12 @@ def evaluate(row: dict, extra_download: bool = True) -> dict:
             for i, h in enumerate(_bins_hist(agg_days[x])):
                 bin_list.append(h)
                 stamps.append(f"{x} {i // 2:02d}:{30 * (i % 2):02d}")
-    if bin_list and len({st[:10] for st in stamps}) == len(cands_days):
+    if bin_list:
         keep = [i for i, h in enumerate(bin_list) if sum(h.values()) >= 1]
-        cp = change_bin([bin_list[i] for i in keep], old, new)
-        if cp is not None and 0 < cp < len(keep):
+        kept = [bin_list[i] for i in keep]
+        cp = change_bin(kept, old, new)
+        if cp is not None and 0 < cp < len(keep) and regimes_match(kept, cp, old, new):
             tm, tsrc = stamps[keep[cp]], "trades (30-minute bins)"
-        elif cp == 0 and keep:
-            tm, tsrc = stamps[keep[0]], "trades (30-minute bins, change at or before first)"
     if tm is None:
         kc = [c for c in kline_changes(kl) if c["old"] == old and c["new"] == new]
         if kc:
@@ -1013,9 +1036,56 @@ def evaluate(row: dict, extra_download: bool = True) -> dict:
     return out
 
 
+def time_check(r: dict) -> str:
+    """Compare the detected with the stated minute, at the detection's resolution."""
+    st, det, src = r.get("stated_time", ""), r.get("detected_time", ""), r.get("source", "")
+    if len(st) < 16 or len(det) < 16 or not st[11:13].isdigit():
+        return ""
+    t0 = dt.datetime.fromisoformat(st[:16])
+    t1 = dt.datetime.fromisoformat(det[:16])
+    tol = 30 if src.startswith("trades") else 120
+    diff = (t1 - t0).total_seconds() / 60
+    if src.startswith("trades"):
+        # a bin starting at the stated minute, or the bin after it, is a match
+        ok = 0 <= diff <= tol
+    else:
+        ok = -tol <= diff <= tol
+    return "matches" if ok else f"differs by {diff / 60:+.1f} h"
+
+
 def stage_evaluate(cands: list[dict]) -> list[dict]:
     res = pmap(lambda r: evaluate(r), [(r,) for r in cands], "evaluate")
     rows = [r for _, r in res if r]
+    allrec = [json.loads(p.read_text()) for p in (CACHE / "agg").glob("*/*.json")
+              if p.stat().st_size > 2]
+    median_bpr = float(np.median([x["zip_bytes"] / x["events"] for x in allrec
+                                  if x.get("zip_bytes") and x.get("events")]))
+    for r in rows:
+        r["time_check"] = time_check(r)
+        r["events_per_day_pre_method"] = "trades" if r.get("pre_trade_days") else ""
+        if r.get("pre_trade_days") or r.get("status") == "no-data":
+            continue
+        # no pre-event trade day: the archive sizes of the pre-event day files divided
+        # by bytes per aggTrade record (this contract's downloaded days, else the median
+        # over all downloaded days)
+        recs = []
+        if (CACHE / "agg" / r["symbol"]).exists():
+            recs = [json.loads(p.read_text()) for p in (CACHE / "agg" / r["symbol"]).glob("*.json")
+                    if p.stat().st_size > 2]
+        recs = [x for x in recs if x.get("zip_bytes") and x.get("events")]
+        bpr = (sum(x["zip_bytes"] for x in recs) / sum(x["events"] for x in recs)) if recs \
+            else median_bpr
+        ref = r.get("detected_time") or r["stated_time"]
+        if not ref[:4].isdigit():
+            continue
+        stated = d_(ref[:10])
+        pre = [_SIZES.get(f"{r['symbol']}|{(stated - dt.timedelta(i)).isoformat()}")
+               for i in range(1, WINDOW + 1)]
+        pre = [x for x in pre if x]
+        if len(pre) >= 5:
+            r["events_per_day_pre"] = float(np.mean(pre)) / bpr
+            r["events_per_day_pre_method"] = ("day-file bytes / bytes per record ("
+                                              + ("own days" if recs else "median") + ")")
     save_sizes()
     return sorted(rows, key=lambda r: (r["event"], r["symbol"]))
 
@@ -1069,21 +1139,23 @@ def stage_controls(treated: list[dict]) -> list[dict]:
                                    _bytes_per_day(inv, r["symbol"], pre))
         # prefilter on inventory bytes, then klines trade counts (cached scan months)
         matches = {r["symbol"]: [] for r in trs}
+        pre_months = months_between(pre[-1], pre[0])
         for c in cands:
             cb = _bytes_per_day(inv, c, pre)
-            for ts_, (tc, tb) in tr_act.items():
-                if not within_factor(cb, tb):
-                    continue
-                ser = daily_series(c, months_between(pre[-1], pre[0]))
-                if not ser:
-                    need = [(c, m) for m in months_between(pre[-1], pre[0])]
-                    for x in need:
-                        kline_month(*x)
-                    ser = daily_series(c, months_between(pre[-1], pre[0]))
-                cnt = [ser[x.isoformat()]["cnt"] for x in pre if x.isoformat() in ser]
-                if len(cnt) < 8:
-                    continue
-                cc = float(np.mean(cnt))
+            hits = [t for t, (_, tb) in tr_act.items() if within_factor(cb, tb)]
+            if not hits:
+                continue
+            ser = daily_series(c, pre_months)
+            if not all((CACHE / "kl2h" / c / f"{m}.json").exists() for m in pre_months):
+                for m in pre_months:
+                    kline_month(c, m)
+                ser = daily_series(c, pre_months)
+            cnt = [ser[x.isoformat()]["cnt"] for x in pre if x.isoformat() in ser]
+            if len(cnt) < 8:
+                continue
+            cc = float(np.mean(cnt))
+            for ts_ in hits:
+                tc, tb = tr_act[ts_]
                 if within_factor(cc, tc):
                     dist = abs(math.log(cc / tc)) + abs(math.log(cb / tb))
                     matches[ts_].append((dist, c, cc, cb))
@@ -1141,10 +1213,12 @@ def stage_controls(treated: list[dict]) -> list[dict]:
                     sample_jobs.setdefault((c, ev), []).append(pair)
     # light trade check: the event day of the top-ranked control per treated contract
     budget = CONTROL_AGG_BUDGET
-    order = sorted(sample_jobs)
+    sizes = {k: agg_size(*k) for k in sorted(sample_jobs)}
+    # smallest files first, so the budget covers as many treated contracts as possible
+    order = sorted(sample_jobs, key=lambda k: (sizes[k] or 0, k))
     jobs = []
     for c, ev in order:
-        sz = agg_size(c, ev)
+        sz = sizes[(c, ev)]
         if not sz or sz > CONTROL_SAMPLE_MAX_FILE:
             for p in sample_jobs[(c, ev)]:
                 p["trade_check"] = "skipped (file over 25 MB)" if sz else "no file"
@@ -1166,7 +1240,14 @@ def stage_controls(treated: list[dict]) -> list[dict]:
             ticks = [t for t in ticks if t is not None]
             day_t = tick_exp(_agg_day_hist(rec), TICK_SHARE)
             bad = sum(t != p["_exp"] for t in ticks)
-            ok = day_t == p["_exp"] and bad <= max(1, len(ticks) // 20)
+            # thin bins can misread the tick, so test for a change instead: no split of
+            # the day into an old-tick part and a 10x finer or coarser part fits
+            hs = [h for h in _bins_hist(rec) if sum(h.values())]
+            moved = False
+            for new in (p["_exp"] - 1, p["_exp"] + 1):
+                cp = change_bin(hs, p["_exp"], new)
+                moved |= bool(cp and 0 < cp < len(hs) and regimes_match(hs, cp, p["_exp"], new))
+            ok = day_t == p["_exp"] and not moved
             p["trade_check"] = (f"ok ({len(ticks)} bins)" if ok else
                                 f"FAILED (day tick {fmt_tick(day_t) if day_t is not None else '?'}"
                                 f", {bad} of {len(ticks)} bins off)")
@@ -1181,8 +1262,8 @@ def stage_controls(treated: list[dict]) -> list[dict]:
 # ----------------------------------------------------------------------------------------
 TICK_COLS = ["symbol", "stated_time", "detected_time", "old_tick", "new_tick", "direction",
              "rel_tick_before_bps", "rel_tick_after_bps", "events_per_day_pre", "status",
-             "source", "event", "listed_in_notes", "notice_code", "trade_days",
-             "pre_trade_days", "trades_per_day_pre_klines", "coarse_share_pre",
+             "source", "time_check", "event", "listed_in_notes", "notice_code", "trade_days",
+             "pre_trade_days", "events_per_day_pre_method", "trades_per_day_pre_klines", "coarse_share_pre",
              "coarse_share_post"]
 
 

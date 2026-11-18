@@ -99,6 +99,10 @@ def test_ghost_month_flag(mp):
     assert p["has_klines"].to_list() == [True, True, False]
     assert p["trading_days"].to_list() == [31, 0, 0]
     assert p["age_months"].to_list() == [0, 1, 2]
+    assert p["resumed_after_ghost"].to_list() == [False, False, False]
+    back = _daily("G", "2024-04-01", [3.0] * 30)
+    p2 = mp.assemble_panel(mp.kline_month_features(pl.concat([live, ghost, back])), fu, me)
+    assert p2.sort("month")["resumed_after_ghost"].to_list() == [False, False, False, True]
     feb = p.row(1, named=True)
     assert feb["quote_volume"] == 0.0
     assert feb["taker_buy_share"] is None

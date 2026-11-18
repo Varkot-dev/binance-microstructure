@@ -55,7 +55,9 @@ ZIPS = RAW / "zips"
 PANEL_PATH = ROOT / "panels" / "monthly_panel.parquet"
 SUMMARY_PATH = Path("research/market_evolution/data/monthly_panel.md")
 INVENTORY = ROOT / "universe" / "aggtrades_monthly_inventory.json"
-SYMBOL_RE = re.compile(r"^[A-Z0-9]+USDT$")
+# Any non-empty prefix: some 2025 listings use Chinese characters (e.g. 币安人生USDT).
+SYMBOL_RE = re.compile(r"^[^_/]+USDT$")
+RUNS = RAW / "fetch_runs.json"
 
 KLINE_COLS = [
     "open_time", "open", "high", "low", "close", "volume", "close_time", "quote_volume",
@@ -454,10 +456,14 @@ def assemble_panel(kl: pl.DataFrame, fu: pl.DataFrame, me: pl.DataFrame) -> pl.D
     )
     p = p.sort("symbol", "month").with_columns(
         age_months=pl.col("month").cum_count().over("symbol") - 1,
+        # Trading again after a ghost month: a relisting or a reused symbol (e.g. MDTUSDT
+        # 2026-10 trades near 96 after ghost months at 0.063). Looks back one row only.
+        resumed_after_ghost=~pl.col("ghost_month")
+        & pl.col("ghost_month").shift(1).over("symbol").fill_null(False),
     )
     order = [
         "symbol", "month", "age_months", "has_klines", "has_funding", "has_metrics",
-        "ghost_month", "days_in_month", "n_kline_days", "missing_kline_days",
+        "ghost_month", "resumed_after_ghost", "days_in_month", "n_kline_days", "missing_kline_days",
         "trading_days", "first_day", "last_day", "last_trading_day",
         "quote_volume", "quote_volume_median", "n_trades", "avg_trade_usd",
         "taker_buy_share", "open_first", "close_last", "ret_month", "realized_vol",
@@ -496,6 +502,8 @@ COLUMN_DOCS = [
     ("age_months", "months", "months since the contract's first panel row (0 = first)"),
     ("has_klines / has_funding / has_metrics", "bool", "a file of that type exists"),
     ("ghost_month", "bool", "files exist but no day with volume > 0 (incl. no kline file)"),
+    ("resumed_after_ghost", "bool", ("trades this month after a ghost month (relisting or "
+     "reused symbol: running peak and age then mix two lives)")),
     ("days_in_month", "days", "calendar days"),
     ("n_kline_days", "days", "daily kline rows in the month"),
     ("missing_kline_days", "days", "days_in_month minus n_kline_days (listing, gaps, end)"),
@@ -573,6 +581,11 @@ def write_summary(panel: pl.DataFrame, stats: dict) -> None:
         (f"- Ghost months: {ghost:,} ({ghost / n:.1%} of rows); rows with klines but no "
         f"trading: {int((panel['has_klines'] & panel['ghost_month']).sum()):,}; rows "
         f"without any kline file: {int((~panel['has_klines']).sum()):,}."),
+        (f"- Rows trading again after a ghost month (`resumed_after_ghost`, relistings or "
+         f"reused symbols): {int(panel['resumed_after_ghost'].sum())}: "
+         + ", ".join(f"{r['symbol']} {r['month']}" for r in
+                     panel.filter(pl.col("resumed_after_ghost")).iter_rows(named=True))
+         + "."),
         (f"- Rows with metrics: {int(panel['has_metrics'].sum()):,}; metrics day is the "
         f"calendar month-end in {int(panel['metrics_is_last_day'].fill_null(False).sum()):,}"
         " of them."),
@@ -580,9 +593,11 @@ def write_summary(panel: pl.DataFrame, stats: dict) -> None:
         f"(klines {stats.get('kline_files', 0):,}, funding {stats.get('funding_files', 0):,},"
         f" metrics {stats.get('metrics_files', 0):,}); each checked against its published "
         "SHA-256, zips deleted after parsing."),
-        (f"- Build time: fetch {stats.get('fetch_seconds', 0) / 60:.1f} min (summed over "
-        f"runs, {stats.get('workers', '')} workers), aggregation "
-        f"{stats.get('build_seconds', 0):.1f} s."),
+        (f"- Build time: fetch {stats.get('fetch_wall_seconds', 0) / 60:.0f} min wall clock "
+        f"over {stats.get('fetch_runs', 0)} run(s) with up to {stats.get('workers', '')} "
+        f"concurrent downloads ({stats.get('fetch_seconds', 0) / 3600:.1f} worker-hours), "
+        f"aggregation {stats.get('build_seconds', 0):.1f} s. Disk: about "
+        f"{stats.get('disk_mb', 0):.0f} MB of per-contract parquet under data/raw_panel/."),
         f"- Download errors: {stats.get('n_errors', 0)}.",
     ]
     for note in stats.get("notes", []):
@@ -632,6 +647,7 @@ def main() -> None:
     if not a.build_only:
         todo = [s for s in symbols if not (CONTRACTS / s / "done.json").exists()]
         print(f"{len(todo)} to fetch", file=sys.stderr)
+        t_run = time.time()
         with cf.ThreadPoolExecutor(a.workers) as ex:
             futs = {ex.submit(fetch_contract, s, a.end, client): s for s in todo}
             for i, fut in enumerate(cf.as_completed(futs), 1):
@@ -643,6 +659,12 @@ def main() -> None:
                           file=sys.stderr, flush=True)
                 except Exception as e:  # noqa: BLE001
                     print(f"[{i}/{len(todo)}] {s} FAILED {e}", file=sys.stderr, flush=True)
+        if todo:
+            runs = json.loads(RUNS.read_text()) if RUNS.exists() else []
+            runs.append({"started": dt.datetime.fromtimestamp(t_run, dt.UTC).isoformat(),
+                         "wall_seconds": round(time.time() - t_run), "contracts": len(todo),
+                         "workers": a.workers})
+            RUNS.write_text(json.dumps(runs, indent=1))
     for s in symbols:
         p = CONTRACTS / s / "done.json"
         if p.exists():
@@ -652,7 +674,9 @@ def main() -> None:
     t0 = time.time()
     stats = {
         "built_at": dt.datetime.now(dt.UTC).strftime("%Y-%m-%d %H:%M UTC"),
-        "end": a.end, "workers": a.workers,
+        "end": a.end,
+        "workers": max([r["workers"] for r in json.loads(RUNS.read_text())], default=a.workers)
+        if RUNS.exists() else a.workers,
         "files": sum(i["files"] for i in infos),
         "bytes": sum(i["bytes"] for i in infos),
         "kline_files": sum(len(i["kline_months"]) + len(i["kline_daily_fallback"])
@@ -660,6 +684,10 @@ def main() -> None:
         "funding_files": sum(len(i["funding_months"]) for i in infos),
         "metrics_files": sum(len(i["metrics_days"]) for i in infos),
         "fetch_seconds": sum(i["seconds"] for i in infos),
+        "fetch_runs": len(json.loads(RUNS.read_text())) if RUNS.exists() else 0,
+        "fetch_wall_seconds": sum(r["wall_seconds"] for r in json.loads(RUNS.read_text()))
+        if RUNS.exists() else 0,
+        "disk_mb": sum(f.stat().st_size for f in CONTRACTS.rglob("*") if f.is_file()) / 1e6,
         "n_errors": sum(len(i["errors"]) for i in infos),
         "notes": [],
     }
@@ -679,15 +707,37 @@ def main() -> None:
             + (f": {', '.join(no_agg)}." if no_agg and len(no_agg) <= 40 else ".")
         )
     no_kl = sorted(i["symbol"] for i in infos if not i["kline_months"]
-                   and not i["kline_daily_fallback"])
+                   and not i["kline_daily_fallback"]
+                   and (i["funding_months"] or i["metrics_days"]))
     if no_kl:
         stats["notes"].append(f"{len(no_kl)} contracts have funding or metrics files but no "
                               f"1d klines: {', '.join(no_kl[:40])}.")
+    empty = sorted(i["symbol"] for i in infos if not (
+        i["kline_months"] or i["kline_daily_fallback"] or i["funding_months"]
+        or i["metrics_days"]))
+    if empty:
+        stats["notes"].append(f"{len(empty)} symbols have no file up to {a.end} (listed "
+                              f"later, no panel rows): {', '.join(empty[:40])}.")
     errs = [e for i in infos for e in i["errors"]]
     if errs:
         stats["notes"].append("First errors: " + "; ".join(errs[:5]))
     stats["build_seconds"] = 0.0
     panel = build([i["symbol"] for i in infos], stats)
+    if INVENTORY.exists():
+        agg = pl.DataFrame(
+            [(s, m) for s, ms in inv.items() for m in ms], schema=["symbol", "month"],
+            orient="row",
+        ).with_columns(in_aggtrades=pl.lit(True))
+        j = panel.join(agg, on=["symbol", "month"], how="left").with_columns(
+            pl.col("in_aggtrades").fill_null(False))
+        n_ga = j.filter(pl.col("ghost_month") & pl.col("in_aggtrades")).height
+        n_ta = j.filter(~pl.col("ghost_month") & ~pl.col("in_aggtrades")).height
+        ex = j.filter(pl.col("ghost_month") & pl.col("in_aggtrades"))
+        ex = ", ".join(f"{r['symbol']} {r['month']}" for r in ex.head(10).iter_rows(named=True))
+        stats["notes"].append(
+            f"Cross-check with the aggTrades inventory: {n_ta} trading (non-ghost) months "
+            f"have no aggTrades file; {n_ga} ghost months do have one"
+            + (f" ({ex})." if ex else "."))
     stats["build_seconds"] = time.time() - t0
     write_summary(panel, stats)
     (RAW / "build_stats.json").write_text(json.dumps(stats, indent=1))
