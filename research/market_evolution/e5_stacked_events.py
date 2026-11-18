@@ -46,6 +46,12 @@ e3's single-event DiD and permutation test (forest plot).
     PYTHONPATH=src .venv/bin/python research/market_evolution/e5_stacked_events.py run
     PYTHONPATH=src .venv/bin/python research/market_evolution/e5_stacked_events.py analyze
 
+Lock-box (the only path that may load the RESERVED batches; run once, see `--lockbox`):
+
+    PYTHONPATH=src .venv/bin/python research/market_evolution/e5_stacked_events.py plan --lockbox
+    PYTHONPATH=src .venv/bin/python research/market_evolution/e5_stacked_events.py run --lockbox
+    PYTHONPATH=src .venv/bin/python research/market_evolution/e5_stacked_events.py analyze --lockbox
+
 Resumable: per contract-day summaries are cached under data/event_study/e5/<batch>/
 <symbol>/<date>.json (the e3 cache under data/event_study/<batch>/ is read first).
 """
@@ -110,6 +116,15 @@ B_PERM = 2999
 B_WILD = 4999
 SEED = 20261118
 
+# Lock-box replication of the frozen design (code frozen at commit ba1ae1c). Same
+# eligibility, controls, GRID days, per-batch budget rule (the CUTS_PER_ARM cheapest cut
+# contracts by PRE-event size, arms cheapest first within BUDGET_CUT), outcomes, fixed
+# effects and inference; only the batches differ. Its own download ledger and cap.
+FROZEN_COMMIT = "ba1ae1c"
+LOCKBOX_DIR = E5_CACHE / "lockbox"
+LOCKBOX_CAP = 2.0e9
+_LOCKBOX_OPEN = False
+
 PRIMARY = ("repeat_rate", "sign_acf_lag1")
 SECONDARY = ("acc_refit", "refit_excess")
 MECHANISMS = ("unchanged", "long_runs", "log_size", "log_events")
@@ -123,8 +138,14 @@ class ReservedBatchError(RuntimeError):
     pass
 
 
+def open_lockbox() -> None:
+    """Allow the RESERVED batches. Called only by the `--lockbox` command-line switch."""
+    global _LOCKBOX_OPEN
+    _LOCKBOX_OPEN = True
+
+
 def guard(batch: str) -> None:
-    if batch in RESERVED:
+    if batch in RESERVED and not _LOCKBOX_OPEN:
         raise ReservedBatchError(f"{batch} is in the lock-box and must not be analysed")
 
 
@@ -164,13 +185,18 @@ def pre_cost(symbol: str, batch: str) -> float:
 
 def design(events: list[dict] | None = None, controls: list[dict] | None = None,
            budget_cut: float = BUDGET_CUT, budget_inc: float = BUDGET_INC,
-           cached: dict[str, set[str]] | None = None) -> dict:
+           cached: dict[str, set[str]] | None = None, lockbox: bool = False) -> dict:
     """Arms (batch x direction) to analyse, chosen by the rules in the module docstring.
 
     `cached` maps an e3 batch to the treated symbols present in the e3 cache; their
     cost is zero and they are all kept. Returns {"arms": [...], "reserved": [...],
-    "eligible": {...}, "dropped": [...]}.
+    "eligible": {...}, "dropped": [...]}. With `lockbox` the same rules are applied to
+    the RESERVED batches only (which needs `open_lockbox()`), and nothing else.
     """
+    if lockbox:
+        for b in RESERVED:
+            guard(b)
+        cached = {}
     events = _read_csv("tick_events.csv") if events is None else events
     controls = _read_csv("tick_event_controls.csv") if controls is None else controls
     cached = _e3_cached_treated() if cached is None else cached
@@ -190,11 +216,11 @@ def design(events: list[dict] | None = None, controls: list[dict] | None = None,
         days = [_date(d) for d in grid_dates(batch).values()]
         return any(sym in reserved_treated[rb] and any(abs((d - _date(rb)).days) <= WINDOW
                                                        for d in days)
-                   for rb in RESERVED)
+                   for rb in RESERVED if rb != batch)
 
     eligible, dropped = {}, []
     for b in sorted(by_batch):
-        if b in RESERVED:
+        if (b in RESERVED) != lockbox:
             continue
         e = _date(b)
         batch_treated = {r["symbol"] for r in by_batch[b]}
@@ -343,13 +369,19 @@ def _cached_summary(batch: str, symbol: str, day: str) -> dict | None:
     return None
 
 
-def run(plan: dict) -> None:
+def run(plan: dict, lockbox: bool = False) -> None:
     import polars as pl
 
     from microstructure.data.ingest import ingest_agg_trades
 
-    e3.HARD_CAP = HARD_CAP  # e3.fetch_day checks the ledger it is given against this
-    ledger = e3.Ledger(CACHE / "e5_ledger.json")
+    # e3.fetch_day checks the ledger it is given against e3.HARD_CAP
+    if lockbox:
+        e3.HARD_CAP = LOCKBOX_CAP
+        LOCKBOX_DIR.mkdir(parents=True, exist_ok=True)
+        ledger = e3.Ledger(LOCKBOX_DIR / "e5_lockbox_ledger.json")
+    else:
+        e3.HARD_CAP = HARD_CAP
+        ledger = e3.Ledger(CACHE / "e5_ledger.json")
     jobs = downloads(plan)
     est = sum(day_bytes(s, d) for _, s, d in jobs)
     print(f"{len(jobs)} contract-days to fetch, about {est / 1e9:.2f} GB; e5 downloaded so "
@@ -743,6 +775,56 @@ def analyze(plan: dict, B: int = B_PERM) -> dict:
     return res
 
 
+def lockbox_verdict(lb: dict, ref: dict) -> dict:
+    """Compare a lock-box estimate with the e5 estimate (rule fixed before the run).
+
+    confirm: same sign as e5, CR1 95% interval excludes zero and permutation p < 0.05.
+    reverse: opposite sign and the CR1 interval excludes zero. weaken: anything else.
+    `size_consistent`: the lock-box CR1 interval contains the e5 point estimate.
+    """
+    if not lb or not ref:
+        return {"verdict": "not estimable"}
+    same = np.sign(lb["b"]) == np.sign(ref["b"])
+    excl = lb["lo"] > 0 or lb["hi"] < 0
+    perm_ok = lb.get("perm", {}).get("p", 1.0) < 0.05
+    v = ("confirm" if same and excl and perm_ok else
+         "reverse" if not same and excl else "weaken")
+    return {"verdict": v, "size_consistent": bool(lb["lo"] <= ref["b"] <= lb["hi"]),
+            "lockbox_b": lb["b"], "e5_b": ref["b"]}
+
+
+def analyze_lockbox(plan: dict, B: int = B_PERM) -> dict:
+    """The frozen stacked models (cut, increase, pooled) and per-arm DiDs on the lock-box."""
+    rows = load_panel(plan)
+    col = columns(rows)
+    res: dict = {"reserved": list(RESERVED), "grid": list(GRID), "models": {},
+                 "frozen_commit": FROZEN_COMMIT}
+    present = collections.Counter(zip(col["batch"].tolist(), col["symbol"].tolist()))
+    res["coverage"] = {
+        "rows": len(rows),
+        "expected": sum(len(set(arm_symbols(a)[0] + arm_symbols(a)[1])) for a in plan["arms"])
+        * len(GRID),
+        "batches": int(np.unique(col["batch"]).size),
+        "contracts": int(np.unique(col["symbol"]).size),
+        "batch_contracts": len(present),
+        "short": {f"{b}|{s}": n for (b, s), n in present.items() if n < len(GRID) - 2},
+        "scored_median": float(np.median(col["n_scored"])),
+    }
+    for model in ("cut", "increase", "pooled"):
+        res["models"][model] = {}
+        for k in OUTCOMES:
+            o = estimate(col, model, k, B=B)
+            if o:
+                res["models"][model][k] = o
+        print(f"[lockbox {model}] done", flush=True)
+    res["arms"] = per_arm(col, plan)
+    ref = json.loads((E5_CACHE / "e5_results.json").read_text())["models"]
+    res["verdict"] = {f"{m}|{k}": lockbox_verdict(res["models"].get(m, {}).get(k, {}),
+                                                  ref.get(m, {}).get(k, {}))
+                      for m in ("cut", "increase", "pooled") for k in PRIMARY + SECONDARY}
+    return res
+
+
 def _rank_of_treated(y, c) -> str:
     """Where the treated contract's post-minus-pre change ranks among all contracts."""
     ch = {}
@@ -873,10 +955,75 @@ def plan_summary(plan: dict) -> dict:
             "planned_inc_bytes": plan["planned_inc_bytes"]}
 
 
+def _git(*args: str) -> str:
+    import subprocess
+
+    return subprocess.run(["git", *args], cwd=ROOT, capture_output=True, text=True,
+                          check=False).stdout.strip()
+
+
+def main_lockbox(stage: str, rerun_reason: str | None) -> None:
+    """The lock-box path. Results are never overwritten: a rerun (after a bug fix) is
+    saved as the next run number with its reason, next to the first run."""
+    open_lockbox()
+    plan = design(lockbox=True)
+    LOCKBOX_DIR.mkdir(parents=True, exist_ok=True)
+    ps = plan_summary(plan)
+    plan_path = LOCKBOX_DIR / "e5_lockbox_plan.json"
+    if stage == "plan":
+        if plan_path.exists():
+            raise SystemExit("the lock-box plan is already written; it is not redone")
+        ps["frozen_commit"] = FROZEN_COMMIT
+        ps["head_at_plan"] = _git("rev-parse", "HEAD")
+        ps["written"] = dt.datetime.now(dt.UTC).isoformat(timespec="seconds")
+        jobs = downloads(plan)
+        ps["planned_download_bytes"] = sum(day_bytes(s, d) for _, s, d in jobs)
+        plan_path.write_text(json.dumps(ps, indent=1, ensure_ascii=False))
+        for x in ps["arms"]:
+            print(x["batch"], x["direction"], x["treated"], "of", x["n_eligible"],
+                  "treated;", len(x["controls"]), "controls")
+        print(f"{len(jobs)} contract-days, about {ps['planned_download_bytes'] / 1e9:.2f} GB")
+        return
+    if not plan_path.exists():
+        raise SystemExit("write the lock-box plan first (plan --lockbox)")
+    if json.loads(plan_path.read_text())["arms"] != ps["arms"]:
+        raise SystemExit("the lock-box design changed since its plan was written")
+    if stage == "run":
+        run(plan, lockbox=True)
+        return
+    if stage != "analyze":
+        raise SystemExit("the lock-box has stages plan, run and analyze")
+    done = sorted(LOCKBOX_DIR.glob("e5_lockbox_run*.json"))
+    if done and not rerun_reason:
+        raise SystemExit(f"the lock-box was already analysed ({done[-1].name}); a rerun "
+                         "needs --rerun-reason describing the bug that was fixed")
+    res = analyze_lockbox(plan)
+    res |= {"plan": ps, "run": len(done) + 1, "rerun_reason": rerun_reason,
+            "head": _git("rev-parse", "HEAD"),
+            "e5_diff_vs_frozen": _git("diff", "--stat", FROZEN_COMMIT, "--",
+                                      "research/market_evolution/e5_stacked_events.py"),
+            "analysed": dt.datetime.now(dt.UTC).isoformat(timespec="seconds")}
+    out = LOCKBOX_DIR / f"e5_lockbox_run{len(done) + 1}.json"
+    out.write_text(json.dumps(_jsonable(res), indent=1, ensure_ascii=False))
+    for model, d in res["models"].items():
+        for k, o in d.items():
+            print(f"{model:9s} {k:14s} b={o['b']:+.3f} [{o['lo']:+.3f},{o['hi']:+.3f}] "
+                  f"perm p={o['perm']['p']:.3f} pre p={o['pre_p']:.3f}")
+    for k, v in res["verdict"].items():
+        print(k, v)
+
+
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("stage", choices=["plan", "run", "analyze", "plot"])
+    ap.add_argument("--lockbox", action="store_true",
+                    help="the only path that may load the reserved batches")
+    ap.add_argument("--rerun-reason", default=None,
+                    help="with --lockbox analyze: rerun after a bug fix (kept as run 2, ...)")
     a = ap.parse_args()
+    if a.lockbox:
+        main_lockbox(a.stage, a.rerun_reason)
+        return
     plan = design()
     E5_CACHE.mkdir(parents=True, exist_ok=True)
     ps = plan_summary(plan)

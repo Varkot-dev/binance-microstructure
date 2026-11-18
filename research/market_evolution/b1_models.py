@@ -49,6 +49,7 @@ DATA = HERE / "data"
 PANEL = DATA / "delisting_panel.parquet"
 OUT_MD = DATA / "b1_models.md"
 OUT_PNG = DATA / "b1_models.png"
+OUT_JSON = DATA / "b1_models.json"
 
 
 def _load_b0():
@@ -829,7 +830,40 @@ def plot(res: dict) -> None:
     plt.close(fig)
 
 
-def main() -> None:
+# --------------------------------------------------------------------------------------
+# Machine-readable output (for the Q16 report). Writes the numbers `run_variant` already
+# computes; no modelling choice lives here. `--json-only` writes this file and leaves the
+# Markdown and the figure untouched. Pre-lock-box folds only, as always in b1.
+# --------------------------------------------------------------------------------------
+
+def write_json(res: dict, path: Path = OUT_JSON) -> None:
+    from microstructure.data.jsonio import dumps_strict
+    out = {"source": "research/market_evolution/b1_models.py", "names": {}, "variants": {}}
+    for label, r in res.items():
+        ev = r["eval"]
+        feat_rows, grp_rows = shap_summary(r["shap"])
+        out["variants"][label] = {
+            "point": ev["point"], "ci": {k: list(v) for k, v in ev["ci"].items()},
+            "alerts_total": ev["alerts_total"], "n_months": ev["n_months"],
+            "n_rows": r["n_rows"], "n_pos": r["n_pos"], "test_lives": r["test_lives"],
+            "folds": r["folds"],
+            "shap": {"test": r["shap"]["test"],
+                     "features": [{"feature": f, "mean_abs": float(m), "share": sh,
+                                   "corr": None if c == "nan" else float(c)}
+                                  for f, m, sh, c in feat_rows],
+                     "groups": [{"group": g, "mean_abs": float(m), "share": sh}
+                                for g, m, sh in grp_rows]},
+            "hazard": r["hazard"], "hazard_gap": r["hazard_gap"],
+            "hazard_events": r["hazard_events"], "hazard_rows": r["hazard_rows"],
+        }
+        for k in r["specs"]:
+            out["names"][k] = name(k)
+    out["names"]["base_b"] = name("base_b")
+    path.write_text(dumps_strict(out) + "\n")
+
+
+def main(argv: list[str] | None = None) -> None:
+    json_only = "--json-only" in (sys.argv[1:] if argv is None else argv)
     t0 = time.time()
     df = prepare(pl.read_parquet(PANEL))
     lb = df.filter(pl.col("t") >= LOCKBOX_T)
@@ -844,6 +878,10 @@ def main() -> None:
             print(f"  {name(k):40s} prec {_ci(ev, f'prec_{k}')} rec {_ci(ev, f'rec_{k}')} "
                   f"AP {_ci(ev, f'ap_{k}')}")
         print(f"  ({time.time() - t0:.0f} s)")
+    write_json(res)
+    print(f"wrote {OUT_JSON.relative_to(ROOT)}")
+    if json_only:
+        return
     write_md(res, time.time() - t0)
     plot(res)
     print(f"wrote {OUT_MD.relative_to(ROOT)} and {OUT_PNG.relative_to(ROOT)}")

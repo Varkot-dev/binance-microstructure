@@ -48,6 +48,7 @@ Q14_JSON = ROOT / "results" / "q14_survivorship.json"
 PANEL_OUT = DATA / "delisting_panel.parquet"
 PANEL_MD = DATA / "delisting_panel.md"
 BASELINE_MD = DATA / "b0_baselines.md"
+BASELINE_JSON = DATA / "b0_baselines.json"
 
 H = 3                      # label horizon in months
 OBS_END = "2026-10"        # last complete month (archive ends 2026-11-16)
@@ -934,14 +935,48 @@ def evaluate() -> dict:
     return res
 
 
+# --------------------------------------------------------------------------------------
+# Machine-readable output (for the Q16 report). Writes the numbers `evaluate_variant`
+# already computes; no modelling choice lives here. `json` stage: pre-lock-box folds only,
+# leaves b0_baselines.md untouched.
+# --------------------------------------------------------------------------------------
+
+def write_json(res: dict[str, dict], path: Path = BASELINE_JSON) -> None:
+    from microstructure.data.jsonio import dumps_strict
+    out = {"source": "research/market_evolution/b0_baselines.py",
+           "lockbox_start": LOCKBOX_START, "first_test": FIRST_TEST, "test_len": TEST_LEN,
+           "alert_rate": ALERT_RATE, "n_boot": N_BOOT, "boot_block": BOOT_BLOCK, "seed": SEED,
+           "variants": {}}
+    for label, r in res.items():
+        out["variants"][label] = {
+            "point": r["point"], "ci": {k: list(v) for k, v in r["ci"].items()},
+            "alerts_total": r["alerts_total"], "n_rows": r["n_rows"], "n_pos": r["n_pos"],
+            "n_months": r["n_months"], "test_events": r["test_events"],
+            "months_with_events": r["months_with_events"], "purged_rows": r["purged_rows"],
+            "per_fold": r["per_fold"],
+        }
+    path.write_text(dumps_strict(out) + "\n")
+
+
+def evaluate_json() -> None:
+    df = pl.read_parquet(PANEL_OUT)
+    res = {"main": evaluate_variant(df, drop_final_full=False),
+           "drop final full month": evaluate_variant(df, drop_final_full=True)}
+    write_json(res)
+    print(f"wrote {BASELINE_JSON.relative_to(ROOT)}")
+
+
 def main(argv: list[str] | None = None) -> None:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    ap.add_argument("stage", nargs="?", choices=["build", "eval", "all"], default="all")
+    ap.add_argument("stage", nargs="?", choices=["build", "eval", "json", "all"],
+                    default="all")
     args = ap.parse_args(argv)
     if args.stage in ("build", "all"):
         build()
     if args.stage in ("eval", "all"):
         evaluate()
+    if args.stage == "json":
+        evaluate_json()
 
 
 if __name__ == "__main__":
