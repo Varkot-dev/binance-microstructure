@@ -1,5 +1,10 @@
 # Politician posts: the data contract
 
+**Post text is not stored in git.** CSVs in this folder are git-ignored. The repository
+keeps `../posts_index/<platform>_<handle>.csv` instead: platform, handle, post_id, url,
+created_at_utc, kind, has_media and the pre-registered topic label, without the text.
+Rebuild the full files locally as described in "Rebuilding the text" below.
+
 Every file of collected posts lands in this folder as one CSV per account and platform:
 
 ```
@@ -35,3 +40,23 @@ file that fails the check is not used.
 - **Coverage matters more than speed.** A missing week of posts biases the influence
   estimate more than a slow collection does. Each file's coverage (first and last post
   date, and any gaps the collector knows about) goes in `../coverage.csv`.
+
+## Rebuilding the text
+
+Trump's Truth Social posts come from the public archive
+`mickpletcher/truthsocial-archiver` (code MIT; the post text is not covered by that
+licence), commit `334073464e27`:
+
+```bash
+git clone https://github.com/mickpletcher/truthsocial-archiver /tmp/truth-archive
+git -C /tmp/truth-archive checkout 334073464e27
+mkdir -p data/politics/raw/pletcher_truth
+cp /tmp/truth-archive/docs/data/posts.jsonl data/politics/raw/pletcher_truth/
+PYTHONPATH=src .venv/bin/python research/politics/c1_trump_posts.py convert
+```
+
+The analysis checks the rebuilt file's sha256 against the one recorded in
+`data/c1_trump_posts.md`, so a rebuild that differs is refused rather than used silently.
+
+X posts collected with `../CLAUDE_DESKTOP_PROMPT.md` are handled the same way: keep the
+CSVs local (or send them over directly), and commit only their index.

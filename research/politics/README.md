@@ -9,8 +9,8 @@ ordinary times, and turn that into one influence number per person with an inter
 - `notes/`: research on post-data sources and on prior studies and methods (in progress).
 - `accounts.csv`: the accounts to collect, grouped (Trump family, White House,
   administration, Republicans, Democrats, regulators, Musk as a separate comparison).
-- `posts/`: where collected posts land, one CSV per account, in the format defined in
-  `posts/README.md`.
+- `posts/`: where collected posts land locally, one CSV per account, in the format defined in
+  `posts/README.md`. Post text is git-ignored; `posts_index/` holds IDs, times and topics.
 - `validate_posts.py`: checks every post file against that format (tests in
   `tests/research/test_validate_posts.py`).
 - `CLAUDE_DESKTOP_PROMPT.md`: the prompt for collecting X posts with Claude Desktop in

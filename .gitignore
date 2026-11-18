@@ -7,3 +7,6 @@ __pycache__/
 .claude/
 .coverage
 coverage.json
+
+# Politician post text stays out of git; research/politics/posts_index/ holds IDs, times and topics.
+research/politics/posts/*.csv

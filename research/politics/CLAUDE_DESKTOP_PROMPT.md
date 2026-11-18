@@ -71,7 +71,8 @@ WHERE TO SAVE:
   put the CSVs in research/politics/posts/, append the coverage rows to
   research/politics/coverage.csv, run
     python research/politics/validate_posts.py
-  fix anything it reports, then commit on a new branch named x-posts and push it.
+  fix anything it reports. Do not commit the CSVs: post text is kept out of git on
+  purpose (the folder is git-ignored). Tell me when the files are ready.
 - Otherwise save everything in a folder named politician_posts in my Downloads and tell
   me where, so I can upload it.
 
