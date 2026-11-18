@@ -18,7 +18,8 @@ carefully: complete, correct timestamps matter far more than speed.
 ACCOUNTS (X handles), highest priority first:
 EricTrump, DonaldJTrumpJr, realDonaldTrump, POTUS, WhiteHouse, JDVance, DavidSacks,
 worldlibertyfi, GetTrumpMemes, SECGov, GaryGensler, SenLummis, SenatorHagerty, SenWarren,
-SenSchumer, RepMaxineWaters, KamalaHarris, elonmusk (do elonmusk last; he posts a lot).
+SenSchumer, RepMaxineWaters, KamalaHarris, JoeBiden, POTUS46Archive (the archived
+Biden-era presidential account), BarackObama, elonmusk (do elonmusk last; he posts a lot).
 First open each profile and confirm the handle exists and is the right person. If a
 handle is wrong or suspended, note it and move on.
 

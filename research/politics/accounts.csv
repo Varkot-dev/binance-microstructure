@@ -18,3 +18,6 @@ x,SenSchumer,Chuck Schumer,democrats,Senate Democratic leader
 x,RepMaxineWaters,Maxine Waters,democrats,House Financial Services ranking member
 x,KamalaHarris,Kamala Harris,democrats,2024 Democratic nominee
 x,elonmusk,Elon Musk,musk_separate,Not a politician; analysed separately as a comparison
+x,JoeBiden,Joe Biden,democrats,President 2021 to 2025; administration hostile to crypto (SEC actions)
+x,POTUS46Archive,Office of the President (Biden era),white_house,Archived Biden-era POTUS account; verify the handle before collecting
+x,BarackObama,Barack Obama,democrats,Left office before the data starts; a check that should show no effect
