@@ -313,7 +313,7 @@ def day_by_day_events(lf: pl.LazyFrame, period: str) -> pl.DataFrame:
     n_days = int((np.datetime64(_month_bounds(period)[1], "D") - first).astype(int)) + 1
     out = []
     for k in range(n_days):
-        d0 = pl.lit(str(first + k)).str.to_datetime("%Y-%m-%d", time_unit="ms", time_zone="UTC")
+        d0 = pl.lit(str(first + np.timedelta64(k, "D"))).str.to_datetime("%Y-%m-%d", time_unit="ms", time_zone="UTC")
         day = lf.filter((pl.col("ts") >= d0) & (pl.col("ts") < d0 + pl.duration(days=1)))
         ev = to_aggressor_events(day)
         if ev.height:
@@ -481,6 +481,7 @@ def run(units: list[dict], max_units: int | None = None) -> dict:
                 rec = process_unit(u, pre)
                 n_ok += rec["status"] == "ok"
                 n_fail += rec["status"] != "ok"
+                _log_run(t0, i + 1, n_ok, n_fail, peak.peak)
                 print(f"[{i + 1}/{len(todo)}] {u['set']} {u['symbol']} {u['period']}: "
                       f"{rec['status']} {rec['seconds']}s"
                       f"{' ' + rec['reason'] if rec['reason'] else ''} "
@@ -488,11 +489,19 @@ def run(units: list[dict], max_units: int | None = None) -> dict:
     finally:
         pre.close()
         shutil.rmtree(TMP / "parquet", ignore_errors=True)
+    return _log_run(t0, len(todo), n_ok, n_fail, peak.peak, finished=True)
+
+
+def _log_run(t0: float, n_done: int, n_ok: int, n_fail: int, peak: int,
+             finished: bool = False) -> dict:
+    """Write (or update) this run's entry in runs.json after every unit, so a run
+    that is killed still leaves its wall time and disk peak."""
     log = {"started_unix": t0, "wall_seconds": round(time.time() - t0, 1),
-           "n_attempted": len(todo), "n_ok": n_ok, "n_failed": n_fail,
-           "tmp_peak_bytes": peak.peak}
+           "n_attempted": n_done, "n_ok": n_ok, "n_failed": n_fail,
+           "tmp_peak_bytes": peak, "finished": finished}
     runs = json.loads(RUNS.read_text()) if RUNS.exists() else []
-    RUNS.write_text(json.dumps(runs + [log], indent=1))
+    runs = [r for r in runs if r["started_unix"] != t0] + [log]
+    RUNS.write_text(json.dumps(runs, indent=1))
     return log
 
 
@@ -574,6 +583,10 @@ def write_md(df: pl.DataFrame, excluded: list[dict], corr: list[dict], runs: lis
           ("Q14's other non-fitted units (incomplete months in 2023-06, too-thin units) have no "
           "Q14 metrics and are outside this table, as in Q14."), "",
           "## Runtime and disk", ""]
+    lean = sorted(f"{k[0]} {k[1]} ({v['proxies']['n_raw'] / 1e6:.0f}M records)"
+                  for k, v in records.items()
+                  if (v.get("proxies") or {}).get("n_raw", 0) > LEAN_ROWS
+                  and v.get("source") == "download")
     tot = sum(r["wall_seconds"] for r in runs)
     peak = max((r["tmp_peak_bytes"] for r in runs), default=0)
     secs = [v["seconds"] for v in records.values() if v.get("seconds") is not None]
@@ -585,7 +598,13 @@ def write_md(df: pl.DataFrame, excluded: list[dict], corr: list[dict], runs: lis
           "- Ingest: `ingest_agg_trades` for CSVs up to 1.5 GB; above that, chunked "
           "parsing straight from the zip (same casts and schema as Q14's streaming ingest, "
           "which would have extracted a 4 to 5 GB CSV and broken the disk budget): "
-          + (", ".join(chunked) if chunked else "none") + ".", "",
+          + (", ".join(chunked) if chunked else "none") + ".",
+          ("- Months over LEAN_ROWS raw records are measured by `month_proxies_lean` (events "
+           "built one day at a time, raw reduced to the columns the proxies read; same "
+           "result, checked on 1000PEPEUSDT 2023-06): "
+           + (", ".join(lean) if lean else "none") + ". Its peak memory was about 11 GB, "
+           "mostly inside `relative_tick`."),
+          *[f"- Run note: {r['note']}." for r in runs if r.get("note")], "",
           "## First descriptive table: proxies against Q14 gbm_all accuracy", "",
           ("**Descriptive only.** Within each period, the Spearman correlation across "
           "contracts of each non-circular proxy with Q14's `gbm_all` accuracy, and the same "
@@ -594,7 +613,9 @@ def write_md(df: pl.DataFrame, excluded: list[dict], corr: list[dict], runs: lis
           "of contracts. One cross-section per period, many proxies, no correction for "
           "multiple comparisons, no causal reading: these are leads for weeks 3 to 4. "
           "`lot` and `tick` are in coin and USDT units and are not comparable across "
-          "contracts; they are shown for completeness."), ""]
+          "contracts; they are shown for completeness. The run-length proxies are not in "
+           "NEAR_CIRCULAR but are close to it: longer same-sign runs mean a higher sign "
+           "repeat rate, so their large correlations are partly mechanical."), ""]
     periods = sorted({r["period"] for r in corr})
     hdr = "| proxy | " + " | ".join(f"{p} rho | {p} partial" for p in periods) + " |"
     L += [hdr, "|---|" + "---|---|" * len(periods)]

@@ -79,6 +79,31 @@ goes with higher accuracy, the opposite sign to the large-tick price-predictabil
 literature; that is worth a closer look in weeks 3 to 4, because relative tick moves with
 price and price moved a lot between snapshots.
 
+## Week 1 second pass: the same proxies across ~430 contract-months (e2)
+
+`data/proxies_cross_section.md` measures every proxy on the Q14 cross-sections (181
+contracts in 2023-06, 251 in 2026-07) and correlates it with fresh-model accuracy across
+contracts, raw and after partialling out activity (log events). Spearman, 95% intervals
+from resampling contracts, descriptive.
+
+| proxy | 2023-06, activity held fixed | 2026-07, activity held fixed | agrees with the 10-coin trend? |
+|---|---|---|---|
+| median trade size (USD) | -0.42 (-0.56 to -0.29) | -0.40 (-0.50 to -0.28) | yes |
+| relative tick | -0.32 (-0.48 to -0.13) | -0.29 (-0.41 to -0.16) | yes |
+| long same-sign runs (partly mechanical) | +0.69 (+0.58 to +0.78) | +0.68 (+0.59 to +0.75) | yes |
+| activity in the first second of each minute | +0.06 (-0.10 to +0.22) | -0.04 (-0.17 to +0.08) | **no** |
+
+What this means:
+- **Smaller trades and a smaller relative tick go with higher predictability both over
+  time within a coin and across coins at equal activity.** Two independent views agree,
+  so these are the strongest leads for weeks 3 to 4.
+- **The minute-boundary pattern does not hold across coins.** Within the 10 coins its
+  rise moved with accuracy (+0.60), but at equal activity, coins with more minute-start
+  bunching are not more predictable. Either it is a market-wide trend that happened to
+  coincide with the rise, or it matters only for the largest coins. This is the
+  within-versus-between distinction in `notes/panel_and_causal_methods.md` section 1.2,
+  and a good first exercise for the fixed-effects regressions.
+
 ## Part A: why did predictability rise? (weeks 1 to 6)
 
 ### Weeks 1 to 2: describe the change
