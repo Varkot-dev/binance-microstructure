@@ -126,6 +126,79 @@ contracts whose tick did not change, 21 days either side.
   mechanical (a finer grid splits the same order into more same-side events); other
   changes Binance made the same day cannot be ruled out.
 
+## Weeks 3 to 4: panel regressions and the composition split (e4)
+
+`data/e4_panel_regressions.md`. Mean accuracy rose +2.75 pp (+2.07 to +3.49) from
+2023-06 to 2026-07 across the cross-section; the one-month noise floor is +0.55.
+
+- **It is not composition.** Contracts present in both months rose +3.41 pp; exits
+  (-0.17) and new listings (-0.48) both pulled the average down slightly. Survivorship
+  does not create the rise.
+- **Trade size is the driver that holds up.** Log median trade size is negative in
+  every model (contract fixed effects -3.4 pp per log point, -4.3 to -2.4) and is the
+  only driver that survives a Bonferroni correction. In a Gelbach decomposition it
+  accounts for more than the whole within-contract rise, because USD trade sizes fell
+  by about 84% for nearly all survivors, a shift far outside the cross-sectional range.
+- **Relative tick has the right sign but explains none of the rise**, because it did
+  not shrink on average between the two snapshots. Its implied effect of a 10x tick cut
+  (+0.4 to +1.3 pp on 136 contracts, +2.9 on the 10 coins) has the same sign as the e3
+  experiment and is smaller.
+- **The fall in trade size is real, not a change in the record format.** Checked on
+  DOGE, LINK, AVAX and BTC, 2023-06 vs 2026-07: the median USD size of an individual
+  exchange fill (the atomic match, below the aggTrade level) fell by about as much as the
+  median aggTrade (DOGE fill $147 to $50, aggTrade $238 to $94; BTC fill $353 to $126,
+  aggTrade $686 to $195), while USD volume per day stayed in the same range. Trading
+  shifted toward many very small orders on top of the same total volume, which fits
+  algorithmic slicing and small automated orders, the order-splitting mechanism.
+
+## Part B weeks 8 to 9: models against the baseline (b1)
+
+`data/b1_models.md`, same six folds and bootstrap as the baselines; the 2026 lock-box was
+not touched.
+
+- **Nothing beats the lowest-volume-rank rule with an interval that excludes zero.**
+  Full-feature logistic regression: precision at the top 5% 0.101 (0.038 to 0.153)
+  against 0.083 for the rule, paired difference +0.018 (-0.008 to +0.042). LightGBM:
+  0.078, no better than the rule; early stopping keeps it to 20 to 41 trees, so what it
+  learns from earlier years does not carry forward.
+- **Open interest is the only extra signal**, the largest share of the tree model's
+  attributions and the only feature group that helps both models, though never by a
+  significant margin over the rule.
+- **The frozen candidates for the lock-box are the full logistic model and the
+  lowest-volume-rank rule**, scored once each on 2026.
+- Scores are for ranking, not probabilities: calibration did not improve the Brier score.
+
+## Part B lock-box (b2): one run on 2026
+
+`data/b2_lockbox.md`. Frozen configurations from commit b3571a6, scored once on 2026-01 to
+2026-07 (3,730 contract-months, 61 delisted contracts, base rate 3.9%).
+
+- **The logistic model beats the lowest-volume rule on the lock-box:** precision at the
+  top 5% 0.270 (0.187 to 0.356) against 0.151, paired difference +0.119 (+0.097 to
+  +0.145). The direction matches cross-validation and the interval now excludes zero.
+- **But more than half of that edge comes from the month that likely contains the
+  delisting announcement.** Without it, the gain is +0.049 (-0.016 to +0.081): ahead, not
+  decisively. That is the fairer test of predicting a delisting before it is announced.
+- **Caveats:** 2026 delistings came in batches (23 distinct stop days), so the intervals
+  rest on few independent months; and 16 of the 61 lock-box delistings already appeared
+  as positives in the last cross-validation block that informed which model to freeze.
+
+## Weeks 5 to 6: stacked event study over 35 tick-change batches (e5)
+
+`data/e5_stacked_events.md`. 113 treated contract-events in 35 batches (97 cuts, 16
+increases including SOLUSDT 2024-10-14), each with its own controls; the 2026-08-06 and
+2026-10-15 batches are reserved as the lock-box and were not loaded.
+
+- **Both prespecified predictions hold.** Cuts raise the sign repeat rate by +7.5 pp
+  (+6.5 to +8.5); increases lower it by -5.6 pp (-7.4 to -3.9). Pooled, the repeat rate
+  changes by -3.15 pp per log point of relative tick (-3.55 to -2.76). No pre-trends in
+  the primary outcomes.
+- **It matches the cross-section.** At equal activity, the cross-sectional slope of the
+  repeat rate on log relative tick is -1.9 to -3.9; the experiment gives -3.2.
+- **Limits:** a budget rule kept mostly small contracts (the full design would have been
+  about 110 GB); only 16 increases; 2023 batches show no effect; sign persistence is not
+  price predictability, and part of it is mechanical.
+
 ## Part A: why did predictability rise? (weeks 1 to 6)
 
 ### Weeks 1 to 2: describe the change

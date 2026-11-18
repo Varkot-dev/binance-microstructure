@@ -1,0 +1,3500 @@
+{
+  "question": "Does a contract's own monthly trading (volume, open interest, price, funding) rank it as likely to stop trading within 3 months, better than the rule that flags the lowest-volume contracts?",
+  "sources": {
+    "b0": "research/market_evolution/data/b0_baselines.json",
+    "b1": "research/market_evolution/data/b1_models.json",
+    "b2": "research/market_evolution/data/b2_lockbox.md",
+    "panel": "research/market_evolution/data/delisting_panel.parquet"
+  },
+  "config": {
+    "horizon_months": 3,
+    "alert_rate": 0.05,
+    "first_test": "2023-01",
+    "test_len": 6,
+    "lockbox_start": "2026-01",
+    "n_boot": 2000,
+    "boot_block": 3,
+    "seed": 0,
+    "b1_names": {
+      "logit_full": "logistic, full features",
+      "gbm_full": "LightGBM, full features",
+      "logit_vol": "logistic, volume level + trend",
+      "gbm_vol": "LightGBM, volume level + trend",
+      "logit_vol+age": "logistic, volume + age",
+      "gbm_vol+age": "LightGBM, volume + age",
+      "logit_vol+price and drawdown": "logistic, volume + price and drawdown",
+      "gbm_vol+price and drawdown": "LightGBM, volume + price and drawdown",
+      "logit_vol+volatility": "logistic, volume + volatility",
+      "gbm_vol+volatility": "LightGBM, volume + volatility",
+      "logit_vol+open interest": "logistic, volume + open interest",
+      "gbm_vol+open interest": "LightGBM, volume + open interest",
+      "logit_vol+funding": "logistic, volume + funding",
+      "gbm_vol+funding": "LightGBM, volume + funding",
+      "logit_vol+other activity": "logistic, volume + other activity",
+      "gbm_vol+other activity": "LightGBM, volume + other activity",
+      "base_b": "(b) lowest volume rank (bar)"
+    }
+  },
+  "facts": {
+    "lifecycle": {
+      "symbols": 924,
+      "lives": 935,
+      "by_status": {
+        "alive": 758,
+        "delisted": 151,
+        "reused-symbol": 11,
+        "renamed": 10,
+        "index": 3,
+        "merged": 2
+      }
+    },
+    "monthly_panel": {
+      "rows": 23356,
+      "ghost_months": 2126,
+      "ghost_share": 0.09102586059256722
+    },
+    "panel": {
+      "rows": 18329,
+      "lives": 686,
+      "months": [
+        "2020-01",
+        "2026-07"
+      ],
+      "pos": 465,
+      "base_rate": 0.025369632822303454,
+      "lives_by_status": {
+        "alive": 513,
+        "delisted": 150,
+        "reused-symbol": 11,
+        "renamed": 10,
+        "merged": 2
+      },
+      "event_lives": 161,
+      "event_lives_with_pos": 161,
+      "ghost_rows": 0,
+      "by_year": [
+        {
+          "year": "2020",
+          "rows": 502,
+          "lives": 80,
+          "pos": 3,
+          "event_lives": 1,
+          "base_rate": 0.00597609561752988
+        },
+        {
+          "year": "2021",
+          "rows": 1380,
+          "lives": 137,
+          "pos": 11,
+          "event_lives": 5,
+          "base_rate": 0.007971014492753623
+        },
+        {
+          "year": "2022",
+          "rows": 1689,
+          "lives": 159,
+          "pos": 44,
+          "event_lives": 17,
+          "base_rate": 0.02605091770278271
+        },
+        {
+          "year": "2023",
+          "rows": 2294,
+          "lives": 243,
+          "pos": 9,
+          "event_lives": 4,
+          "base_rate": 0.003923278116826504
+        },
+        {
+          "year": "2024",
+          "rows": 3339,
+          "lives": 371,
+          "pos": 89,
+          "event_lives": 32,
+          "base_rate": 0.026654687032045522
+        },
+        {
+          "year": "2025",
+          "rows": 5395,
+          "lives": 580,
+          "pos": 164,
+          "event_lives": 65,
+          "base_rate": 0.030398517145505097
+        },
+        {
+          "year": "2026",
+          "rows": 3730,
+          "lives": 574,
+          "pos": 145,
+          "event_lives": 61,
+          "base_rate": 0.0388739946380697
+        }
+      ]
+    },
+    "excluded": {
+      "n": 238,
+      "by_reason": {
+        "by the weekend-volume screen, confirmed by name": 182,
+        "non-crypto by name with under 14 trading days": 16,
+        "stocks (Q14 name review)": 25,
+        "Q14 timing screen": 3,
+        "index contracts": 3,
+        "ETFs (Q14 name review)": 6,
+        "commodities (Q14 name review)": 3
+      },
+      "crypto_kept": "CFGUSDT life 1, GRVTUSDT life 1, LITUSDT life 2, MOONSHOTUSDT life 1, PREDICTUSDT life 1",
+      "rows_dropped": "censored_label_unknown 24, final_trading_month 174, label_window_past_data_end 1,573"
+    },
+    "leakage": {
+      "final_full_month_pos": 153,
+      "final_full_month_settled_by_day10": 39,
+      "pre_lockbox_pos": 320,
+      "pre_lockbox_final_full_month_pos": 100,
+      "lockbox_pos": 145,
+      "lockbox_final_full_month_pos": 53
+    },
+    "lockbox_batches": {
+      "event_lives": 61,
+      "stop_days": 23,
+      "stop_months": 9,
+      "seen_in_last_cv_block": 16,
+      "last_cv_block": [
+        "2025-10",
+        "2025-12"
+      ],
+      "pos_in_first_quarter": 93
+    }
+  },
+  "cv": {
+    "main": {
+      "n_rows": 11028,
+      "n_pos": 262,
+      "n_months": 36,
+      "event_lives": 96,
+      "months_with_events": 32,
+      "base": {
+        "estimate": 0.023757707653246283,
+        "ci95": [
+          0.012941048022234836,
+          0.03223252711251759
+        ]
+      },
+      "candidates": {
+        "base_a": {
+          "prec": {
+            "estimate": 0.02717391304347826,
+            "ci95": [
+              0.00809394002935626,
+              0.05203681255582493
+            ]
+          },
+          "rec": {
+            "estimate": 0.05725190839694656,
+            "ci95": [
+              0.025629496402877698,
+              0.11216036392894714
+            ]
+          },
+          "ap": {
+            "estimate": 0.028156875403704665,
+            "ci95": [
+              0.01392104309483358,
+              0.0427356397741302
+            ]
+          },
+          "alerts": 552,
+          "hits": 15
+        },
+        "base_b": {
+          "prec": {
+            "estimate": 0.08333333333333333,
+            "ci95": [
+              0.03053351959952768,
+              0.13290497071907195
+            ]
+          },
+          "rec": {
+            "estimate": 0.17557251908396945,
+            "ci95": [
+              0.0939471868531644,
+              0.25823724731810543
+            ]
+          },
+          "ap": {
+            "estimate": 0.056348660344161326,
+            "ci95": [
+              0.022729005465463175,
+              0.08552798157890595
+            ]
+          },
+          "alerts": 552,
+          "hits": 46
+        },
+        "logit_c": {
+          "prec": {
+            "estimate": 0.05253623188405797,
+            "ci95": [
+              0.021214622641509435,
+              0.0752844182027649
+            ]
+          },
+          "rec": {
+            "estimate": 0.11068702290076336,
+            "ci95": [
+              0.06128867676102699,
+              0.1443343662475418
+            ]
+          },
+          "ap": {
+            "estimate": 0.04488465047885681,
+            "ci95": [
+              0.018942933097787492,
+              0.06425224603610506
+            ]
+          },
+          "alerts": 552,
+          "hits": 29
+        },
+        "logit_full": {
+          "prec": {
+            "estimate": 0.10144927536231885,
+            "ci95": [
+              0.03845986038394415,
+              0.15337651096397983
+            ]
+          },
+          "rec": {
+            "estimate": 0.21374045801526717,
+            "ci95": [
+              0.1287036056546831,
+              0.2790721899224806
+            ]
+          },
+          "ap": {
+            "estimate": 0.07629943473753506,
+            "ci95": [
+              0.027426749588338913,
+              0.11973723675684521
+            ]
+          },
+          "alerts": 552,
+          "hits": 56
+        },
+        "gbm_full": {
+          "prec": {
+            "estimate": 0.07789855072463768,
+            "ci95": [
+              0.030586056644880177,
+              0.1136400058275058
+            ]
+          },
+          "rec": {
+            "estimate": 0.16412213740458015,
+            "ci95": [
+              0.09912427149101506,
+              0.19355260935652757
+            ]
+          },
+          "ap": {
+            "estimate": 0.05251279874986287,
+            "ci95": [
+              0.016626799611731167,
+              0.08685610355562841
+            ]
+          },
+          "alerts": 552,
+          "hits": 43
+        },
+        "logit_vol": {
+          "prec": {
+            "estimate": 0.06159420289855073,
+            "ci95": [
+              0.0256945588316038,
+              0.08907803885885564
+            ]
+          },
+          "rec": {
+            "estimate": 0.1297709923664122,
+            "ci95": [
+              0.07653770004949678,
+              0.17030729419375706
+            ]
+          },
+          "ap": {
+            "estimate": 0.04552048211116895,
+            "ci95": [
+              0.015910639579329887,
+              0.07370644950586762
+            ]
+          },
+          "alerts": 552,
+          "hits": 34
+        },
+        "gbm_vol": {
+          "prec": {
+            "estimate": 0.04710144927536232,
+            "ci95": [
+              0.02719546943334785,
+              0.06610204510435636
+            ]
+          },
+          "rec": {
+            "estimate": 0.09923664122137404,
+            "ci95": [
+              0.07692307692307693,
+              0.14013297575148057
+            ]
+          },
+          "ap": {
+            "estimate": 0.04031194651088373,
+            "ci95": [
+              0.020445932706623406,
+              0.056068556832769775
+            ]
+          },
+          "alerts": 552,
+          "hits": 26
+        }
+      },
+      "diffs_vs_b": {
+        "logit_full": {
+          "prec": {
+            "estimate": 0.01811594202898552,
+            "ci95": [
+              -0.007796209754460247,
+              0.04225850385330849
+            ]
+          },
+          "ap": {
+            "estimate": 0.01995077439337374,
+            "ci95": [
+              -0.018844337626665344,
+              0.054656132443339556
+            ]
+          }
+        },
+        "gbm_full": {
+          "prec": {
+            "estimate": -0.0054347826086956486,
+            "ci95": [
+              -0.040711666742815365,
+              0.017242734764693124
+            ]
+          },
+          "ap": {
+            "estimate": -0.0038358615942984467,
+            "ci95": [
+              -0.03637055541906245,
+              0.029982628368622418
+            ]
+          }
+        },
+        "logit_vol": {
+          "prec": {
+            "estimate": -0.0217391304347826,
+            "ci95": [
+              -0.0558650819494193,
+              0.003427536671111634
+            ]
+          },
+          "ap": {
+            "estimate": -0.01082817823299237,
+            "ci95": [
+              -0.03808995716144727,
+              0.013388956495758865
+            ]
+          }
+        },
+        "gbm_vol": {
+          "prec": {
+            "estimate": -0.03623188405797101,
+            "ci95": [
+              -0.08007944526904988,
+              0.005671886118438543
+            ]
+          },
+          "ap": {
+            "estimate": -0.016036713833277587,
+            "ci95": [
+              -0.04410140744541905,
+              0.01137411414139307
+            ]
+          }
+        },
+        "logit_c": {
+          "prec": {
+            "estimate": -0.03079710144927536,
+            "ci95": [
+              -0.06330266768116943,
+              -0.005789847917710525
+            ]
+          },
+          "ap": {
+            "estimate": -0.01146400986530452,
+            "ci95": [
+              -0.030825437766767,
+              0.002536281654867101
+            ]
+          }
+        }
+      },
+      "b_minus_a": {
+        "estimate": 0.05615942028985507,
+        "ci95": [
+          0.0019677409509857744,
+          0.10339770421106037
+        ]
+      },
+      "bss_logit_full": {
+        "estimate": 0.02144784761652585,
+        "ci95": [
+          -0.006270154373571718,
+          0.03823451409465977
+        ]
+      },
+      "folds": [
+        {
+          "test": "2023-01 to 2023-06",
+          "n_train": 3138,
+          "train_pos": 53,
+          "n_test": 1019,
+          "test_pos": 5,
+          "C": 0.003,
+          "inner_val": "2021-10 to 2022-09",
+          "inner_val_pos": 48,
+          "n_trees": 20
+        },
+        {
+          "test": "2023-07 to 2023-12",
+          "n_train": 4049,
+          "train_pos": 62,
+          "n_test": 1275,
+          "test_pos": 4,
+          "C": 0.01,
+          "inner_val": "2022-04 to 2023-03",
+          "inner_val_pos": 30,
+          "n_trees": 20
+        },
+        {
+          "test": "2024-01 to 2024-06",
+          "n_train": 5177,
+          "train_pos": 65,
+          "n_test": 1553,
+          "test_pos": 46,
+          "C": 1.0,
+          "inner_val": "2022-10 to 2023-09",
+          "inner_val_pos": 12,
+          "n_trees": 20
+        },
+        {
+          "test": "2024-07 to 2024-12",
+          "n_train": 6634,
+          "train_pos": 99,
+          "n_test": 1786,
+          "test_pos": 43,
+          "C": 3.0,
+          "inner_val": "2023-04 to 2024-03",
+          "inner_val_pos": 37,
+          "n_trees": 36
+        },
+        {
+          "test": "2025-01 to 2025-06",
+          "n_train": 8246,
+          "train_pos": 125,
+          "n_test": 2356,
+          "test_pos": 35,
+          "C": 1.0,
+          "inner_val": "2023-10 to 2024-09",
+          "inner_val_pos": 60,
+          "n_trees": 20
+        },
+        {
+          "test": "2025-07 to 2025-12",
+          "n_train": 10302,
+          "train_pos": 180,
+          "n_test": 3039,
+          "test_pos": 129,
+          "C": 1.0,
+          "inner_val": "2024-04 to 2025-03",
+          "inner_val_pos": 81,
+          "n_trees": 20
+        }
+      ],
+      "ablation": [
+        {
+          "key": "logit_vol+age",
+          "model": "logit",
+          "group": "age",
+          "prec": {
+            "estimate": 0.04528985507246377,
+            "ci95": [
+              0.024606785523119366,
+              0.06700323525226728
+            ]
+          },
+          "prec_change_vs_volume": -0.01630434782608696,
+          "ap_change_vs_volume": -0.0004994026095076071,
+          "prec_minus_b": {
+            "estimate": -0.03804347826086956,
+            "ci95": [
+              -0.0793926541613816,
+              0.0031980724528461926
+            ]
+          }
+        },
+        {
+          "key": "logit_vol+price and drawdown",
+          "model": "logit",
+          "group": "price and drawdown",
+          "prec": {
+            "estimate": 0.07971014492753623,
+            "ci95": [
+              0.03874416620948287,
+              0.11000193798449612
+            ]
+          },
+          "prec_change_vs_volume": 0.018115942028985497,
+          "ap_change_vs_volume": 0.00879774387219788,
+          "prec_minus_b": {
+            "estimate": -0.0036231884057971037,
+            "ci95": [
+              -0.031658000995630285,
+              0.015965398758213283
+            ]
+          }
+        },
+        {
+          "key": "logit_vol+volatility",
+          "model": "logit",
+          "group": "volatility",
+          "prec": {
+            "estimate": 0.06159420289855073,
+            "ci95": [
+              0.02580368860951855,
+              0.08915714460436708
+            ]
+          },
+          "prec_change_vs_volume": 0.0,
+          "ap_change_vs_volume": 0.004710694170857427,
+          "prec_minus_b": {
+            "estimate": -0.0217391304347826,
+            "ci95": [
+              -0.05765963423007304,
+              0.004447228549734227
+            ]
+          }
+        },
+        {
+          "key": "logit_vol+open interest",
+          "model": "logit",
+          "group": "open interest",
+          "prec": {
+            "estimate": 0.08333333333333333,
+            "ci95": [
+              0.035954100380195836,
+              0.12055209943491367
+            ]
+          },
+          "prec_change_vs_volume": 0.0217391304347826,
+          "ap_change_vs_volume": 0.007388848741193409,
+          "prec_minus_b": {
+            "estimate": 0.0,
+            "ci95": [
+              -0.03048813698921303,
+              0.025100026795610374
+            ]
+          }
+        },
+        {
+          "key": "logit_vol+funding",
+          "model": "logit",
+          "group": "funding",
+          "prec": {
+            "estimate": 0.050724637681159424,
+            "ci95": [
+              0.024663101628898444,
+              0.07495790911258678
+            ]
+          },
+          "prec_change_vs_volume": -0.010869565217391304,
+          "ap_change_vs_volume": 0.0038675985570614455,
+          "prec_minus_b": {
+            "estimate": -0.032608695652173905,
+            "ci95": [
+              -0.06849370935663367,
+              0.005578848428523133
+            ]
+          }
+        },
+        {
+          "key": "logit_vol+other activity",
+          "model": "logit",
+          "group": "other activity",
+          "prec": {
+            "estimate": 0.06340579710144928,
+            "ci95": [
+              0.027552851849401178,
+              0.0901256420316735
+            ]
+          },
+          "prec_change_vs_volume": 0.0018115942028985518,
+          "ap_change_vs_volume": 0.0004040569582124537,
+          "prec_minus_b": {
+            "estimate": -0.01992753623188405,
+            "ci95": [
+              -0.05534368750176051,
+              0.005021739130434752
+            ]
+          }
+        },
+        {
+          "key": "gbm_vol+age",
+          "model": "gbm",
+          "group": "age",
+          "prec": {
+            "estimate": 0.04710144927536232,
+            "ci95": [
+              0.02365413877054169,
+              0.06972337066827029
+            ]
+          },
+          "prec_change_vs_volume": 0.0,
+          "ap_change_vs_volume": 0.0017406910324945582,
+          "prec_minus_b": {
+            "estimate": -0.03623188405797101,
+            "ci95": [
+              -0.07448878324603274,
+              0.0016893084785798032
+            ]
+          }
+        },
+        {
+          "key": "gbm_vol+price and drawdown",
+          "model": "gbm",
+          "group": "price and drawdown",
+          "prec": {
+            "estimate": 0.050724637681159424,
+            "ci95": [
+              0.02263351209429641,
+              0.07132029253445188
+            ]
+          },
+          "prec_change_vs_volume": 0.0036231884057971037,
+          "ap_change_vs_volume": 0.0010030113382321348,
+          "prec_minus_b": {
+            "estimate": -0.032608695652173905,
+            "ci95": [
+              -0.07650605178489353,
+              0.006104357620009282
+            ]
+          }
+        },
+        {
+          "key": "gbm_vol+volatility",
+          "model": "gbm",
+          "group": "volatility",
+          "prec": {
+            "estimate": 0.057971014492753624,
+            "ci95": [
+              0.030546799800052052,
+              0.08136363636363632
+            ]
+          },
+          "prec_change_vs_volume": 0.010869565217391304,
+          "ap_change_vs_volume": 0.00474524899304319,
+          "prec_minus_b": {
+            "estimate": -0.025362318840579705,
+            "ci95": [
+              -0.06726926641347604,
+              0.01666876046901171
+            ]
+          }
+        },
+        {
+          "key": "gbm_vol+open interest",
+          "model": "gbm",
+          "group": "open interest",
+          "prec": {
+            "estimate": 0.08333333333333333,
+            "ci95": [
+              0.029226795483290918,
+              0.1245943578999537
+            ]
+          },
+          "prec_change_vs_volume": 0.03623188405797101,
+          "ap_change_vs_volume": 0.009520991658115978,
+          "prec_minus_b": {
+            "estimate": 0.0,
+            "ci95": [
+              -0.03527379357663279,
+              0.023183449897877063
+            ]
+          }
+        },
+        {
+          "key": "gbm_vol+funding",
+          "model": "gbm",
+          "group": "funding",
+          "prec": {
+            "estimate": 0.04710144927536232,
+            "ci95": [
+              0.02433931553895822,
+              0.07044462072179837
+            ]
+          },
+          "prec_change_vs_volume": 0.0,
+          "ap_change_vs_volume": 0.009411780915152497,
+          "prec_minus_b": {
+            "estimate": -0.03623188405797101,
+            "ci95": [
+              -0.0849970824697719,
+              0.011218670348343224
+            ]
+          }
+        },
+        {
+          "key": "gbm_vol+other activity",
+          "model": "gbm",
+          "group": "other activity",
+          "prec": {
+            "estimate": 0.050724637681159424,
+            "ci95": [
+              0.02888095238095238,
+              0.07414711465109712
+            ]
+          },
+          "prec_change_vs_volume": 0.0036231884057971037,
+          "ap_change_vs_volume": -0.0005293690295446393,
+          "prec_minus_b": {
+            "estimate": -0.032608695652173905,
+            "ci95": [
+              -0.065844490323657,
+              0.0036648865153537957
+            ]
+          }
+        }
+      ],
+      "shap": {
+        "test": "2025-07 to 2025-12",
+        "features": [
+          {
+            "feature": "oi_rank_pct",
+            "mean_abs": 0.193,
+            "share": "25%",
+            "corr": -0.9
+          },
+          {
+            "feature": "funding_interval_min_h",
+            "mean_abs": 0.068,
+            "share": "9%",
+            "corr": -0.73
+          },
+          {
+            "feature": "funding_abs_mean",
+            "mean_abs": 0.05,
+            "share": "7%",
+            "corr": 0.58
+          },
+          {
+            "feature": "trades_rank_pct",
+            "mean_abs": 0.041,
+            "share": "5%",
+            "corr": -0.6
+          },
+          {
+            "feature": "max_dd_life",
+            "mean_abs": 0.036,
+            "share": "5%",
+            "corr": -0.37
+          },
+          {
+            "feature": "log_oi",
+            "mean_abs": 0.036,
+            "share": "5%",
+            "corr": -0.68
+          },
+          {
+            "feature": "ret_6m",
+            "mean_abs": 0.032,
+            "share": "4%",
+            "corr": -0.29
+          },
+          {
+            "feature": "ls_toptrader_account_month_end",
+            "mean_abs": 0.032,
+            "share": "4%",
+            "corr": 0.62
+          },
+          {
+            "feature": "log_avg_trade",
+            "mean_abs": 0.028,
+            "share": "4%",
+            "corr": -0.52
+          },
+          {
+            "feature": "log_price",
+            "mean_abs": 0.027,
+            "share": "4%",
+            "corr": -0.63
+          },
+          {
+            "feature": "dlog_oi_3m",
+            "mean_abs": 0.024,
+            "share": "3%",
+            "corr": 0.55
+          },
+          {
+            "feature": "log_age",
+            "mean_abs": 0.023,
+            "share": "3%",
+            "corr": 0.11
+          },
+          {
+            "feature": "log_qv_median",
+            "mean_abs": 0.018,
+            "share": "2%",
+            "corr": -0.55
+          },
+          {
+            "feature": "realized_vol",
+            "mean_abs": 0.018,
+            "share": "2%",
+            "corr": 0.24
+          },
+          {
+            "feature": "ret_3m",
+            "mean_abs": 0.016,
+            "share": "2%",
+            "corr": 0.13
+          },
+          {
+            "feature": "dlog_qv_3m_rank",
+            "mean_abs": 0.014,
+            "share": "2%",
+            "corr": 0.49
+          },
+          {
+            "feature": "ret_3m_rank",
+            "mean_abs": 0.012,
+            "share": "2%",
+            "corr": -0.02
+          },
+          {
+            "feature": "funding_mean",
+            "mean_abs": 0.011,
+            "share": "1%",
+            "corr": 0.09
+          },
+          {
+            "feature": "ls_account_month_end",
+            "mean_abs": 0.009,
+            "share": "1%",
+            "corr": 0.63
+          },
+          {
+            "feature": "log_oi_to_qv",
+            "mean_abs": 0.009,
+            "share": "1%",
+            "corr": 0.01
+          },
+          {
+            "feature": "log_trades_rel_peak",
+            "mean_abs": 0.008,
+            "share": "1%",
+            "corr": 0.41
+          },
+          {
+            "feature": "qv_rank_pct",
+            "mean_abs": 0.008,
+            "share": "1%",
+            "corr": -0.16
+          },
+          {
+            "feature": "dd_life_month_end",
+            "mean_abs": 0.007,
+            "share": "1%",
+            "corr": -0.29
+          },
+          {
+            "feature": "dlog_trades_3m",
+            "mean_abs": 0.007,
+            "share": "1%",
+            "corr": 0.28
+          },
+          {
+            "feature": "ret_month",
+            "mean_abs": 0.007,
+            "share": "1%",
+            "corr": 0.35
+          },
+          {
+            "feature": "log_trades",
+            "mean_abs": 0.006,
+            "share": "1%",
+            "corr": 0.21
+          },
+          {
+            "feature": "dlog_qv_3m",
+            "mean_abs": 0.005,
+            "share": "1%",
+            "corr": 0.32
+          },
+          {
+            "feature": "mean_range",
+            "mean_abs": 0.005,
+            "share": "1%",
+            "corr": 0.12
+          },
+          {
+            "feature": "taker_buy_share",
+            "mean_abs": 0.004,
+            "share": "1%",
+            "corr": 0.49
+          },
+          {
+            "feature": "dlog_trades_6m",
+            "mean_abs": 0.004,
+            "share": "1%",
+            "corr": -0.21
+          },
+          {
+            "feature": "dlog_qv_6m",
+            "mean_abs": 0.003,
+            "share": "0%",
+            "corr": 0.49
+          },
+          {
+            "feature": "log_qv_rel_peak",
+            "mean_abs": 0.002,
+            "share": "0%",
+            "corr": -0.07
+          },
+          {
+            "feature": "log_qv",
+            "mean_abs": 0.001,
+            "share": "0%",
+            "corr": 0.02
+          },
+          {
+            "feature": "funding_interval_shortened",
+            "mean_abs": 0.0,
+            "share": "0%",
+            "corr": null
+          },
+          {
+            "feature": "zero_volume_days",
+            "mean_abs": 0.0,
+            "share": "0%",
+            "corr": null
+          }
+        ],
+        "groups": [
+          {
+            "group": "open interest",
+            "mean_abs": 0.303,
+            "share": "40%"
+          },
+          {
+            "group": "price and drawdown",
+            "mean_abs": 0.138,
+            "share": "18%"
+          },
+          {
+            "group": "funding",
+            "mean_abs": 0.13,
+            "share": "17%"
+          },
+          {
+            "group": "volume level",
+            "mean_abs": 0.102,
+            "share": "13%"
+          },
+          {
+            "group": "volume trend",
+            "mean_abs": 0.045,
+            "share": "6%"
+          },
+          {
+            "group": "volatility",
+            "mean_abs": 0.023,
+            "share": "3%"
+          },
+          {
+            "group": "age",
+            "mean_abs": 0.023,
+            "share": "3%"
+          },
+          {
+            "group": "other activity",
+            "mean_abs": 0.004,
+            "share": "1%"
+          }
+        ]
+      },
+      "hazard": [
+        {
+          "feature": "qv_rank_pct",
+          "or": 0.24001854151529128,
+          "lo": 0.15863585466743224,
+          "hi": 0.3074062783260113,
+          "sd": 0.2884900499178699
+        },
+        {
+          "feature": "dlog_qv_3m",
+          "or": 0.9597925279737752,
+          "lo": 0.7247024409742541,
+          "hi": 1.2476864289760976,
+          "sd": 1.00363352247282
+        },
+        {
+          "feature": "log_qv_rel_peak",
+          "or": 1.0097523029082522,
+          "lo": 0.7345577156631318,
+          "hi": 1.4358178728399018,
+          "sd": 1.2579797801382253
+        },
+        {
+          "feature": "log_age",
+          "or": 0.9906739757069987,
+          "lo": 0.6655992967313603,
+          "hi": 1.5991532362199719,
+          "sd": 1.0760075378296559
+        },
+        {
+          "feature": "dd_life_month_end",
+          "or": 0.8533472437623101,
+          "lo": 0.5455641192342928,
+          "hi": 1.4456597156483133,
+          "sd": 0.27041108668241376
+        },
+        {
+          "feature": "ret_3m",
+          "or": 0.8240543752199816,
+          "lo": 0.6012802619866128,
+          "hi": 1.1008755713780392,
+          "sd": 0.649834848320431
+        },
+        {
+          "feature": "realized_vol",
+          "or": 2.0618956101183183,
+          "lo": 1.5633963777173263,
+          "hi": 2.7629913550018865,
+          "sd": 0.03060320256311641
+        },
+        {
+          "feature": "log_oi_to_qv",
+          "or": 0.7547973832559041,
+          "lo": 0.5638083614063479,
+          "hi": 1.0361305608397247,
+          "sd": 0.6466156711547776
+        },
+        {
+          "feature": "funding_abs_mean",
+          "or": 1.3725629714542376,
+          "lo": 1.076620117613911,
+          "hi": 1.6455559355898417,
+          "sd": 0.0002291008210039958
+        }
+      ],
+      "hazard_gap": 1,
+      "hazard_events": 100
+    },
+    "drop final full month": {
+      "n_rows": 10948,
+      "n_pos": 182,
+      "n_months": 36,
+      "event_lives": 96,
+      "months_with_events": 29,
+      "base": {
+        "estimate": 0.016624040920716114,
+        "ci95": [
+          0.008746537140308873,
+          0.022721739870616275
+        ]
+      },
+      "candidates": {
+        "base_a": {
+          "prec": {
+            "estimate": 0.016363636363636365,
+            "ci95": [
+              0.0033323447681882458,
+              0.03169697884436394
+            ]
+          },
+          "rec": {
+            "estimate": 0.04945054945054945,
+            "ci95": [
+              0.010866643291257597,
+              0.09016887221015206
+            ]
+          },
+          "ap": {
+            "estimate": 0.01921934041606943,
+            "ci95": [
+              0.009144444806043952,
+              0.031445169699864536
+            ]
+          },
+          "alerts": 550,
+          "hits": 9
+        },
+        "base_b": {
+          "prec": {
+            "estimate": 0.05454545454545454,
+            "ci95": [
+              0.020660979217934312,
+              0.08213128729752768
+            ]
+          },
+          "rec": {
+            "estimate": 0.16483516483516483,
+            "ci95": [
+              0.0931344049247606,
+              0.2248110465116279
+            ]
+          },
+          "ap": {
+            "estimate": 0.04026470299670585,
+            "ci95": [
+              0.0144932368878373,
+              0.06003865554989818
+            ]
+          },
+          "alerts": 550,
+          "hits": 30
+        },
+        "logit_c": {
+          "prec": {
+            "estimate": 0.02909090909090909,
+            "ci95": [
+              0.008212295185014458,
+              0.044218090079633746
+            ]
+          },
+          "rec": {
+            "estimate": 0.08791208791208792,
+            "ci95": [
+              0.03602799227799228,
+              0.1256599421520887
+            ]
+          },
+          "ap": {
+            "estimate": 0.027956566650087198,
+            "ci95": [
+              0.013079585505215867,
+              0.04014264093581966
+            ]
+          },
+          "alerts": 550,
+          "hits": 16
+        },
+        "logit_full": {
+          "prec": {
+            "estimate": 0.06181818181818182,
+            "ci95": [
+              0.016915033979178717,
+              0.09369473564683557
+            ]
+          },
+          "rec": {
+            "estimate": 0.18681318681318682,
+            "ci95": [
+              0.0813825239398085,
+              0.23426623376623376
+            ]
+          },
+          "ap": {
+            "estimate": 0.060423602038927285,
+            "ci95": [
+              0.0198850324630577,
+              0.0919884282103465
+            ]
+          },
+          "alerts": 550,
+          "hits": 34
+        },
+        "gbm_full": {
+          "prec": {
+            "estimate": 0.045454545454545456,
+            "ci95": [
+              0.015408826693958955,
+              0.07045208006714489
+            ]
+          },
+          "rec": {
+            "estimate": 0.13736263736263737,
+            "ci95": [
+              0.06861631016042781,
+              0.18110378865685267
+            ]
+          },
+          "ap": {
+            "estimate": 0.03270336409378993,
+            "ci95": [
+              0.011813509984555621,
+              0.054808167528525166
+            ]
+          },
+          "alerts": 550,
+          "hits": 25
+        },
+        "logit_vol": {
+          "prec": {
+            "estimate": 0.04727272727272727,
+            "ci95": [
+              0.02163138440860215,
+              0.06702149308532286
+            ]
+          },
+          "rec": {
+            "estimate": 0.14285714285714285,
+            "ci95": [
+              0.09027308558558558,
+              0.19469026548672566
+            ]
+          },
+          "ap": {
+            "estimate": 0.028560908011618133,
+            "ci95": [
+              0.012175166618633713,
+              0.04641870378520428
+            ]
+          },
+          "alerts": 550,
+          "hits": 26
+        },
+        "gbm_vol": {
+          "prec": {
+            "estimate": 0.03090909090909091,
+            "ci95": [
+              0.015935462919692996,
+              0.046968521788936075
+            ]
+          },
+          "rec": {
+            "estimate": 0.09340659340659341,
+            "ci95": [
+              0.04979206173372636,
+              0.183213110161776
+            ]
+          },
+          "ap": {
+            "estimate": 0.028194108929364622,
+            "ci95": [
+              0.015831918314062745,
+              0.04158489716461042
+            ]
+          },
+          "alerts": 550,
+          "hits": 17
+        }
+      },
+      "diffs_vs_b": {
+        "logit_full": {
+          "prec": {
+            "estimate": 0.007272727272727278,
+            "ci95": [
+              -0.0193050193050193,
+              0.022302307462147113
+            ]
+          },
+          "ap": {
+            "estimate": 0.020158899042221436,
+            "ci95": [
+              -0.004397336017471541,
+              0.04465865508074061
+            ]
+          }
+        },
+        "gbm_full": {
+          "prec": {
+            "estimate": -0.009090909090909087,
+            "ci95": [
+              -0.023051696070265765,
+              0.004484809922029649
+            ]
+          },
+          "ap": {
+            "estimate": -0.007561338902915916,
+            "ci95": [
+              -0.023202375448360492,
+              0.012426843215188391
+            ]
+          }
+        },
+        "logit_vol": {
+          "prec": {
+            "estimate": -0.007272727272727271,
+            "ci95": [
+              -0.021594684385382056,
+              0.007797270955165692
+            ]
+          },
+          "ap": {
+            "estimate": -0.011703794985087716,
+            "ci95": [
+              -0.0244731876808112,
+              0.005932134161205908
+            ]
+          }
+        },
+        "gbm_vol": {
+          "prec": {
+            "estimate": -0.023636363636363632,
+            "ci95": [
+              -0.04972423073642713,
+              0.00604869257086999
+            ]
+          },
+          "ap": {
+            "estimate": -0.012070594067341227,
+            "ci95": [
+              -0.029459880403544445,
+              0.01337835394463195
+            ]
+          }
+        },
+        "logit_c": {
+          "prec": {
+            "estimate": -0.025454545454545452,
+            "ci95": [
+              -0.04056437389770723,
+              -0.010845400080757999
+            ]
+          },
+          "ap": {
+            "estimate": -0.012308136346618651,
+            "ci95": [
+              -0.02421937109359005,
+              0.001179511396850031
+            ]
+          }
+        }
+      },
+      "b_minus_a": {
+        "estimate": 0.03818181818181818,
+        "ci95": [
+          0.007842753539772073,
+          0.06031775050056585
+        ]
+      },
+      "bss_logit_full": {
+        "estimate": 0.017026631209322907,
+        "ci95": [
+          -0.006148440751517242,
+          0.029202578042930544
+        ]
+      },
+      "folds": [
+        {
+          "test": "2023-01 to 2023-06",
+          "n_train": 3122,
+          "train_pos": 37,
+          "n_test": 1017,
+          "test_pos": 3,
+          "C": 0.003,
+          "inner_val": "2021-10 to 2022-09",
+          "inner_val_pos": 34,
+          "n_trees": 22
+        },
+        {
+          "test": "2023-07 to 2023-12",
+          "n_train": 4028,
+          "train_pos": 41,
+          "n_test": 1274,
+          "test_pos": 3,
+          "C": 0.003,
+          "inner_val": "2022-04 to 2023-03",
+          "inner_val_pos": 17,
+          "n_trees": 41
+        },
+        {
+          "test": "2024-01 to 2024-06",
+          "n_train": 5155,
+          "train_pos": 43,
+          "n_test": 1538,
+          "test_pos": 31,
+          "C": 3.0,
+          "inner_val": "2022-10 to 2023-09",
+          "inner_val_pos": 6,
+          "n_trees": 20
+        },
+        {
+          "test": "2024-07 to 2024-12",
+          "n_train": 6607,
+          "train_pos": 72,
+          "n_test": 1773,
+          "test_pos": 30,
+          "C": 3.0,
+          "inner_val": "2023-04 to 2024-03",
+          "inner_val_pos": 31,
+          "n_trees": 20
+        },
+        {
+          "test": "2025-01 to 2025-06",
+          "n_train": 8206,
+          "train_pos": 85,
+          "n_test": 2345,
+          "test_pos": 24,
+          "C": 1.0,
+          "inner_val": "2023-10 to 2024-09",
+          "inner_val_pos": 42,
+          "n_trees": 20
+        },
+        {
+          "test": "2025-07 to 2025-12",
+          "n_train": 10241,
+          "train_pos": 119,
+          "n_test": 3001,
+          "test_pos": 91,
+          "C": 0.03,
+          "inner_val": "2024-04 to 2025-03",
+          "inner_val_pos": 47,
+          "n_trees": 20
+        }
+      ],
+      "ablation": [
+        {
+          "key": "logit_vol+age",
+          "model": "logit",
+          "group": "age",
+          "prec": {
+            "estimate": 0.045454545454545456,
+            "ci95": [
+              0.021171534348004936,
+              0.06344039006810291
+            ]
+          },
+          "prec_change_vs_volume": -0.001818181818181816,
+          "ap_change_vs_volume": 0.0004169882608105954,
+          "prec_minus_b": {
+            "estimate": -0.009090909090909087,
+            "ci95": [
+              -0.023391812865497075,
+              0.005847953216374269
+            ]
+          }
+        },
+        {
+          "key": "logit_vol+price and drawdown",
+          "model": "logit",
+          "group": "price and drawdown",
+          "prec": {
+            "estimate": 0.05272727272727273,
+            "ci95": [
+              0.02368906072448103,
+              0.07900442815697052
+            ]
+          },
+          "prec_change_vs_volume": 0.005454545454545455,
+          "ap_change_vs_volume": 0.006333095400656984,
+          "prec_minus_b": {
+            "estimate": -0.001818181818181816,
+            "ci95": [
+              -0.01907019577157031,
+              0.018581867082818847
+            ]
+          }
+        },
+        {
+          "key": "logit_vol+volatility",
+          "model": "logit",
+          "group": "volatility",
+          "prec": {
+            "estimate": 0.045454545454545456,
+            "ci95": [
+              0.017658103485918057,
+              0.06772999576784436
+            ]
+          },
+          "prec_change_vs_volume": -0.001818181818181816,
+          "ap_change_vs_volume": 0.0005055829952719665,
+          "prec_minus_b": {
+            "estimate": -0.009090909090909087,
+            "ci95": [
+              -0.025339985112230873,
+              0.007594177956253742
+            ]
+          }
+        },
+        {
+          "key": "logit_vol+open interest",
+          "model": "logit",
+          "group": "open interest",
+          "prec": {
+            "estimate": 0.056363636363636366,
+            "ci95": [
+              0.019801001839314367,
+              0.08232263840495545
+            ]
+          },
+          "prec_change_vs_volume": 0.009090909090909094,
+          "ap_change_vs_volume": 0.014477021561698923,
+          "prec_minus_b": {
+            "estimate": 0.001818181818181823,
+            "ci95": [
+              -0.016097390796391248,
+              0.011111552729199788
+            ]
+          }
+        },
+        {
+          "key": "logit_vol+funding",
+          "model": "logit",
+          "group": "funding",
+          "prec": {
+            "estimate": 0.04181818181818182,
+            "ci95": [
+              0.017786341677646027,
+              0.06250287753222834
+            ]
+          },
+          "prec_change_vs_volume": -0.005454545454545455,
+          "ap_change_vs_volume": 0.0035158480805422623,
+          "prec_minus_b": {
+            "estimate": -0.012727272727272726,
+            "ci95": [
+              -0.03448424751354893,
+              0.008772411798727585
+            ]
+          }
+        },
+        {
+          "key": "logit_vol+other activity",
+          "model": "logit",
+          "group": "other activity",
+          "prec": {
+            "estimate": 0.045454545454545456,
+            "ci95": [
+              0.0195693652684421,
+              0.06653153153153152
+            ]
+          },
+          "prec_change_vs_volume": -0.001818181818181816,
+          "ap_change_vs_volume": -0.0005931628008640083,
+          "prec_minus_b": {
+            "estimate": -0.009090909090909087,
+            "ci95": [
+              -0.020479066788105644,
+              0.005425447074692408
+            ]
+          }
+        },
+        {
+          "key": "gbm_vol+age",
+          "model": "gbm",
+          "group": "age",
+          "prec": {
+            "estimate": 0.02181818181818182,
+            "ci95": [
+              0.006592685214129416,
+              0.035853344768439085
+            ]
+          },
+          "prec_change_vs_volume": -0.00909090909090909,
+          "ap_change_vs_volume": -0.001738748088450131,
+          "prec_minus_b": {
+            "estimate": -0.03272727272727272,
+            "ci95": [
+              -0.06331280021348515,
+              0.001845189285226184
+            ]
+          }
+        },
+        {
+          "key": "gbm_vol+price and drawdown",
+          "model": "gbm",
+          "group": "price and drawdown",
+          "prec": {
+            "estimate": 0.03090909090909091,
+            "ci95": [
+              0.013697294987850142,
+              0.04826850094876659
+            ]
+          },
+          "prec_change_vs_volume": 0.0,
+          "ap_change_vs_volume": -0.0011570549688830513,
+          "prec_minus_b": {
+            "estimate": -0.023636363636363632,
+            "ci95": [
+              -0.04200433854214351,
+              -0.0018079131747976193
+            ]
+          }
+        },
+        {
+          "key": "gbm_vol+volatility",
+          "model": "gbm",
+          "group": "volatility",
+          "prec": {
+            "estimate": 0.02727272727272727,
+            "ci95": [
+              0.013301571642068043,
+              0.04152421206755225
+            ]
+          },
+          "prec_change_vs_volume": -0.003636363636363639,
+          "ap_change_vs_volume": 0.0002083011407808394,
+          "prec_minus_b": {
+            "estimate": -0.02727272727272727,
+            "ci95": [
+              -0.049780412179543605,
+              0.0
+            ]
+          }
+        },
+        {
+          "key": "gbm_vol+open interest",
+          "model": "gbm",
+          "group": "open interest",
+          "prec": {
+            "estimate": 0.05272727272727273,
+            "ci95": [
+              0.020479447112906883,
+              0.07921184975640419
+            ]
+          },
+          "prec_change_vs_volume": 0.021818181818181816,
+          "ap_change_vs_volume": 0.009309510253286066,
+          "prec_minus_b": {
+            "estimate": -0.001818181818181816,
+            "ci95": [
+              -0.020038261356030415,
+              0.01219565402460308
+            ]
+          }
+        },
+        {
+          "key": "gbm_vol+funding",
+          "model": "gbm",
+          "group": "funding",
+          "prec": {
+            "estimate": 0.025454545454545455,
+            "ci95": [
+              0.013006900911341726,
+              0.038674924255925856
+            ]
+          },
+          "prec_change_vs_volume": -0.005454545454545455,
+          "ap_change_vs_volume": 0.0007322199534722726,
+          "prec_minus_b": {
+            "estimate": -0.029090909090909087,
+            "ci95": [
+              -0.054520099647211724,
+              0.0017486371653038296
+            ]
+          }
+        },
+        {
+          "key": "gbm_vol+other activity",
+          "model": "gbm",
+          "group": "other activity",
+          "prec": {
+            "estimate": 0.025454545454545455,
+            "ci95": [
+              0.011718178910818713,
+              0.03861928985311952
+            ]
+          },
+          "prec_change_vs_volume": -0.005454545454545455,
+          "ap_change_vs_volume": -0.0026738009412592863,
+          "prec_minus_b": {
+            "estimate": -0.029090909090909087,
+            "ci95": [
+              -0.056199638429752063,
+              0.0019494129203216368
+            ]
+          }
+        }
+      ],
+      "shap": {
+        "test": "2025-07 to 2025-12",
+        "features": [
+          {
+            "feature": "oi_rank_pct",
+            "mean_abs": 0.158,
+            "share": "22%",
+            "corr": -0.88
+          },
+          {
+            "feature": "log_oi",
+            "mean_abs": 0.053,
+            "share": "7%",
+            "corr": -0.7
+          },
+          {
+            "feature": "funding_abs_mean",
+            "mean_abs": 0.048,
+            "share": "7%",
+            "corr": 0.32
+          },
+          {
+            "feature": "funding_interval_min_h",
+            "mean_abs": 0.047,
+            "share": "7%",
+            "corr": -0.56
+          },
+          {
+            "feature": "ret_6m",
+            "mean_abs": 0.043,
+            "share": "6%",
+            "corr": -0.23
+          },
+          {
+            "feature": "ret_3m",
+            "mean_abs": 0.042,
+            "share": "6%",
+            "corr": 0.1
+          },
+          {
+            "feature": "log_price",
+            "mean_abs": 0.038,
+            "share": "5%",
+            "corr": -0.64
+          },
+          {
+            "feature": "ls_toptrader_account_month_end",
+            "mean_abs": 0.034,
+            "share": "5%",
+            "corr": 0.63
+          },
+          {
+            "feature": "trades_rank_pct",
+            "mean_abs": 0.032,
+            "share": "5%",
+            "corr": -0.5
+          },
+          {
+            "feature": "dd_life_month_end",
+            "mean_abs": 0.024,
+            "share": "3%",
+            "corr": -0.38
+          },
+          {
+            "feature": "dlog_qv_3m_rank",
+            "mean_abs": 0.021,
+            "share": "3%",
+            "corr": 0.62
+          },
+          {
+            "feature": "dlog_oi_3m",
+            "mean_abs": 0.019,
+            "share": "3%",
+            "corr": 0.63
+          },
+          {
+            "feature": "dlog_trades_3m",
+            "mean_abs": 0.016,
+            "share": "2%",
+            "corr": 0.41
+          },
+          {
+            "feature": "ls_account_month_end",
+            "mean_abs": 0.016,
+            "share": "2%",
+            "corr": 0.64
+          },
+          {
+            "feature": "dlog_trades_6m",
+            "mean_abs": 0.015,
+            "share": "2%",
+            "corr": -0.38
+          },
+          {
+            "feature": "log_trades_rel_peak",
+            "mean_abs": 0.014,
+            "share": "2%",
+            "corr": 0.32
+          },
+          {
+            "feature": "max_dd_life",
+            "mean_abs": 0.014,
+            "share": "2%",
+            "corr": -0.34
+          },
+          {
+            "feature": "ret_month",
+            "mean_abs": 0.012,
+            "share": "2%",
+            "corr": 0.37
+          },
+          {
+            "feature": "log_age",
+            "mean_abs": 0.01,
+            "share": "1%",
+            "corr": -0.45
+          },
+          {
+            "feature": "funding_mean",
+            "mean_abs": 0.01,
+            "share": "1%",
+            "corr": 0.07
+          },
+          {
+            "feature": "dlog_qv_3m",
+            "mean_abs": 0.009,
+            "share": "1%",
+            "corr": 0.37
+          },
+          {
+            "feature": "log_oi_to_qv",
+            "mean_abs": 0.007,
+            "share": "1%",
+            "corr": 0.38
+          },
+          {
+            "feature": "qv_rank_pct",
+            "mean_abs": 0.006,
+            "share": "1%",
+            "corr": -0.28
+          },
+          {
+            "feature": "ret_3m_rank",
+            "mean_abs": 0.005,
+            "share": "1%",
+            "corr": -0.33
+          },
+          {
+            "feature": "log_qv_rel_peak",
+            "mean_abs": 0.005,
+            "share": "1%",
+            "corr": -0.13
+          },
+          {
+            "feature": "taker_buy_share",
+            "mean_abs": 0.004,
+            "share": "1%",
+            "corr": -0.46
+          },
+          {
+            "feature": "realized_vol",
+            "mean_abs": 0.003,
+            "share": "0%",
+            "corr": -0.04
+          },
+          {
+            "feature": "mean_range",
+            "mean_abs": 0.003,
+            "share": "0%",
+            "corr": -0.2
+          },
+          {
+            "feature": "dlog_qv_6m",
+            "mean_abs": 0.002,
+            "share": "0%",
+            "corr": -0.02
+          },
+          {
+            "feature": "log_avg_trade",
+            "mean_abs": 0.002,
+            "share": "0%",
+            "corr": 0.28
+          },
+          {
+            "feature": "log_trades",
+            "mean_abs": 0.002,
+            "share": "0%",
+            "corr": -0.5
+          },
+          {
+            "feature": "log_qv_median",
+            "mean_abs": 0.001,
+            "share": "0%",
+            "corr": -0.3
+          },
+          {
+            "feature": "log_qv",
+            "mean_abs": 0.001,
+            "share": "0%",
+            "corr": 0.28
+          },
+          {
+            "feature": "funding_interval_shortened",
+            "mean_abs": 0.0,
+            "share": "0%",
+            "corr": null
+          },
+          {
+            "feature": "zero_volume_days",
+            "mean_abs": 0.0,
+            "share": "0%",
+            "corr": null
+          }
+        ],
+        "groups": [
+          {
+            "group": "open interest",
+            "mean_abs": 0.287,
+            "share": "40%"
+          },
+          {
+            "group": "price and drawdown",
+            "mean_abs": 0.178,
+            "share": "25%"
+          },
+          {
+            "group": "funding",
+            "mean_abs": 0.105,
+            "share": "15%"
+          },
+          {
+            "group": "volume trend",
+            "mean_abs": 0.082,
+            "share": "11%"
+          },
+          {
+            "group": "volume level",
+            "mean_abs": 0.045,
+            "share": "6%"
+          },
+          {
+            "group": "age",
+            "mean_abs": 0.01,
+            "share": "1%"
+          },
+          {
+            "group": "volatility",
+            "mean_abs": 0.006,
+            "share": "1%"
+          },
+          {
+            "group": "other activity",
+            "mean_abs": 0.004,
+            "share": "1%"
+          }
+        ]
+      },
+      "hazard": [
+        {
+          "feature": "qv_rank_pct",
+          "or": 0.35045893905680375,
+          "lo": 0.25233753132100656,
+          "hi": 0.4499043963194515,
+          "sd": 0.28812526317732057
+        },
+        {
+          "feature": "dlog_qv_3m",
+          "or": 0.941206806754911,
+          "lo": 0.7192741656444366,
+          "hi": 1.183137858449474,
+          "sd": 1.0034756679172794
+        },
+        {
+          "feature": "log_qv_rel_peak",
+          "or": 1.1043530108576105,
+          "lo": 0.8069697767768758,
+          "hi": 1.5143284062664062,
+          "sd": 1.2578267007402615
+        },
+        {
+          "feature": "log_age",
+          "or": 0.8197670452208854,
+          "lo": 0.594226653710717,
+          "hi": 1.15505416696808,
+          "sd": 1.0772910962085265
+        },
+        {
+          "feature": "dd_life_month_end",
+          "or": 0.8906637693174346,
+          "lo": 0.592409460679208,
+          "hi": 1.283350651185868,
+          "sd": 0.2705972021431284
+        },
+        {
+          "feature": "ret_3m",
+          "or": 1.044542160897965,
+          "lo": 0.8290576405544728,
+          "hi": 1.3713792474778708,
+          "sd": 0.653586131403044
+        },
+        {
+          "feature": "realized_vol",
+          "or": 1.4288940697808916,
+          "lo": 1.1267581518899297,
+          "hi": 1.814918534126815,
+          "sd": 0.030504634495306895
+        },
+        {
+          "feature": "log_oi_to_qv",
+          "or": 0.8308551372859159,
+          "lo": 0.6510070191422483,
+          "hi": 1.0310049763566125,
+          "sd": 0.6458731330033185
+        },
+        {
+          "feature": "funding_abs_mean",
+          "or": 1.2473226102533965,
+          "lo": 1.0645826018083335,
+          "hi": 1.4732571310967628,
+          "sd": 0.00022887184549931096
+        }
+      ],
+      "hazard_gap": 2,
+      "hazard_events": 106
+    }
+  },
+  "lockbox": {
+    "runs": "first run on 2026-11-18",
+    "commit": "b3571a691e6cfb52cea23c8d875c163e0b7e39a8",
+    "frozen": {
+      "main": {
+        "train_rows": 13002,
+        "train_pos": 244,
+        "last_train_month": "2025-09",
+        "inner_validation": "2024-10 to 2025-09",
+        "inner_val_pos": 119,
+        "C_logit": 0.03,
+        "trees_gbm": 20,
+        "train_base_rate": 0.0188
+      },
+      "drop final full month": {
+        "train_rows": 12930,
+        "train_pos": 172,
+        "last_train_month": "2025-09",
+        "inner_validation": "2024-10 to 2025-09",
+        "inner_val_pos": 87,
+        "C_logit": 0.01,
+        "trees_gbm": 36,
+        "train_base_rate": 0.0133
+      }
+    },
+    "variants": {
+      "main": {
+        "n_rows": 3730,
+        "n_lives": 574,
+        "n_months": 7,
+        "months": [
+          "2026-01",
+          "2026-07"
+        ],
+        "n_pos": 145,
+        "event_lives": 61,
+        "base": {
+          "estimate": 0.0389,
+          "ci95": [
+            0.0241,
+            0.0533
+          ]
+        },
+        "candidates": {
+          "base_a": {
+            "prec": {
+              "estimate": 0.054,
+              "ci95": [
+                0.016,
+                0.09
+              ]
+            },
+            "rec": {
+              "estimate": 0.069,
+              "ci95": [
+                0.033,
+                0.087
+              ]
+            },
+            "hits": 10,
+            "alerts": 185,
+            "ap": {
+              "estimate": 0.052,
+              "ci95": [
+                0.02,
+                0.082
+              ]
+            }
+          },
+          "base_b": {
+            "prec": {
+              "estimate": 0.151,
+              "ci95": [
+                0.066,
+                0.243
+              ]
+            },
+            "rec": {
+              "estimate": 0.193,
+              "ci95": [
+                0.135,
+                0.217
+              ]
+            },
+            "hits": 28,
+            "alerts": 185,
+            "ap": {
+              "estimate": 0.119,
+              "ci95": [
+                0.046,
+                0.196
+              ]
+            }
+          },
+          "logit_full": {
+            "prec": {
+              "estimate": 0.27,
+              "ci95": [
+                0.187,
+                0.356
+              ]
+            },
+            "rec": {
+              "estimate": 0.345,
+              "ci95": [
+                0.318,
+                0.392
+              ]
+            },
+            "hits": 50,
+            "alerts": 185,
+            "ap": {
+              "estimate": 0.202,
+              "ci95": [
+                0.119,
+                0.312
+              ]
+            }
+          },
+          "gbm_full": {
+            "prec": {
+              "estimate": 0.216,
+              "ci95": [
+                0.148,
+                0.309
+              ]
+            },
+            "rec": {
+              "estimate": 0.276,
+              "ci95": [
+                0.251,
+                0.327
+              ]
+            },
+            "hits": 40,
+            "alerts": 185,
+            "ap": {
+              "estimate": 0.171,
+              "ci95": [
+                0.123,
+                0.245
+              ]
+            }
+          }
+        },
+        "diffs_vs_b": {
+          "logit_full": {
+            "prec": {
+              "estimate": 0.119,
+              "ci95": [
+                0.097,
+                0.145
+              ]
+            },
+            "rec": {
+              "estimate": 0.152,
+              "ci95": [
+                0.103,
+                0.247
+              ]
+            },
+            "ap": {
+              "estimate": 0.083,
+              "ci95": [
+                0.061,
+                0.151
+              ]
+            }
+          },
+          "gbm_full": {
+            "prec": {
+              "estimate": 0.065,
+              "ci95": [
+                0.038,
+                0.124
+              ]
+            },
+            "rec": {
+              "estimate": 0.083,
+              "ci95": [
+                0.045,
+                0.183
+              ]
+            },
+            "ap": {
+              "estimate": 0.052,
+              "ci95": [
+                0.033,
+                0.119
+              ]
+            }
+          },
+          "base_a": {
+            "prec": {
+              "estimate": -0.097,
+              "ci95": [
+                -0.148,
+                -0.044
+              ]
+            },
+            "rec": {
+              "estimate": -0.124,
+              "ci95": [
+                -0.149,
+                -0.083
+              ]
+            },
+            "ap": {
+              "estimate": -0.067,
+              "ci95": [
+                -0.113,
+                -0.025
+              ]
+            }
+          }
+        },
+        "leave_one_month_out_prec_diff": {
+          "logit_full": [
+            0.101,
+            0.139
+          ],
+          "gbm_full": [
+            0.044,
+            0.095
+          ],
+          "base_a": [
+            -0.119,
+            -0.076
+          ]
+        },
+        "brier": {
+          "logit_full": 0.03467,
+          "gbm_full": 0.03658,
+          "ref": 0.03777,
+          "bss_logit_full": {
+            "estimate": 0.082,
+            "ci95": [
+              0.041,
+              0.102
+            ]
+          },
+          "bss_gbm_full": {
+            "estimate": 0.031,
+            "ci95": [
+              0.027,
+              0.035
+            ]
+          },
+          "mean_pred_logit": 0.03,
+          "mean_pred_gbm": 0.0227,
+          "observed": 0.0389
+        },
+        "by_month": [
+          {
+            "month": "2026-01",
+            "rows": 543,
+            "alerts": 27,
+            "pos": 34,
+            "lives": 34,
+            "base_a": 3,
+            "base_b": 9,
+            "logit_full": 13,
+            "gbm_full": 6
+          },
+          {
+            "month": "2026-02",
+            "rows": 541,
+            "alerts": 27,
+            "pos": 31,
+            "lives": 31,
+            "base_a": 3,
+            "base_b": 8,
+            "logit_full": 8,
+            "gbm_full": 10
+          },
+          {
+            "month": "2026-03",
+            "rows": 539,
+            "alerts": 27,
+            "pos": 28,
+            "lives": 28,
+            "base_a": 2,
+            "base_b": 4,
+            "logit_full": 10,
+            "gbm_full": 9
+          },
+          {
+            "month": "2026-04",
+            "rows": 526,
+            "alerts": 26,
+            "pos": 12,
+            "lives": 12,
+            "base_a": 1,
+            "base_b": 1,
+            "logit_full": 5,
+            "gbm_full": 4
+          },
+          {
+            "month": "2026-05",
+            "rows": 526,
+            "alerts": 26,
+            "pos": 15,
+            "lives": 15,
+            "base_a": 0,
+            "base_b": 4,
+            "logit_full": 5,
+            "gbm_full": 5
+          },
+          {
+            "month": "2026-06",
+            "rows": 527,
+            "alerts": 26,
+            "pos": 10,
+            "lives": 10,
+            "base_a": 1,
+            "base_b": 0,
+            "logit_full": 5,
+            "gbm_full": 3
+          },
+          {
+            "month": "2026-07",
+            "rows": 528,
+            "alerts": 26,
+            "pos": 15,
+            "lives": 15,
+            "base_a": 0,
+            "base_b": 2,
+            "logit_full": 4,
+            "gbm_full": 3
+          }
+        ]
+      },
+      "drop final full month": {
+        "n_rows": 3677,
+        "n_lives": 567,
+        "n_months": 7,
+        "months": [
+          "2026-01",
+          "2026-07"
+        ],
+        "n_pos": 92,
+        "event_lives": 54,
+        "base": {
+          "estimate": 0.025,
+          "ci95": [
+            0.0159,
+            0.0343
+          ]
+        },
+        "candidates": {
+          "base_a": {
+            "prec": {
+              "estimate": 0.038,
+              "ci95": [
+                0.011,
+                0.059
+              ]
+            },
+            "rec": {
+              "estimate": 0.076,
+              "ci95": [
+                0.032,
+                0.09
+              ]
+            },
+            "hits": 7,
+            "alerts": 184,
+            "ap": {
+              "estimate": 0.037,
+              "ci95": [
+                0.014,
+                0.056
+              ]
+            }
+          },
+          "base_b": {
+            "prec": {
+              "estimate": 0.125,
+              "ci95": [
+                0.066,
+                0.188
+              ]
+            },
+            "rec": {
+              "estimate": 0.25,
+              "ci95": [
+                0.207,
+                0.303
+              ]
+            },
+            "hits": 23,
+            "alerts": 184,
+            "ap": {
+              "estimate": 0.092,
+              "ci95": [
+                0.044,
+                0.142
+              ]
+            }
+          },
+          "logit_full": {
+            "prec": {
+              "estimate": 0.174,
+              "ci95": [
+                0.077,
+                0.258
+              ]
+            },
+            "rec": {
+              "estimate": 0.348,
+              "ci95": [
+                0.237,
+                0.381
+              ]
+            },
+            "hits": 32,
+            "alerts": 184,
+            "ap": {
+              "estimate": 0.133,
+              "ci95": [
+                0.056,
+                0.233
+              ]
+            }
+          },
+          "gbm_full": {
+            "prec": {
+              "estimate": 0.125,
+              "ci95": [
+                0.066,
+                0.188
+              ]
+            },
+            "rec": {
+              "estimate": 0.25,
+              "ci95": [
+                0.207,
+                0.338
+              ]
+            },
+            "hits": 23,
+            "alerts": 184,
+            "ap": {
+              "estimate": 0.085,
+              "ci95": [
+                0.06,
+                0.141
+              ]
+            }
+          }
+        },
+        "diffs_vs_b": {
+          "logit_full": {
+            "prec": {
+              "estimate": 0.049,
+              "ci95": [
+                -0.016,
+                0.081
+              ]
+            },
+            "rec": {
+              "estimate": 0.098,
+              "ci95": [
+                -0.049,
+                0.126
+              ]
+            },
+            "ap": {
+              "estimate": 0.041,
+              "ci95": [
+                0.002,
+                0.092
+              ]
+            }
+          },
+          "gbm_full": {
+            "prec": {
+              "estimate": 0.0,
+              "ci95": [
+                -0.005,
+                0.022
+              ]
+            },
+            "rec": {
+              "estimate": 0.0,
+              "ci95": [
+                -0.014,
+                0.052
+              ]
+            },
+            "ap": {
+              "estimate": -0.007,
+              "ci95": [
+                -0.022,
+                0.04
+              ]
+            }
+          },
+          "base_a": {
+            "prec": {
+              "estimate": -0.087,
+              "ci95": [
+                -0.134,
+                -0.044
+              ]
+            },
+            "rec": {
+              "estimate": -0.174,
+              "ci95": [
+                -0.262,
+                -0.138
+              ]
+            },
+            "ap": {
+              "estimate": -0.056,
+              "ci95": [
+                -0.089,
+                -0.027
+              ]
+            }
+          }
+        },
+        "leave_one_month_out_prec_diff": {
+          "logit_full": [
+            0.019,
+            0.076
+          ],
+          "gbm_full": [
+            -0.013,
+            0.006
+          ],
+          "base_a": [
+            -0.108,
+            -0.07
+          ]
+        },
+        "brier": {
+          "logit_full": 0.02337,
+          "gbm_full": 0.02388,
+          "ref": 0.02453,
+          "bss_logit_full": {
+            "estimate": 0.047,
+            "ci95": [
+              0.013,
+              0.062
+            ]
+          },
+          "bss_gbm_full": {
+            "estimate": 0.027,
+            "ci95": [
+              0.019,
+              0.033
+            ]
+          },
+          "mean_pred_logit": 0.0213,
+          "mean_pred_gbm": 0.0185,
+          "observed": 0.025
+        },
+        "by_month": [
+          {
+            "month": "2026-01",
+            "rows": 536,
+            "alerts": 27,
+            "pos": 27,
+            "lives": 27,
+            "base_a": 3,
+            "base_b": 6,
+            "logit_full": 12,
+            "gbm_full": 5
+          },
+          {
+            "month": "2026-02",
+            "rows": 532,
+            "alerts": 27,
+            "pos": 22,
+            "lives": 22,
+            "base_a": 2,
+            "base_b": 7,
+            "logit_full": 7,
+            "gbm_full": 6
+          },
+          {
+            "month": "2026-03",
+            "rows": 521,
+            "alerts": 26,
+            "pos": 10,
+            "lives": 10,
+            "base_a": 0,
+            "base_b": 3,
+            "logit_full": 4,
+            "gbm_full": 5
+          },
+          {
+            "month": "2026-04",
+            "rows": 522,
+            "alerts": 26,
+            "pos": 8,
+            "lives": 8,
+            "base_a": 1,
+            "base_b": 1,
+            "logit_full": 2,
+            "gbm_full": 1
+          },
+          {
+            "month": "2026-05",
+            "rows": 520,
+            "alerts": 26,
+            "pos": 9,
+            "lives": 9,
+            "base_a": 0,
+            "base_b": 4,
+            "logit_full": 1,
+            "gbm_full": 3
+          },
+          {
+            "month": "2026-06",
+            "rows": 525,
+            "alerts": 26,
+            "pos": 8,
+            "lives": 8,
+            "base_a": 1,
+            "base_b": 0,
+            "logit_full": 3,
+            "gbm_full": 1
+          },
+          {
+            "month": "2026-07",
+            "rows": 521,
+            "alerts": 26,
+            "pos": 8,
+            "lives": 8,
+            "base_a": 0,
+            "base_b": 2,
+            "logit_full": 3,
+            "gbm_full": 2
+          }
+        ]
+      }
+    },
+    "cv_copied_in_b2": {
+      "main": {
+        "prec_base_a": {
+          "cv": {
+            "estimate": 0.027,
+            "ci95": [
+              0.008,
+              0.052
+            ]
+          },
+          "lockbox": {
+            "estimate": 0.054,
+            "ci95": [
+              0.016,
+              0.09
+            ]
+          },
+          "b2_verdict": ""
+        },
+        "prec_base_b": {
+          "cv": {
+            "estimate": 0.083,
+            "ci95": [
+              0.031,
+              0.133
+            ]
+          },
+          "lockbox": {
+            "estimate": 0.151,
+            "ci95": [
+              0.066,
+              0.243
+            ]
+          },
+          "b2_verdict": ""
+        },
+        "prec_logit_full": {
+          "cv": {
+            "estimate": 0.101,
+            "ci95": [
+              0.038,
+              0.153
+            ]
+          },
+          "lockbox": {
+            "estimate": 0.27,
+            "ci95": [
+              0.187,
+              0.356
+            ]
+          },
+          "b2_verdict": ""
+        },
+        "prec_gbm_full": {
+          "cv": {
+            "estimate": 0.078,
+            "ci95": [
+              0.031,
+              0.114
+            ]
+          },
+          "lockbox": {
+            "estimate": 0.216,
+            "ci95": [
+              0.148,
+              0.309
+            ]
+          },
+          "b2_verdict": ""
+        },
+        "ap_base_b": {
+          "cv": {
+            "estimate": 0.056,
+            "ci95": [
+              0.023,
+              0.086
+            ]
+          },
+          "lockbox": {
+            "estimate": 0.119,
+            "ci95": [
+              0.046,
+              0.196
+            ]
+          },
+          "b2_verdict": ""
+        },
+        "ap_logit_full": {
+          "cv": {
+            "estimate": 0.076,
+            "ci95": [
+              0.027,
+              0.12
+            ]
+          },
+          "lockbox": {
+            "estimate": 0.202,
+            "ci95": [
+              0.119,
+              0.312
+            ]
+          },
+          "b2_verdict": ""
+        },
+        "ap_gbm_full": {
+          "cv": {
+            "estimate": 0.053,
+            "ci95": [
+              0.017,
+              0.087
+            ]
+          },
+          "lockbox": {
+            "estimate": 0.171,
+            "ci95": [
+              0.123,
+              0.245
+            ]
+          },
+          "b2_verdict": ""
+        },
+        "prec_logit_full_minus_b": {
+          "cv": {
+            "estimate": 0.018,
+            "ci95": [
+              -0.008,
+              0.042
+            ]
+          },
+          "lockbox": {
+            "estimate": 0.119,
+            "ci95": [
+              0.097,
+              0.145
+            ]
+          },
+          "b2_verdict": "strengthens: positive, interval now excludes 0"
+        },
+        "ap_logit_full_minus_b": {
+          "cv": {
+            "estimate": 0.02,
+            "ci95": [
+              -0.019,
+              0.055
+            ]
+          },
+          "lockbox": {
+            "estimate": 0.083,
+            "ci95": [
+              0.061,
+              0.151
+            ]
+          },
+          "b2_verdict": "strengthens: positive, interval now excludes 0"
+        },
+        "prec_gbm_full_minus_b": {
+          "cv": {
+            "estimate": -0.005,
+            "ci95": [
+              -0.041,
+              0.017
+            ]
+          },
+          "lockbox": {
+            "estimate": 0.065,
+            "ci95": [
+              0.038,
+              0.124
+            ]
+          },
+          "b2_verdict": "reverses: positive, interval excludes 0"
+        },
+        "ap_gbm_full_minus_b": {
+          "cv": {
+            "estimate": -0.004,
+            "ci95": [
+              -0.036,
+              0.03
+            ]
+          },
+          "lockbox": {
+            "estimate": 0.052,
+            "ci95": [
+              0.033,
+              0.119
+            ]
+          },
+          "b2_verdict": "reverses: positive, interval excludes 0"
+        },
+        "bss_logit_full": {
+          "cv": {
+            "estimate": 0.021,
+            "ci95": [
+              -0.006,
+              0.038
+            ]
+          },
+          "lockbox": {
+            "estimate": 0.082,
+            "ci95": [
+              0.041,
+              0.102
+            ]
+          },
+          "b2_verdict": ""
+        }
+      },
+      "drop final full month": {
+        "prec_base_a": {
+          "cv": {
+            "estimate": 0.016,
+            "ci95": [
+              0.003,
+              0.032
+            ]
+          },
+          "lockbox": {
+            "estimate": 0.038,
+            "ci95": [
+              0.011,
+              0.059
+            ]
+          },
+          "b2_verdict": ""
+        },
+        "prec_base_b": {
+          "cv": {
+            "estimate": 0.055,
+            "ci95": [
+              0.021,
+              0.082
+            ]
+          },
+          "lockbox": {
+            "estimate": 0.125,
+            "ci95": [
+              0.066,
+              0.188
+            ]
+          },
+          "b2_verdict": ""
+        },
+        "prec_logit_full": {
+          "cv": {
+            "estimate": 0.062,
+            "ci95": [
+              0.017,
+              0.094
+            ]
+          },
+          "lockbox": {
+            "estimate": 0.174,
+            "ci95": [
+              0.077,
+              0.258
+            ]
+          },
+          "b2_verdict": ""
+        },
+        "prec_gbm_full": {
+          "cv": {
+            "estimate": 0.045,
+            "ci95": [
+              0.015,
+              0.07
+            ]
+          },
+          "lockbox": {
+            "estimate": 0.125,
+            "ci95": [
+              0.066,
+              0.188
+            ]
+          },
+          "b2_verdict": ""
+        },
+        "ap_base_b": {
+          "cv": {
+            "estimate": 0.04,
+            "ci95": [
+              0.014,
+              0.06
+            ]
+          },
+          "lockbox": {
+            "estimate": 0.092,
+            "ci95": [
+              0.044,
+              0.142
+            ]
+          },
+          "b2_verdict": ""
+        },
+        "ap_logit_full": {
+          "cv": {
+            "estimate": 0.06,
+            "ci95": [
+              0.02,
+              0.092
+            ]
+          },
+          "lockbox": {
+            "estimate": 0.133,
+            "ci95": [
+              0.056,
+              0.233
+            ]
+          },
+          "b2_verdict": ""
+        },
+        "ap_gbm_full": {
+          "cv": {
+            "estimate": 0.033,
+            "ci95": [
+              0.012,
+              0.055
+            ]
+          },
+          "lockbox": {
+            "estimate": 0.085,
+            "ci95": [
+              0.06,
+              0.141
+            ]
+          },
+          "b2_verdict": ""
+        },
+        "prec_logit_full_minus_b": {
+          "cv": {
+            "estimate": 0.007,
+            "ci95": [
+              -0.019,
+              0.022
+            ]
+          },
+          "lockbox": {
+            "estimate": 0.049,
+            "ci95": [
+              -0.016,
+              0.081
+            ]
+          },
+          "b2_verdict": "confirms the sign, interval includes 0"
+        },
+        "ap_logit_full_minus_b": {
+          "cv": {
+            "estimate": 0.02,
+            "ci95": [
+              -0.004,
+              0.045
+            ]
+          },
+          "lockbox": {
+            "estimate": 0.041,
+            "ci95": [
+              0.002,
+              0.092
+            ]
+          },
+          "b2_verdict": "strengthens: positive, interval now excludes 0"
+        },
+        "prec_gbm_full_minus_b": {
+          "cv": {
+            "estimate": -0.009,
+            "ci95": [
+              -0.023,
+              0.004
+            ]
+          },
+          "lockbox": {
+            "estimate": 0.0,
+            "ci95": [
+              -0.005,
+              0.022
+            ]
+          },
+          "b2_verdict": "confirms the sign, interval includes 0"
+        },
+        "ap_gbm_full_minus_b": {
+          "cv": {
+            "estimate": -0.008,
+            "ci95": [
+              -0.023,
+              0.012
+            ]
+          },
+          "lockbox": {
+            "estimate": -0.007,
+            "ci95": [
+              -0.022,
+              0.04
+            ]
+          },
+          "b2_verdict": "confirms the sign, interval includes 0"
+        },
+        "bss_logit_full": {
+          "cv": {
+            "estimate": 0.017,
+            "ci95": [
+              -0.006,
+              0.029
+            ]
+          },
+          "lockbox": {
+            "estimate": 0.047,
+            "ci95": [
+              0.013,
+              0.062
+            ]
+          },
+          "b2_verdict": ""
+        }
+      }
+    },
+    "n_runs": 1
+  },
+  "checks": {
+    "cv_copied_in_b2": [
+      {
+        "variant": "main",
+        "metric": "prec_base_a",
+        "b2": [
+          0.027,
+          0.008,
+          0.052
+        ],
+        "json": [
+          0.02717391304347826,
+          0.00809394002935626,
+          0.05203681255582493
+        ],
+        "max_abs_diff": 0.00017391304347826042,
+        "ok": true
+      },
+      {
+        "variant": "main",
+        "metric": "prec_base_b",
+        "b2": [
+          0.083,
+          0.031,
+          0.133
+        ],
+        "json": [
+          0.08333333333333333,
+          0.03053351959952768,
+          0.13290497071907195
+        ],
+        "max_abs_diff": 0.00046648040047232026,
+        "ok": true
+      },
+      {
+        "variant": "main",
+        "metric": "prec_logit_full",
+        "b2": [
+          0.101,
+          0.038,
+          0.153
+        ],
+        "json": [
+          0.10144927536231885,
+          0.03845986038394415,
+          0.15337651096397983
+        ],
+        "max_abs_diff": 0.0004598603839441537,
+        "ok": true
+      },
+      {
+        "variant": "main",
+        "metric": "prec_gbm_full",
+        "b2": [
+          0.078,
+          0.031,
+          0.114
+        ],
+        "json": [
+          0.07789855072463768,
+          0.030586056644880177,
+          0.1136400058275058
+        ],
+        "max_abs_diff": 0.0004139433551198224,
+        "ok": true
+      },
+      {
+        "variant": "main",
+        "metric": "ap_base_b",
+        "b2": [
+          0.056,
+          0.023,
+          0.086
+        ],
+        "json": [
+          0.056348660344161326,
+          0.022729005465463175,
+          0.08552798157890595
+        ],
+        "max_abs_diff": 0.00047201842109403924,
+        "ok": true
+      },
+      {
+        "variant": "main",
+        "metric": "ap_logit_full",
+        "b2": [
+          0.076,
+          0.027,
+          0.12
+        ],
+        "json": [
+          0.07629943473753506,
+          0.027426749588338913,
+          0.11973723675684521
+        ],
+        "max_abs_diff": 0.0004267495883389129,
+        "ok": true
+      },
+      {
+        "variant": "main",
+        "metric": "ap_gbm_full",
+        "b2": [
+          0.053,
+          0.017,
+          0.087
+        ],
+        "json": [
+          0.05251279874986287,
+          0.016626799611731167,
+          0.08685610355562841
+        ],
+        "max_abs_diff": 0.0004872012501371259,
+        "ok": true
+      },
+      {
+        "variant": "main",
+        "metric": "prec_logit_full_minus_b",
+        "b2": [
+          0.018,
+          -0.008,
+          0.042
+        ],
+        "json": [
+          0.01811594202898552,
+          -0.007796209754460247,
+          0.04225850385330849
+        ],
+        "max_abs_diff": 0.0002585038533084866,
+        "ok": true
+      },
+      {
+        "variant": "main",
+        "metric": "ap_logit_full_minus_b",
+        "b2": [
+          0.02,
+          -0.019,
+          0.055
+        ],
+        "json": [
+          0.01995077439337374,
+          -0.018844337626665344,
+          0.054656132443339556
+        ],
+        "max_abs_diff": 0.0003438675566604446,
+        "ok": true
+      },
+      {
+        "variant": "main",
+        "metric": "prec_gbm_full_minus_b",
+        "b2": [
+          -0.005,
+          -0.041,
+          0.017
+        ],
+        "json": [
+          -0.0054347826086956486,
+          -0.040711666742815365,
+          0.017242734764693124
+        ],
+        "max_abs_diff": 0.00043478260869564845,
+        "ok": true
+      },
+      {
+        "variant": "main",
+        "metric": "ap_gbm_full_minus_b",
+        "b2": [
+          -0.004,
+          -0.036,
+          0.03
+        ],
+        "json": [
+          -0.0038358615942984467,
+          -0.03637055541906245,
+          0.029982628368622418
+        ],
+        "max_abs_diff": 0.000370555419062453,
+        "ok": true
+      },
+      {
+        "variant": "main",
+        "metric": "bss_logit_full",
+        "b2": [
+          0.021,
+          -0.006,
+          0.038
+        ],
+        "json": [
+          0.02144784761652585,
+          -0.006270154373571718,
+          0.03823451409465977
+        ],
+        "max_abs_diff": 0.00044784761652584895,
+        "ok": true
+      },
+      {
+        "variant": "drop final full month",
+        "metric": "prec_base_a",
+        "b2": [
+          0.016,
+          0.003,
+          0.032
+        ],
+        "json": [
+          0.016363636363636365,
+          0.0033323447681882458,
+          0.03169697884436394
+        ],
+        "max_abs_diff": 0.0003636363636363646,
+        "ok": true
+      },
+      {
+        "variant": "drop final full month",
+        "metric": "prec_base_b",
+        "b2": [
+          0.055,
+          0.021,
+          0.082
+        ],
+        "json": [
+          0.05454545454545454,
+          0.020660979217934312,
+          0.08213128729752768
+        ],
+        "max_abs_diff": 0.00045454545454545747,
+        "ok": true
+      },
+      {
+        "variant": "drop final full month",
+        "metric": "prec_logit_full",
+        "b2": [
+          0.062,
+          0.017,
+          0.094
+        ],
+        "json": [
+          0.06181818181818182,
+          0.016915033979178717,
+          0.09369473564683557
+        ],
+        "max_abs_diff": 0.0003052643531644278,
+        "ok": true
+      },
+      {
+        "variant": "drop final full month",
+        "metric": "prec_gbm_full",
+        "b2": [
+          0.045,
+          0.015,
+          0.07
+        ],
+        "json": [
+          0.045454545454545456,
+          0.015408826693958955,
+          0.07045208006714489
+        ],
+        "max_abs_diff": 0.00045454545454545747,
+        "ok": true
+      },
+      {
+        "variant": "drop final full month",
+        "metric": "ap_base_b",
+        "b2": [
+          0.04,
+          0.014,
+          0.06
+        ],
+        "json": [
+          0.04026470299670585,
+          0.0144932368878373,
+          0.06003865554989818
+        ],
+        "max_abs_diff": 0.0004932368878372995,
+        "ok": true
+      },
+      {
+        "variant": "drop final full month",
+        "metric": "ap_logit_full",
+        "b2": [
+          0.06,
+          0.02,
+          0.092
+        ],
+        "json": [
+          0.060423602038927285,
+          0.0198850324630577,
+          0.0919884282103465
+        ],
+        "max_abs_diff": 0.0004236020389272871,
+        "ok": true
+      },
+      {
+        "variant": "drop final full month",
+        "metric": "ap_gbm_full",
+        "b2": [
+          0.033,
+          0.012,
+          0.055
+        ],
+        "json": [
+          0.03270336409378993,
+          0.011813509984555621,
+          0.054808167528525166
+        ],
+        "max_abs_diff": 0.00029663590621006874,
+        "ok": true
+      },
+      {
+        "variant": "drop final full month",
+        "metric": "prec_logit_full_minus_b",
+        "b2": [
+          0.007,
+          -0.019,
+          0.022
+        ],
+        "json": [
+          0.007272727272727278,
+          -0.0193050193050193,
+          0.022302307462147113
+        ],
+        "max_abs_diff": 0.0003050193050193016,
+        "ok": true
+      },
+      {
+        "variant": "drop final full month",
+        "metric": "ap_logit_full_minus_b",
+        "b2": [
+          0.02,
+          -0.004,
+          0.045
+        ],
+        "json": [
+          0.020158899042221436,
+          -0.004397336017471541,
+          0.04465865508074061
+        ],
+        "max_abs_diff": 0.0003973360174715406,
+        "ok": true
+      },
+      {
+        "variant": "drop final full month",
+        "metric": "prec_gbm_full_minus_b",
+        "b2": [
+          -0.009,
+          -0.023,
+          0.004
+        ],
+        "json": [
+          -0.009090909090909087,
+          -0.023051696070265765,
+          0.004484809922029649
+        ],
+        "max_abs_diff": 0.0004848099220296489,
+        "ok": true
+      },
+      {
+        "variant": "drop final full month",
+        "metric": "ap_gbm_full_minus_b",
+        "b2": [
+          -0.008,
+          -0.023,
+          0.012
+        ],
+        "json": [
+          -0.007561338902915916,
+          -0.023202375448360492,
+          0.012426843215188391
+        ],
+        "max_abs_diff": 0.00043866109708408374,
+        "ok": true
+      },
+      {
+        "variant": "drop final full month",
+        "metric": "bss_logit_full",
+        "b2": [
+          0.017,
+          -0.006,
+          0.029
+        ],
+        "json": [
+          0.017026631209322907,
+          -0.006148440751517242,
+          0.029202578042930544
+        ],
+        "max_abs_diff": 0.00020257804293054293,
+        "ok": true
+      }
+    ],
+    "lockbox_counts": {
+      "event_lives_b2": 61,
+      "event_lives_panel": 61,
+      "pos_b2": 145,
+      "pos_panel": 145,
+      "rows_b2": 3730
+    }
+  },
+  "summary": {
+    "cv|main|logit_full": "ahead",
+    "lockbox|main|logit_full": "beats",
+    "cv|main|gbm_full": "not",
+    "lockbox|main|gbm_full": "beats",
+    "lockbox_ap|main|logit_full": "beats",
+    "cv|drop final full month|logit_full": "ahead",
+    "lockbox|drop final full month|logit_full": "ahead",
+    "cv|drop final full month|gbm_full": "not",
+    "lockbox|drop final full month|gbm_full": "not",
+    "lockbox_ap|drop final full month|logit_full": "beats",
+    "lockbox_gain_share_from_final_month": 0.588235294117647
+  },
+  "verdict": "**On the fair test (final full month dropped), the frozen full-feature logistic model is ahead but not decisively.** The baseline is the lowest-volume-rank rule (b), and the headline metric is precision among the top 5% of live contracts each month on the 2026 lock-box (3,730 contract-months over 7 origin months, 61 delisted contracts, base rate 3.9%). With the final full month before the last trading day kept, the logistic model beats the baseline: 0.270 against 0.151, paired difference +0.119 [+0.097, +0.145]. With that month dropped, since it often holds the delisting announcement, it is ahead but not decisively: 0.174 against 0.125, paired difference +0.049 [-0.016, +0.081] (PR-AUC difference +0.041 [+0.002, +0.092]); 59% of the main-run gain, more than half, disappears when that month is dropped. In cross-validation (36 test months, 2023-01 to 2025-12) the same model is ahead but not decisively with the month kept (+0.018 [-0.008, +0.042]) and is ahead but not decisively without it (+0.007 [-0.019, +0.022]). LightGBM on the same features does not beat the baseline on the fair lock-box test (+0.000 [-0.005, +0.022]), and the falling-volume rule (a) stays near chance (0.038 against a base rate of 0.025). So a contract's own monthly trading does flag likely delistings, mostly through its volume rank (rule (b) alone reaches 5.0 times the base rate on the fair lock-box test) and its open-interest rank (open interest is 40% of the tree model's attributions); the extra features add an edge with the same sign in CV and the lock-box, but its size is not established once the announcement month is removed."
+}

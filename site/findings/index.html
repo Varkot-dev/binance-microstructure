@@ -485,6 +485,64 @@ footer p { font-size: var(--text-small); color: var(--ink-faint); }
     </article>
   </section>
 
+  <section class="part" aria-labelledby="p3">
+    <div class="part-head">
+      <span class="label">Part three · Q15 and Q16</span>
+      <h2 id="p3">How the market changed</h2>
+      <p>Two follow-up questions across every USDT futures contract Binance has listed: why trade direction became more predictable, and whether a coin's own trading warns that it is about to be delisted.</p>
+    </div>
+
+    <article class="entry">
+      <div class="gutter"><span class="qid">Q15</span><span class="label">Why it changed</span></div>
+      <div class="body">
+        <h3>Why did trade direction become more predictable, and does tick size cause it?</h3>
+        <span class="verdict mixed">Smaller trades, and tick size as a cause of persistence</span>
+        <ul>
+          <li><strong>The rise happened inside coins, not through which coins survived.</strong> Coins present in 2023 and 2026 rose 3.4 points; dead coins and new listings both pulled the average slightly down.</li>
+          <li><strong>It lines up with much smaller trades.</strong> The median trade, measured even at the level of individual exchange matches, fell by roughly two thirds while daily volume held, consistent with algorithms slicing orders. This part is a correlation, not an experiment.</li>
+          <li><strong>Tick size causes persistence, in both directions.</strong> Across 35 tick-change batches, cuts raised the chance the next trade repeats the last one's direction by 7.5 points and increases lowered it by 5.6, with no pre-trends. Two batches held back until the end point the same way; one primary measure confirms decisively and the other is weaker.</li>
+          <li><strong>Tick size explains none of the 2023 to 2026 rise across coins,</strong> because relative ticks did not shrink on average over that span.</li>
+        </ul>
+        <div class="table-scroll">
+          <table>
+            <thead><tr><th>Evidence</th><th>Effect on repeat rate per log point of relative tick</th><th>95% interval</th></tr></thead>
+            <tbody>
+              <tr><td>Cross-section, equal activity, 2023 and 2026</td><td>−3.9 and −1.9</td><td>both exclude 0</td></tr>
+              <tr><td>35 tick-change batches (113 contracts)</td><td class="hi">−3.15</td><td>−3.55 to −2.76</td></tr>
+              <tr><td>Held-back batches, run once (6 contracts)</td><td>−1.55</td><td>−3.33 to +0.23</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <figure><div class="plate"><img src="q15_market_evolution.png" alt="Forest plot of repeat-rate effects for 35 tick-change batches, cuts positive and increases negative, with the held-back batches; and cross-sectional slopes beside the experimental slope" loading="lazy"></div><figcaption>Tick changes by batch, and cross-sectional against experimental slopes.</figcaption></figure>
+      </div>
+    </article>
+
+    <article class="entry">
+      <div class="gutter"><span class="qid">Q16</span><span class="label">Delistings</span></div>
+      <div class="body">
+        <h3>Can a coin's own trading warn that it will be delisted?</h3>
+        <span class="verdict mixed">Yes, mostly through low volume · models add a little</span>
+        <p>A monthly panel of every USDT futures contract from 2020 to 2026 (161 delistings; renamed, merged, index and stock-linked contracts handled separately), tested on 2023 to 2025 and scored once on 2026, which was never used to choose anything.</p>
+        <div class="table-scroll">
+          <table>
+            <thead><tr><th>Flag the 5% most at risk each month</th><th>Precision, 2023 to 2025</th><th>Precision, 2026 (scored once)</th><th>2026, final month dropped</th></tr></thead>
+            <tbody>
+              <tr><td>Random pick</td><td>2.4%</td><td>3.9%</td><td>2.5%</td></tr>
+              <tr><td>Falling volume</td><td>2.7%</td><td>5.4%</td><td>3.8%</td></tr>
+              <tr><td>Lowest volume</td><td>8.3%</td><td>15.1%</td><td>12.5%</td></tr>
+              <tr><td>Logistic regression, all features</td><td>10.1%</td><td class="hi">27.0%</td><td>17.4%</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <ul>
+          <li>"Volume is falling", the rule most studies use, is no better than chance; very low volume and very low open interest carry the signal.</li>
+          <li>The model beats the lowest-volume rule on 2026 by 12 points, but more than half of that edge comes from the final month before trading stops, which likely contains the delisting announcement. With that month dropped it is ahead by 5 points, not decisively.</li>
+        </ul>
+        <figure><div class="plate"><img src="q16_delisting.png" alt="Precision at the top 5% for each rule and model in cross-validation and on the 2026 lock-box, with and without the final month" loading="lazy"></div><figcaption>Precision in cross-validation and on the 2026 lock-box.</figcaption></figure>
+      </div>
+    </article>
+  </section>
+
   <section class="part" aria-labelledby="p4">
     <div class="part-head">
       <span class="label">Reading these results</span>

@@ -1,0 +1,2134 @@
+{
+  "source": "research/market_evolution/b1_models.py",
+  "names": {
+    "logit_full": "logistic, full features",
+    "gbm_full": "LightGBM, full features",
+    "logit_vol": "logistic, volume level + trend",
+    "gbm_vol": "LightGBM, volume level + trend",
+    "logit_vol+age": "logistic, volume + age",
+    "gbm_vol+age": "LightGBM, volume + age",
+    "logit_vol+price and drawdown": "logistic, volume + price and drawdown",
+    "gbm_vol+price and drawdown": "LightGBM, volume + price and drawdown",
+    "logit_vol+volatility": "logistic, volume + volatility",
+    "gbm_vol+volatility": "LightGBM, volume + volatility",
+    "logit_vol+open interest": "logistic, volume + open interest",
+    "gbm_vol+open interest": "LightGBM, volume + open interest",
+    "logit_vol+funding": "logistic, volume + funding",
+    "gbm_vol+funding": "LightGBM, volume + funding",
+    "logit_vol+other activity": "logistic, volume + other activity",
+    "gbm_vol+other activity": "LightGBM, volume + other activity",
+    "base_b": "(b) lowest volume rank (bar)"
+  },
+  "variants": {
+    "main": {
+      "point": {
+        "base": 0.023757707653246283,
+        "prec_logit_full": 0.10144927536231885,
+        "rec_logit_full": 0.21374045801526717,
+        "ap_logit_full": 0.07629943473753506,
+        "prec_gbm_full": 0.07789855072463768,
+        "rec_gbm_full": 0.16412213740458015,
+        "ap_gbm_full": 0.05251279874986287,
+        "prec_logit_vol": 0.06159420289855073,
+        "rec_logit_vol": 0.1297709923664122,
+        "ap_logit_vol": 0.04552048211116895,
+        "prec_gbm_vol": 0.04710144927536232,
+        "rec_gbm_vol": 0.09923664122137404,
+        "ap_gbm_vol": 0.04031194651088373,
+        "prec_logit_vol+age": 0.04528985507246377,
+        "rec_logit_vol+age": 0.09541984732824428,
+        "ap_logit_vol+age": 0.04502107950166134,
+        "prec_gbm_vol+age": 0.04710144927536232,
+        "rec_gbm_vol+age": 0.09923664122137404,
+        "ap_gbm_vol+age": 0.04205263754337829,
+        "prec_logit_vol+price and drawdown": 0.07971014492753623,
+        "rec_logit_vol+price and drawdown": 0.16793893129770993,
+        "ap_logit_vol+price and drawdown": 0.05431822598336683,
+        "prec_gbm_vol+price and drawdown": 0.050724637681159424,
+        "rec_gbm_vol+price and drawdown": 0.10687022900763359,
+        "ap_gbm_vol+price and drawdown": 0.04131495784911587,
+        "prec_logit_vol+volatility": 0.06159420289855073,
+        "rec_logit_vol+volatility": 0.1297709923664122,
+        "ap_logit_vol+volatility": 0.05023117628202638,
+        "prec_gbm_vol+volatility": 0.057971014492753624,
+        "rec_gbm_vol+volatility": 0.12213740458015267,
+        "ap_gbm_vol+volatility": 0.04505719550392692,
+        "prec_logit_vol+open interest": 0.08333333333333333,
+        "rec_logit_vol+open interest": 0.17557251908396945,
+        "ap_logit_vol+open interest": 0.05290933085236236,
+        "prec_gbm_vol+open interest": 0.08333333333333333,
+        "rec_gbm_vol+open interest": 0.17557251908396945,
+        "ap_gbm_vol+open interest": 0.04983293816899971,
+        "prec_logit_vol+funding": 0.050724637681159424,
+        "rec_logit_vol+funding": 0.10687022900763359,
+        "ap_logit_vol+funding": 0.049388080668230395,
+        "prec_gbm_vol+funding": 0.04710144927536232,
+        "rec_gbm_vol+funding": 0.09923664122137404,
+        "ap_gbm_vol+funding": 0.04972372742603623,
+        "prec_logit_vol+other activity": 0.06340579710144928,
+        "rec_logit_vol+other activity": 0.13358778625954199,
+        "ap_logit_vol+other activity": 0.045924539069381404,
+        "prec_gbm_vol+other activity": 0.050724637681159424,
+        "rec_gbm_vol+other activity": 0.10687022900763359,
+        "ap_gbm_vol+other activity": 0.03978257748133909,
+        "prec_base_b": 0.08333333333333333,
+        "rec_base_b": 0.17557251908396945,
+        "ap_base_b": 0.05634866034416132,
+        "prec_logit_full_minus_b": 0.01811594202898552,
+        "rec_logit_full_minus_b": 0.03816793893129772,
+        "ap_logit_full_minus_b": 0.01995077439337374,
+        "prec_gbm_full_minus_b": -0.0054347826086956486,
+        "rec_gbm_full_minus_b": -0.011450381679389304,
+        "ap_gbm_full_minus_b": -0.0038358615942984467,
+        "prec_logit_vol_minus_b": -0.0217391304347826,
+        "rec_logit_vol_minus_b": -0.045801526717557245,
+        "ap_logit_vol_minus_b": -0.01082817823299237,
+        "prec_gbm_vol_minus_b": -0.03623188405797101,
+        "rec_gbm_vol_minus_b": -0.07633587786259541,
+        "ap_gbm_vol_minus_b": -0.016036713833277587,
+        "prec_logit_vol+age_minus_b": -0.03804347826086956,
+        "rec_logit_vol+age_minus_b": -0.08015267175572517,
+        "ap_logit_vol+age_minus_b": -0.011327580842499976,
+        "prec_gbm_vol+age_minus_b": -0.03623188405797101,
+        "rec_gbm_vol+age_minus_b": -0.07633587786259541,
+        "ap_gbm_vol+age_minus_b": -0.014296022800783029,
+        "prec_logit_vol+price and drawdown_minus_b": -0.0036231884057971037,
+        "rec_logit_vol+price and drawdown_minus_b": -0.007633587786259527,
+        "ap_logit_vol+price and drawdown_minus_b": -0.002030434360794489,
+        "prec_gbm_vol+price and drawdown_minus_b": -0.032608695652173905,
+        "rec_gbm_vol+price and drawdown_minus_b": -0.06870229007633587,
+        "ap_gbm_vol+price and drawdown_minus_b": -0.015033702495045452,
+        "prec_logit_vol+volatility_minus_b": -0.0217391304347826,
+        "rec_logit_vol+volatility_minus_b": -0.045801526717557245,
+        "ap_logit_vol+volatility_minus_b": -0.0061174840621349424,
+        "prec_gbm_vol+volatility_minus_b": -0.025362318840579705,
+        "rec_gbm_vol+volatility_minus_b": -0.053435114503816786,
+        "ap_gbm_vol+volatility_minus_b": -0.011291464840234397,
+        "prec_logit_vol+open interest_minus_b": 0.0,
+        "rec_logit_vol+open interest_minus_b": 0.0,
+        "ap_logit_vol+open interest_minus_b": -0.0034393294917989606,
+        "prec_gbm_vol+open interest_minus_b": 0.0,
+        "rec_gbm_vol+open interest_minus_b": 0.0,
+        "ap_gbm_vol+open interest_minus_b": -0.006515722175161609,
+        "prec_logit_vol+funding_minus_b": -0.032608695652173905,
+        "rec_logit_vol+funding_minus_b": -0.06870229007633587,
+        "ap_logit_vol+funding_minus_b": -0.006960579675930924,
+        "prec_gbm_vol+funding_minus_b": -0.03623188405797101,
+        "rec_gbm_vol+funding_minus_b": -0.07633587786259541,
+        "ap_gbm_vol+funding_minus_b": -0.00662493291812509,
+        "prec_logit_vol+other activity_minus_b": -0.01992753623188405,
+        "rec_logit_vol+other activity_minus_b": -0.04198473282442747,
+        "ap_logit_vol+other activity_minus_b": -0.010424121274779916,
+        "prec_gbm_vol+other activity_minus_b": -0.032608695652173905,
+        "rec_gbm_vol+other activity_minus_b": -0.06870229007633587,
+        "ap_gbm_vol+other activity_minus_b": -0.016566082862822226,
+        "brier_ref": 0.02325013198373902,
+        "brier_logit_full": 0.022751466695887672,
+        "brier_gbm_full": 0.0230468032693946,
+        "brier_logit_full_platt": 0.02313887098892442,
+        "brier_logit_full_isotonic": 0.023201029218273658,
+        "brier_gbm_full_platt": 0.023221383875997266,
+        "brier_gbm_full_isotonic": 0.023101759513782107,
+        "bss_logit_full": 0.02144784761652585,
+        "bss_gbm_full": 0.008745271402615051,
+        "bss_logit_full_platt": 0.0047853919664806455,
+        "bss_logit_full_isotonic": 0.0021119349128729814,
+        "bss_gbm_full_platt": 0.0012364707332355174,
+        "bss_gbm_full_isotonic": 0.0063815753846336865
+      },
+      "ci": {
+        "base": [
+          0.012941048022234836,
+          0.03223252711251759
+        ],
+        "prec_logit_full": [
+          0.03845986038394415,
+          0.15337651096397983
+        ],
+        "rec_logit_full": [
+          0.1287036056546831,
+          0.2790721899224806
+        ],
+        "ap_logit_full": [
+          0.027426749588338913,
+          0.11973723675684521
+        ],
+        "prec_gbm_full": [
+          0.030586056644880177,
+          0.1136400058275058
+        ],
+        "rec_gbm_full": [
+          0.09912427149101506,
+          0.19355260935652757
+        ],
+        "ap_gbm_full": [
+          0.016626799611731167,
+          0.08685610355562841
+        ],
+        "prec_logit_vol": [
+          0.0256945588316038,
+          0.08907803885885564
+        ],
+        "rec_logit_vol": [
+          0.07653770004949678,
+          0.17030729419375706
+        ],
+        "ap_logit_vol": [
+          0.015910639579329887,
+          0.07370644950586762
+        ],
+        "prec_gbm_vol": [
+          0.02719546943334785,
+          0.06610204510435636
+        ],
+        "rec_gbm_vol": [
+          0.07692307692307693,
+          0.14013297575148057
+        ],
+        "ap_gbm_vol": [
+          0.020445932706623406,
+          0.056068556832769775
+        ],
+        "prec_logit_vol+age": [
+          0.024606785523119366,
+          0.06700323525226728
+        ],
+        "rec_logit_vol+age": [
+          0.06207907075873828,
+          0.15311752392344494
+        ],
+        "ap_logit_vol+age": [
+          0.0178382464583334,
+          0.06552178147027547
+        ],
+        "prec_gbm_vol+age": [
+          0.02365413877054169,
+          0.06972337066827029
+        ],
+        "rec_gbm_vol+age": [
+          0.06467608080288213,
+          0.15923707795501943
+        ],
+        "ap_gbm_vol+age": [
+          0.022866690926972414,
+          0.056964627867769166
+        ],
+        "prec_logit_vol+price and drawdown": [
+          0.03874416620948287,
+          0.11000193798449612
+        ],
+        "rec_logit_vol+price and drawdown": [
+          0.11457201086956521,
+          0.21183866624425787
+        ],
+        "ap_logit_vol+price and drawdown": [
+          0.023791057405760523,
+          0.0779360901422423
+        ],
+        "prec_gbm_vol+price and drawdown": [
+          0.02263351209429641,
+          0.07132029253445188
+        ],
+        "rec_gbm_vol+price and drawdown": [
+          0.06914435069699193,
+          0.14407111736889644
+        ],
+        "ap_gbm_vol+price and drawdown": [
+          0.016486737598433582,
+          0.060714724303754436
+        ],
+        "prec_logit_vol+volatility": [
+          0.02580368860951855,
+          0.08915714460436708
+        ],
+        "rec_logit_vol+volatility": [
+          0.07877130681818181,
+          0.17040617056890742
+        ],
+        "ap_logit_vol+volatility": [
+          0.016597671099072012,
+          0.08004001990544807
+        ],
+        "prec_gbm_vol+volatility": [
+          0.030546799800052052,
+          0.08136363636363632
+        ],
+        "rec_gbm_vol+volatility": [
+          0.08923864324651726,
+          0.16666666666666666
+        ],
+        "ap_gbm_vol+volatility": [
+          0.020242272502475563,
+          0.0593591510572286
+        ],
+        "prec_logit_vol+open interest": [
+          0.035954100380195836,
+          0.12055209943491367
+        ],
+        "rec_logit_vol+open interest": [
+          0.11381651884700665,
+          0.2070178865131579
+        ],
+        "ap_logit_vol+open interest": [
+          0.02162935199839466,
+          0.08534474728699874
+        ],
+        "prec_gbm_vol+open interest": [
+          0.029226795483290918,
+          0.1245943578999537
+        ],
+        "rec_gbm_vol+open interest": [
+          0.09301910299003323,
+          0.21052936159844052
+        ],
+        "ap_gbm_vol+open interest": [
+          0.020167388711381136,
+          0.07792361527394856
+        ],
+        "prec_logit_vol+funding": [
+          0.024663101628898444,
+          0.07495790911258678
+        ],
+        "rec_logit_vol+funding": [
+          0.07946942501702049,
+          0.14763227513227506
+        ],
+        "ap_logit_vol+funding": [
+          0.024765958390694592,
+          0.07204319024063714
+        ],
+        "prec_gbm_vol+funding": [
+          0.02433931553895822,
+          0.07044462072179837
+        ],
+        "rec_gbm_vol+funding": [
+          0.07076174496644295,
+          0.1394425698566279
+        ],
+        "ap_gbm_vol+funding": [
+          0.023078196652911317,
+          0.068644267961647
+        ],
+        "prec_logit_vol+other activity": [
+          0.027552851849401178,
+          0.0901256420316735
+        ],
+        "rec_logit_vol+other activity": [
+          0.08155476941871119,
+          0.175
+        ],
+        "ap_logit_vol+other activity": [
+          0.01584186292088319,
+          0.07088650542487243
+        ],
+        "prec_gbm_vol+other activity": [
+          0.02888095238095238,
+          0.07414711465109712
+        ],
+        "rec_gbm_vol+other activity": [
+          0.0806429211469534,
+          0.16535433070866143
+        ],
+        "ap_gbm_vol+other activity": [
+          0.02081082160911822,
+          0.05149927430906328
+        ],
+        "prec_base_b": [
+          0.03053351959952768,
+          0.13290497071907195
+        ],
+        "rec_base_b": [
+          0.0939471868531644,
+          0.25823724731810543
+        ],
+        "ap_base_b": [
+          0.022729005465463175,
+          0.08552798157890594
+        ],
+        "prec_logit_full_minus_b": [
+          -0.007796209754460247,
+          0.04225850385330849
+        ],
+        "rec_logit_full_minus_b": [
+          -0.023259213926288574,
+          0.08275862068965517
+        ],
+        "ap_logit_full_minus_b": [
+          -0.018844337626665344,
+          0.054656132443339556
+        ],
+        "prec_gbm_full_minus_b": [
+          -0.040711666742815365,
+          0.017242734764693124
+        ],
+        "rec_gbm_full_minus_b": [
+          -0.10001396648044693,
+          0.03918069014992153
+        ],
+        "ap_gbm_full_minus_b": [
+          -0.03637055541906245,
+          0.029982628368622418
+        ],
+        "prec_logit_vol_minus_b": [
+          -0.0558650819494193,
+          0.003427536671111634
+        ],
+        "rec_logit_vol_minus_b": [
+          -0.12462032710280373,
+          0.00967670011148264
+        ],
+        "ap_logit_vol_minus_b": [
+          -0.03808995716144727,
+          0.013388956495758865
+        ],
+        "prec_gbm_vol_minus_b": [
+          -0.08007944526904988,
+          0.005671886118438543
+        ],
+        "rec_gbm_vol_minus_b": [
+          -0.1620756829377519,
+          0.017756794104099458
+        ],
+        "ap_gbm_vol_minus_b": [
+          -0.04410140744541905,
+          0.01137411414139307
+        ],
+        "prec_logit_vol+age_minus_b": [
+          -0.0793926541613816,
+          0.0031980724528461926
+        ],
+        "rec_logit_vol+age_minus_b": [
+          -0.14726198591229264,
+          0.009303412301673543
+        ],
+        "ap_logit_vol+age_minus_b": [
+          -0.039067388422391186,
+          0.013247964583887557
+        ],
+        "prec_gbm_vol+age_minus_b": [
+          -0.07448878324603274,
+          0.0016893084785798032
+        ],
+        "rec_gbm_vol+age_minus_b": [
+          -0.14348172987974098,
+          0.004654500945810597
+        ],
+        "ap_gbm_vol+age_minus_b": [
+          -0.042747177579596916,
+          0.015215141787887649
+        ],
+        "prec_logit_vol+price and drawdown_minus_b": [
+          -0.031658000995630285,
+          0.015965398758213283
+        ],
+        "rec_logit_vol+price and drawdown_minus_b": [
+          -0.07036379815745393,
+          0.04425046388809589
+        ],
+        "ap_logit_vol+price and drawdown_minus_b": [
+          -0.03141812781097328,
+          0.020291409797070944
+        ],
+        "prec_gbm_vol+price and drawdown_minus_b": [
+          -0.07650605178489353,
+          0.006104357620009282
+        ],
+        "rec_gbm_vol+price and drawdown_minus_b": [
+          -0.1615251527300496,
+          0.017243245260486637
+        ],
+        "ap_gbm_vol+price and drawdown_minus_b": [
+          -0.04544398350722935,
+          0.011726041997464891
+        ],
+        "prec_logit_vol+volatility_minus_b": [
+          -0.05765963423007304,
+          0.004447228549734227
+        ],
+        "rec_logit_vol+volatility_minus_b": [
+          -0.1274148308303629,
+          0.013247240618101532
+        ],
+        "ap_logit_vol+volatility_minus_b": [
+          -0.035215900950549016,
+          0.018674954949348233
+        ],
+        "prec_gbm_vol+volatility_minus_b": [
+          -0.06726926641347604,
+          0.01666876046901171
+        ],
+        "rec_gbm_vol+volatility_minus_b": [
+          -0.13356224184828236,
+          0.04318936877076411
+        ],
+        "ap_gbm_vol+volatility_minus_b": [
+          -0.03959680519804166,
+          0.01385331266042019
+        ],
+        "prec_logit_vol+open interest_minus_b": [
+          -0.03048813698921303,
+          0.025100026795610374
+        ],
+        "rec_logit_vol+open interest_minus_b": [
+          -0.07273312524385482,
+          0.056783230570691144
+        ],
+        "ap_logit_vol+open interest_minus_b": [
+          -0.02995738106150561,
+          0.022161291239764947
+        ],
+        "prec_gbm_vol+open interest_minus_b": [
+          -0.03527379357663279,
+          0.023183449897877063
+        ],
+        "rec_gbm_vol+open interest_minus_b": [
+          -0.08938768009408998,
+          0.049127131208302435
+        ],
+        "ap_gbm_vol+open interest_minus_b": [
+          -0.0311051001014753,
+          0.017917132072606468
+        ],
+        "prec_logit_vol+funding_minus_b": [
+          -0.06849370935663367,
+          0.005578848428523133
+        ],
+        "rec_logit_vol+funding_minus_b": [
+          -0.14035087719298245,
+          0.013995215311004732
+        ],
+        "ap_logit_vol+funding_minus_b": [
+          -0.0348133169830307,
+          0.024987145408323776
+        ],
+        "prec_gbm_vol+funding_minus_b": [
+          -0.0849970824697719,
+          0.011218670348343224
+        ],
+        "rec_gbm_vol+funding_minus_b": [
+          -0.17264232851120903,
+          0.030707406402604432
+        ],
+        "ap_gbm_vol+funding_minus_b": [
+          -0.038911389395064264,
+          0.023660698294085736
+        ],
+        "prec_logit_vol+other activity_minus_b": [
+          -0.05534368750176051,
+          0.005021739130434752
+        ],
+        "rec_logit_vol+other activity_minus_b": [
+          -0.12149976902029067,
+          0.01614017109249682
+        ],
+        "ap_logit_vol+other activity_minus_b": [
+          -0.03804203472127689,
+          0.01066033908607554
+        ],
+        "prec_gbm_vol+other activity_minus_b": [
+          -0.065844490323657,
+          0.0036648865153537957
+        ],
+        "rec_gbm_vol+other activity_minus_b": [
+          -0.12371134020618554,
+          0.0092670122275385
+        ],
+        "ap_gbm_vol+other activity_minus_b": [
+          -0.043798570742350384,
+          0.007108038084207336
+        ],
+        "brier_ref": [
+          0.012776572541901647,
+          0.03143855245481054
+        ],
+        "brier_logit_full": [
+          0.012774025326920964,
+          0.030548429778717974
+        ],
+        "brier_gbm_full": [
+          0.012876205738250143,
+          0.031060114192063174
+        ],
+        "brier_logit_full_platt": [
+          0.012880087452682744,
+          0.031235184472189585
+        ],
+        "brier_logit_full_isotonic": [
+          0.012916398960255527,
+          0.03129092074057265
+        ],
+        "brier_gbm_full_platt": [
+          0.012931883060389948,
+          0.031335560868207796
+        ],
+        "brier_gbm_full_isotonic": [
+          0.012926060734168547,
+          0.03111099287984641
+        ],
+        "bss_logit_full": [
+          -0.006270154373571718,
+          0.03823451409465977
+        ],
+        "bss_gbm_full": [
+          -0.006478671670790764,
+          0.01549195991448679
+        ],
+        "bss_logit_full_platt": [
+          -0.009297590059833827,
+          0.011968167604252896
+        ],
+        "bss_logit_full_isotonic": [
+          -0.01490520381138925,
+          0.010427307272336352
+        ],
+        "bss_gbm_full_platt": [
+          -0.009815141998021375,
+          0.007834237700287306
+        ],
+        "bss_gbm_full_isotonic": [
+          -0.01532543560393811,
+          0.017081951393346853
+        ]
+      },
+      "alerts_total": {
+        "logit_full": [
+          552,
+          56,
+          262
+        ],
+        "gbm_full": [
+          552,
+          43,
+          262
+        ],
+        "logit_vol": [
+          552,
+          34,
+          262
+        ],
+        "gbm_vol": [
+          552,
+          26,
+          262
+        ],
+        "logit_vol+age": [
+          552,
+          25,
+          262
+        ],
+        "gbm_vol+age": [
+          552,
+          26,
+          262
+        ],
+        "logit_vol+price and drawdown": [
+          552,
+          44,
+          262
+        ],
+        "gbm_vol+price and drawdown": [
+          552,
+          28,
+          262
+        ],
+        "logit_vol+volatility": [
+          552,
+          34,
+          262
+        ],
+        "gbm_vol+volatility": [
+          552,
+          32,
+          262
+        ],
+        "logit_vol+open interest": [
+          552,
+          46,
+          262
+        ],
+        "gbm_vol+open interest": [
+          552,
+          46,
+          262
+        ],
+        "logit_vol+funding": [
+          552,
+          28,
+          262
+        ],
+        "gbm_vol+funding": [
+          552,
+          26,
+          262
+        ],
+        "logit_vol+other activity": [
+          552,
+          35,
+          262
+        ],
+        "gbm_vol+other activity": [
+          552,
+          28,
+          262
+        ],
+        "base_b": [
+          552,
+          46,
+          262
+        ]
+      },
+      "n_months": 36,
+      "n_rows": 11028,
+      "n_pos": 262,
+      "test_lives": 96,
+      "folds": [
+        {
+          "test": "2023-01 to 2023-06",
+          "n_train": 3138,
+          "train_pos": 53,
+          "n_test": 1019,
+          "test_pos": 5,
+          "C": 0.003,
+          "inner_val": "2021-10 to 2022-09",
+          "inner_val_pos": 48,
+          "n_trees": 20
+        },
+        {
+          "test": "2023-07 to 2023-12",
+          "n_train": 4049,
+          "train_pos": 62,
+          "n_test": 1275,
+          "test_pos": 4,
+          "C": 0.01,
+          "inner_val": "2022-04 to 2023-03",
+          "inner_val_pos": 30,
+          "n_trees": 20
+        },
+        {
+          "test": "2024-01 to 2024-06",
+          "n_train": 5177,
+          "train_pos": 65,
+          "n_test": 1553,
+          "test_pos": 46,
+          "C": 1.0,
+          "inner_val": "2022-10 to 2023-09",
+          "inner_val_pos": 12,
+          "n_trees": 20
+        },
+        {
+          "test": "2024-07 to 2024-12",
+          "n_train": 6634,
+          "train_pos": 99,
+          "n_test": 1786,
+          "test_pos": 43,
+          "C": 3.0,
+          "inner_val": "2023-04 to 2024-03",
+          "inner_val_pos": 37,
+          "n_trees": 36
+        },
+        {
+          "test": "2025-01 to 2025-06",
+          "n_train": 8246,
+          "train_pos": 125,
+          "n_test": 2356,
+          "test_pos": 35,
+          "C": 1.0,
+          "inner_val": "2023-10 to 2024-09",
+          "inner_val_pos": 60,
+          "n_trees": 20
+        },
+        {
+          "test": "2025-07 to 2025-12",
+          "n_train": 10302,
+          "train_pos": 180,
+          "n_test": 3039,
+          "test_pos": 129,
+          "C": 1.0,
+          "inner_val": "2024-04 to 2025-03",
+          "inner_val_pos": 81,
+          "n_trees": 20
+        }
+      ],
+      "shap": {
+        "test": "2025-07 to 2025-12",
+        "features": [
+          {
+            "feature": "oi_rank_pct",
+            "mean_abs": 0.193,
+            "share": "25%",
+            "corr": -0.9
+          },
+          {
+            "feature": "funding_interval_min_h",
+            "mean_abs": 0.068,
+            "share": "9%",
+            "corr": -0.73
+          },
+          {
+            "feature": "funding_abs_mean",
+            "mean_abs": 0.05,
+            "share": "7%",
+            "corr": 0.58
+          },
+          {
+            "feature": "trades_rank_pct",
+            "mean_abs": 0.041,
+            "share": "5%",
+            "corr": -0.6
+          },
+          {
+            "feature": "max_dd_life",
+            "mean_abs": 0.036,
+            "share": "5%",
+            "corr": -0.37
+          },
+          {
+            "feature": "log_oi",
+            "mean_abs": 0.036,
+            "share": "5%",
+            "corr": -0.68
+          },
+          {
+            "feature": "ret_6m",
+            "mean_abs": 0.032,
+            "share": "4%",
+            "corr": -0.29
+          },
+          {
+            "feature": "ls_toptrader_account_month_end",
+            "mean_abs": 0.032,
+            "share": "4%",
+            "corr": 0.62
+          },
+          {
+            "feature": "log_avg_trade",
+            "mean_abs": 0.028,
+            "share": "4%",
+            "corr": -0.52
+          },
+          {
+            "feature": "log_price",
+            "mean_abs": 0.027,
+            "share": "4%",
+            "corr": -0.63
+          },
+          {
+            "feature": "dlog_oi_3m",
+            "mean_abs": 0.024,
+            "share": "3%",
+            "corr": 0.55
+          },
+          {
+            "feature": "log_age",
+            "mean_abs": 0.023,
+            "share": "3%",
+            "corr": 0.11
+          },
+          {
+            "feature": "log_qv_median",
+            "mean_abs": 0.018,
+            "share": "2%",
+            "corr": -0.55
+          },
+          {
+            "feature": "realized_vol",
+            "mean_abs": 0.018,
+            "share": "2%",
+            "corr": 0.24
+          },
+          {
+            "feature": "ret_3m",
+            "mean_abs": 0.016,
+            "share": "2%",
+            "corr": 0.13
+          },
+          {
+            "feature": "dlog_qv_3m_rank",
+            "mean_abs": 0.014,
+            "share": "2%",
+            "corr": 0.49
+          },
+          {
+            "feature": "ret_3m_rank",
+            "mean_abs": 0.012,
+            "share": "2%",
+            "corr": -0.02
+          },
+          {
+            "feature": "funding_mean",
+            "mean_abs": 0.011,
+            "share": "1%",
+            "corr": 0.09
+          },
+          {
+            "feature": "ls_account_month_end",
+            "mean_abs": 0.009,
+            "share": "1%",
+            "corr": 0.63
+          },
+          {
+            "feature": "log_oi_to_qv",
+            "mean_abs": 0.009,
+            "share": "1%",
+            "corr": 0.01
+          },
+          {
+            "feature": "log_trades_rel_peak",
+            "mean_abs": 0.008,
+            "share": "1%",
+            "corr": 0.41
+          },
+          {
+            "feature": "qv_rank_pct",
+            "mean_abs": 0.008,
+            "share": "1%",
+            "corr": -0.16
+          },
+          {
+            "feature": "dd_life_month_end",
+            "mean_abs": 0.007,
+            "share": "1%",
+            "corr": -0.29
+          },
+          {
+            "feature": "dlog_trades_3m",
+            "mean_abs": 0.007,
+            "share": "1%",
+            "corr": 0.28
+          },
+          {
+            "feature": "ret_month",
+            "mean_abs": 0.007,
+            "share": "1%",
+            "corr": 0.35
+          },
+          {
+            "feature": "log_trades",
+            "mean_abs": 0.006,
+            "share": "1%",
+            "corr": 0.21
+          },
+          {
+            "feature": "dlog_qv_3m",
+            "mean_abs": 0.005,
+            "share": "1%",
+            "corr": 0.32
+          },
+          {
+            "feature": "mean_range",
+            "mean_abs": 0.005,
+            "share": "1%",
+            "corr": 0.12
+          },
+          {
+            "feature": "taker_buy_share",
+            "mean_abs": 0.004,
+            "share": "1%",
+            "corr": 0.49
+          },
+          {
+            "feature": "dlog_trades_6m",
+            "mean_abs": 0.004,
+            "share": "1%",
+            "corr": -0.21
+          },
+          {
+            "feature": "dlog_qv_6m",
+            "mean_abs": 0.003,
+            "share": "0%",
+            "corr": 0.49
+          },
+          {
+            "feature": "log_qv_rel_peak",
+            "mean_abs": 0.002,
+            "share": "0%",
+            "corr": -0.07
+          },
+          {
+            "feature": "log_qv",
+            "mean_abs": 0.001,
+            "share": "0%",
+            "corr": 0.02
+          },
+          {
+            "feature": "funding_interval_shortened",
+            "mean_abs": 0.0,
+            "share": "0%",
+            "corr": null
+          },
+          {
+            "feature": "zero_volume_days",
+            "mean_abs": 0.0,
+            "share": "0%",
+            "corr": null
+          }
+        ],
+        "groups": [
+          {
+            "group": "open interest",
+            "mean_abs": 0.303,
+            "share": "40%"
+          },
+          {
+            "group": "price and drawdown",
+            "mean_abs": 0.138,
+            "share": "18%"
+          },
+          {
+            "group": "funding",
+            "mean_abs": 0.13,
+            "share": "17%"
+          },
+          {
+            "group": "volume level",
+            "mean_abs": 0.102,
+            "share": "13%"
+          },
+          {
+            "group": "volume trend",
+            "mean_abs": 0.045,
+            "share": "6%"
+          },
+          {
+            "group": "volatility",
+            "mean_abs": 0.023,
+            "share": "3%"
+          },
+          {
+            "group": "age",
+            "mean_abs": 0.023,
+            "share": "3%"
+          },
+          {
+            "group": "other activity",
+            "mean_abs": 0.004,
+            "share": "1%"
+          }
+        ]
+      },
+      "hazard": [
+        {
+          "feature": "qv_rank_pct",
+          "or": 0.24001854151529128,
+          "lo": 0.15863585466743224,
+          "hi": 0.3074062783260113,
+          "sd": 0.2884900499178699
+        },
+        {
+          "feature": "dlog_qv_3m",
+          "or": 0.9597925279737752,
+          "lo": 0.7247024409742541,
+          "hi": 1.2476864289760976,
+          "sd": 1.00363352247282
+        },
+        {
+          "feature": "log_qv_rel_peak",
+          "or": 1.0097523029082522,
+          "lo": 0.7345577156631318,
+          "hi": 1.4358178728399018,
+          "sd": 1.2579797801382253
+        },
+        {
+          "feature": "log_age",
+          "or": 0.9906739757069987,
+          "lo": 0.6655992967313603,
+          "hi": 1.5991532362199719,
+          "sd": 1.0760075378296559
+        },
+        {
+          "feature": "dd_life_month_end",
+          "or": 0.8533472437623101,
+          "lo": 0.5455641192342928,
+          "hi": 1.4456597156483133,
+          "sd": 0.27041108668241376
+        },
+        {
+          "feature": "ret_3m",
+          "or": 0.8240543752199816,
+          "lo": 0.6012802619866128,
+          "hi": 1.1008755713780392,
+          "sd": 0.649834848320431
+        },
+        {
+          "feature": "realized_vol",
+          "or": 2.0618956101183183,
+          "lo": 1.5633963777173263,
+          "hi": 2.7629913550018865,
+          "sd": 0.03060320256311641
+        },
+        {
+          "feature": "log_oi_to_qv",
+          "or": 0.7547973832559041,
+          "lo": 0.5638083614063479,
+          "hi": 1.0361305608397247,
+          "sd": 0.6466156711547776
+        },
+        {
+          "feature": "funding_abs_mean",
+          "or": 1.3725629714542376,
+          "lo": 1.076620117613911,
+          "hi": 1.6455559355898417,
+          "sd": 0.0002291008210039958
+        }
+      ],
+      "hazard_gap": 1,
+      "hazard_events": 100,
+      "hazard_rows": 14599
+    },
+    "drop final full month": {
+      "point": {
+        "base": 0.016624040920716114,
+        "prec_logit_full": 0.06181818181818182,
+        "rec_logit_full": 0.18681318681318682,
+        "ap_logit_full": 0.060423602038927285,
+        "prec_gbm_full": 0.045454545454545456,
+        "rec_gbm_full": 0.13736263736263737,
+        "ap_gbm_full": 0.03270336409378993,
+        "prec_logit_vol": 0.04727272727272727,
+        "rec_logit_vol": 0.14285714285714285,
+        "ap_logit_vol": 0.028560908011618133,
+        "prec_gbm_vol": 0.03090909090909091,
+        "rec_gbm_vol": 0.09340659340659341,
+        "ap_gbm_vol": 0.028194108929364622,
+        "prec_logit_vol+age": 0.045454545454545456,
+        "rec_logit_vol+age": 0.13736263736263737,
+        "ap_logit_vol+age": 0.02897789627242873,
+        "prec_gbm_vol+age": 0.02181818181818182,
+        "rec_gbm_vol+age": 0.06593406593406594,
+        "ap_gbm_vol+age": 0.02645536084091449,
+        "prec_logit_vol+price and drawdown": 0.05272727272727273,
+        "rec_logit_vol+price and drawdown": 0.15934065934065933,
+        "ap_logit_vol+price and drawdown": 0.03489400341227512,
+        "prec_gbm_vol+price and drawdown": 0.03090909090909091,
+        "rec_gbm_vol+price and drawdown": 0.09340659340659341,
+        "ap_gbm_vol+price and drawdown": 0.02703705396048157,
+        "prec_logit_vol+volatility": 0.045454545454545456,
+        "rec_logit_vol+volatility": 0.13736263736263737,
+        "ap_logit_vol+volatility": 0.0290664910068901,
+        "prec_gbm_vol+volatility": 0.02727272727272727,
+        "rec_gbm_vol+volatility": 0.08241758241758242,
+        "ap_gbm_vol+volatility": 0.028402410070145462,
+        "prec_logit_vol+open interest": 0.056363636363636366,
+        "rec_logit_vol+open interest": 0.17032967032967034,
+        "ap_logit_vol+open interest": 0.043037929573317056,
+        "prec_gbm_vol+open interest": 0.05272727272727273,
+        "rec_gbm_vol+open interest": 0.15934065934065933,
+        "ap_gbm_vol+open interest": 0.03750361918265069,
+        "prec_logit_vol+funding": 0.04181818181818182,
+        "rec_logit_vol+funding": 0.12637362637362637,
+        "ap_logit_vol+funding": 0.032076756092160395,
+        "prec_gbm_vol+funding": 0.025454545454545455,
+        "rec_gbm_vol+funding": 0.07692307692307693,
+        "ap_gbm_vol+funding": 0.028926328882836895,
+        "prec_logit_vol+other activity": 0.045454545454545456,
+        "rec_logit_vol+other activity": 0.13736263736263737,
+        "ap_logit_vol+other activity": 0.027967745210754125,
+        "prec_gbm_vol+other activity": 0.025454545454545455,
+        "rec_gbm_vol+other activity": 0.07692307692307693,
+        "ap_gbm_vol+other activity": 0.025520307988105336,
+        "prec_base_b": 0.05454545454545454,
+        "rec_base_b": 0.16483516483516483,
+        "ap_base_b": 0.04026470299670585,
+        "prec_logit_full_minus_b": 0.007272727272727278,
+        "rec_logit_full_minus_b": 0.021978021978021983,
+        "ap_logit_full_minus_b": 0.020158899042221436,
+        "prec_gbm_full_minus_b": -0.009090909090909087,
+        "rec_gbm_full_minus_b": -0.027472527472527458,
+        "ap_gbm_full_minus_b": -0.007561338902915916,
+        "prec_logit_vol_minus_b": -0.007272727272727271,
+        "rec_logit_vol_minus_b": -0.021978021978021983,
+        "ap_logit_vol_minus_b": -0.011703794985087716,
+        "prec_gbm_vol_minus_b": -0.023636363636363632,
+        "rec_gbm_vol_minus_b": -0.07142857142857142,
+        "ap_gbm_vol_minus_b": -0.012070594067341227,
+        "prec_logit_vol+age_minus_b": -0.009090909090909087,
+        "rec_logit_vol+age_minus_b": -0.027472527472527458,
+        "ap_logit_vol+age_minus_b": -0.01128680672427712,
+        "prec_gbm_vol+age_minus_b": -0.03272727272727272,
+        "rec_gbm_vol+age_minus_b": -0.0989010989010989,
+        "ap_gbm_vol+age_minus_b": -0.013809342155791358,
+        "prec_logit_vol+price and drawdown_minus_b": -0.001818181818181816,
+        "rec_logit_vol+price and drawdown_minus_b": -0.005494505494505503,
+        "ap_logit_vol+price and drawdown_minus_b": -0.005370699584430733,
+        "prec_gbm_vol+price and drawdown_minus_b": -0.023636363636363632,
+        "rec_gbm_vol+price and drawdown_minus_b": -0.07142857142857142,
+        "ap_gbm_vol+price and drawdown_minus_b": -0.013227649036224278,
+        "prec_logit_vol+volatility_minus_b": -0.009090909090909087,
+        "rec_logit_vol+volatility_minus_b": -0.027472527472527458,
+        "ap_logit_vol+volatility_minus_b": -0.01119821198981575,
+        "prec_gbm_vol+volatility_minus_b": -0.02727272727272727,
+        "rec_gbm_vol+volatility_minus_b": -0.08241758241758242,
+        "ap_gbm_vol+volatility_minus_b": -0.011862292926560387,
+        "prec_logit_vol+open interest_minus_b": 0.001818181818181823,
+        "rec_logit_vol+open interest_minus_b": 0.005494505494505503,
+        "ap_logit_vol+open interest_minus_b": 0.002773226576611207,
+        "prec_gbm_vol+open interest_minus_b": -0.001818181818181816,
+        "rec_gbm_vol+open interest_minus_b": -0.005494505494505503,
+        "ap_gbm_vol+open interest_minus_b": -0.002761083814055161,
+        "prec_logit_vol+funding_minus_b": -0.012727272727272726,
+        "rec_logit_vol+funding_minus_b": -0.038461538461538464,
+        "ap_logit_vol+funding_minus_b": -0.008187946904545454,
+        "prec_gbm_vol+funding_minus_b": -0.029090909090909087,
+        "rec_gbm_vol+funding_minus_b": -0.0879120879120879,
+        "ap_gbm_vol+funding_minus_b": -0.011338374113868954,
+        "prec_logit_vol+other activity_minus_b": -0.009090909090909087,
+        "rec_logit_vol+other activity_minus_b": -0.027472527472527458,
+        "ap_logit_vol+other activity_minus_b": -0.012296957785951725,
+        "prec_gbm_vol+other activity_minus_b": -0.029090909090909087,
+        "rec_gbm_vol+other activity_minus_b": -0.0879120879120879,
+        "ap_gbm_vol+other activity_minus_b": -0.014744395008600513,
+        "brier_ref": 0.01638052474762099,
+        "brier_logit_full": 0.01610161959372806,
+        "brier_gbm_full": 0.016316426743652718,
+        "brier_logit_full_platt": 0.016336611862495163,
+        "brier_logit_full_isotonic": 0.01638863150119545,
+        "brier_gbm_full_platt": 0.016407991652793677,
+        "brier_gbm_full_isotonic": 0.016396594061491764,
+        "bss_logit_full": 0.017026631209322907,
+        "bss_gbm_full": 0.003913061697097375,
+        "bss_logit_full_platt": 0.002680798436094367,
+        "bss_logit_full_isotonic": -0.000494901946022086,
+        "bss_gbm_full_platt": -0.001676802519813947,
+        "bss_gbm_full_isotonic": -0.0009810011656132822
+      },
+      "ci": {
+        "base": [
+          0.008746537140308873,
+          0.022721739870616275
+        ],
+        "prec_logit_full": [
+          0.016915033979178717,
+          0.09369473564683557
+        ],
+        "rec_logit_full": [
+          0.0813825239398085,
+          0.23426623376623376
+        ],
+        "ap_logit_full": [
+          0.0198850324630577,
+          0.0919884282103465
+        ],
+        "prec_gbm_full": [
+          0.015408826693958955,
+          0.07045208006714489
+        ],
+        "rec_gbm_full": [
+          0.06861631016042781,
+          0.18110378865685267
+        ],
+        "ap_gbm_full": [
+          0.011813509984555621,
+          0.054808167528525166
+        ],
+        "prec_logit_vol": [
+          0.02163138440860215,
+          0.06702149308532286
+        ],
+        "rec_logit_vol": [
+          0.09027308558558558,
+          0.19469026548672566
+        ],
+        "ap_logit_vol": [
+          0.012175166618633713,
+          0.04641870378520428
+        ],
+        "prec_gbm_vol": [
+          0.015935462919692996,
+          0.046968521788936075
+        ],
+        "rec_gbm_vol": [
+          0.04979206173372636,
+          0.183213110161776
+        ],
+        "ap_gbm_vol": [
+          0.015831918314062745,
+          0.04158489716461042
+        ],
+        "prec_logit_vol+age": [
+          0.021171534348004936,
+          0.06344039006810291
+        ],
+        "rec_logit_vol+age": [
+          0.0896779887415323,
+          0.1830372862173038
+        ],
+        "ap_logit_vol+age": [
+          0.011843326993747641,
+          0.04611801587076383
+        ],
+        "prec_gbm_vol+age": [
+          0.006592685214129416,
+          0.035853344768439085
+        ],
+        "rec_gbm_vol+age": [
+          0.020317073170731708,
+          0.14705882352941177
+        ],
+        "ap_gbm_vol+age": [
+          0.013995965183921717,
+          0.038036259509016665
+        ],
+        "prec_logit_vol+price and drawdown": [
+          0.02368906072448103,
+          0.07900442815697052
+        ],
+        "rec_logit_vol+price and drawdown": [
+          0.11178398895790201,
+          0.2212407514870158
+        ],
+        "ap_logit_vol+price and drawdown": [
+          0.01431759702190671,
+          0.05505746564807385
+        ],
+        "prec_gbm_vol+price and drawdown": [
+          0.013697294987850142,
+          0.04826850094876659
+        ],
+        "rec_gbm_vol+price and drawdown": [
+          0.05185089234312032,
+          0.16093501326259937
+        ],
+        "ap_gbm_vol+price and drawdown": [
+          0.013251261450465965,
+          0.043178005949437714
+        ],
+        "prec_logit_vol+volatility": [
+          0.017658103485918057,
+          0.06772999576784436
+        ],
+        "rec_logit_vol+volatility": [
+          0.07339449541284404,
+          0.1956521739130435
+        ],
+        "ap_logit_vol+volatility": [
+          0.012047338370635013,
+          0.04794070399802073
+        ],
+        "prec_gbm_vol+volatility": [
+          0.013301571642068043,
+          0.04152421206755225
+        ],
+        "rec_gbm_vol+volatility": [
+          0.04443952802359882,
+          0.14869587329264725
+        ],
+        "ap_gbm_vol+volatility": [
+          0.01537946546834504,
+          0.043110424711475435
+        ],
+        "prec_logit_vol+open interest": [
+          0.019801001839314367,
+          0.08232263840495545
+        ],
+        "rec_logit_vol+open interest": [
+          0.08999358974358974,
+          0.21761734227369703
+        ],
+        "ap_logit_vol+open interest": [
+          0.014462471825897518,
+          0.07246741701232606
+        ],
+        "prec_gbm_vol+open interest": [
+          0.020479447112906883,
+          0.07921184975640419
+        ],
+        "rec_gbm_vol+open interest": [
+          0.08974358974358974,
+          0.19931818181818173
+        ],
+        "ap_gbm_vol+open interest": [
+          0.01626460713134273,
+          0.060788942492900844
+        ],
+        "prec_logit_vol+funding": [
+          0.017786341677646027,
+          0.06250287753222834
+        ],
+        "rec_logit_vol+funding": [
+          0.07618788819875777,
+          0.18519473081328744
+        ],
+        "ap_logit_vol+funding": [
+          0.014724942490567173,
+          0.04919208627635076
+        ],
+        "prec_gbm_vol+funding": [
+          0.013006900911341726,
+          0.038674924255925856
+        ],
+        "rec_gbm_vol+funding": [
+          0.045247590561648385,
+          0.13955118452510315
+        ],
+        "ap_gbm_vol+funding": [
+          0.01538688220475173,
+          0.04131180388790499
+        ],
+        "prec_logit_vol+other activity": [
+          0.0195693652684421,
+          0.06653153153153152
+        ],
+        "rec_logit_vol+other activity": [
+          0.08695652173913043,
+          0.18902851021753458
+        ],
+        "ap_logit_vol+other activity": [
+          0.011703631512274588,
+          0.04621252234020349
+        ],
+        "prec_gbm_vol+other activity": [
+          0.011718178910818713,
+          0.03861928985311952
+        ],
+        "rec_gbm_vol+other activity": [
+          0.034999125874125875,
+          0.1466912751677851
+        ],
+        "ap_gbm_vol+other activity": [
+          0.013901641187940864,
+          0.03534354138168978
+        ],
+        "prec_base_b": [
+          0.020660979217934312,
+          0.08213128729752768
+        ],
+        "rec_base_b": [
+          0.0931344049247606,
+          0.2248110465116279
+        ],
+        "ap_base_b": [
+          0.014493236887837298,
+          0.06003865554989818
+        ],
+        "prec_logit_full_minus_b": [
+          -0.0193050193050193,
+          0.022302307462147113
+        ],
+        "rec_logit_full_minus_b": [
+          -0.08039739461358314,
+          0.06285804132973945
+        ],
+        "ap_logit_full_minus_b": [
+          -0.004397336017471541,
+          0.04465865508074061
+        ],
+        "prec_gbm_full_minus_b": [
+          -0.023051696070265765,
+          0.004484809922029649
+        ],
+        "rec_gbm_full_minus_b": [
+          -0.08088235294117646,
+          0.014829059829059759
+        ],
+        "ap_gbm_full_minus_b": [
+          -0.023202375448360492,
+          0.012426843215188391
+        ],
+        "prec_logit_vol_minus_b": [
+          -0.021594684385382056,
+          0.007797270955165692
+        ],
+        "rec_logit_vol_minus_b": [
+          -0.0625,
+          0.033615805872910944
+        ],
+        "ap_logit_vol_minus_b": [
+          -0.0244731876808112,
+          0.005932134161205908
+        ],
+        "prec_gbm_vol_minus_b": [
+          -0.04972423073642713,
+          0.00604869257086999
+        ],
+        "rec_gbm_vol_minus_b": [
+          -0.12396854378883977,
+          0.029451664386684694
+        ],
+        "ap_gbm_vol_minus_b": [
+          -0.029459880403544445,
+          0.01337835394463195
+        ],
+        "prec_logit_vol+age_minus_b": [
+          -0.023391812865497075,
+          0.005847953216374269
+        ],
+        "rec_logit_vol+age_minus_b": [
+          -0.06859294259219934,
+          0.025331212697579795
+        ],
+        "ap_logit_vol+age_minus_b": [
+          -0.024645770960533126,
+          0.0069920122384327845
+        ],
+        "prec_gbm_vol+age_minus_b": [
+          -0.06331280021348515,
+          0.001845189285226184
+        ],
+        "rec_gbm_vol+age_minus_b": [
+          -0.16087221633085894,
+          0.008131747301079562
+        ],
+        "ap_gbm_vol+age_minus_b": [
+          -0.031010116993359236,
+          0.010027449456652343
+        ],
+        "prec_logit_vol+price and drawdown_minus_b": [
+          -0.01907019577157031,
+          0.018581867082818847
+        ],
+        "rec_logit_vol+price and drawdown_minus_b": [
+          -0.0640025641025641,
+          0.07059518295507175
+        ],
+        "ap_logit_vol+price and drawdown_minus_b": [
+          -0.01980469091756188,
+          0.018021205121203993
+        ],
+        "prec_gbm_vol+price and drawdown_minus_b": [
+          -0.04200433854214351,
+          -0.0018079131747976193
+        ],
+        "rec_gbm_vol+price and drawdown_minus_b": [
+          -0.11275039085401602,
+          -0.0067114093959731586
+        ],
+        "ap_gbm_vol+price and drawdown_minus_b": [
+          -0.028630754558198454,
+          0.009616284567919985
+        ],
+        "prec_logit_vol+volatility_minus_b": [
+          -0.025339985112230873,
+          0.007594177956253742
+        ],
+        "rec_logit_vol+volatility_minus_b": [
+          -0.07751937984496124,
+          0.03333798882681562
+        ],
+        "ap_logit_vol+volatility_minus_b": [
+          -0.02278702799603559,
+          0.006248827306128934
+        ],
+        "prec_gbm_vol+volatility_minus_b": [
+          -0.049780412179543605,
+          0.0
+        ],
+        "rec_gbm_vol+volatility_minus_b": [
+          -0.12887013634852013,
+          0.0
+        ],
+        "ap_gbm_vol+volatility_minus_b": [
+          -0.029856275073936518,
+          0.013497693302056473
+        ],
+        "prec_logit_vol+open interest_minus_b": [
+          -0.016097390796391248,
+          0.011111552729199788
+        ],
+        "rec_logit_vol+open interest_minus_b": [
+          -0.058838089691322086,
+          0.03763694461351188
+        ],
+        "ap_logit_vol+open interest_minus_b": [
+          -0.012944246624353927,
+          0.024608463373350323
+        ],
+        "prec_gbm_vol+open interest_minus_b": [
+          -0.020038261356030415,
+          0.01219565402460308
+        ],
+        "rec_gbm_vol+open interest_minus_b": [
+          -0.0703125,
+          0.043173287456990894
+        ],
+        "ap_gbm_vol+open interest_minus_b": [
+          -0.016998107354915713,
+          0.021092510674688567
+        ],
+        "prec_logit_vol+funding_minus_b": [
+          -0.03448424751354893,
+          0.008772411798727585
+        ],
+        "rec_logit_vol+funding_minus_b": [
+          -0.10051095815210505,
+          0.03497848305540604
+        ],
+        "ap_logit_vol+funding_minus_b": [
+          -0.022549554014901104,
+          0.010745019328093916
+        ],
+        "prec_gbm_vol+funding_minus_b": [
+          -0.054520099647211724,
+          0.0017486371653038296
+        ],
+        "rec_gbm_vol+funding_minus_b": [
+          -0.14634534721143388,
+          0.006103349799320751
+        ],
+        "ap_gbm_vol+funding_minus_b": [
+          -0.02837134583780231,
+          0.010739786773188457
+        ],
+        "prec_logit_vol+other activity_minus_b": [
+          -0.020479066788105644,
+          0.005425447074692408
+        ],
+        "rec_logit_vol+other activity_minus_b": [
+          -0.0625,
+          0.022390155961764212
+        ],
+        "ap_logit_vol+other activity_minus_b": [
+          -0.025614894199101103,
+          0.0060098793974948895
+        ],
+        "prec_gbm_vol+other activity_minus_b": [
+          -0.056199638429752063,
+          0.0019494129203216368
+        ],
+        "rec_gbm_vol+other activity_minus_b": [
+          -0.1395399614095664,
+          0.009436208445642394
+        ],
+        "ap_gbm_vol+other activity_minus_b": [
+          -0.031701085663898156,
+          0.007971739151463755
+        ],
+        "brier_ref": [
+          0.008672205648797055,
+          0.022347413252038217
+        ],
+        "brier_logit_full": [
+          0.008725597467397121,
+          0.02184480720360985
+        ],
+        "brier_gbm_full": [
+          0.008713916447425092,
+          0.022214944301901324
+        ],
+        "brier_logit_full_platt": [
+          0.008689301368544096,
+          0.022241347165696968
+        ],
+        "brier_logit_full_isotonic": [
+          0.00882367995122793,
+          0.022225534208979228
+        ],
+        "brier_gbm_full_platt": [
+          0.008733194514504333,
+          0.022315823830471655
+        ],
+        "brier_gbm_full_isotonic": [
+          0.0088244861720477,
+          0.022264514005058293
+        ],
+        "bss_logit_full": [
+          -0.006148440751517242,
+          0.029202578042930544
+        ],
+        "bss_gbm_full": [
+          -0.005649279411605468,
+          0.008121535889172317
+        ],
+        "bss_logit_full_platt": [
+          -0.007950043929748485,
+          0.007889737457279862
+        ],
+        "bss_logit_full_isotonic": [
+          -0.019043822458638848,
+          0.0073059571202964595
+        ],
+        "bss_gbm_full_platt": [
+          -0.00997170463436855,
+          0.0035388057623761213
+        ],
+        "bss_gbm_full_isotonic": [
+          -0.01665806940988619,
+          0.00568011256272979
+        ]
+      },
+      "alerts_total": {
+        "logit_full": [
+          550,
+          34,
+          182
+        ],
+        "gbm_full": [
+          550,
+          25,
+          182
+        ],
+        "logit_vol": [
+          550,
+          26,
+          182
+        ],
+        "gbm_vol": [
+          550,
+          17,
+          182
+        ],
+        "logit_vol+age": [
+          550,
+          25,
+          182
+        ],
+        "gbm_vol+age": [
+          550,
+          12,
+          182
+        ],
+        "logit_vol+price and drawdown": [
+          550,
+          29,
+          182
+        ],
+        "gbm_vol+price and drawdown": [
+          550,
+          17,
+          182
+        ],
+        "logit_vol+volatility": [
+          550,
+          25,
+          182
+        ],
+        "gbm_vol+volatility": [
+          550,
+          15,
+          182
+        ],
+        "logit_vol+open interest": [
+          550,
+          31,
+          182
+        ],
+        "gbm_vol+open interest": [
+          550,
+          29,
+          182
+        ],
+        "logit_vol+funding": [
+          550,
+          23,
+          182
+        ],
+        "gbm_vol+funding": [
+          550,
+          14,
+          182
+        ],
+        "logit_vol+other activity": [
+          550,
+          25,
+          182
+        ],
+        "gbm_vol+other activity": [
+          550,
+          14,
+          182
+        ],
+        "base_b": [
+          550,
+          30,
+          182
+        ]
+      },
+      "n_months": 36,
+      "n_rows": 10948,
+      "n_pos": 182,
+      "test_lives": 96,
+      "folds": [
+        {
+          "test": "2023-01 to 2023-06",
+          "n_train": 3122,
+          "train_pos": 37,
+          "n_test": 1017,
+          "test_pos": 3,
+          "C": 0.003,
+          "inner_val": "2021-10 to 2022-09",
+          "inner_val_pos": 34,
+          "n_trees": 22
+        },
+        {
+          "test": "2023-07 to 2023-12",
+          "n_train": 4028,
+          "train_pos": 41,
+          "n_test": 1274,
+          "test_pos": 3,
+          "C": 0.003,
+          "inner_val": "2022-04 to 2023-03",
+          "inner_val_pos": 17,
+          "n_trees": 41
+        },
+        {
+          "test": "2024-01 to 2024-06",
+          "n_train": 5155,
+          "train_pos": 43,
+          "n_test": 1538,
+          "test_pos": 31,
+          "C": 3.0,
+          "inner_val": "2022-10 to 2023-09",
+          "inner_val_pos": 6,
+          "n_trees": 20
+        },
+        {
+          "test": "2024-07 to 2024-12",
+          "n_train": 6607,
+          "train_pos": 72,
+          "n_test": 1773,
+          "test_pos": 30,
+          "C": 3.0,
+          "inner_val": "2023-04 to 2024-03",
+          "inner_val_pos": 31,
+          "n_trees": 20
+        },
+        {
+          "test": "2025-01 to 2025-06",
+          "n_train": 8206,
+          "train_pos": 85,
+          "n_test": 2345,
+          "test_pos": 24,
+          "C": 1.0,
+          "inner_val": "2023-10 to 2024-09",
+          "inner_val_pos": 42,
+          "n_trees": 20
+        },
+        {
+          "test": "2025-07 to 2025-12",
+          "n_train": 10241,
+          "train_pos": 119,
+          "n_test": 3001,
+          "test_pos": 91,
+          "C": 0.03,
+          "inner_val": "2024-04 to 2025-03",
+          "inner_val_pos": 47,
+          "n_trees": 20
+        }
+      ],
+      "shap": {
+        "test": "2025-07 to 2025-12",
+        "features": [
+          {
+            "feature": "oi_rank_pct",
+            "mean_abs": 0.158,
+            "share": "22%",
+            "corr": -0.88
+          },
+          {
+            "feature": "log_oi",
+            "mean_abs": 0.053,
+            "share": "7%",
+            "corr": -0.7
+          },
+          {
+            "feature": "funding_abs_mean",
+            "mean_abs": 0.048,
+            "share": "7%",
+            "corr": 0.32
+          },
+          {
+            "feature": "funding_interval_min_h",
+            "mean_abs": 0.047,
+            "share": "7%",
+            "corr": -0.56
+          },
+          {
+            "feature": "ret_6m",
+            "mean_abs": 0.043,
+            "share": "6%",
+            "corr": -0.23
+          },
+          {
+            "feature": "ret_3m",
+            "mean_abs": 0.042,
+            "share": "6%",
+            "corr": 0.1
+          },
+          {
+            "feature": "log_price",
+            "mean_abs": 0.038,
+            "share": "5%",
+            "corr": -0.64
+          },
+          {
+            "feature": "ls_toptrader_account_month_end",
+            "mean_abs": 0.034,
+            "share": "5%",
+            "corr": 0.63
+          },
+          {
+            "feature": "trades_rank_pct",
+            "mean_abs": 0.032,
+            "share": "5%",
+            "corr": -0.5
+          },
+          {
+            "feature": "dd_life_month_end",
+            "mean_abs": 0.024,
+            "share": "3%",
+            "corr": -0.38
+          },
+          {
+            "feature": "dlog_qv_3m_rank",
+            "mean_abs": 0.021,
+            "share": "3%",
+            "corr": 0.62
+          },
+          {
+            "feature": "dlog_oi_3m",
+            "mean_abs": 0.019,
+            "share": "3%",
+            "corr": 0.63
+          },
+          {
+            "feature": "dlog_trades_3m",
+            "mean_abs": 0.016,
+            "share": "2%",
+            "corr": 0.41
+          },
+          {
+            "feature": "ls_account_month_end",
+            "mean_abs": 0.016,
+            "share": "2%",
+            "corr": 0.64
+          },
+          {
+            "feature": "dlog_trades_6m",
+            "mean_abs": 0.015,
+            "share": "2%",
+            "corr": -0.38
+          },
+          {
+            "feature": "log_trades_rel_peak",
+            "mean_abs": 0.014,
+            "share": "2%",
+            "corr": 0.32
+          },
+          {
+            "feature": "max_dd_life",
+            "mean_abs": 0.014,
+            "share": "2%",
+            "corr": -0.34
+          },
+          {
+            "feature": "ret_month",
+            "mean_abs": 0.012,
+            "share": "2%",
+            "corr": 0.37
+          },
+          {
+            "feature": "log_age",
+            "mean_abs": 0.01,
+            "share": "1%",
+            "corr": -0.45
+          },
+          {
+            "feature": "funding_mean",
+            "mean_abs": 0.01,
+            "share": "1%",
+            "corr": 0.07
+          },
+          {
+            "feature": "dlog_qv_3m",
+            "mean_abs": 0.009,
+            "share": "1%",
+            "corr": 0.37
+          },
+          {
+            "feature": "log_oi_to_qv",
+            "mean_abs": 0.007,
+            "share": "1%",
+            "corr": 0.38
+          },
+          {
+            "feature": "qv_rank_pct",
+            "mean_abs": 0.006,
+            "share": "1%",
+            "corr": -0.28
+          },
+          {
+            "feature": "ret_3m_rank",
+            "mean_abs": 0.005,
+            "share": "1%",
+            "corr": -0.33
+          },
+          {
+            "feature": "log_qv_rel_peak",
+            "mean_abs": 0.005,
+            "share": "1%",
+            "corr": -0.13
+          },
+          {
+            "feature": "taker_buy_share",
+            "mean_abs": 0.004,
+            "share": "1%",
+            "corr": -0.46
+          },
+          {
+            "feature": "realized_vol",
+            "mean_abs": 0.003,
+            "share": "0%",
+            "corr": -0.04
+          },
+          {
+            "feature": "mean_range",
+            "mean_abs": 0.003,
+            "share": "0%",
+            "corr": -0.2
+          },
+          {
+            "feature": "dlog_qv_6m",
+            "mean_abs": 0.002,
+            "share": "0%",
+            "corr": -0.02
+          },
+          {
+            "feature": "log_avg_trade",
+            "mean_abs": 0.002,
+            "share": "0%",
+            "corr": 0.28
+          },
+          {
+            "feature": "log_trades",
+            "mean_abs": 0.002,
+            "share": "0%",
+            "corr": -0.5
+          },
+          {
+            "feature": "log_qv_median",
+            "mean_abs": 0.001,
+            "share": "0%",
+            "corr": -0.3
+          },
+          {
+            "feature": "log_qv",
+            "mean_abs": 0.001,
+            "share": "0%",
+            "corr": 0.28
+          },
+          {
+            "feature": "funding_interval_shortened",
+            "mean_abs": 0.0,
+            "share": "0%",
+            "corr": null
+          },
+          {
+            "feature": "zero_volume_days",
+            "mean_abs": 0.0,
+            "share": "0%",
+            "corr": null
+          }
+        ],
+        "groups": [
+          {
+            "group": "open interest",
+            "mean_abs": 0.287,
+            "share": "40%"
+          },
+          {
+            "group": "price and drawdown",
+            "mean_abs": 0.178,
+            "share": "25%"
+          },
+          {
+            "group": "funding",
+            "mean_abs": 0.105,
+            "share": "15%"
+          },
+          {
+            "group": "volume trend",
+            "mean_abs": 0.082,
+            "share": "11%"
+          },
+          {
+            "group": "volume level",
+            "mean_abs": 0.045,
+            "share": "6%"
+          },
+          {
+            "group": "age",
+            "mean_abs": 0.01,
+            "share": "1%"
+          },
+          {
+            "group": "volatility",
+            "mean_abs": 0.006,
+            "share": "1%"
+          },
+          {
+            "group": "other activity",
+            "mean_abs": 0.004,
+            "share": "1%"
+          }
+        ]
+      },
+      "hazard": [
+        {
+          "feature": "qv_rank_pct",
+          "or": 0.35045893905680375,
+          "lo": 0.25233753132100656,
+          "hi": 0.4499043963194515,
+          "sd": 0.28812526317732057
+        },
+        {
+          "feature": "dlog_qv_3m",
+          "or": 0.941206806754911,
+          "lo": 0.7192741656444366,
+          "hi": 1.183137858449474,
+          "sd": 1.0034756679172794
+        },
+        {
+          "feature": "log_qv_rel_peak",
+          "or": 1.1043530108576105,
+          "lo": 0.8069697767768758,
+          "hi": 1.5143284062664062,
+          "sd": 1.2578267007402615
+        },
+        {
+          "feature": "log_age",
+          "or": 0.8197670452208854,
+          "lo": 0.594226653710717,
+          "hi": 1.15505416696808,
+          "sd": 1.0772910962085265
+        },
+        {
+          "feature": "dd_life_month_end",
+          "or": 0.8906637693174346,
+          "lo": 0.592409460679208,
+          "hi": 1.283350651185868,
+          "sd": 0.2705972021431284
+        },
+        {
+          "feature": "ret_3m",
+          "or": 1.044542160897965,
+          "lo": 0.8290576405544728,
+          "hi": 1.3713792474778708,
+          "sd": 0.653586131403044
+        },
+        {
+          "feature": "realized_vol",
+          "or": 1.4288940697808916,
+          "lo": 1.1267581518899297,
+          "hi": 1.814918534126815,
+          "sd": 0.030504634495306895
+        },
+        {
+          "feature": "log_oi_to_qv",
+          "or": 0.8308551372859159,
+          "lo": 0.6510070191422483,
+          "hi": 1.0310049763566125,
+          "sd": 0.6458731330033185
+        },
+        {
+          "feature": "funding_abs_mean",
+          "or": 1.2473226102533965,
+          "lo": 1.0645826018083335,
+          "hi": 1.4732571310967628,
+          "sd": 0.00022887184549931096
+        }
+      ],
+      "hazard_gap": 2,
+      "hazard_events": 106,
+      "hazard_rows": 14499
+    }
+  }
+}
