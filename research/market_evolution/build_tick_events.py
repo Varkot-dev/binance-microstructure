@@ -1046,11 +1046,17 @@ def time_check(r: dict) -> str:
     tol = 30 if src.startswith("trades") else 120
     diff = (t1 - t0).total_seconds() / 60
     if src.startswith("trades"):
-        # a bin starting at the stated minute, or the bin after it, is a match
-        ok = 0 <= diff <= tol
-    else:
-        ok = -tol <= diff <= tol
-    return "matches" if ok else f"differs by {diff / 60:+.1f} h"
+        if diff == 0:
+            return "matches"
+        # the bin after the stated one is a match only if the stated bin is already mixed
+        at = r.get("coarse_share_bin_at_stated")
+        if diff == 30 and at is not None:
+            mixed = at < 0.99 if r.get("direction") == "cut" else at > 0.2
+            if mixed:
+                return "matches (switch inside the stated half hour)"
+        return f"differs by {diff / 60:+.1f} h"
+    ok = -tol <= diff <= tol
+    return "matches (2h klines)" if ok else f"differs by {diff / 60:+.1f} h (2h klines)"
 
 
 def stage_evaluate(cands: list[dict]) -> list[dict]:
@@ -1061,6 +1067,17 @@ def stage_evaluate(cands: list[dict]) -> list[dict]:
     median_bpr = float(np.median([x["zip_bytes"] / x["events"] for x in allrec
                                   if x.get("zip_bytes") and x.get("events")]))
     for r in rows:
+        # share on the coarser grid in the half hour before the stated minute and in
+        # the half hour that starts at it (a cut: 1.0 then lower; an increase: the reverse)
+        st = r.get("stated_time", "")
+        if len(st) >= 16 and st[11:13].isdigit() and r.get("old_exp") is not None:
+            path = CACHE / "agg" / r["symbol"] / f"{st[:10]}.json"
+            if path.exists() and path.stat().st_size > 2:
+                bins = _bins_hist(json.loads(path.read_text()))
+                i = int(st[11:13]) * 2 + int(st[14:16]) // 30
+                coarse = max(r["old_exp"], r["new_exp"])
+                r["coarse_share_bin_before_stated"] = grid_share(bins[i - 1], coarse)
+                r["coarse_share_bin_at_stated"] = grid_share(bins[i], coarse)
         r["time_check"] = time_check(r)
         r["events_per_day_pre_method"] = "trades" if r.get("pre_trade_days") else ""
         if r.get("pre_trade_days") or r.get("status") == "no-data":
@@ -1264,7 +1281,7 @@ TICK_COLS = ["symbol", "stated_time", "detected_time", "old_tick", "new_tick", "
              "rel_tick_before_bps", "rel_tick_after_bps", "events_per_day_pre", "status",
              "source", "time_check", "event", "listed_in_notes", "notice_code", "trade_days",
              "pre_trade_days", "events_per_day_pre_method", "trades_per_day_pre_klines", "coarse_share_pre",
-             "coarse_share_post"]
+             "coarse_share_post", "coarse_share_bin_before_stated", "coarse_share_bin_at_stated"]
 
 
 def write_csv(path: Path, rows: list[dict], cols: list[str]) -> None:

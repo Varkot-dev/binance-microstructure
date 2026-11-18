@@ -30,11 +30,11 @@ METRIC_LABEL = {
     "lift": "lift of gbm_all over majority",
     "gbm_minus_linear": "gbm_all minus linear",
 }
-COMPARISON_LABEL = {
-    "delisted_vs_survivors_2023": ("delisted", "survivors", "2023-06"),
-    "renamed_merged_vs_survivors_2023": ("renamed or merged", "survivors", "2023-06"),
-    "ended_vs_survivors_2023": ("all ended", "survivors", "2023-06"),
-    "new_vs_survivors_2026": ("new listings", "2023 survivors", "2026-07"),
+COMPARISON_LABEL = {  # (group adjective, control adjective, month)
+    "delisted_vs_survivors_2023": ("delisted", "survivor", "2023-06"),
+    "renamed_merged_vs_survivors_2023": ("renamed or merged", "survivor", "2023-06"),
+    "ended_vs_survivors_2023": ("ended", "survivor", "2023-06"),
+    "new_vs_survivors_2026": ("crypto new-listing", "2023 survivor", "2026-07"),
 }
 STATE_WORD = {"positive": "above zero", "negative": "below zero", "zero": "includes zero"}
 STATUS_LABEL = {
@@ -62,6 +62,12 @@ def _ci(d: dict | None, nd: int = 4) -> str:
     return f"{d['estimate']:+.{nd}f} [{d['ci95'][0]:+.{nd}f}, {d['ci95'][1]:+.{nd}f}]"
 
 
+def _ord(x: float) -> str:
+    n = round(x)
+    suffix = "th" if 10 <= n % 100 <= 20 else {1: "st", 2: "nd", 3: "rd"}.get(n % 10, "th")
+    return f"{n}{suffix}"
+
+
 def _pp(x: float | None) -> str:
     """Accuracy difference in percentage points."""
     return "n/a" if x is None else f"{100 * x:+.2f} pp"
@@ -71,7 +77,7 @@ def _distinguishable(d: dict | None) -> str:
     if not d:
         return "not estimable"
     return ("not distinguishable from zero" if d["state"] == "zero"
-            else f"distinguishable from zero ({'positive' if d['state'] == 'positive' else 'negative'})")
+            else f"distinguishable from zero, {'positive' if d['state'] == 'positive' else 'negative'}")
 
 
 # --------------------------------------------------------------------------
@@ -84,14 +90,14 @@ def comparison_sentence(result: dict, key: str, metric: str = "gbm_all") -> str:
     c = result["comparisons"][key][metric]
     treat, ctrl, month = COMPARISON_LABEL[key]
     if c["raw"] is None:
-        return (f"In {month}, {treat} ({c['n_treat']}) against {ctrl} ({c['n_ctrl']}): too "
+        return (f"In {month}, {treat} ({c['n_treat']}) against {ctrl} contracts ({c['n_ctrl']}): too "
                 f"few fitted contracts to compare {METRIC_LABEL[metric]}.")
     s = (f"In {month}, {treat} contracts ({c['n_treat']}) have a median "
          f"{METRIC_LABEL[metric]} of {_f(c['median_treat'])} against {_f(c['median_ctrl'])} "
-         f"for {ctrl} ({c['n_ctrl']}): a raw median difference of {_ci(c['raw'])}, "
+         f"for {ctrl} contracts ({c['n_ctrl']}): a raw median difference of {_ci(c['raw'])}, "
          f"{_distinguishable(c['raw'])}. Controlling for activity (OLS on log10 events plus "
          f"a group dummy, HC1), the group difference is {_ci(c['ols'])}, "
-         f"{_distinguishable(c['ols'])}; matched to the {ctrl.split()[-1][:-1]} contract with the "
+         f"{_distinguishable(c['ols'])}; matched to the {ctrl} contract with the "
          f"nearest log events (with replacement), it is {_ci(c['matched'])}, "
          f"{_distinguishable(c['matched'])}.")
     raw_s, ols_s = c["raw"]["state"], c["ols"]["state"]
@@ -102,8 +108,13 @@ def comparison_sentence(result: dict, key: str, metric: str = "gbm_all") -> str:
               f"{_f(c['median_log10_events_ctrl'], 2)}), and that accounts for it.")
     elif ols_s != "zero":
         word = "more" if ols_s == "positive" else "less"
-        s += (f" At equal activity, {treat} contracts were {word} predictable than {ctrl} by "
+        s += (f" At equal activity, {treat} contracts were {word} predictable than {ctrl} contracts by "
               f"this measure.")
+    elif c["matched"]["state"] != "zero":
+        word = "above" if c["matched"]["state"] == "positive" else "below"
+        s += (f" Only the matched comparison excludes zero ({word}); the raw and regression "
+              f"intervals include it, so a difference at equal activity is weak evidence that "
+              f"depends on the method.")
     else:
         sign = "above" if c["ols"]["estimate"] > 0 else "below"
         s += (f" Neither raw nor at equal activity is there a difference the data can "
@@ -124,6 +135,23 @@ def paired_sentence(result: dict, metric: str = "gbm_all") -> str:
             f"activity (intercept of the change on the change in log10 events, HC1) it is "
             f"{_ci(p['controlled'])}, {_distinguishable(p['controlled'])}, with a slope of "
             f"{_f(p['controlled']['slope_dlog10_events'], signed=True)} per decade of events.")
+
+
+def paired_components_sentence(result: dict) -> str:
+    """How the parts of the ladder moved between 2023-06 and the last month."""
+    bm = result["paired_last_vs_2023"]["by_metric"]
+    if bm["lift"]["median"] is None:
+        return ""
+    lift, lin, gap = bm["lift"], bm["linear"], bm["gbm_minus_linear"]
+    months = sorted(r["period"] for r in result["paired_last_vs_2023"]["rows"])
+    return (f"By rung, the median change in the lift over majority is {_ci(lift['median'])} "
+            f"({_distinguishable(lift['median'])}), in linear accuracy {_ci(lin['median'])} "
+            f"({_distinguishable(lin['median'])}) and in gbm_all minus linear "
+            f"{_ci(gap['median'])} ({_distinguishable(gap['median'])}; {gap['n_down']} of "
+            f"{gap['n']} contracts down), so by the last month a larger share of what is "
+            f"predictable is already in the linear rung. Because the last months fall between "
+            f"{months[0]} and {months[-1]}, this mixes the approach to the end with market-wide change "
+            f"over those years.")
 
 
 def representativeness(result: dict) -> tuple[str, float | None]:
@@ -151,8 +179,8 @@ def q9_sentence(result: dict) -> str:
     s = (f"Q9's {len(qp['rows'])} symbols have a median gbm_all accuracy of "
          f"{_f(m['median_q9'])}; the median over all {qp['n_full']} fitted 2023-06 coins is "
          f"{_ci(m['median_full'])} (survivors only: {_f(m['median_survivors'])}). The Q9 median "
-         f"sits at the {m['q9_median_pct_full']:.0f}th percentile of the full universe, and "
-         f"the Q9 symbols' activity at a median {pct_ev:.0f}th percentile (median log10 events "
+         f"sits at the {_ord(m['q9_median_pct_full'])} percentile of the full universe, and "
+         f"the Q9 symbols' activity at a median {_ord(pct_ev)} percentile (median log10 events "
          f"{_f(ev['median_q9'], 2)} against {_f(ev['median_full']['estimate'], 2)}).")
     if word == "overstates":
         s += (f" Q9's 10-symbol headline overstates the typical contract: it is "
@@ -163,6 +191,12 @@ def q9_sentence(result: dict) -> str:
     else:
         s += (f" Q9's 10-symbol headline is representative of the typical contract: the gap "
               f"of {_pp(gap)} lies inside the universe median's interval.")
+    lift = qp["metrics"].get("lift")
+    if lift:
+        s += (f" What the models add over the majority rule is typical, though: Q9's median "
+              f"lift, {_f(lift['median_q9'])}, sits at the "
+              f"{_ord(lift['q9_median_pct_full'])} percentile of the universe "
+              f"(median {_ci(lift['median_full'])}).")
     if "activity_predicted_gap_gbm_all" in qp and gap:
         s += (f" The activity slope alone predicts a gap of "
               f"{_pp(qp['activity_predicted_gap_gbm_all'])} for that difference in activity.")
@@ -207,6 +241,7 @@ def verdict_paragraph(result: dict) -> str:
         comparison_sentence(result, "delisted_vs_survivors_2023"),
         comparison_sentence(result, "renamed_merged_vs_survivors_2023"),
         paired_sentence(result),
+        paired_components_sentence(result),
         equity_sentence(result),
         comparison_sentence(result, "new_vs_survivors_2026"),
         q9_sentence(result),
@@ -248,7 +283,7 @@ def _comparison_table(result: dict) -> list[str]:
     for key, by_metric in result["comparisons"].items():
         treat, ctrl, month = COMPARISON_LABEL[key]
         for metric, c in by_metric.items():
-            L.append(f"| {treat} vs {ctrl}, {month} | {METRIC_LABEL[metric]} | "
+            L.append(f"| {treat} vs {ctrl} contracts, {month} | {METRIC_LABEL[metric]} | "
                      f"{c['n_treat']}, {c['n_ctrl']} | {_f(c['median_treat'])} | "
                      f"{_f(c['median_ctrl'])} | {_ci(c['raw'])} | {_ci(c['ols'])} | "
                      f"{_ci(c['matched'])} |")
@@ -284,6 +319,12 @@ def _caveats(result: dict) -> list[str]:
          "outside the frame. Sampled contracts flagged as equity perpetuals are dropped from "
          "the crypto group after the draw, so it is smaller than the draw. Zip size is an activity proxy, so the draw is stratified on the "
          "confound but is not the full population."),
+        ("- **Non-crypto contracts in 2026-07 are labelled by hand.** Stock, ETF and commodity "
+         "perpetuals are identified by a review of the ticker names plus a trade-time screen; "
+         "a crypto token on a ticker that happens to look like a stock, or an unrecognised "
+         "stock contract that trades round the clock, could be misplaced. The flagged "
+         "contracts are more predictable than either crypto group (see the 2026-07 table), so "
+         "pooling them would have moved the new-listing comparison."),
         ("- **One month per unit, seven test days.** Each unit is one month with Q9's split, "
          "so a unit's accuracy rests on its 7 or so test days; across-symbol intervals treat "
          "each unit's number as exact and include only the between-contract spread."),
@@ -322,7 +363,9 @@ def write_markdown(path: Path, result: dict) -> None:
             f"{', '.join(g['resumes'] for g in c23[s]['gaps'])})"
             for s in by_status.get("relisted", [])) + ". The brief listed MDTUSDT as alive in "
         "2026-07 with a gap; the inventory has no 2026-07 file for it, so it is treated as a "
-        "contract that stopped and came back and is left out of both comparison groups.",
+        "contract that stopped and came back and is left out of both comparison groups. The "
+        "2026-10 MDTUSDT trades near 93, as a stock-token perpetual on the reused ticker, so "
+        "it is not the same contract in any case.",
         "", "Renamed or migrated (successor verified in the inventory):", "",
         "| contract | last file | successor | successor first file | lag (months) |",
         "|---|---|---|---|---|"]
@@ -337,8 +380,8 @@ def write_markdown(path: Path, result: dict) -> None:
               f"{s} (last file {c23[s]['last_month']})" for s in by_status.get("index", [])) + ".",
           "", "Delisted (last archive file): " + ", ".join(
               f"{s} ({c23[s]['last_month']})" for s in by_status.get("delisted", [])) + ".",
-          "", (f"New-listing sample: the frame is the {nl['n_frame']} new listings with a "
-               f"complete 2026-07 ({nl['frame_zip_gb']:.1f} GB of zips); {nl['n_listed_in_2026_07']}"
+          "", (f"New-listing sample: the frame is the {nl['n_frame']} new listings first listed "
+               f"before 2026-07 ({nl['frame_zip_gb']:.1f} GB of 2026-07 zips); {nl['n_listed_in_2026_07']}"
                f" first listed in 2026-07 are outside it. {nl['per_decile']} were drawn from "
                f"each decile of 2026-07 zip size with seed {nl['seed']} "
                f"({len(nl['sample'])} in all; the list is in the JSON under "
@@ -409,7 +452,7 @@ def write_markdown(path: Path, result: dict) -> None:
                "names for stocks, ETFs and commodities, and the strict timing cuts above, which "
                "flag no known crypto contract, are a cross-check for names the review did not "
                "recognise. A unit is excluded if either label flags it. "
-               f"flagged: {len(eq['flagged'])}. Flagged units are summarised as their own row "
+               f"Flagged: {len(eq['flagged'])}. Flagged units are summarised as their own row "
                "and left out of every comparison."), ""]
         sess = [u for u in result["units"] if u["set"] == "cross_2026" and u.get("session")]
         for grp, keep in (
@@ -601,10 +644,10 @@ def plot(path: Path, result: dict) -> None:
     old = _fitted(result, "cross_2026", ("survivor", "survivor_gap"))
     new = _fitted(result, "cross_2026", ("new_listing",))
     _scatter(ax, old, _MUTED, "o", f"2023 survivors ({len(old)})")
-    _scatter(ax, new, _ORANGE, "s", f"new listings, sample ({len(new)})")
+    _scatter(ax, new, _ORANGE, "s", f"crypto new listings, sample ({len(new)})")
     eqs = _fitted(result, "cross_2026", ("new_listing_equity", "survivor_equity",
                                           "survivor_gap_equity"))
-    _scatter(ax, eqs, _AQUA, "^", f"equity-like, excluded ({len(eqs)})", size=36)
+    _scatter(ax, eqs, _AQUA, "^", f"stock, ETF or commodity, excluded ({len(eqs)})", size=36)
     _fit_line(ax, old, _MUTED)
     _fit_line(ax, new, _ORANGE, "--")
     ax.set_xlabel("log10 aggressor events in the month", fontsize=9, color=_INK)
@@ -626,7 +669,8 @@ def plot(path: Path, result: dict) -> None:
         v = [r["gbm_all_2023"] for r in rows] + [r["gbm_all_last"] for r in rows]
         lo, hi = min(v) - 0.01, max(v) + 0.01
         ax.plot([lo, hi], [lo, hi], color=_MUTED, linewidth=1, linestyle="--", zorder=1)
-        ax.text(hi, hi, " no change", fontsize=8, color=_MUTED, ha="right", va="bottom")
+        ax.text(hi - 0.002, hi - 0.006, "no change", fontsize=8, color=_MUTED, ha="right",
+                va="top", rotation=45, rotation_mode="anchor")
         ax.set_xlim(lo, hi)
         ax.set_ylim(lo, hi)
     ax.set_xlabel("gbm_all accuracy, 2023-06", fontsize=9, color=_INK)
