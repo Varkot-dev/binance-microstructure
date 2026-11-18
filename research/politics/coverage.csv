@@ -1,1 +1,2 @@
 platform,handle,first_post_utc,last_post_utc,rows,known_gaps,collected_by,notes
+x,EricTrump,2023-01-17T00:03:10Z,2023-08-25T16:21:59Z,61,not yet collected: 2023-09 to 2026-11; 2023-03 (passes disagreed); 2023-04 (passes disagreed),claude-desktop,"X search by month, 2 passes/month (3rd where they disagreed); 37 plain reposts skipped (X shows only the original post's time)"
