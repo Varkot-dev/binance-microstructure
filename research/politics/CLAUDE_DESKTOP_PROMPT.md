@@ -18,7 +18,8 @@ carefully: complete, correct timestamps matter far more than speed.
 ACCOUNTS (X handles), highest priority first:
 EricTrump, DonaldJTrumpJr, realDonaldTrump, POTUS, WhiteHouse, JDVance, DavidSacks,
 worldlibertyfi, GetTrumpMemes, SECGov, GaryGensler, SenLummis, SenatorHagerty, SenWarren,
-SenSchumer, RepMaxineWaters, KamalaHarris, elonmusk (do elonmusk last; he posts a lot).
+SenSchumer, RepMaxineWaters, KamalaHarris, JoeBiden, POTUS46Archive (the archived
+Biden-era presidential account), BarackObama, elonmusk (do elonmusk last; he posts a lot).
 First open each profile and confirm the handle exists and is the right person. If a
 handle is wrong or suspended, note it and move on.
 
@@ -70,7 +71,14 @@ WHERE TO SAVE:
   put the CSVs in research/politics/posts/, append the coverage rows to
   research/politics/coverage.csv, run
     python research/politics/validate_posts.py
-  fix anything it reports, then commit on a new branch named x-posts and push it.
+  fix anything it reports. The folder is git-ignored so post text never reaches main,
+  so push the files to a separate branch instead:
+    git checkout -b x-posts origin/main   (or git checkout x-posts if it exists)
+    git add -f research/politics/posts/x_*.csv research/politics/coverage.csv
+    git commit -m "X posts: <handles>"
+    git push -u origin x-posts
+  Push after each account is finished, so the analysis can start on the first ones.
+  Never merge or push this branch into main.
 - Otherwise save everything in a folder named politician_posts in my Downloads and tell
   me where, so I can upload it.
 
