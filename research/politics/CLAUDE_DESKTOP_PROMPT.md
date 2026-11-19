@@ -9,6 +9,8 @@ Before you start, two things to know:
   sign of trouble, but the risk is to your account, so it is your call.
 - **Public posts only.** Nothing private (DMs, protected accounts) is collected.
 
+**Collection order:** follow `COLLECTION_PLAN.md` in this folder (tiers and date windows); it overrides the account list below.
+
 ```text
 I'm collecting public posts by politicians for a research project that measures how their
 posts move crypto markets. Please collect posts with your browser tools, using my
