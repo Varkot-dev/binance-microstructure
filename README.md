@@ -280,3 +280,14 @@ site/            static results site; build_data.py derives site/data/*.json
 - The cross-section only includes symbols above one million aggressor events a month, and the
   2026 universe differs in composition from 2023 (tokenized-equity perpetuals, USDC-margined
   pairs). The shared cohort is 39 contracts.
+
+## Licences
+
+- **Code:** MIT (see [LICENSE](LICENSE)).
+- **Data derived from Binance:** the market data comes from data.binance.vision, which Binance
+  licenses under [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/). Data
+  files in this repository derived from it (for example the monthly panel, the contract
+  lifecycle table and the result tables) are shared under the same licence: attribution,
+  non-commercial use, share-alike.
+- **Politicians' posts:** post text is not stored in this repository; `research/politics/posts_index/`
+  holds post IDs, times and topic labels only.
