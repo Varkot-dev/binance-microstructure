@@ -16,8 +16,21 @@ git, so I couldn't quietly adjust it after seeing the results. A few results tha
 at first fell apart under stricter checks. I've kept those in and said so, because a clear "no"
 is still an answer.
 
+## The guiding question
+
+**On Hyperliquid, where every trader's history is public, does anyone have real skill, or are
+the winners just lucky?**
+
+Everything here builds toward that. The first parts show that public patterns and public news
+don't give traders an edge on Binance. The next step is to look at real, identifiable traders
+and pooled funds on Hyperliquid, correct for luck, and see who is left. Along the way it
+covers memecoins and rug pulls: who profits when a new token launches or collapses, and
+whether the warning signs show up early. The plan is in
+[research/hyperliquid](research/hyperliquid/).
+
 ## Contents
 
+- [The guiding question](#the-guiding-question)
 - [The short version](#the-short-version)
 - [1. How the market moves](#1-how-the-market-moves)
 - [2. Can it be predicted?](#2-can-it-be-predicted)
