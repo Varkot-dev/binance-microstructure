@@ -1,0 +1,7 @@
+article_code,type,symbol,life,release_time_utc,time_precision,contract_day,lead_days,lead_hours_to_day_start,status
+cfe97d52a8c840d3ba631835b637e9e7,delisting,XEMUSDT,1,2024-11-29,day,2024-12-09,10,240.0,delisted
+cfe97d52a8c840d3ba631835b637e9e7,delisting,ORBSUSDT,1,2024-11-29,day,2024-12-09,10,240.0,delisted
+cfe97d52a8c840d3ba631835b637e9e7,delisting,LOOMUSDT,1,2024-11-29,day,2024-12-09,10,240.0,delisted
+572715f2d96e47769ebbb967c2a6e445,delisting,REEFUSDT,1,2025-01-15,day,2025-01-22,7,168.0,delisted
+21e399dcea734230a3c181daf5407b64,delisting,DEFIUSDT,1,2025-08-06,day,2025-08-11,5,120.0,index
+21e399dcea734230a3c181daf5407b64,delisting,MEMEFIUSDT,1,2025-08-06,day,2025-08-11,5,120.0,delisted

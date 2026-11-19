@@ -8,6 +8,9 @@ Subcommands (run from the repository root):
 
     .venv/bin/python research/announcements/d1_inventory.py probe
         One request to Binance's announcement list endpoint; prints the HTTP outcome.
+    .venv/bin/python research/announcements/d1_inventory.py collect
+        Only when www.binance.com is reachable: list pages of catalogs 48 and 161 into
+        data/announcements/raw/ (git-ignored), 1 request per second, stops on refusal.
     .venv/bin/python research/announcements/d1_inventory.py ingest
         Parse saved list pages (data/announcements/raw/*.json, the JSON that
         www.binance.com/bapi/composite/v1/public/cms/article/list/query returns) into
@@ -19,7 +22,7 @@ Subcommands (run from the repository root):
         research/announcements/data/event_inventory.csv.
     .venv/bin/python research/announcements/d1_inventory.py match [--file PATH]
         Match an announcement table (announcements.csv, or a filled MANUAL_TEMPLATE.csv)
-        to contract lives and write research/announcements/data/matches.csv plus a
+        to contract lives and write research/announcements/data/matches_<stem>.csv plus a
         summary of lead times and unmatched cases.
 """
 from __future__ import annotations
@@ -382,7 +385,7 @@ def match(path: Path) -> None:
                         "status": life["status"]})
     OUT.mkdir(parents=True, exist_ok=True)
     if out:
-        with open(OUT / "matches.csv", "w", newline="") as fh:
+        with open(OUT / f"matches_{path.stem.lower()}.csv", "w", newline="") as fh:
             w = csv.DictWriter(fh, list(out[0]))
             w.writeheader()
             w.writerows(out)

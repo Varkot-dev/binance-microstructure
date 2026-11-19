@@ -1,0 +1,5 @@
+article_code,release_time_utc,time_precision,type,market,symbols,title,catalog,source,time_as_shown,shown_timezone,settlement_or_launch_utc,notes
+cfe97d52a8c840d3ba631835b637e9e7,2024-11-29,day,delisting,futures,XEMUSDT;ORBSUSDT;LOOMUSDT,,Delisting,notes_2026-11-17,,,2024-12-09,example row from research/market_evolution/notes/delisting_prediction.md section 4; fill title and minute
+572715f2d96e47769ebbb967c2a6e445,2025-01-15,day,delisting,futures,REEFUSDT,,Delisting,notes_2026-11-17,,,2025-01-22 09:00,example row; same notice cut REEF margin tiers at 2025-01-15 07:30
+21e399dcea734230a3c181daf5407b64,2025-08-06,day,delisting,futures,DEFIUSDT;MEMEFIUSDT,,Delisting,notes_2026-11-17,,,2025-08-11,example row; DEFIUSDT is an index contract
+746056ce732d43dda12c1e5ae1b7a059,2025-12-01,day,delisting,futures,,,Delisting,notes_2026-11-17,,,2025-12-05,example row; symbol list not read
