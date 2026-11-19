@@ -6,27 +6,32 @@
 
 Varshith Kotagiri · University of Pennsylvania
 
-I measured how order flow behaves at the tick level on Binance USDT-M perpetual futures:
-how long the sign of trades stays predictable, how prices respond to it, how much trading is
-triggered by other trading, and what that means for executing a large order. Everything is built
-from the public `aggTrades` and `bookTicker` dumps on data.binance.vision (105M trades and 114M
-top-of-book updates in the core sample).
+A study of how crypto futures markets work trade by trade, built entirely from Binance's
+public data (data.binance.vision): tick-level trades for hundreds of contracts and daily
+data for all 900+ USDT-M perpetual contracts, 2020 to 2026. It runs in four parts, each one asking a sharper question than the last.
 
-The work runs in three stages. First I replicated classical equities results (long memory in
-order signs, the price response function, order-flow imbalance) on BTC and ETH and compared them
-with published numbers. Then I extended them to a 121-symbol cross-section, a 41-symbol Hawkes
-endogeneity panel and an execution-cost replay. Last, I re-ran the cross-section in five more
-months through July 2026 to see which results hold over time.
+| Part | Question | Headline answer |
+|---|---|---|
+| **1. Market mechanics** (Q0 to Q8) | How predictable is order flow, how do prices respond, how much trading reacts to other trading? | Long memory in trade signs; about 70% of trades are reactions to other trades |
+| **2. Prediction** (Q9 to Q14) | How much can machine learning predict, and does it pay? | Direction is about 60% predictable; no strategy covers trading costs |
+| **3. How the market changed** (Q15, Q16) | Why did predictability rise from 2023 to 2025? What warns of a delisting? | Smaller trades; tick size causes persistence (35 natural experiments); low volume flags delistings |
+| **4. Politicians and insider trading** (C1 to C4) | Do politicians' posts move crypto? Did anyone trade before them? | Not robustly, and no evidence of unusual trading before Trump's tariff posts |
 
-[Results site](https://varkot-dev.github.io/binance-microstructure/) ·
-[Full write-up](docs/report.md) · [Per-question results](results/)
+Every test that could be tuned to the data was written down and fingerprinted (sha256) in git
+**before** the data was opened, and several first results that looked positive were overturned
+by stricter checks. Those reversals are reported, not hidden.
+
+[Summary of every result](#results-index) · [Engineering](#engineering-highlights) ·
+[Full write-up of part 1](docs/report.md) · [Per-question results](results/)
 
 ## Key findings
+
+### Part 1: market mechanics
 
 - **Order flow has long memory, and its exponent does not depend on liquidity.** BTC γ̂ = 0.3803,
   ETH γ̂ = 0.2380. Across 121 symbols, γ̂ against log-activity has slope −0.0112 and R² 0.0003.
   [q1](results/q1_results.md), [q4](results/q4_cross_section.md)
-- **The price response rises 5.39× before plateauing,** inside the 3.5–6.9× band predicted from
+- **The price response rises 5.39× before plateauing,** inside the 3.5 to 6.9× band predicted from
   the memory exponent, and 12 of 16 deconvolved impact kernels satisfy the critical-balance
   condition that keeps prices diffusive. [q2](results/q2_results.md),
   [q5](results/q5_kernel_panel.md)
@@ -55,6 +60,62 @@ months through July 2026 to see which results hold over time.
   endogeneity (0.71 to 0.39) that the kernel-free estimator does not show (0.96 to 0.93).
   [q0](results/q0_aggregation_effect.md), [q8](results/q8_regimes.md)
 
+
+### Part 2: prediction with machine learning
+
+- **The next trade's direction is about 60% predictable,** but three quarters of that edge is
+  already in a linear predictor built from the measured memory; gradient-boosted trees add about
+  3 points, mostly from trade size and timing. [q9](results/q9_sign_prediction.md)
+- **Short-horizon price direction is very predictable (AUC up to 0.93 for BTC) but never pays a
+  taker:** the predicted move covers at most about a fifth of round-trip cost in 0 of 144 cells,
+  and would need fees about ten times lower. [q11](results/q11_mid_direction.md),
+  [q13](results/q13_break_even.md)
+- **A neural point process beats Hawkes models for trade timing on 10 of 10 contracts, but the
+  best Hawkes model already captures about 91% of its gain.** [q12](results/q12_neural_ceiling.md)
+- **Studying only survivors did not bias the headline:** across 181 contracts, those later
+  delisted were if anything slightly more predictable at equal activity.
+  [q14](results/q14_survivorship.md)
+
+### Part 3: how the market changed
+
+- **Predictability rose from 2023 to 2025 inside contracts, not through which contracts
+  survived, and it lines up with much smaller trades** (the median exchange fill fell by about
+  two thirds while daily volume held), consistent with algorithmic order slicing.
+- **Tick size causes trade-sign persistence, in both directions:** across 35 Binance tick-change
+  batches (113 contracts, matched controls, no pre-trends), cuts raise the repeat rate by 7.5
+  points and increases lower it by 5.6. Held-out batches point the same way, more weakly.
+  [q15](results/q15_market_evolution.md)
+- **Very low volume flags coming delistings;** a model beats the volume rule on held-out 2026
+  data, but more than half of its edge comes from the month that holds the announcement.
+  [q16](results/q16_delisting.md)
+
+### Part 4: politicians and insider trading
+
+- **No politician's posts reliably move Bitcoin within five minutes** once each post is compared
+  only with nearby weeks. An early "Trump's tariff posts move Bitcoin" result did not survive
+  that comparison. [ranking](research/politics/data/c2_ranking_local.md),
+  [Trump](research/politics/data/c3_trump_tariff_local.md)
+- **No evidence of unusual trading before Trump's tariff posts:** order flow in the 10 minutes
+  before 178 posts looks like order flow before ordinary posts and at random times. The data
+  is anonymous, so this can show patterns, never who traded.
+  [investigation](research/politics/data/c4_prepost_trading.md)
+
+## Engineering highlights
+
+- **Disk-bounded streaming pipeline.** More than 20 GB of extra tick data streamed through a
+  machine with about 7 GB free: download, verify the published SHA-256 checksum, ingest,
+  compute, delete, with resumable per-unit caches so crashes and restarts lose nothing.
+- **Memory under control.** 90-million-record months crashed the standard loader; events are now
+  built one day at a time and large archives parsed in chunks straight from the zip, with tests
+  proving byte-identical output.
+- **Locked analyses.** Each pre-registration's sha256 is checked by the analysis code, which
+  refuses to run if the plan changed; plans are committed before any result exists.
+- **Tests and CI.** About 660 tests (estimators against synthetic data with known answers,
+  analyses on fixtures); ruff and the offline suite run on every push.
+- **Real-data debugging.** A single stray off-grid BTC quote that broke tick estimation,
+  double-counted daily and monthly files, "ghost" files published after contracts die, and a
+  frozen order-book depth series around the 2025-10-10 crash were each found and handled.
+
 ## What I built
 
 **Data pipeline** (`src/microstructure/data/`). Downloads Binance's monthly and daily dumps,
@@ -82,7 +143,17 @@ known answer before touching real data:
 parent order for adverse drift, half-spread and its own impact under three schedules: TWAP,
 front-loaded and flow-reactive.
 
-**Analyses** (`src/microstructure/analyses/`). One script per question, Q0 to Q8. Each writes a
+**Machine learning** (`src/microstructure/ml/`, `src/microstructure/evolution/`). Causal trade
+and quote features, a model ladder from majority class to LightGBM, a neural temporal point
+process (PyTorch), drift attribution, and a library of order-flow proxies (order splitting, size
+clustering, burstiness, relative tick).
+
+**Research projects** (`research/`). Market evolution (panel regressions, a contract lifecycle
+table for every Binance USDT-M perpetual, a monthly panel, stacked event studies of tick
+changes), politicians and crypto (pre-registered event studies and a ranking), the delisting
+model, and prior-art reviews of each idea in `research/novelty/`.
+
+**Analyses** (`src/microstructure/analyses/`). One script per question, Q0 to Q16. Each writes a
 figure, a Markdown write-up and a JSON/Parquet artifact to `results/`. Q8 compares six regimes
 from the saved artifacts alone, refits every regression independently, and checks slope
 significance, survivorship, kernel mode and cohort composition.
@@ -99,8 +170,8 @@ Stack: Python 3.12, Polars, NumPy, Matplotlib, pytest, ruff, uv, GitHub Actions.
 | Q0 | Raw prints vs aggressor events | [raw γ̂ inflated by 0.29 to 0.50](results/q0_aggregation_effect.md) |
 | Q1 | Sign autocorrelation, BTC and ETH | [long memory, BTC γ̂ 0.3803, ETH 0.2380](results/q1_results.md) |
 | Q1b | Short-lag zigzag in the ACF | [real structure, not a tie-break artifact](results/q1b_zigzag.md) |
-| Q2 | Response function R(ℓ) | [rises 5.39×, inside the predicted 3.5–6.9×](results/q2_results.md) |
-| Q3 | Price change vs order-flow imbalance | [linear, R² 0.40 vs 65–70% in equities](results/q3_results.md) |
+| Q2 | Response function R(ℓ) | [rises 5.39×, inside the predicted 3.5 to 6.9×](results/q2_results.md) |
+| Q3 | Price change vs order-flow imbalance | [linear, R² 0.40 vs 65 to 70% in equities](results/q3_results.md) |
 | Q4 | 121-symbol cross-section, 2023-06 | [γ̂ flat in activity (R² 0.0003), flip probability not (R² 0.2632)](results/q4_cross_section.md) |
 | Q4b | Tick-size confound for flip probability | [activity dominates; tick size borderline (t 2.09)](results/q4b_tick_confound.md) |
 | Q5 | Deconvolved impact kernel, 16 symbols | [critical balance holds for 12 of 16](results/q5_kernel_panel.md) |
@@ -108,6 +179,18 @@ Stack: Python 3.12, Polars, NumPy, Matplotlib, pytest, ruff, uv, GitHub Actions.
 | Q6b | Two- and three-timescale Hawkes kernels | [K=2 lifts n̂ 0.707 → 0.854, closes 54% of the estimator gap](results/q6b_kernel_sensitivity.md) |
 | Q7 | Execution schedules on replayed flow | [front-loaded: higher mean, 17× lower sd](results/q7_execution.md) |
 | Q8 | Six regimes, 2023-06 to 2026-07 | [flip law gone by 2026; γ̂ break within the 2023 cohort](results/q8_regimes.md) |
+| Q9 | Next-trade-sign prediction, 10 contracts | [about 60%; 74% of the gain is the linear memory predictor](results/q9_sign_prediction.md) |
+| Q10 | Does a 2023 model go stale? | [yes, by missing a gain: the market became more predictable](results/q10_drift.md) |
+| Q11 | Mid-price direction from quotes, and cost | [AUC up to 0.93; edge covers cost in 0 of 144 cells](results/q11_mid_direction.md) |
+| Q12 | Neural point process vs Hawkes for timing | [network wins 10 of 10; Hawkes gets about 91% of the way](results/q12_neural_ceiling.md) |
+| Q13 | Break-even fee and timing value | [needs fees under about 0.5 bps per side](results/q13_break_even.md) |
+| Q14 | Survivorship across 181 contracts | [little bias; the 60% headline is if anything low](results/q14_survivorship.md) |
+| Q15 | Why predictability rose; tick size as a cause | [smaller trades; 35 natural experiments both ways](results/q15_market_evolution.md) |
+| Q16 | Predicting delistings | [low volume flags them; model edge is mostly the announcement month](results/q16_delisting.md) |
+| C1 | Trump's Truth Social posts and BTC, pre-registered | [tariff posts looked positive at first](research/politics/data/c1_trump_posts.md) |
+| C2 | Politician ranking (24 people, 2020 to 2023) | [no one survives time-local controls](research/politics/data/c2_ranking_local.md) |
+| C3 | Trump-only tariff follow-up | [does not support an effect](research/politics/data/c3_trump_tariff_local.md) |
+| C4 | Trading before Trump's tariff posts | [no evidence](research/politics/data/c4_prepost_trading.md) |
 
 ## Method notes
 
@@ -167,8 +250,16 @@ src/microstructure/
   signals/       loaders, trade/quote alignment, business-time transform
   estimators/    ACF and γ, response, propagator, OFI, Hawkes
   execution/     execution-cost replay simulator
-  analyses/      one script per question, Q0–Q8
+  ml/            features, model ladder, drift, neural point process
+  evolution/     order-flow proxy library
+  analyses/      one script per question, Q0 to Q16
   synthetic.py   generators with known answers for the tests
+research/
+  market_evolution/  why predictability changed: data, regressions, event studies
+  politics/          politicians' posts and crypto (pre-registered)
+  announcements/     trading before listing and delisting announcements (in progress)
+  novelty/           prior-art reviews: which ideas are new
+qfa/             Penn quant club session materials and notes
 tests/           estimator tests on synthetic data, analysis tests on fixtures
 results/         figures, per-question write-ups, JSON/Parquet artifacts
 site/            static results site; build_data.py derives site/data/*.json
@@ -178,7 +269,7 @@ site/            static results site; build_data.py derives site/data/*.json
 
 - Q2, Q3, Q5 and Q7 each use one short window (14, 14, 7 days and a 4-day evaluation window).
   Only Q4 and Q6 were repeated across regimes, with one month per year after 2023.
-- Q1–Q3 standard errors are OLS and too small, since ACF values at adjacent lags are correlated.
+- Q1 to Q3 standard errors are OLS and too small, since ACF values at adjacent lags are correlated.
   Block-bootstrap intervals are done for Q5 only.
 - Every exponential-kernel branching ratio is a lower bound. A second kernel timescale explains
   about half of the MLE vs count-variance gap; the rest is unattributed. A likelihood-ratio test
