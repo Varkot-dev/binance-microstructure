@@ -1,5 +1,12 @@
 # QFA session notes and project ideas
 
+> **Correction (from `research/novelty/qfa_derived_ideas.md`):** the Binance option files
+> do contain same-day expiries on 85 of 147 BTC days in 2023-05-18 to 2023-10-23, but total
+> volume is only about $4M, so the conclusion stands: a crypto 0DTE study is not feasible
+> on free Binance data. Statements below that there are "no daily expiries" are wrong on
+> that point.
+
+
 Notes on the Quant Finance Academy (QFA) materials in `qfa/`, written 2026-11-19. Numbers are
 quoted as they appear in the documents. There are five session folders, not four:
 2026-10-21, 2026-10-28, 2026-11-04, 2026-11-11 and 2026-11-18.
