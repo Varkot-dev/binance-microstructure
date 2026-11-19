@@ -84,7 +84,7 @@ def append_manifest(out: Path, path: Path, **extra) -> dict:
 def gzip_bytes(path: Path, raw: bytes) -> None:
     """Write deterministic gzip (mtime 0), so equal content gives an equal file hash."""
     path.parent.mkdir(parents=True, exist_ok=True)
-    with path.open("wb") as fh, gzip.GzipFile(fileobj=fh, mode="wb", mtime=0) as gz:
+    with path.open("wb") as fh, gzip.GzipFile(filename="", fileobj=fh, mode="wb", mtime=0) as gz:
         gz.write(raw)
 
 
@@ -109,7 +109,7 @@ class HourlyWriter:
             path = self.path_for(kind, hour)
             path.parent.mkdir(parents=True, exist_ok=True)
             fh = path.open("wb")
-            gz = gzip.GzipFile(fileobj=fh, mode="wb", mtime=0)
+            gz = gzip.GzipFile(filename="", fileobj=fh, mode="wb", mtime=0)
             self._open[kind] = (hour, path, gz, fh, 0)
         h, path, gz, fh, n = self._open[kind]
         gz.write((json.dumps(obj, separators=(",", ":")) + "\n").encode())
