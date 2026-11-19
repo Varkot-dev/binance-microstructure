@@ -67,7 +67,7 @@ def run_hook(template: str | None, path: Path) -> None:
     if not template:
         return
     cmd = template.replace("{path}", shlex.quote(str(path)))
-    res = subprocess.run(cmd, shell=True, capture_output=True, text=True)
+    res = subprocess.run(cmd, shell=True, capture_output=True, text=True, check=False)
     if res.returncode != 0:
         print(f"on-close failed ({res.returncode}) for {path}: {res.stderr.strip()}",
               file=sys.stderr, flush=True)
