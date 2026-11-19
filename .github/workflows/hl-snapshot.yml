@@ -1,0 +1,48 @@
+name: hyperliquid-snapshot
+
+# Once a day, save Hyperliquid's leaderboard, vault list and market metadata exactly as
+# served, and attach the files plus a sha256 manifest to a monthly pre-release
+# (tag hl-snapshots-YYYY-MM). Hyperliquid keeps no free history of these, so a day that is
+# not saved is lost. Code: src/microstructure/hyperliquid/recorder.py.
+
+on:
+  schedule:
+    - cron: "17 0 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: hl-snapshot
+  cancel-in-progress: false
+
+jobs:
+  snapshot:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v5
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.12"
+      - run: uv sync --no-dev
+      - name: Take the snapshot
+        run: uv run python -m microstructure.hyperliquid.recorder snapshot --out out
+      - name: Attach to the monthly release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          day_dir=$(ls -d out/snapshot/* | tail -1)
+          stamp=$(ls "$day_dir"/leaderboard_*.json.gz | sed -E 's/.*leaderboard_(.*)\.json\.gz/\1/')
+          tag="hl-snapshots-${stamp:0:4}-${stamp:4:2}"
+          cp out/manifest.jsonl "$day_dir/manifest_${stamp}.jsonl"
+          if ! gh release view "$tag" >/dev/null 2>&1; then
+            gh release create "$tag" --prerelease --target "$GITHUB_SHA" \
+              --title "Hyperliquid snapshots ${stamp:0:4}-${stamp:4:2}" \
+              --notes "Daily Hyperliquid leaderboard, vaults and market metadata, saved as served. Each day's manifest lists every file's sha256. Produced by .github/workflows/hl-snapshot.yml."
+          fi
+          gh release upload "$tag" "$day_dir"/* --clobber
+          echo "Uploaded $(ls "$day_dir" | wc -l) files to $tag" >> "$GITHUB_STEP_SUMMARY"
+          cat "$day_dir/manifest_${stamp}.jsonl" | python3 -c "import sys,json;[print(f\"| {e['kind']} | {e['raw_bytes']:,} | {e['raw_sha256'][:16]} |\") for e in map(json.loads,sys.stdin)]" >> "$GITHUB_STEP_SUMMARY"
