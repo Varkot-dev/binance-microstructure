@@ -23,6 +23,9 @@ dev = [
     "ruff>=0.5",
     {include-group = "ml"},
 ]
+hl = [
+    "websockets>=13",
+]
 ml = [
     "lightgbm>=4.3",
     "scikit-learn>=1.5",
