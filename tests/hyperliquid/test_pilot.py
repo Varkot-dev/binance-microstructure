@@ -192,3 +192,27 @@ def test_fill_notional_splits_markets():
          {"coin": "xyz:XYZ100", "px": "1", "sz": "1"}]
     n = pilot.fill_notional(f)
     assert n == {"all": 11.0, "perp": 6.0, "spot": 4.0, "hip3": 1.0}
+
+
+def test_value_at_or_before():
+    hist = [[10, "1"], [20, "2"], [30, "3"]]
+    assert pilot.value_at_or_before(hist, 25) == (20, 2.0)
+    assert pilot.value_at_or_before(hist, 30) == (30, 3.0)
+    assert pilot.value_at_or_before(hist, 5) is None
+
+
+def test_at_formation_rolls_pnl_back_with_day_window():
+    h = 3_600_000
+    t = 10 * h
+    wins = {
+        "day": {"accountValueHistory": [[9 * h, "100"], [11 * h, "150"]],
+                "pnlHistory": [[9 * h, "0"], [11 * h, "40"]]},
+        "allTime": {"accountValueHistory": [[11 * h, "150"]], "pnlHistory": [[11 * h, "500"]]},
+    }
+    wins["perpDay"] = {"pnlHistory": [[9 * h, "0"], [11 * h, "10"]]}
+    wins["perpAllTime"] = {"pnlHistory": [[11 * h, "300"]]}
+    out = pilot.at_formation(wins, t)
+    assert out["f_pnl_perpAllTime"] == 290.0
+    assert out["f_accountValue"] == 100.0 and out["f_point_lag_h"] == 1.0
+    assert out["f_pnl_allTime"] == 460.0  # 500 minus the 40 earned after the formation point
+    assert pilot.at_formation({}, t) == {}

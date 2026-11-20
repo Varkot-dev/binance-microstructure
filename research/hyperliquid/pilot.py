@@ -19,7 +19,7 @@ Three commands, all idempotent:
 
 ``summarize``
     Read the cache only and write per-wallet data-quality metrics
-    (``wallet_metrics.jsonl``) and aggregate tables (``summary.json``, ``summary.md``).
+    (``wallet_metrics.jsonl``) and aggregate tables (``summary.json``).
 
 Usage (from the repo root)::
 
@@ -522,6 +522,39 @@ def fill_notional(fills: Iterable[dict]) -> dict[str, float]:
     return out
 
 
+def value_at_or_before(hist: Sequence[Sequence], t_ms: int) -> tuple[int, float] | None:
+    """Last ``[time, value]`` point of a history at or before ``t_ms`` (None if none)."""
+    pts = [(int(p[0]), float(p[1])) for p in hist if int(p[0]) <= t_ms]
+    return max(pts) if pts else None
+
+
+def at_formation(wins: dict, t_ms: int = FORMATION_MS) -> dict:
+    """accountValue and allTime pnl as of the formation snapshot, from the ``day`` window.
+
+    ``portfolio`` is fetched hours after the leaderboard file was saved, so the last allTime
+    point is not contemporaneous. The ``day`` window has points every 20 min to 2.3 h.
+    accountValue is read directly; allTime pnl at ``t_ms`` is the last allTime pnl minus the
+    day-window pnl change between the formation point and the day window's last point (the
+    day window's pnl starts at zero, so only its changes are meaningful).
+    """
+    day = wins.get("day") or {}
+    av = value_at_or_before(day.get("accountValueHistory") or [], t_ms)
+    out: dict[str, Any] = {}
+    if av is not None:
+        out["f_accountValue"] = av[1]
+        out["f_point_lag_h"] = (t_ms - av[0]) / 3.6e6
+    for short, long_, name in (("day", "allTime", "f_pnl_allTime"),
+                               ("perpDay", "perpAllTime", "f_pnl_perpAllTime")):
+        dp = (wins.get(short) or {}).get("pnlHistory") or []
+        ap = (wins.get(long_) or {}).get("pnlHistory") or []
+        p_f = value_at_or_before(dp, t_ms)
+        if p_f is not None and ap:
+            last_day = float(max(dp, key=lambda p: p[0])[1])
+            last_all = float(max(ap, key=lambda p: p[0])[1])
+            out[name] = last_all - (last_day - p_f[1])
+    return out
+
+
 def rel_diff(a: float, b: float) -> float | None:
     """|a - b| / |b|, or None when b is zero."""
     return abs(a - b) / abs(b) if b else None
@@ -603,6 +636,10 @@ def wallet_metrics(w: dict, lb: dict[str, float], as_of_ms: int) -> dict:
                           min((p[0] for p in av_hist), default=None)) if x is not None]
     m["first_activity_ms"] = min(starts) if starts else None
     m["perp_open_at_first_fill"] = open_at_first_fill(fills)
+    # Alternative counting units for the retention cap: aggregated fills (one per order per
+    # millisecond, what aggregateByTime=true would return) and distinct fill timestamps.
+    m["n_agg_fills"] = len({(f.get("oid"), f.get("time")) for f in fills})
+    m["n_fill_ms"] = len({f.get("time") for f in fills})
     m["fill_status"] = classify_fills(m["n_fills"], m["fill_coverage"], vlm_all,
                                       len(m["perp_open_at_first_fill"]))
     if m["earliest_fill_ms"] is not None and m["first_inbound_ms"] is not None:
@@ -625,8 +662,12 @@ def wallet_metrics(w: dict, lb: dict[str, float], as_of_ms: int) -> dict:
         m["pf_last_ms"] = int(last_av[0])
     if pnl_hist:
         m["pf_pnl_allTime"] = float(max(pnl_hist, key=lambda p: p[0])[1])
+    m.update(at_formation(wins))
     for a, b, name in (("pf_accountValue", "lb_accountValue", "accountValue"),
                        ("pf_pnl_allTime", "lb_pnl_allTime", "pnl"),
+                       ("f_accountValue", "lb_accountValue", "accountValue_at_formation"),
+                       ("f_pnl_allTime", "lb_pnl_allTime", "pnl_at_formation"),
+                       ("f_pnl_perpAllTime", "lb_pnl_allTime", "perp_pnl_at_formation"),
                        ("portfolio_vlm_allTime", "lb_vlm_allTime", "vlm")):
         if a in m:
             m[f"absdiff_{name}"] = abs(m[a] - m[b])
@@ -709,13 +750,29 @@ def aggregate(metrics: Sequence[dict], budget_per_min: float, n_cohort: int) -> 
           "coverage": m["fill_coverage"], "role": m["role"]}
          for m in metrics if m["fill_status"] in ("left_censored", "volume_gap")),
         key=lambda d: d["n_fills"])
+    # Completeness by volume coverage, crossed with the open-position-at-first-fill flag.
+    def cov_bin(c: float | None) -> str:
+        if c is None:
+            return "none"
+        return "ge_0.99" if c >= 0.99 else ("0.95_0.99" if c >= 0.95 else "lt_0.95")
+    agg["coverage_x_open_flag"] = dict(Counter(
+        f"{cov_bin(m['fill_coverage'])}|open_flag={bool(m['perp_open_at_first_fill'])}"
+        for m in traded))
+    agg["retention_units"] = {
+        b: {u: _q((m[u] for m in traded if cov_bin(m["fill_coverage"]) == b),
+                  qs=(0.0, 0.1, 0.25, 0.5, 0.75, 0.9, 1.0))
+            for u in ("n_fills", "n_oids", "n_agg_fills", "n_fill_ms")}
+        for b in ("ge_0.99", "0.95_0.99", "lt_0.95")}
     agg["ledger"] = {"n_rows": _q(m["n_ledger"] for m in metrics),
                      "multi_page": sum((m["ledger_pages"] or 0) > 1 for m in metrics),
                      "types": dict(sum((Counter(m["ledger_types"]) for m in metrics),
                                        Counter()))}
     agg["leaderboard_match"] = {}
     lb_field = {"accountValue": "lb_accountValue", "pnl": "lb_pnl_allTime",
-                "vlm": "lb_vlm_allTime"}
+                "vlm": "lb_vlm_allTime",
+                "accountValue_at_formation": "lb_accountValue",
+                "pnl_at_formation": "lb_pnl_allTime",
+                "perp_pnl_at_formation": "lb_pnl_allTime"}
     for name, lbk in lb_field.items():
         ms = [m for m in metrics if f"absdiff_{name}" in m]
         absd = [m[f"absdiff_{name}"] for m in ms]
@@ -731,6 +788,7 @@ def aggregate(metrics: Sequence[dict], budget_per_min: float, n_cohort: int) -> 
             "rel_gt_1pct": sum(x > 0.01 for x in rel),
             "rel_gt_10pct": sum(x > 0.10 for x in rel),
         }
+    agg["formation_point_lag_h"] = _q(m.get("f_point_lag_h") for m in metrics)
     lags = [(m["pf_last_ms"] - FORMATION_MS) / 3.6e6 for m in metrics if "pf_last_ms" in m]
     agg["portfolio_last_point_minus_formation_h"] = _q(lags)
     weights = [m["weight"] for m in metrics]
