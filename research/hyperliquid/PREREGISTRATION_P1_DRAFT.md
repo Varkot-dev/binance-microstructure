@@ -107,11 +107,12 @@ Hypotheses (each tested at the primary benchmark rung R1, section 4):
   q-value group's holding alpha positive but not significant, and not significantly better
   than the top-PnL group; H4 rho between 0 and 0.2. Our subjective probability of a
   **positive** out-of-sample verdict (section 9) is about 15%. A top-500 holding return near
-  the 37.9 bp per day after fees that `LITERATURE.md` records for the top Taiwanese day
-  traders (Barber, Lee, Liu and Odean, 2014; the figure and its fee basis are still to be
-  checked against the paper's table, section 13) would be a large and surprising result and
-  would be checked for data errors first. Holding returns here are after Hyperliquid trading
-  fees and funding, so the comparison is net to net if the figure is confirmed as after fees.
+  the 37.9 bp per day **after fees** (61.3 bp before fees) earned the next year by the 500
+  Taiwanese day traders with the best prior-year return (Barber, Lee, Liu and Odean, 2014;
+  both figures confirmed in the abstract through a search index on 2026-11-20, the table
+  itself not yet read) would be a large and surprising result and would be checked for data
+  errors first. Holding returns here are after Hyperliquid trading fees and funding, so the
+  comparison is net to net.
 
 ---
 
@@ -452,11 +453,11 @@ Smyth (2010) cover.
   but assumes residuals are symmetric, which short-volatility payoffs violate, so it is never
   the headline.
 
-The trade-level sign-randomization described in `LITERATURE.md` for a Polymarket working paper
-listed as SSRN 6687418 (authors given there as Gomez-Cram, Guo, Jensen and Kung; **unverified**:
-the record could not be opened, two authors' first names and the year are unknown) is **not
-part of this plan**. Its procedure will not be pre-registered until the paper has been found
-and read.
+The trade-level sign-randomization described in `LITERATURE.md` for the Polymarket working
+paper of Gomez-Cram, Guo, Jensen and Kung (2026; **unverified**: author names, year and title
+were matched through news coverage only, and the SSRN record, listed as 6687418, could not be
+opened) is **not part of this plan**. Its procedure will not be pre-registered until the paper
+has been found and read.
 
 ---
 
@@ -539,16 +540,22 @@ rate at that threshold is W% (Harvey and Liu, 2020)." It is reported for every r
 ### 7.1 Windows
 
 - **Formation window:** everything at or before T0 = 2026-11-19T23:58:51Z.
-- **Primary holding window:** 2026-11-20 00:00:00 UTC to 2027-01-14 23:59:59 UTC (56 days, the
-  8-week horizon). The 69 seconds between T0 and the window start are ignored.
-- **Secondary holding window:** 2026-11-20 00:00:00 UTC to 2027-05-20 23:59:59 UTC (182 days),
-  reported separately with the same code.
-- **Sub-blocks:** the primary window split into 2026-11-20 to 2026-12-17 and 2026-12-18 to
-  2027-01-14 (28 days each), reported separately, because rank correlations swing with the
-  market phase (Dennim89, 2026).
-- Holding-window data are recorded from 2026-11-20 but no holding-window statistic may be
-  computed before the lock; the lock must happen before 2026-12-04, and the lock date is
-  printed in the output.
+- **Lock time L:** the UTC time recorded in `P1_LOCK.txt`. Let D1 be 00:00:00 UTC on the
+  calendar day after L.
+- **Primary holding window:** D1 to D1 + 56 days (56 days, the 8-week horizon), so that no
+  day of the primary window has started when the text is fixed.
+- **Secondary holding window:** D1 to D1 + 182 days, reported separately with the same code.
+- **Sub-blocks:** the primary window split into [D1, D1 + 28 days) and [D1 + 28 days,
+  D1 + 56 days), reported separately, because rank correlations swing with the market phase
+  (Dennim89, 2026).
+- **Pre-lock gap:** the days from 2026-11-20 00:00 UTC up to D1 are reported only as an
+  exploratory "pre-lock gap", with the same measures, and never enter a test or verdict.
+  Selection sets are still formed from data at or before T0 (section 7.2), and holding-period
+  returns start at D1 for every unit.
+- Holding-window data are recorded from 2026-11-20, but no holding-window or pre-lock-gap
+  statistic may be computed before the lock. `P1_LOCK.txt` states that no leaderboard
+  snapshot or portfolio point dated after T0 was opened before the lock (section 2.2), and
+  the lock time and D1 are printed in every output.
 
 ### 7.2 Selection sets (computed only from formation data)
 
@@ -556,7 +563,8 @@ Among eligible trader units with equity of at least $100 at T0 (a copier can onl
 account that holds capital):
 
 - **A, top q-value:** the 500 units with the smallest R1 Storey q-values among those with
-  t_i > 0 (ties broken by larger t_i). The number of A units with q <= 0.10 is reported.
+  t_i > 0, ranked by q_i, then by p_i, then by larger t_i. The number of A units with
+  q <= 0.10 is reported.
 - **B, top PnL:** the 500 units with the highest formation dollar PnL, P(T0) - P(first point),
   from `perpAllTime`. Secondary: the trailing 30-day PnL, which is what public leaderboards
   sort on by default.
@@ -565,9 +573,12 @@ account that holds capital):
   at a cutoff time: formation R1 t-statistic, R1 alpha, total dollar PnL, PnL over the last
   30, 90 and 180 days, mean and standard deviation of span returns, maximum drawdown, account
   value, account age, `perpAllTime` volume, share of zero-PnL spans, R1 beta and the number
-  of members in the entity. Training: features at T0 - 56 days, target = the unit's R1 alpha
-  return over (T0 - 56 days, T0] (four spans), winsorized at the 1st and 99th percentiles;
-  training units are those meeting section 3.5 at T0 - 56 days. Mixing parameter in
+  of members in the entity. Training: features at T0 - 56 days; target = the sum over the four
+  14-day spans in (T0 - 56 days, T0] of (r_ik - beta_i r_BTC,k), with beta_i estimated by OLS
+  on the unit's alive spans ending at or before T0 - 56 days only (beta_i = 1 if there are
+  fewer than 8 such spans), and winsorized at the 1st and 99th percentiles of the training
+  cross-section; the same winsorization bounds are applied to nothing else. Training units are
+  those meeting section 3.5 at T0 - 56 days. Mixing parameter in
   {0.1, 0.5, 0.9, 1.0} and penalty path of 100 values chosen by 5-fold cross-validation with
   folds split by entity (Friedman, Hastie and Tibshirani, 2010), seed 20261119 + 7. The fitted
   model is applied to features at T0 and C is the top 500 predictions.
@@ -578,7 +589,8 @@ Overlaps between A, B and C are reported. Every unit in a set stays in it for th
 whether it trades, quits, withdraws or is liquidated (intention to treat, following the
 everyone-who-starts design of Chague, De-Losso and Giovannetti, 2019, and treating quitting as
 an outcome as in Barber, Lee, Liu, Odean and Zhang, 2020). No holding-window capital floor is
-applied, which avoids the survivorship that removed 114 of 190 leaders in Dennim89 (2026).
+applied. By contrast, Dennim89 (2026) excluded 114 of 190 fetched leaders (an unverified run
+note) from its ROI test with a $1,000 capital floor.
 
 ### 7.3 Holding-window measures
 
@@ -589,8 +601,10 @@ applied, which avoids the survivorship that removed 114 of 190 leaders in Dennim
 - **Secondary group return:** the calendar-time ratio of summed daily dollar PnL to summed
   start-of-day equity of the set (Barber, Lee, Liu and Odean, 2014).
 - **Value added:** each unit's daily V against R1 with beta estimated **only from
-  holding-window data**, to avoid false persistence from shared beta estimation error (Berk and
-  van Binsbergen, 2015, section 7.1); daily average across units of each set and decile.
+  holding-window data**, to avoid false persistence from shared beta estimation error. This
+  is a project choice; whether Berk and van Binsbergen (2015) estimate out-of-sample betas
+  only from measurement-period data, and where, is unverified and must be checked before it
+  is credited to them. Daily average across units of each set and decile.
 
 ### 7.4 Tests
 
@@ -608,15 +622,28 @@ Secondary, reported in full:
 - A minus C and A minus D, and B minus D, with the same method.
 - Top-minus-bottom decile spread and its R1 and R2 alpha (Carhart, 1997, decile-portfolio
   design, adapted to t-statistic sorts because return sorts are sorts on leverage).
-- BvB order statistics: the number of days the top decile's value added beats the bottom
-  decile's, and the number of days it is in the top half, each against Binomial(56, 1/2) with
-  exact p-values, plus the adjacent-decile monotonicity count (Berk and van Binsbergen, 2015,
-  section 7.1). The skewness of daily decile-mean value added is reported because the binomial
-  test needs symmetry.
-- **H4.** Spearman rank correlation (Spearman, 1904) between formation t_i and holding-window
-  t_i (R1, holding-window beta, daily Newey-West) over eligible units with at least 30 alive
-  days in the holding window, with a 95% stationary-bootstrap interval of days. Compared with
-  Placebo (rho = -0.09) and Dennim89 (-0.44 to +0.54).
+- Order-statistic persistence test, an adaptation of Berk and van Binsbergen (2015; section
+  pointer unverified). For this test only, selection-eligible units are sorted into deciles
+  on the formation **skill ratio** at R1, mean V_ik divided by its Newey-West standard error
+  (section 4), which is the sort variable of Berk and van Binsbergen; the decile sort on t_i
+  above is reported as a labelled adaptation. Reported: the number of days the top decile's
+  value added beats the bottom decile's, and the number of days it is in the top half, each
+  against Binomial(56, 1/2) with exact p-values, which assume independent days; next to each,
+  a p-value from a stationary bootstrap of days (mean block 5 days, B = 10,000, seed
+  20261119 + 11) that allows serial dependence. Plus the adjacent-decile monotonicity count.
+  Berk and van Binsbergen track value added over horizons of 36 to 120 months
+  (`qfa/NOTES.md`); a 56-day window is far shorter, and this is stated with the result. The
+  skewness of daily decile-mean value added is reported because the binomial test needs
+  symmetry.
+- **H4.** Spearman rank correlation (Spearman, 1904) between formation t_i and a holding-window
+  outcome, with a 95% stationary-bootstrap interval of days. **Primary version:** over all
+  selection-eligible units; a unit with at least 30 alive days is ranked by its holding-window
+  t_i (R1, holding-window beta, daily Newey-West), and a unit with fewer than 30 alive days is
+  ranked below every such unit by its realized holding-window return (units with zero equity
+  at the end tied at the bottom). **Secondary version:** holding-window t_i over units with at
+  least 30 alive days only, which conditions on survival. The share of units with fewer than
+  30 alive days is reported by formation decile. Compared with Placebo (rho = -0.09) and
+  Dennim89 (-0.44 to +0.54).
 - Full distribution of holding-window dollar PnL for every eligible unit: shares above $0,
   above $10k and above $50k, annualized (Chague, De-Losso and Giovannetti, 2019).
 - Quit hazard by formation-PnL quintile (no trading volume and no change in perp account value
@@ -731,11 +758,21 @@ file, labelled as such, and every result is also reported under the original pla
 1. Read and check the section, table and equation numbers cited for every [R] reference, in
    particular Kosowski et al. (2006), Fama and French (2010), Barras et al. (2010), Storey
    (2002), Harvey and Liu (2020), Carhart (1997), Liu et al. (2022), Barber et al. (2014,
-   2020) and Chague et al. (2019); update their tags in `LITERATURE.md`.
-2. Confirm the formation pass schedule (section 2.2) and that weekly forward polling is
+   2020) and Chague et al. (2019); update their tags in `LITERATURE.md` so that the two
+   files use the same tag for each paper. In particular: the gamma* grid and MSE target and
+   the lambda objective and grid of Barras, Scaillet and Wermers (2010, Section I and
+   Appendix); the Fama and French (2010) section pointers; every Berk and van Binsbergen
+   (2015) pointer in sections 3.4, 4, 7.3 and 7.4 (value added, the ex ante mean S, the
+   investable alternative and augmented basis, the $5M floor, holding-window betas, the
+   order-statistic test and its sort variable).
+2. Open SSRN 6687418 and confirm or remove the Gomez-Cram, Guo, Jensen and Kung entry.
+3. Confirm that the DOIs added on 2026-11-20 resolve.
+4. Confirm the formation pass schedule (section 2.2) and that weekly forward polling is
    running.
-3. Confirm that no cohort return or performance statistic has been computed.
-4. Remove the DRAFT banner, rename the file to `PREREGISTRATION_P1.md`, replace the hash line
+5. Confirm that no cohort return or performance statistic has been computed, and that no
+   leaderboard snapshot or portfolio point dated after T0 has been opened except as the
+   differencing anchor of section 2.2; write this statement in `P1_LOCK.txt`.
+6. Remove the DRAFT banner, rename the file to `PREREGISTRATION_P1.md`, replace the hash line
    as described at the top, compute the sha256 of the final file, write it to
    `research/hyperliquid/P1_LOCK.txt` with the UTC lock time, and fix it as a constant in
    `p1_skill.py`, which refuses to run on a mismatch and prints the hash in every output (the
@@ -745,9 +782,13 @@ file, labelled as such, and every result is also reported under the original pla
 
 ## References
 
-Status tags: [V] read in full by this project; [R] standard published reference, method
-described from knowledge of the paper, section numbers to be checked before locking;
-[W] non-peer-reviewed public work read by this project.
+Status tags (as defined at the top): [V] read in full by this project; [R] standard
+published reference, method described from knowledge of the paper, section numbers to be
+checked before locking; [S] non-peer-reviewed public work known only through the skeptic
+agent's summary in `LITERATURE.md`, not read in full; unverified, record not confirmed.
+DOIs of the references added on 2026-11-20 (Besag and Clifford; Davidson and Flachaire; Liu;
+Mammen; Storey, Taylor and Siegmund) are written from knowledge and must be checked to
+resolve before locking (doi.org was not reachable from this session).
 
 - Agarwal, V. and Naik, N. Y. (2004). Risks and portfolio decisions involving hedge funds.
   *Review of Financial Studies* 17(1), 63-98. https://doi.org/10.1093/rfs/hhg044 [R]
@@ -778,6 +819,8 @@ described from knowledge of the paper, section numbers to be checked before lock
   https://doi.org/10.1016/j.jfineco.2015.05.002 [V]
 - Berk, J. B. and van Binsbergen, J. H. (2017). Mutual funds in equilibrium. *Annual Review of
   Financial Economics* 9, 147-167. https://doi.org/10.1146/annurev-financial-110716-032454 [V]
+- Besag, J. and Clifford, P. (1991). Sequential Monte Carlo p-values. *Biometrika* 78(2),
+  301-304. https://doi.org/10.1093/biomet/78.2.301 [R]
 - Carhart, M. M. (1997). On persistence in mutual fund performance. *Journal of Finance* 52(1),
   57-82. https://doi.org/10.1111/j.1540-6261.1997.tb03808.x [R]
 - Chague, F., De-Losso, R. and Giovannetti, B. (2019). Day trading for a living? Working paper,
@@ -786,8 +829,10 @@ described from knowledge of the paper, section numbers to be checked before lock
 - DeMiguel, V., Gil-Bazo, J., Nogales, F. J. and Santos, A. A. P. (2023). Machine learning and
   fund characteristics help to select mutual funds with positive alpha. *Journal of Financial
   Economics* 150(3), 103737. https://doi.org/10.1016/j.jfineco.2023.103737 [R]
+- Davidson, R. and Flachaire, E. (2008). The wild bootstrap, tamed at last. *Journal of
+  Econometrics* 146(1), 162-169. https://doi.org/10.1016/j.jeconom.2008.08.003 [R]
 - Dennim89 (2026). hyperliquid-copytrade-study. GitHub repository, results dated 2026-09-25.
-  https://github.com/Dennim89/hyperliquid-copytrade-study [W]
+  https://github.com/Dennim89/hyperliquid-copytrade-study [S]
 - Dietz, P. O. (1966). *Pension Funds: Measuring Investment Performance.* New York: Free
   Press. (Book; the Modified Dietz return is standard performance-measurement practice.) [R]
 - Dunn, O. J. (1961). Multiple comparisons among means. *Journal of the American Statistical
@@ -809,8 +854,12 @@ described from knowledge of the paper, section numbers to be checked before lock
 - Kosowski, R., Timmermann, A., Wermers, R. and White, H. (2006). Can mutual fund "stars" really
   pick stocks? New evidence from a bootstrap analysis. *Journal of Finance* 61(6), 2551-2595.
   https://doi.org/10.1111/j.1540-6261.2006.01015.x [R]
+- Liu, R. Y. (1988). Bootstrap procedures under some non-i.i.d. models. *Annals of
+  Statistics* 16(4), 1696-1708. https://doi.org/10.1214/aos/1176351062 [R]
 - Liu, Y., Tsyvinski, A. and Wu, X. (2022). Common risk factors in cryptocurrency. *Journal of
   Finance* 77(2), 1133-1177. https://doi.org/10.1111/jofi.13119 [R]
+- Mammen, E. (1993). Bootstrap and wild bootstrap for high dimensional linear models.
+  *Annals of Statistics* 21(1), 255-285. https://doi.org/10.1214/aos/1176349025 [R]
 - Massey, F. J. (1951). The Kolmogorov-Smirnov test for goodness of fit. *Journal of the
   American Statistical Association* 46(253), 68-78.
   https://doi.org/10.1080/01621459.1951.10500769 [R]
@@ -825,7 +874,7 @@ described from knowledge of the paper, section numbers to be checked before lock
   and Molecular Biology* 9(1), Article 39. https://doi.org/10.2202/1544-6115.1585 [R]
 - Placebo (cyberhooman) (2026). Hyperliquid timing placebo test. GitHub repository, results
   dated 2026-10-05 (README.md and PREREGISTRATION.md). https://github.com/cyberhooman/placebo
-  [W]
+  [S]
 - Politis, D. N. and Romano, J. P. (1994). The stationary bootstrap. *Journal of the American
   Statistical Association* 89(428), 1303-1313.
   https://doi.org/10.1080/01621459.1994.10476870 [R]
@@ -837,6 +886,10 @@ described from knowledge of the paper, section numbers to be checked before lock
   Statistical Society, Series B* 64(3), 479-498. https://doi.org/10.1111/1467-9868.00346 [R]
 - Storey, J. D. (2003). The positive false discovery rate: A Bayesian interpretation and the
   q-value. *Annals of Statistics* 31(6), 2013-2035. https://doi.org/10.1214/aos/1074290335 [R]
+- Storey, J. D., Taylor, J. E. and Siegmund, D. (2004). Strong control, conservative point
+  estimation and simultaneous conservative consistency of false discovery rates: A unified
+  approach. *Journal of the Royal Statistical Society, Series B* 66(1), 187-205.
+  https://doi.org/10.1111/j.1467-9868.2004.00439.x [R]
 - Storey, J. D. and Tibshirani, R. (2003). Statistical significance for genomewide studies.
   *Proceedings of the National Academy of Sciences* 100(16), 9440-9445.
   https://doi.org/10.1073/pnas.1530509100 [R]
@@ -852,7 +905,71 @@ described from knowledge of the paper, section numbers to be checked before lock
   *Journal of the Royal Statistical Society, Series B* 67(2), 301-320.
   https://doi.org/10.1111/j.1467-9868.2005.00503.x [R]
 
-Mentioned but deliberately not used until read: Gomez-Cram, R., Guo, ?, Jensen, ? and Kung, H.
-Prediction market accuracy: Crowd wisdom or informed minority? Working paper, SSRN 6687418.
-https://papers.ssrn.com/sol3/papers.cfm?abstract_id=6687418 (unread; author first names not
-confirmed).
+Mentioned but deliberately not used until read (**unverified**): Gomez-Cram, R., Guo, Y.,
+Jensen, T. I. and Kung, H. (2026). Prediction market accuracy: Crowd wisdom or informed
+minority? Working paper, SSRN, posted April 2026. Full names (Roberto Gomez-Cram, Yunhan Guo,
+Theis Ingerslev Jensen, Howard Kung), title and posting month come from news coverage of the
+paper found by web search on 2026-11-20, not from the SSRN record. The SSRN identifier
+6687418 is taken from `LITERATURE.md` and could not be confirmed (papers.ssrn.com was not
+reachable); one news source gives the title as "... Crowd wisdom or informed traders?".
+https://papers.ssrn.com/sol3/papers.cfm?abstract_id=6687418
+
+---
+
+## Verification (2026-11-20, DRAFT still not locked)
+
+Checked against a verifier's list of findings. Web access: arxiv.org, papers.ssrn.com,
+usenix.org and doi.org did not resolve from this session; a web search index was available.
+
+Changed in this pass:
+
+- Holding window (section 7.1, Methods in plain English): the primary window now starts at
+  D1, 00:00 UTC on the day after the recorded lock time, and runs 56 days; sub-blocks and the
+  secondary window are defined from D1; days from 2026-11-20 to D1 are an exploratory
+  pre-lock gap. `P1_LOCK.txt` must state that no post-T0 snapshot or portfolio point was
+  opened before the lock (section 13 item 5).
+- Barber, Lee, Liu and Odean (2014): 37.9 bp per day after fees (61.3 bp before fees) for the
+  top 500 confirmed through the abstract in a search index; the prior now says after fees.
+- Gomez-Cram, Guo, Jensen and Kung (2026): first names and year filled in from news coverage;
+  the SSRN identifier and the exact title remain unverified and are labelled so in the body
+  and the reference list. The paper is still not used.
+- Selection set A: ranking fixed as q_i, then p_i, then larger t_i.
+- Elastic-net target C: defined as the sum of four span residuals with beta from spans ending
+  at or before T0 - 56 days only, winsorized on the training cross-section.
+- Order-statistic persistence test (7.4): sorted on the formation skill ratio, labelled an
+  adaptation of Berk and van Binsbergen (2015), with a stationary-bootstrap p-value next to
+  the binomial one and the 36 to 120 month horizon of the original noted.
+- H4: primary version now over all selection-eligible units, with short-lived units ranked at
+  the bottom by realized return; the survival-conditioned version is secondary.
+- Holding-window betas (7.3): no longer credited to Berk and van Binsbergen (2015, section
+  7.1); marked as a project choice pending a check.
+- Dennim89 and Placebo retagged [S] to match `LITERATURE.md`; the 114 of 190 statement now
+  says they were excluded from Dennim89's ROI test by a $1,000 capital floor (unverified run
+  note).
+- Reference list: added Besag and Clifford (1991), Storey, Taylor and Siegmund (2004), Liu
+  (1988), Mammen (1993) and Davidson and Flachaire (2008), which the text already cited; the
+  tag legend now defines [S] instead of [W].
+- Checklist (section 13): added the specific pointer checks, the SSRN and DOI checks, and the
+  post-T0 statement.
+
+Already present in the draft when this pass began, checked and kept: the Fama and French
+sigma rule labelled as the project's own with a likelihood table; Hall and Wilson cited only
+for the bootstrap-t and null-reflecting design, with Besag and Clifford and the validity
+argument; Victor (2020) only as a general reference; fund-level wording for Barras et al. and
+Berk and van Binsbergen; the lambda rule credited to Storey, Taylor and Siegmund (2004); the
+gamma* grid marked as a project choice; the 60-observation minimum as a precision filter;
+Rademacher weights credited to Liu, Mammen and Davidson and Flachaire; Harvey, Liu and Zhu
+replaced by Kosowski et al. for the non-normality argument; Chague et al. wording; the
+stricter synthetic calibration gate and the Monte Carlo only scope of stage 2; the
+invalid-draw rule; the q-value computation and sign split; the stitching rule; post-T0 inputs
+(vault list, rule 3, entity membership); nominal USDC; and the internal cross-references
+(8, item 1; 7.2; 8, item 11; 10; 7).
+
+Not resolved here:
+
+- Section, table and equation pointers for all [R] papers (Barras et al. gamma* and lambda,
+  Fama and French, Berk and van Binsbergen) remain unchecked; full texts could not be opened.
+- The SSRN identifier 6687418 and the DOIs added in this pass could not be resolved.
+- The tag disagreement with `LITERATURE.md` ([V] there for papers that are [R] here) and the
+  README's "4-week blocks" (should be 30-day blocks) are in files outside this pass and were
+  not edited.
