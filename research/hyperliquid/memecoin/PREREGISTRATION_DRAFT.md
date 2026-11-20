@@ -108,9 +108,11 @@ Kaplan-Meier analysis free of the `tokenDetails` selection (section 6). The gap
 `t0 - deployTime` is reported descriptively.
 
 Kaplan and Meier (1958) require a well-defined origin and independent censoring (their
-section 1 on "lifetimes" and the product-limit estimator, section 2); the choice of first
-traded day follows Gatabazi et al. (2022, data section), who measure token lifetime from the
-first observed trading date.
+section 1 on "lifetimes" and the product-limit estimator, section 2; section pointers
+unverified, record only). Measuring token lifetime in calendar time from listing follows the
+general approach of Gatabazi et al. (2022), who fit Kaplan-Meier, Cox and Aalen models to
+coin lifetimes; that they use the first observed trading date as origin is unverified (only
+the abstract and a search summary of the method were read).
 
 ### 3.3 Collapse label (primary)
 
@@ -252,7 +254,12 @@ Three layers of missing data, each reported as a result, not a footnote:
    the census is "tokens that reached `spotMeta`", which is the survivorship problem of
    Brown, Goetzmann, Ibbotson and Ross (1992, sections 1 and 2): a sample truncated on
    survival can make outcomes look better or more predictable than they are. If any index
-   appears without a USDC pair, it is counted separately.
+   appears without a USDC pair, it is counted separately. The same holds for pairs: in crawl
+   `20261120T002608Z`, 820 of token indices 0 to 1338 and 839 of pair indices 0 to 1192 are
+   absent from `spotMeta`, yet `spotMetaAndAssetCtxs` returns contexts for all 1,193 pair
+   indices. Before locking, the rule for these unlisted pairs is fixed from metadata only
+   (for example, whether their contexts carry any supply), and they are reported as a
+   separate row of the flow table; their prices are not looked at.
 2. **`tokenDetails` failures** (HTTP 500 after retries, or JSON `null`). Reported as a table
    by cohort and index band. Diagnostics: (a) compare failed and successful tokens on
    fields available without `tokenDetails` (`t0`, cohort, `fee_share`, pair index); (b)
@@ -285,6 +292,15 @@ it); the method sections were **not** read in full. Section and equation pointer
 those entries come from the abstract, the standard structure of the paper, or the
 secondary description named. They must be checked against the full text before locking.
 Entries marked **unverified** could not be located with enough detail to confirm.
+
+A second attempt on 2026-11-20 (Project 2 session) also failed for arxiv.org, usenix.net,
+mdpi.com, repository.up.ac.za, api.crossref.org and api.semanticscholar.org (proxy refusal),
+so no full text was read. Web search confirmed two details used above: Cernera et al.
+(2023) define a 1-day token by a lifetime (creation to last transfer) under one day, and a
+1-day rug pull as a pool pairing such a token whose single liquidity provider withdraws all
+liquidity; Gatabazi et al. (2022) use the Cox proportional hazards and Aalen additive models
+with Kaplan-Meier curves. The Mazorra, Adan and Daza (2022) label thresholds remain
+unverified.
 
 - Brown, S. J., Goetzmann, W. N., Ibbotson, R. G. and Ross, S. A. (1992). "Survivorship bias
   in performance studies." *Review of Financial Studies* 5(4), 553-580.
