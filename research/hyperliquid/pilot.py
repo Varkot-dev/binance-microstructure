@@ -527,28 +527,38 @@ def rel_diff(a: float, b: float) -> float | None:
     return abs(a - b) / abs(b) if b else None
 
 
+def open_at_first_fill(fills: Sequence[dict]) -> list[str]:
+    """Perp coins (main dex and HIP-3) whose first retrieved fill starts from a nonzero position.
+
+    A perp position can only be opened by a fill, so a nonzero ``startPosition`` on the first
+    retained fill of a coin is direct evidence that earlier fills are missing. Spot is
+    excluded because spot balances can arrive by transfer. ``fills`` must be in server order
+    within each millisecond (``tid`` is not monotone and must not be used to order fills).
+    """
+    first: dict[str, dict] = {}
+    for f in fills:
+        first.setdefault(f["coin"], f)
+    return sorted(c for c, f in first.items()
+                  if not is_spot(c) and float(f.get("startPosition") or 0) != 0)
+
+
 def classify_fills(n_fills: int, coverage: float | None, vlm_all: float,
-                   earliest_fill_ms: int | None, first_event_ms: int | None,
-                   tol: float = 0.05, lag_ms: int = 7 * 86_400_000) -> str:
+                   n_open_at_first: int, tol: float = 0.05) -> str:
     """Label a wallet's fill history.
 
-    ``no_trading``: no fills and zero allTime volume. ``complete``: retrieved fill notional
-    covers at least ``1 - tol`` of portfolio allTime volume. ``left_censored``: coverage
-    below that and the earliest retrieved fill is more than ``lag_ms`` after the wallet's
-    first recorded activity (or there is no fill despite volume). ``partial``: anything else
-    (coverage short but no evidence that old history is missing, for example volume that does
-    not appear as fills).
+    ``no_trading``: no fills and zero allTime volume. ``left_censored``: at least one perp
+    coin's first retained fill starts from an open position, or volume but no fills.
+    ``complete``: no such evidence and retrieved fill notional covers at least ``1 - tol`` of
+    portfolio allTime volume. ``volume_gap``: no evidence of missing early fills, but the
+    fills explain less than ``1 - tol`` (or more than ``1 + tol``) of the reported volume.
     """
     if n_fills == 0 and vlm_all == 0:
         return "no_trading"
-    if coverage is not None and coverage >= 1 - tol:
+    if n_fills == 0 or n_open_at_first > 0:
+        return "left_censored"
+    if coverage is not None and abs(coverage - 1) <= tol:
         return "complete"
-    if n_fills == 0:
-        return "left_censored"
-    if earliest_fill_ms is not None and first_event_ms is not None \
-            and earliest_fill_ms - first_event_ms > lag_ms:
-        return "left_censored"
-    return "partial"
+    return "volume_gap"
 
 
 def wallet_metrics(w: dict, lb: dict[str, float], as_of_ms: int) -> dict:
@@ -592,8 +602,9 @@ def wallet_metrics(w: dict, lb: dict[str, float], as_of_ms: int) -> dict:
     starts = [x for x in (m["first_ledger_ms"],
                           min((p[0] for p in av_hist), default=None)) if x is not None]
     m["first_activity_ms"] = min(starts) if starts else None
+    m["perp_open_at_first_fill"] = open_at_first_fill(fills)
     m["fill_status"] = classify_fills(m["n_fills"], m["fill_coverage"], vlm_all,
-                                      m["earliest_fill_ms"], m["first_activity_ms"])
+                                      len(m["perp_open_at_first_fill"]))
     if m["earliest_fill_ms"] is not None and m["first_inbound_ms"] is not None:
         m["fill_minus_inbound_days"] = (m["earliest_fill_ms"] - m["first_inbound_ms"]) / 8.64e7
     else:
@@ -696,7 +707,7 @@ def aggregate(metrics: Sequence[dict], budget_per_min: float, n_cohort: int) -> 
     agg["censored_detail"] = sorted(
         ({"n_fills": m["n_fills"], "n_oids": m["n_oids"],
           "coverage": m["fill_coverage"], "role": m["role"]}
-         for m in metrics if m["fill_status"] in ("left_censored", "partial")),
+         for m in metrics if m["fill_status"] in ("left_censored", "volume_gap")),
         key=lambda d: d["n_fills"])
     agg["ledger"] = {"n_rows": _q(m["n_ledger"] for m in metrics),
                      "multi_page": sum((m["ledger_pages"] or 0) > 1 for m in metrics),
@@ -810,16 +821,24 @@ def cmd_summarize(args) -> dict:
     sample = draw_sample(table, args.n)
     meta = _run_meta(args.out)
     client = InfoClient(args.out / "raw", offline=True)
-    metrics = []
+    metrics, missing = [], []
     for user in sample:
-        w = fetch_wallet(client, user, meta["as_of_ms"], args.max_fill_pages)
+        try:
+            w = fetch_wallet(client, user, meta["as_of_ms"], args.max_fill_pages)
+        except FileNotFoundError:  # not fetched yet: summarize what is cached
+            missing.append(user)
+            continue
         metrics.append(wallet_metrics(w, table[user], meta["as_of_ms"]))
+    if missing:
+        print(f"{len(missing)} of {len(sample)} sampled wallets not cached yet; skipped",
+              file=sys.stderr)
     with (args.out / "wallet_metrics.jsonl").open("w") as f:
         for m in metrics:
             f.write(json.dumps(m) + "\n")
     agg = aggregate(metrics, DOC_BUDGET_PER_MIN * args.pace, len(table))
     agg["sample_vs_cohort"] = sample_vs_cohort(table, sample)
     agg["run"] = meta
+    agg["n_not_cached"] = len(missing)
     log_path = args.out / "wallet_log.jsonl"
     if log_path.exists():
         logs = [json.loads(x) for x in log_path.read_text().splitlines()]

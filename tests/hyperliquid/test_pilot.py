@@ -169,12 +169,22 @@ def test_first_inbound_and_classification():
         {"time": 20, "delta": {"type": "deposit", "usdc": "1"}},
     ]
     assert pilot.first_inbound_ms(ledger, user) == 9
-    day = 86_400_000
-    assert pilot.classify_fills(0, None, 0.0, None, None) == "no_trading"
-    assert pilot.classify_fills(10, 0.99, 1.0, 0, 0) == "complete"
-    assert pilot.classify_fills(10, 0.5, 1.0, 30 * day, 0) == "left_censored"
-    assert pilot.classify_fills(10, 0.5, 1.0, day, 0) == "partial"
-    assert pilot.classify_fills(0, 0.0, 5.0, None, 0) == "left_censored"
+    assert pilot.classify_fills(0, None, 0.0, 0) == "no_trading"
+    assert pilot.classify_fills(10, 0.99, 1.0, 0) == "complete"
+    assert pilot.classify_fills(10, 1.00, 1.0, 2) == "left_censored"
+    assert pilot.classify_fills(0, 0.0, 5.0, 0) == "left_censored"
+    assert pilot.classify_fills(10, 0.5, 1.0, 0) == "volume_gap"
+
+
+def test_open_at_first_fill_uses_server_order_and_skips_spot():
+    fills = [
+        {"coin": "BTC", "startPosition": "0.0", "tid": 9},
+        {"coin": "BTC", "startPosition": "1.0", "tid": 1},  # later fill, lower tid
+        {"coin": "ETH", "startPosition": "-2.0", "tid": 5},
+        {"coin": "@107", "startPosition": "3.0", "tid": 6},
+        {"coin": "xyz:XYZ100", "startPosition": "1.0", "tid": 7},
+    ]
+    assert pilot.open_at_first_fill(fills) == ["ETH", "xyz:XYZ100"]
 
 
 def test_fill_notional_splits_markets():
