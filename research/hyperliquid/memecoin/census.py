@@ -48,8 +48,8 @@ DEFAULT_OUT = ROOT / "data" / "hyperliquid" / "memecoin" / "raw"
 # about 40 requests or about 900 weight per minute, under the 70% rule in DATA.md once
 # candle surcharges are counted.
 MIN_INTERVAL_S = 1.5
-MAX_ATTEMPTS = 4
-BACKOFF_BASE_S = 4.0
+MAX_ATTEMPTS = 3
+BACKOFF_BASE_S = 3.0
 TIMEOUT_S = 60.0
 RETRY_STATUSES = frozenset({429, 500, 502, 503, 504})
 
