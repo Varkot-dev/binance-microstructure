@@ -1,0 +1,43 @@
+Project 1 lock record: a luck-adjusted Hyperliquid leaderboard
+
+Locked file:       research/hyperliquid/PREREGISTRATION_P1.md
+sha256:            f5dcd9e48f0c3d61d1fe4414178c4f79faf9703163b592cde216596b21e378c4
+Lock time (L):     2026-11-22T21:21:00Z
+Holding start D1:  2026-11-23T00:00:00Z (00:00 UTC on the day after L, section 7.1)
+Primary window:    2026-11-23T00:00:00Z to 2027-01-18T00:00:00Z (56 days)
+Secondary window:  2026-11-23T00:00:00Z to 2027-05-24T00:00:00Z (182 days)
+Pre-lock gap:      2026-11-20T00:00:00Z to 2026-11-23T00:00:00Z (exploratory only)
+Formation time T0: 2026-11-19T23:58:51Z
+Cohort file:       leaderboard_20261119T235851Z.json.gz
+Cohort sha256:     ac669f966b7ddbd4a4e5aa8ac50781c9a8d9f51a071ac3c062812046217c1a37
+Analysis script:   research/hyperliquid/p1_skill.py (holds the sha256 above and refuses to run
+                   on a mismatch)
+Approved by:       the repository owner, in the session on 2026-11-22
+
+Statement (checklist item 5). Before this lock, no return, alpha, t-statistic, p-value,
+ranking or portfolio statistic of any cohort wallet was computed. The 200-wallet pilot
+measured only coverage, spacing, retention, consistency and cost; it read accountValue and
+pnl at T0, using post-T0 points only as the differencing anchor of section 2.2. No
+leaderboard snapshot dated after T0 was opened: the daily snapshots from 2026-11-20 onward
+were saved by GitHub Actions to release assets and never downloaded. A three-wallet live test
+of the crawler on 2026-11-22 printed only record counts.
+
+Data collection (checklist item 4). The weekly crawl of section 2.2 runs as
+.github/workflows/hl-p1-crawl.yml: daily runs, 24 resumable shards, one pass per ISO week
+stored as the pre-release hl-p1-pass-YYYYMMDD. Its first pass (hl-p1-pass-20261116, the
+formation pass) started at 2026-11-22T21:20:34Z, Actions run 45071560386. Each pass fetches
+portfolio, subAccounts and userNonFundingLedgerUpdates for every cohort address and listed
+sub-account, plus the section 2.2 benchmarks. userRole is not called by the crawl; vault
+status comes from the 2026-11-19 vault list, and any userRole calls for unresolved
+addresses will be made and recorded separately.
+
+Checklist items not completed at the lock (recorded so they cannot be mistaken for done):
+1. Section, table and equation pointers for the [R] references were not checked against the
+   papers: arxiv.org, papers.ssrn.com, doi.org and the journal hosts were unreachable from
+   the session. The references keep their [R] or unverified tags.
+2. SSRN 6687418 (Gomez-Cram, Guo, Jensen and Kung) could not be opened; the entry stays
+   marked unverified.
+3. The DOIs added on 2026-11-20 were not resolved, for the same reason.
+None of these changes a method. If a check later shows a pointer or attribution is wrong,
+the correction is a dated amendment under section 12, and results are also reported under
+the plan as locked.

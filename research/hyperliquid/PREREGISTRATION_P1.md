@@ -1,14 +1,9 @@
-# P1 pre-registration (DRAFT): a luck-adjusted Hyperliquid leaderboard
+# P1 pre-registration: a luck-adjusted Hyperliquid leaderboard
 
-> **DRAFT, NOT LOCKED.** This plan is waiting for the owner's review. It has no force until
-> the word DRAFT is removed, the file is renamed `PREREGISTRATION_P1.md`, and its sha256 is
-> written on the line below and fixed in the analysis script. Until then no return, alpha,
-> t-statistic, p-value, ranking or portfolio statistic of any cohort wallet may be computed,
-> for the formation window or for the holding window.
->
-> sha256 of the locked file (a file cannot contain its own hash, so at the lock this line is
-> replaced by the sentence "recorded in `p1_skill.py` and `P1_LOCK.txt`", and the hash of the
-> file as it then stands is written in those two places):
+> **LOCKED.** The lock time and this file's sha256 are recorded in `p1_skill.py` and
+> `P1_LOCK.txt` (a file cannot contain its own hash). No return, alpha, t-statistic, p-value,
+> ranking or portfolio statistic of any cohort wallet was computed before the lock. Changes
+> after the lock follow section 12.
 
 Written 2026-11-20, the day after the formation snapshot, **before any wallet return or
 performance statistic was computed**. The 200-wallet pilot (`pilot/PILOT_REPORT.md`) measured
@@ -916,7 +911,7 @@ https://papers.ssrn.com/sol3/papers.cfm?abstract_id=6687418
 
 ---
 
-## Verification (2026-11-20, DRAFT still not locked)
+## Verification (2026-11-20, before the lock)
 
 Checked against a verifier's list of findings. Web access: arxiv.org, papers.ssrn.com,
 usenix.org and doi.org did not resolve from this session; a web search index was available.

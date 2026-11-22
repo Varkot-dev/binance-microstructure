@@ -1,5 +1,10 @@
 # Hyperliquid: skill or luck?
 
+> **Status (2026-11-22):** Project 1's plan is locked in
+> [PREREGISTRATION_P1.md](PREREGISTRATION_P1.md) (sha256 and lock time in
+> [P1_LOCK.txt](P1_LOCK.txt)). The out-of-sample window runs from 2026-11-23 to 2027-01-18,
+> and the weekly wallet crawl (`.github/workflows/hl-p1-crawl.yml`) collects its data.
+
 Written 2026-11-19 from one day of desk research and live API probes. This is the starting brief
 for the new guiding question of the repo. Read this file first, then `DATA.md`, `LITERATURE.md`
 and `ML_IDEAS.md` in this folder.
