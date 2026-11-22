@@ -1,0 +1,76 @@
+name: binance-rpi-recorder
+
+# Record Binance USD-M futures trades with the isRPITrade (retail) flag for a fixed list of
+# RPI-enabled contracts. The flag is not in Binance's downloadable archive, so trades that are
+# not recorded are lost. Runs start every 4 hours and each lasts until 75 minutes after the
+# next start, so consecutive runs overlap and a late start leaves no hole; overlapping trades
+# are removed later by trade id. Each run attaches one gzipped CSV and one JSON summary (counts,
+# id gaps, rate limits) to the monthly pre-release rpi-trades-YYYY-MM.
+# Code: src/microstructure/rpi/recorder.py.
+
+on:
+  schedule:
+    - cron: "23 */4 * * *"
+  workflow_dispatch:
+    inputs:
+      minutes:
+        description: "Run length in minutes (empty: until the end of the current slot)"
+        required: false
+
+permissions:
+  contents: write
+
+jobs:
+  record:
+    runs-on: ubuntu-latest
+    timeout-minutes: 355
+    steps:
+      - uses: actions/checkout@v5
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.12"
+      - run: uv sync --no-dev
+      - name: Check that Binance answers from this runner
+        run: |
+          code=$(curl -s -o /dev/null -w '%{http_code}' "https://www.binance.com/fapi/v1/trades?symbol=BTCUSDC&limit=1")
+          echo "Binance status from runner: $code"
+          if [ "$code" != "200" ]; then
+            echo "::error::Binance returned HTTP $code from this runner (451 means a blocked location)"
+            exit 1
+          fi
+      - name: Record
+        env:
+          MINUTES: ${{ github.event.inputs.minutes }}
+        run: |
+          set -euo pipefail
+          if [ -n "${MINUTES:-}" ]; then
+            uv run python -m microstructure.rpi.recorder run --out out --minutes "$MINUTES"
+          else
+            end=$(uv run python -m microstructure.rpi.recorder end-time)
+            echo "recording until $end"
+            uv run python -m microstructure.rpi.recorder run --out out --until-iso "$end"
+          fi
+      - name: Attach to the monthly release
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          ls out/rpi_run_*.json >/dev/null 2>&1 || { echo "nothing recorded"; exit 0; }
+          run=$(ls out/rpi_run_*.json | sed -E 's/.*rpi_run_(.*)\.json/\1/')
+          tag="rpi-trades-${run:0:4}-${run:4:2}"
+          if ! gh release view "$tag" >/dev/null 2>&1; then
+            gh release create "$tag" --prerelease --target "$GITHUB_SHA" \
+              --title "Binance RPI trades ${run:0:4}-${run:4:2}" \
+              --notes "Binance USD-M futures trades with the isRPITrade flag, recorded every 4 hours with overlap. One gzipped CSV and one JSON summary (counts, trade-id gaps, rate limits) per run. Produced by .github/workflows/rpi-recorder.yml." || true
+          fi
+          for i in 1 2 3 4; do
+            gh release upload "$tag" out/* --clobber && break
+            sleep $((i * 20))
+          done
+          python3 -c "
+          import json,glob
+          s=json.load(open(glob.glob('out/rpi_run_*.json')[0]))
+          v=s['symbols'].values()
+          print(f\"Run {s['run_id']}: {sum(x['trades'] for x in v):,} trades, {sum(x['rpi_trades'] for x in v):,} RPI, {sum(len(x['gaps']) for x in v)} gaps, {s['http_429_or_418']} rate limits\")
+          " >> "$GITHUB_STEP_SUMMARY"
