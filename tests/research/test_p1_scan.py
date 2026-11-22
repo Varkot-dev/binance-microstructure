@@ -222,3 +222,35 @@ def test_shifted_times_near_other_corruption_starts_are_excluded():
     assert np.isnan(second[j])  # lands exactly on the first onset
     k = int(np.flatnonzero(p1.SHIFT_HOURS == -30)[0])
     assert np.isfinite(second[k])  # 6 h away from it: allowed
+
+
+def test_episodes_merge_runs_across_symbols():
+    import polars as pl
+
+    iv = pl.DataFrame({
+        "symbol": ["A", "B", "C", "A"], "rule": ["S1", "S3", "S3", "S0"],
+        "band": [None, -1.0, 1.0, None], "side": ["bid", "bid", "ask", "na"],
+        "start_ts": [0, 1800, 20_000, 0], "end_ts": [7200, 9000, 30_000, 99_999],
+        "n_snap": [1, 1, 1, 1]})
+    ep = p1.episodes(iv)
+    assert ep["n_symbols"].to_list() == [2, 1]  # A and B merged; C later; S0 ignored
+    assert ep["rules"].to_list() == ["S1+S3", "S3"]
+
+
+def test_write_report_runs_on_a_scan():
+    import polars as pl
+
+    d0 = dt.date(2024, 3, 10)
+    res = p1.scan_symbol("TESTUSDT", FakeArchive({d0: 100}), d0, d0, workers=1,
+                         log=lambda s: None)
+    days = res["days"]
+    d3 = p1.bd.d3_dropped_dates(days).join(
+        p1.bd.d3_dropped_dates(days, col="d1_s_v1").select(
+            "date", pl.col("d3_dropped").alias("d3_dropped_v1")), on="date")
+    t1 = {"primary": {"bid": {"n": 1, "median": -0.01, "null_median": 0.0, "n_shifts": 9,
+                              "p": 0.1, "share_predicted_sign": 1.0, "null_share": 0.5}},
+          "holm_reject": {"bid": False}, "secondary": {"bid:h15": {"n": 1, "p": 0.5}}}
+    md = p1.write_report(days, d3, res["intervals"], res["metric_days"], res["manifest"],
+                         res.get("metric_flags", pl.DataFrame()), t1)
+    assert "## 1. Share removed by each rule (D5)" in md
+    assert "fails D1 (d1_s_v1)" in md and "Holm rejections" in md

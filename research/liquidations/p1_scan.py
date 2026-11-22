@@ -642,9 +642,122 @@ def cmd_report(_: argparse.Namespace) -> None:
     _load_all("metric_days").write_parquet(OUT / "metrics_days.parquet")
     _load_all("metric_flags").write_parquet(OUT / "metrics_flags.parquet")
     _load_all("errors").write_csv(OUT / "errors.csv")
+    t1p = OUT / "t1_onset_test.json"
+    t1 = json.loads(t1p.read_text()) if t1p.exists() else None
+    (OUT / "p1_report.md").write_text(write_report(
+        full, d3, _load_all("intervals"), _load_all("metric_days"), man,
+        _load_all("metric_flags"), t1))
     print(f"{full.height} contract-days with a file; D1 pass v2 {full['d1_s'].mean():.3f}, "
           f"v1 {full['d1_s_v1'].mean():.3f}; D3 drops {d3['d3_dropped'].sum()} dates (v2), "
           f"{d3['d3_dropped_v1'].sum()} (v1)")
+
+
+def episodes(iv: pl.DataFrame, min_s: int = 3600, link_s: int = 3600) -> pl.DataFrame:
+    """S1, S2 and S3 runs longer than min_s, merged across symbols: a run joins the current
+    episode if it starts within link_s of the previous run's start."""
+    runs = (iv.filter(pl.col("rule").is_in(["S1", "S2", "S3"])
+                      & ((pl.col("end_ts") - pl.col("start_ts")) >= min_s))
+            .sort("start_ts"))
+    if runs.height == 0:
+        return pl.DataFrame()
+    start = runs["start_ts"].to_numpy()
+    ep = np.cumsum(np.r_[True, np.diff(start) > link_s])
+    return (runs.with_columns(pl.Series("episode", ep))
+            .group_by("episode").agg(
+                pl.col("start_ts").min().alias("first_start"),
+                pl.col("start_ts").max().alias("last_start"),
+                pl.col("end_ts").max().alias("last_end"),
+                pl.col("symbol").n_unique().alias("n_symbols"),
+                pl.col("rule").unique().sort().str.join("+").alias("rules"),
+                pl.col("side").unique().sort().str.join("+").alias("sides"))
+            .sort("first_start")
+            .with_columns([pl.from_epoch(c).alias(c) for c in
+                           ("first_start", "last_start", "last_end")]))
+
+
+def _md_table(df: pl.DataFrame, floatfmt: str = "{:.4f}") -> str:
+    cols = df.columns
+    out = ["| " + " | ".join(cols) + " |", "|" + "---|" * len(cols)]
+    for row in df.iter_rows():
+        out.append("| " + " | ".join(floatfmt.format(v) if isinstance(v, float) else str(v)
+                                     for v in row) + " |")
+    return "\n".join(out)
+
+
+def d5_table(full: pl.DataFrame) -> pl.DataFrame:
+    """D5: share of snapshots and of contract-days touched by each rule, and D1 failures."""
+    n_snap = full["n_snap"].sum()
+    rows = []
+    for r in bd.RULES + ("S5_nokline", "S6_v1", "calendar"):
+        col = f"n_{r}"
+        if col in full.columns:
+            rows.append({"item": f"rule {r}", "share_of_snapshots": full[col].sum() / n_snap,
+                         "share_of_contract_days": float((full[col] > 0).mean())})
+    for c in [c for c in full.columns if c.startswith("d1_")]:
+        rows.append({"item": f"fails D1 ({c})", "share_of_snapshots": float("nan"),
+                     "share_of_contract_days": float((~full[c]).mean())})
+    return pl.DataFrame(rows)
+
+
+def write_report(full: pl.DataFrame, d3: pl.DataFrame, iv: pl.DataFrame,
+                 mdays: pl.DataFrame, man: pl.DataFrame, mflags: pl.DataFrame,
+                 t1: dict | None) -> str:
+    """Markdown report of P1 (PREREGISTRATION_P1.md sections 4 and 5)."""
+    L = ["# P1 results: bookDepth mask, metrics screen and onset test", "",
+         f"Generated {dt.datetime.now(dt.UTC):%Y-%m-%d %H:%M} UTC by `p1_scan.py report`.",
+         (f"Pre-registration sha256 `{PREREG_SHA}`; mask v2 `{MASK_SHA}` (primary), "
+          f"v1 `{MASK_V1_SHA}`; metrics screen `{SCREEN_SHA}`."), "",
+         (f"- Symbols: {full['symbol'].n_unique()}; contract-days with a verified bookDepth "
+          f"file: {full.height}; files in manifest: {man.height}; files with an error: "
+          f"{man.filter(pl.col('error').is_not_null()).height}."), "",
+         "## 1. Share removed by each rule (D5)", "",
+         _md_table(d5_table(full.filter(pl.col("n_snap").is_not_null()))), "",
+         "## 2. Dates dropped for all contracts (D3)", ""]
+    dropped = d3.filter(pl.col("d3_dropped") | pl.col("d3_dropped_v1"))
+    L += [(f"{d3['d3_dropped'].sum()} dates under v2, {d3['d3_dropped_v1'].sum()} under v1, "
+           f"of {d3.height}."), "", _md_table(dropped) if dropped.height else "(none)", "",
+          "## 3. Corruption episodes (runs over 1 hour, merged across symbols)", ""]
+    ep = episodes(iv)
+    L += [_md_table(ep) if ep.height else "(none)", "",
+          "## 4. Metrics screen", ""]
+    if mflags.height:
+        L += ["| rule | rows flagged |", "|---|---|"]
+        L += [f"| {c} | {int(mflags[c].sum())} |" for c in ("m0", "m2", "m2_value", "m3")]
+        L += [""]
+    if mdays.height:
+        conv = mdays.join(man.filter(pl.col("kind") == "metrics").select(
+            "symbol", "date", "zip_member_mtime"), on=["symbol", "date"], how="left")
+        by_month = (conv.with_columns(pl.col("date").dt.strftime("%Y-%m").alias("file_month"))
+                    .group_by("file_month").agg(
+                        (pl.col("convention") == "start").sum().alias("start"),
+                        (pl.col("convention") == "end").sum().alias("end"),
+                        (pl.col("convention") == "undetermined").sum().alias("undetermined"))
+                    .sort("file_month"))
+        by_rewrite = (conv.with_columns(pl.col("zip_member_mtime").str.slice(0, 4)
+                                        .alias("zip_year"))
+                      .group_by("zip_year").agg(
+                          (pl.col("convention") == "start").sum().alias("start"),
+                          (pl.col("convention") == "end").sum().alias("end"),
+                          (pl.col("convention") == "undetermined").sum().alias("undetermined"))
+                      .sort("zip_year"))
+        L += ["Label convention (M5) by file date:", "", _md_table(by_month), "",
+              ("By year of the timestamp stored inside the zip (a later year means the file "
+               "was rewritten):"), "", _md_table(by_rewrite), ""]
+    L += ["## 5. Test T1: do corruption onsets follow same-direction price moves?", ""]
+    if t1 is None:
+        L += ["Not run yet (`p1_scan.py onset`)."]
+    else:
+        prim = pl.DataFrame([{"side": k, **{x: v.get(x) for x in
+                              ("n", "median", "null_median", "n_shifts", "p",
+                               "share_predicted_sign", "null_share")}}
+                             for k, v in t1["primary"].items()])
+        L += ["Primary (60-minute prior return, Holm over the two sides at 5%):", "",
+              _md_table(prim, "{:.5f}"), "", f"Holm rejections: {t1['holm_reject']}", "",
+              "Secondary analyses (reported, never used to change the verdict):", "",
+              _md_table(pl.DataFrame([{"analysis": k, **{x: v.get(x) for x in
+                                       ("n", "median", "null_median", "p")}}
+                                      for k, v in t1["secondary"].items()]), "{:.5f}")]
+    return "\n".join(L) + "\n"
 
 
 def _load_onsets(suffix: str = "", key: str = "r60") -> tuple[pl.DataFrame, list[np.ndarray]]:
