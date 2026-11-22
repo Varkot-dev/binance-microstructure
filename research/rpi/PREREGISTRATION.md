@@ -80,11 +80,13 @@ Binance's documentation and cannot be tested with public data.
   by two overlapping runs are de-duplicated by (symbol, id). Notional is computed as price times
   qty, because the pilot showed that `quoteQty` is truncated.
 - **Lot and tick sizes** come from `exchangeInfo` as saved by the recorder at each run start.
-- **DECISION D1: record the order books as well.** `GET /fapi/v1/rpiDepth` (book including RPI
-  orders) and `GET /fapi/v1/depth` (book without them) are free. Recording both lets us measure
-  when RPI liquidity is at the front, which (a) measures labelling opportunity directly and
-  (b) yields confirmed non-retail trades (section 6.4). Recommended. It requires extending the
-  recorder before day 1.
+- **Order books (D1, built on the review branch, runs once merged).**
+  `src/microstructure/rpi/books.py` takes a paired snapshot of every contract every 30 seconds:
+  `GET /fapi/v1/depth` (book without RPI orders) and then `GET /fapi/v1/rpiDepth` (book
+  including them), top 20 levels each. In a 3-minute test the two books' exchange timestamps
+  were a median 98 ms apart. A contract is in an **RPI-at-front moment** on the bid (ask) side
+  when the best bid (ask) of the RPI book is strictly better than that of the ordinary book.
+  Binance hides crossed RPI levels from this book, so some RPI liquidity is not visible.
 - **DECISION D2: backfill with `historicalTrades`.** Needs a free API key stored as a repository
   secret. Recommended as a repair tool for gaps only.
 
@@ -169,23 +171,29 @@ retail order is likely. Section 8.4 tests what can be tested.
 | Lift, recall and model training | `L_front` | Size-neutral under A2 |
 | Sensitivity | `L_any` for everything | Shows how much the choice matters |
 
-### 6.4 Confirmed negatives (only if D1 is approved)
+### 6.4 Probable negatives from the order books
 
-A sell (buy) order is a **confirmed non-retail** order if it is unflagged and the book snapshots
-immediately before and after it, no more than 2 seconds apart, both show RPI liquidity strictly
-better than the best ordinary bid (ask). An app order would have hit that RPI liquidity. With
-positives and negatives inside these "RPI-at-front" windows, rules and the model are also
-evaluated as an ordinary labelled problem (Hsieh et al. 2019 for learning with biased negatives).
-Limitations stated in advance: snapshots are not continuous, and it is undocumented whether app
-stop orders and liquidations can take RPI liquidity.
+A sell (buy) order is a **probable non-retail** order if it is unflagged and its time is within
+1,000 ms after both book timestamps of a paired snapshot showing an RPI-at-front moment on the
+bid (ask) side. An app order arriving then would have hit the RPI liquidity first. With
+positives and probable negatives inside these moments, rules and the model are also evaluated as
+an ordinary labelled problem (Hsieh et al. 2019 for learning with biased negatives).
+
+Limitations stated in advance. Snapshots are 30 seconds apart, so only a small share of orders
+fall in such a window. The book can change within the second, so some probable negatives are
+wrong; the analysis is repeated with a 250 ms window. It is undocumented whether app stop orders
+and liquidations can take RPI liquidity. These results are secondary.
 
 ### 6.5 Mechanism checks, run first on training data only
 
 - M1: within orders with both flagged and unflagged rows at one price, do flagged rows come last?
   (Checks the queue rule and the order reconstruction.)
 - M2: the share of `L_any` orders that are `L_front`, by contract.
-- M3: if D1 is approved, the share of flagged orders arriving when the recorded books show RPI
-  liquidity at the front.
+- M3: among orders within 1,000 ms after a paired snapshot, the share of `L_front` orders that
+  fall in an RPI-at-front moment on their side. If the reading of the rules in section 2 is
+  right, this share is high.
+- M4: the share of snapshots in an RPI-at-front moment, by contract and hour. This measures
+  labelling opportunity directly and uses no flags.
 
 If M1 fails in more than 5% of such orders, order reconstruction is judged unreliable and the
 row-level analysis becomes primary. This switch is decided by that number alone.
@@ -247,7 +255,7 @@ anything computed from other orders' flags.
 
 | Part | Days | Use |
 |---|---|---|
-| Train | 1 to 28 | Fit models; mechanism checks M1 to M3 |
+| Train | 1 to 28 | Fit models; mechanism checks M1 to M4 |
 | Validation | 29 to 35 | Tuning and model choice |
 | Embargo | 36 | Dropped (López de Prado 2018) |
 | Test | 37 to 56 | Opened once, after models are frozen and committed |
@@ -319,7 +327,8 @@ with Holm's method at 5% (Holm 1979, *Scandinavian Journal of Statistics* 6, 65-
 - **Tick-constraint split.** Repeat by contract. Where the spread is usually one tick, RPI orders
   cannot rest inside it, so `L_front` should be rare (M2); a large difference in conclusions
   between such contracts and the others is reported as evidence about A2.
-- **Confirmed negatives** (if D1): ordinary precision, recall and AUC inside RPI-at-front windows.
+- **Probable negatives** (section 6.4): ordinary precision, recall and AUC inside RPI-at-front
+  moments.
 
 ### 8.5 Robustness reported in every case
 

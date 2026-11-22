@@ -5,8 +5,10 @@ name: binance-rpi-recorder
 # not recorded are lost. Runs start every 4 hours and each lasts until 75 minutes after the
 # next start, so consecutive runs overlap and a late start leaves no hole; overlapping trades
 # are removed later by trade id. Each run attaches one gzipped CSV and one JSON summary (counts,
-# id gaps, rate limits) to the monthly pre-release rpi-trades-YYYY-MM.
-# Code: src/microstructure/rpi/recorder.py.
+# id gaps, rate limits) to the monthly pre-release rpi-trades-YYYY-MM. Beside it, paired
+# order-book snapshots (with and without RPI orders) are taken every 30 seconds and attached as
+# one gzipped JSONL file and one summary per run.
+# Code: src/microstructure/rpi/recorder.py and src/microstructure/rpi/books.py.
 
 on:
   schedule:
@@ -44,12 +46,18 @@ jobs:
         run: |
           set -euo pipefail
           if [ -n "${MINUTES:-}" ]; then
-            uv run python -m microstructure.rpi.recorder run --out out --minutes "$MINUTES"
+            window=(--minutes "$MINUTES")
           else
             end=$(uv run python -m microstructure.rpi.recorder end-time)
             echo "recording until $end"
-            uv run python -m microstructure.rpi.recorder run --out out --until-iso "$end"
+            window=(--until-iso "$end")
           fi
+          # Order-book snapshots run beside the trade recorder and must never stop it.
+          uv run python -m microstructure.rpi.books run --out out "${window[@]}" > books.log 2>&1 &
+          books_pid=$!
+          uv run python -m microstructure.rpi.recorder run --out out "${window[@]}"
+          wait "$books_pid" || echo "::warning::order-book recorder failed"
+          tail -n 5 books.log
       - name: Attach to the monthly release
         if: always()
         env:

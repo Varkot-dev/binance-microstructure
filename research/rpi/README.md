@@ -9,7 +9,8 @@ Status on 2026-11-22: research done, plan drafted, nothing locked, no analysis r
 | `PREREGISTRATION.md` | The draft analysis plan, to be reviewed and then sha256-locked |
 | `DATA_QUALITY.md` | Gap and data-quality checks on the recorder's output |
 
-Code: `src/microstructure/rpi/quality.py` (data-quality checks, tested in `tests/rpi/`). The
+Code: `src/microstructure/rpi/quality.py` (data-quality checks) and
+`src/microstructure/rpi/books.py` (order-book snapshots), tested in `tests/rpi/`. The
 recorder is `src/microstructure/rpi/recorder.py`, on `main` since 2026-11-22.
 
 ## The plan in plain language
@@ -53,8 +54,10 @@ share of all trading that is retail. The data cannot reveal that, and the plan s
 1. **Check that the recorder runs on time.** Pull request 19 was merged on 2026-11-22 and the
    first run was started by hand, but it was still waiting in GitHub's queue behind the
    Hyperliquid crawl ten minutes later. Flags that are not recorded are lost for good.
-2. **D1: record the order books too (recommended).** Free. It tells us when RPI orders are at the
-   front, which measures labelling chances directly and gives confirmed non-retail trades.
+2. **Merge the order-book recording.** It is built and tested on this branch
+   (`src/microstructure/rpi/books.py`, plus a change to the recorder workflow) and starts only
+   once merged to `main`. It takes both books every 30 seconds, which tells us when RPI orders
+   are at the front.
 3. **D2: free API key for gap repair (recommended, low priority).**
 4. **The plan itself**, especially: the rule thresholds (section 5), the two label definitions
    (section 4.2), the 56-day window and split (section 7), the three held-out contracts, and the
