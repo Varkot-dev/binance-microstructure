@@ -90,8 +90,11 @@ Binance's documentation and cannot be tested with public data.
 
 ### 4.1 Exclusions (fixed before seeing flags)
 
-- Trades within 2 seconds either side of a missing-id gap that has not been backfilled.
-- A contract-day with more than 1% of trade ids missing after backfill.
+- A **recorder gap** is a run of trade ids that are present in the daily archive on
+  data.binance.vision but missing from the recording. Ids absent from both are not gaps: the
+  pilot showed that Binance's feed itself skips single ids (see `DATA_QUALITY.md`).
+- Trades within 2 seconds either side of a recorder gap that has not been backfilled.
+- A contract-day with more than 1% of archived trades missing from the recording after backfill.
 - A contract-day on which `exchangeInfo` shows the contract was not RPI-enabled.
 - Nothing is excluded for looking unusual. No outlier trimming.
 

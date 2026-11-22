@@ -55,9 +55,10 @@ https://www.binance.com/en/support/announcement/detail/d0ed1c8add7848c8b3e5a87bb
    with the same timestamp and side. This is inference [U]. It is deliberately **not** checked
    against data here, because doing so means looking at flagged rows before the plan is locked.
    It is the first pre-registered descriptive step (M1 in the pre-registration).
-3. **Whether trade ids of RPI fills share the ordinary sequence.** The pilot recording has no
-   missing ids on any contract while containing both flag values, so yes in practice. [V] for
-   the pilot window only.
+3. **Whether trade ids of RPI fills share the ordinary sequence.** In the pilot recording
+   99.98% of ids are consecutive while the flag takes both values, so flagged fills must share
+   the sequence. The 21 absent ids are single ids that Binance did not serve (see
+   `DATA_QUALITY.md`). [V] for the pilot window only.
 
 ### Why these rules matter for the study (our reading)
 
