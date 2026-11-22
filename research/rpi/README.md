@@ -10,7 +10,7 @@ Status on 2026-11-22: research done, plan drafted, nothing locked, no analysis r
 | `DATA_QUALITY.md` | Gap and data-quality checks on the recorder's output |
 
 Code: `src/microstructure/rpi/quality.py` (data-quality checks, tested in `tests/rpi/`). The
-recorder itself is in pull request 19 and is not on `main` yet.
+recorder is `src/microstructure/rpi/recorder.py`, on `main` since 2026-11-22.
 
 ## The plan in plain language
 
@@ -50,9 +50,9 @@ share of all trading that is retail. The data cannot reveal that, and the plan s
 
 ## What needs your decision
 
-1. **The recorder is not running.** Its workflow is only on the branch behind pull request 19.
-   GitHub runs scheduled workflows from `main` only, so no data has been collected and none can
-   be until that pull request is merged. Every day of delay is a day of flags lost for good.
+1. **Check that the recorder runs on time.** Pull request 19 was merged on 2026-11-22 and the
+   first run was started by hand, but it was still waiting in GitHub's queue behind the
+   Hyperliquid crawl ten minutes later. Flags that are not recorded are lost for good.
 2. **D1: record the order books too (recommended).** Free. It tells us when RPI orders are at the
    front, which measures labelling chances directly and gives confirmed non-retail trades.
 3. **D2: free API key for gap repair (recommended, low priority).**
