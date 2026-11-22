@@ -38,7 +38,7 @@ use only the first kind of mark.
 1. Record every trade on 15 contracts for 8 weeks, with the marks.
 2. Rebuild orders from fills (fills in the same millisecond on the same side).
 3. Test the common retail rules: small size, round dollar amounts, round quantities, time of day,
-   sweeps. For each rule, ask how much more often its trades are confirmed app trades than
+   sweeps, and a "split pattern" rule that looks for a large order cut into equal small pieces. For each rule, ask how much more often its trades are confirmed app trades than
    average (lift), and what share of confirmed app trades it catches.
 4. Train a model on weeks 1 to 4, tune it on week 5, and test it once on weeks 6 to 8, including
    three contracts it never saw. Ask whether it beats the best simple rule.

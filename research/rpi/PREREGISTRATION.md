@@ -125,6 +125,11 @@ All thresholds are fixed here. "Notional" is order notional in USD (USDC and USD
 | R4c | hour of day (24 UTC hours) | descriptive, two-sided | No verified source |
 | R5 | sweep: the order fills at 2 or more distinct prices | two-sided | Chakravarty et al. (2012) find sweeps are institutional in equities |
 | R6 | R1b and (R2 or R3a) | enriched | The composite a practitioner would build |
+| R7 | split pattern: at least 3 earlier orders on the same side of the same contract in the previous 60 seconds have exactly this order's quantity | depleted | Order splitting by execution algorithms makes pieces of large orders look small (O'Hara et al. 2014; Alexander and Peterson 2007 on stealth trading) |
+
+R7 can also fire by coincidence on busy contracts, where many unrelated orders share a common
+quantity such as the minimum lot. It is therefore reported twice: for all orders, and for orders
+of at least 10 lot steps.
 
 R5 is **mechanism-exposed**: an RPI fill at an improved price adds a price level to a flagged
 order. R5 is reported with that caveat and is never used as a model feature.
@@ -202,6 +207,20 @@ Context features, from the 60 seconds before the order, excluding the order itse
 14. order count, 15. total notional, 16. signed order-flow imbalance, 17. realised volatility of
 trade prices, 18. last price change in ticks, 19. median order notional
 
+Splitting features, from earlier orders on the same side of the same contract, excluding the
+order itself. They target execution algorithms that cut a large order into equal pieces
+(O'Hara et al. 2014; Alexander and Peterson 2007):
+20. same-size count: number of such orders in the previous 60 seconds with exactly this order's
+    quantity
+21. same-size share: feature 20 divided by the number of same-side orders in the previous 60
+    seconds (0 if there are none)
+22. spacing regularity: take this order and the same-side orders of exactly its quantity in the
+    previous 300 seconds; if there are at least 4 in total, the coefficient of variation of the
+    gaps between consecutive ones (low means evenly spaced, as a timer would produce);
+    otherwise missing
+
+These use quantities and times only, never other orders' flags.
+
 Excluded on purpose because the matching rule affects them for flagged orders: number of rows,
 number of price levels, the order's execution price relative to earlier prices, row sizes, and
 anything computed from other orders' flags.
@@ -209,10 +228,10 @@ anything computed from other orders' flags.
 ### 6.7 Model
 
 - **Primary.** Gradient-boosted trees (LightGBM) trained to predict `L_front` from features 1 to
-  19 plus contract and UTC-hour identifiers as controls: the "non-traditional classifier" of
+  22 plus contract and UTC-hour identifiers as controls: the "non-traditional classifier" of
   Elkan and Noto (2008). The score is used only to rank orders within a contract-day.
 - **Robustness 1.** SAR-EM (Bekker et al. 2019), with the propensity model restricted to contract,
-  timing and context features and the class model restricted to order features. This is an
+  timing and context features and the class model restricted to order and splitting features. This is an
   exclusion restriction and is reported as one.
 - **Robustness 2.** The same primary model trained on `L_any`, and a non-negative PU risk model
   (Kiryo et al. 2017) over an assumed class-prior grid of 5, 10, 20, 40 and 60%, as the benchmark
@@ -281,7 +300,7 @@ Test period, label `L_front`, order level, contract-day bootstrap.
 - **H4 (transfer).** On the three held-out contracts, the model's lift in the top 5% has a 95%
   interval above 1.
 
-R4a, R4b, R5 and R6 are reported with intervals as secondary. R4c is descriptive.
+R4a, R4b, R5, R6 and R7 are reported with intervals as secondary. R4c is descriptive.
 Multiple testing: the eight confirmatory tests (three in H1, three in H2, H3, H4) are corrected
 with Holm's method at 5% (Holm 1979, *Scandinavian Journal of Statistics* 6, 65-70).
 
@@ -322,7 +341,9 @@ Will not be claimed:
 
 Known threats: the two-route selection (section 2); undocumented treatment of stop orders and
 liquidations; order reconstruction errors; RPI maker behaviour changing over time; the app's
-percentage-of-balance slider producing unrounded sizes; a one-month test period.
+percentage-of-balance slider producing unrounded sizes; a one-month test period; splitting
+detection that only catches equal-sized pieces, so algorithms that randomise piece sizes are
+missed.
 
 ## 10. Deviations and lock
 
