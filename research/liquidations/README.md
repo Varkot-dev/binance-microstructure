@@ -1,7 +1,7 @@
 # Liquidation cascades: does the market warn you before it breaks?
 
-Status: literature and data review done (2026-11-20). P1 code, metrics screen and pre-registration
-drafted (2026-11-22) and awaiting review; nothing has been locked or run.
+Status: literature and data review done (2026-11-20). P1 pre-registration, mask v2 and metrics
+screen reviewed and locked (2026-11-22); the full P1 scan is running.
 Everything numeric below that comes from our own probes is exploratory: it was seen before any plan
 was locked, and every pre-registration must say so.
 
@@ -14,8 +14,9 @@ Companion files in this folder:
 | [EVENT_DEFINITION_DRAFT.md](EVENT_DEFINITION_DRAFT.md) | DRAFT cascade definition and matched control periods |
 | [ML_IDEAS.md](ML_IDEAS.md) | Early-warning models: features, labels, rare-event validation, baselines |
 | [bookdepth_mask_v1_DRAFT.txt](bookdepth_mask_v1_DRAFT.txt) | Drafted bookDepth quality mask, sha256 `61d003375266604e95b2d9ff66149b9f39d0eb03862c8a779f566c6abc4513f7` (committed unchanged in 69ebe50; approval pending in PREREGISTRATION_P1.md) |
-| [metrics_screen_v1_DRAFT.txt](metrics_screen_v1_DRAFT.txt) | Drafted metrics screen (spike-and-reverse, ghost rows, per-file label convention) |
-| [PREREGISTRATION_P1.md](PREREGISTRATION_P1.md) | DRAFT P1 plan: scope, interpretation notes, onset test T1, open questions |
+| [bookdepth_mask_v2.txt](bookdepth_mask_v2.txt) | Primary mask: v1 except that isolated crossings (1 or 2 snapshots) get no 10-minute buffer |
+| [metrics_screen_v1.txt](metrics_screen_v1.txt) | Metrics screen (spike-and-reverse, ghost rows, per-file label convention), locked |
+| [PREREGISTRATION_P1.md](PREREGISTRATION_P1.md) | Locked P1 plan: scope, interpretation notes, onset test T1, review decisions |
 | [p1_scan.py](p1_scan.py) | P1 scanner; refuses to run until the plan is hashed. Library code in `src/microstructure/quality/` |
 | [data/p1/](data/p1/) | `universe.csv` (scope) and `validation.md` (acceptance checks run before locking) |
 
@@ -224,7 +225,7 @@ nothing until future events).
 - [x] Write the metrics screen (spike-and-reverse, missing rows, label convention). Finding: the
       label convention follows whether Binance rewrote the file, not the 2026-06-25 date, so it
       is decided per file (rule M5).
-- [ ] Review PREREGISTRATION_P1.md (open questions Q1 to Q4), lock it and the screen by hash.
+- [x] Review PREREGISTRATION_P1.md (open questions Q1 to Q4), lock it and the screen by hash.
 - [ ] Run the full bookDepth and metrics scan (rewritten from scratch: the earlier scanner was not
       in the repo) and publish the ledger and test T1.
 - [ ] Deduplicate COIN-M liquidationSnapshot, apply the outage mask, and pre-register P2 with a

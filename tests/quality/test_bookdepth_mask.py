@@ -97,12 +97,26 @@ def test_s1_crossed_side_and_s6_buffer():
     ts, d, n = _book(100)
     # stale bid far above the market: inner bid VWAP 103 > inner ask VWAP ~100.5
     n[50, 4] = d[50, 4] * 103.0
-    m = _mask(ts, d, n)
+    m = _mask(ts, d, n, s6_min_s1_run=bd.S6_MIN_S1_RUN_V1)
     assert np.flatnonzero(m.flags["S1"]).tolist() == [50]
     assert m.s1_side[50] == -1
     buf = np.flatnonzero(m.flags["S6"])
     assert buf.tolist() == list(range(30, 50)) + list(range(51, 71))
     assert m.invalid.sum() == 41
+
+
+def test_v2_buffers_only_crossed_runs_of_three_or_more():
+    ts, d, n = _book(300)
+    n[50, 4] = d[50, 4] * 103.0  # isolated crossing
+    n[100:102, 4] = d[100:102, 4] * 103.0  # run of 2
+    n[200:203, 4] = d[200:203, 4] * 103.0  # run of 3
+    v2 = _mask(ts, d, n)  # v2 is the library default
+    assert np.flatnonzero(v2.flags["S6"]).tolist() == list(range(180, 200)) + list(range(203, 223))
+    assert v2.invalid.sum() == 1 + 2 + 3 + 40
+    v1 = _mask(ts, d, n, s6_min_s1_run=bd.S6_MIN_S1_RUN_V1)
+    assert v1.invalid.sum() == 41 + 42 + 43
+    # S1 runs (and so onsets) do not depend on the version
+    assert v1.s1_runs.tolist() == v2.s1_runs.tolist()
 
 
 def test_s4_non_monotone():

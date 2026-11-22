@@ -1,0 +1,33 @@
+bookDepth mask v2 (liquidation-cascades), written 2026-11-22, before any depth outcome is computed
+Identical to v1 (bookdepth_mask_v1_DRAFT.txt, sha256 61d003375266604e95b2d9ff66149b9f39d0eb03862c8a779f566c6abc4513f7) except rule S6 and the note at the end.
+Source: data.binance.vision data/futures/um/daily/bookDepth/<SYMBOL>/<SYMBOL>-bookDepth-<YYYY-MM-DD>.zip, USDT-M perpetuals only.
+Unit: a snapshot = all rows sharing (symbol, timestamp). Each symbol's snapshots are concatenated across daily files in timestamp order before runs are counted, so runs continue across midnight.
+Core bands C = {-5,-4,-3,-2,-1,+1,+2,+3,+4,+5}. The -0.2/+0.2 bands (present from 2026-01-15) are used only by analyses that name them; when used, they obey the same rules, except that a zero depth in a 0.2 band is not by itself a flag.
+Inner band: the bid (ask) band closest to zero that has depth > 0 in that snapshot.
+VWAP of a band: notional / depth.
+
+Snapshot is INVALID if any of S0 to S6 holds.
+S0 incomplete: any core band missing; depth or notional non-finite, negative, or zero in a core band; or two rows for the same (timestamp, percentage) with different values.
+S1 crossed: VWAP(inner bid band) >= VWAP(inner ask band).
+S2 whole-book repeat: the depth vector over all core bands equals the previous snapshot's exactly, inside a run of >= 3 consecutive identical snapshots. Every snapshot of the run is invalid.
+S3 band freeze: one core band has exactly the same depth value > 0 for >= 20 consecutive snapshots. Every snapshot of the run is invalid on both sides.
+S4 non-monotone: on either side, depth of an outer core band < depth of the next inner core band.
+S5 off-price: implied mid m = (VWAP(inner bid) + VWAP(inner ask)) / 2 lies outside [0.98 * low, 1.02 * high] of the 1-minute futures/um kline that contains the timestamp. Applied to every snapshot that enters an analysis.
+S6 buffer: the 20 snapshots (about 10 minutes) before the first and after the last snapshot of every S2 run, every S3 run, and every S1 run of >= 3 consecutive crossed snapshots are invalid. An S1 run of 1 or 2 snapshots makes only its own snapshots invalid.
+
+Calendar exclusions, fixed now from the archive scan of 2026-11-20 (applied in addition to S0 to S6, never instead):
+X1 2025-04-16 10:31 UTC to 2025-05-19 11:13 UTC, all symbols (the archive replays one frozen book).
+X2 2025-10-09 00:00 to 2025-10-16 00:00 UTC and 2025-10-29 00:00 to 2025-10-31 00:00 UTC, all symbols (stale-level crossed books); ETHUSDT also 2025-10-31 00:00 to 2025-12-02 00:00 UTC. Exception: in the event study of the 2025-10-10 cascade only, the primary specification lifts X2 for 2025-10-09 and 2025-10-10 and relies on S0 to S6 plus D2; the version with X2 applied is reported as the robustness check.
+X3 2025-08-25 00:00 to 2025-08-30 00:00 UTC, all symbols (stale-level crossed books on about half of the most active symbols).
+X4 2026-09-03 00:00 to 2026-09-12 00:00 UTC, all symbols (inner ask bands frozen).
+X5 days with no file or with fewer than 2,592 snapshots fail D1; known all-symbol cases include 2023-02-08, 2023-02-09, 2024-04-18, 2024-06-12, 2026-01-14, 2026-10-07, 2026-10-08, 2026-10-09 and several 2023-H1 days. D1 decides; this list is not a substitute.
+X6 symbols whose exchangeInfo underlyingSubType contains TradFi or Pre-Market, or whose underlyingType is EQUITY, HK_EQUITY, COMMODITY, INDEX or PREMARKET, are out of scope (their books are static outside venue hours).
+
+Day and window rules.
+D1 a contract-day is usable iff it has >= 2,592 valid snapshots (90% of 2,880) and no gap > 900 s between consecutive valid snapshots.
+D2 an event window for a contract is usable iff, separately in its pre-event and post-event parts, >= 90% of the 30-second grid has a valid snapshot within 45 s and no gap between valid snapshots exceeds 300 s.
+D3 a calendar date is dropped for all contracts if > 20% of contracts with a file that date fail D1. The list is produced by code, not chosen by hand.
+D4 masked values are never filled, interpolated or carried forward.
+D5 reporting: for every result, report the share of candidate contract-days and event windows removed by each rule, and the main estimate with and without X2 and D3, and with S3 threshold 10 and 40 snapshots as sensitivity checks.
+Why v2: under v1 one isolated crossed snapshot invalidates 41 snapshots, leaving a 1,260 s gap that fails D1 for the whole contract-day. In February and early March 2024 almost all symbols show isolated crossed snapshots (runs of at most 2), so v1 removes most of those days (DOGEUSDT 2024-02-22: 490 of 2,873 snapshots valid). The change was decided on 2026-11-22 from these artifact counts, before any outcome was computed. v2 is the primary mask; every v1 result is reported alongside.
+Changes after outcomes are seen are allowed only as a new version (v3) with a new hash, and v2 results are reported alongside.

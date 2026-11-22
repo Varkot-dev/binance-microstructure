@@ -1,7 +1,10 @@
-"""bookDepth quality mask v1.
+"""bookDepth quality mask, versions 1 and 2.
 
 Implements research/liquidations/bookdepth_mask_v1_DRAFT.txt (sha256
-61d003375266604e95b2d9ff66149b9f39d0eb03862c8a779f566c6abc4513f7). Rule names (S0 to S6,
+61d003375266604e95b2d9ff66149b9f39d0eb03862c8a779f566c6abc4513f7) and
+research/liquidations/bookdepth_mask_v2.txt, which differs from v1 only in S6: crossed (S1)
+runs shorter than 3 snapshots are invalid themselves but get no buffer. Choose the version
+with `s6_min_s1_run` (1 for v1, 3 for v2). Rule names (S0 to S6,
 X1 to X6, D1 to D3) follow that text. Where the text leaves a choice open, the choice is
 fixed in research/liquidations/PREREGISTRATION_P1.md (section "Interpretation notes") and
 marked "I<n>" in comments here.
@@ -35,6 +38,8 @@ S2_MIN_RUN = 3
 S3_MIN_RUN = 20
 S5_TOL = 0.02
 S6_BUFFER = 20
+S6_MIN_S1_RUN_V1 = 1
+S6_MIN_S1_RUN_V2 = 3
 D1_MIN_VALID = 2592
 D1_MAX_GAP_S = 900
 D2_GRID_S = 30
@@ -294,7 +299,8 @@ class SymbolMask:
 
     @classmethod
     def from_days(cls, symbol: str, days: list[DayFeatures],
-                  s3_min_run: int = S3_MIN_RUN) -> SymbolMask:
+                  s3_min_run: int = S3_MIN_RUN,
+                  s6_min_s1_run: int = S6_MIN_S1_RUN_V2) -> SymbolMask:
         days = [d for d in days if d.ts.size]
         if not days:
             z = np.empty(0, bool)
@@ -321,7 +327,8 @@ class SymbolMask:
                 s3 |= paint(n, r)
         s2 = paint(n, s2_runs)
 
-        anchors = [s1_runs, s2_runs] + [r for _, r in s3_runs]
+        s1_long = s1_runs[(s1_runs[:, 1] - s1_runs[:, 0] + 1) >= s6_min_s1_run]
+        anchors = [s1_long, s2_runs] + [r for _, r in s3_runs]
         anchors = np.vstack(anchors) if any(a.size for a in anchors) else np.empty((0, 2), int)
         if anchors.size:
             before = np.column_stack([np.maximum(anchors[:, 0] - S6_BUFFER, 0),

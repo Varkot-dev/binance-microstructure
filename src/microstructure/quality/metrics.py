@@ -1,6 +1,6 @@
 """metrics screen v1.
 
-Implements research/liquidations/metrics_screen_v1_DRAFT.txt. Rule names (M0 to M5)
+Implements research/liquidations/metrics_screen_v1.txt. Rule names (M0 to M5)
 follow that text. Input is one symbol's daily `metrics` files (5-minute open interest,
 long/short ratios, taker buy/sell ratio) and the same days' 1-minute klines.
 """

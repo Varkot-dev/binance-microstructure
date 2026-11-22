@@ -1,8 +1,9 @@
 """P1: bookDepth quality mask and metrics screen over all USDT-M perpetuals.
 
 The design is fixed in research/liquidations/PREREGISTRATION_P1.md. This script refuses to
-scan, report or test unless that file, bookdepth_mask_v1_DRAFT.txt and
-metrics_screen_v1_DRAFT.txt all match the sha256 values below. `validate` is the only
+scan, report or test unless that file, bookdepth_mask_v2.txt (primary),
+bookdepth_mask_v1_DRAFT.txt (reported alongside) and metrics_screen_v1.txt all match the
+sha256 values below. `validate` is the only
 command that runs before the lock: it re-runs the mask on the contract-days listed in the
 pre-registration's acceptance checks, all of which were examined before the plan was
 written, and prints the checks.
@@ -47,12 +48,15 @@ if str(ROOT / "src") not in sys.path:
 from microstructure.quality import bookdepth as bd
 from microstructure.quality import metrics as mt
 
-MASK = HERE / "bookdepth_mask_v1_DRAFT.txt"
-MASK_SHA = "61d003375266604e95b2d9ff66149b9f39d0eb03862c8a779f566c6abc4513f7"
-SCREEN = HERE / "metrics_screen_v1_DRAFT.txt"
-SCREEN_SHA: str | None = None  # set when the user approves the screen
+MASK = HERE / "bookdepth_mask_v2.txt"  # primary
+MASK_SHA = "c800985ddac189c14044b8c5364c9bce02d5b62401f956cc5b43237d21731a09"
+MASK_V1 = HERE / "bookdepth_mask_v1_DRAFT.txt"  # reported alongside
+MASK_V1_SHA = "61d003375266604e95b2d9ff66149b9f39d0eb03862c8a779f566c6abc4513f7"
+SCREEN = HERE / "metrics_screen_v1.txt"
+# SCREEN_SHA and PREREG_SHA recorded when the project owner approved them, 2026-11-22
+SCREEN_SHA: str | None = "4e3934d6f2891f92fcd80deedca26b94a567ad364b594e6e3305919b189d09e4"
 PREREG = HERE / "PREREGISTRATION_P1.md"
-PREREG_SHA: str | None = None  # set when the user approves the plan
+PREREG_SHA: str | None = "f63240d23064848d73613145d0d8e47aaa9086246b67ef1929539f5453f64543"
 
 BUCKET = "https://s3-ap-northeast-1.amazonaws.com/data.binance.vision"
 UM = "data/futures/um/daily"
@@ -74,8 +78,9 @@ def sha256_file(path: Path) -> str:
 
 
 def check_locks(require_plan: bool = True) -> None:
-    if sha256_file(MASK) != MASK_SHA:
-        raise SystemExit(f"{MASK.name} changed since it was hashed; refusing to run")
+    for path, want in ((MASK, MASK_SHA), (MASK_V1, MASK_V1_SHA)):
+        if sha256_file(path) != want:
+            raise SystemExit(f"{path.name} changed since it was hashed; refusing to run")
     if not require_plan:
         return
     for path, want in ((SCREEN, SCREEN_SHA), (PREREG, PREREG_SHA)):
@@ -319,8 +324,16 @@ def scan_symbol(sym: str, archive: Archive, start: dt.date = START, end: dt.date
                                             **conv})
             log(f"{sym}: {min(i + 4 * workers, len(dates))}/{len(dates)} dates")
 
-    mask = bd.SymbolMask.from_days(sym, feats)
+    mask = bd.SymbolMask.from_days(sym, feats, s6_min_s1_run=bd.S6_MIN_S1_RUN_V2)
     days = mask.day_table()
+    v1 = bd.SymbolMask.from_days(sym, feats, s6_min_s1_run=bd.S6_MIN_S1_RUN_V1)
+    if days.height:
+        days = days.join(v1.day_table().select(
+            "date", *[pl.col(c).alias(f"{c}_v1") for c in
+                      ("n_S6", "n_valid_s", "max_gap_s", "d1_s", "n_valid_sx", "max_gap_sx",
+                       "d1_sx")]), on="date", how="left")
+    v1_s6 = v1.intervals().filter(pl.col("rule") == "S6").with_columns(
+        pl.lit("S6_v1").alias("rule"))
     sens = {}
     for k in S3_SENSITIVITY:
         mk = bd.SymbolMask.from_days(sym, feats, s3_min_run=k)
@@ -329,7 +342,7 @@ def scan_symbol(sym: str, archive: Archive, start: dt.date = START, end: dt.date
                                                    pl.col("d1_sx").alias(f"d1_sx_s3_{k}")),
                              on="date", how="left")
         sens[k] = onset_inputs(mk, closes)
-    res = {"days": days, "intervals": mask.intervals(),
+    res = {"days": days, "intervals": pl.concat([mask.intervals(), v1_s6]),
            "manifest": pl.DataFrame(manifest, infer_schema_length=None),
            "errors": pl.DataFrame(errors, infer_schema_length=None),
            "metric_days": pl.DataFrame(metric_days, infer_schema_length=None)}
@@ -590,9 +603,14 @@ def cmd_report(_: argparse.Namespace) -> None:
     man = _load_all("manifest")
     files = (man.filter((pl.col("kind") == "bookDepth") & pl.col("sha256").is_not_null())
              .select("symbol", "date").unique())
+    d1_cols = [c for c in days.columns if c.startswith("d1_")]
     full = files.join(days, on=["symbol", "date"], how="left").with_columns(
-        pl.col("d1_s").fill_null(False), pl.col("d1_sx").fill_null(False))
+        [pl.col(c).fill_null(False) for c in d1_cols])
     d3 = bd.d3_dropped_dates(full)
+    d3_v1 = bd.d3_dropped_dates(full, col="d1_s_v1").select(
+        "date", pl.col("fail_share").alias("fail_share_v1"),
+        pl.col("d3_dropped").alias("d3_dropped_v1"))
+    d3 = d3.join(d3_v1, on="date", how="left")
     days.write_parquet(OUT / "day_table.parquet")
     d3.write_csv(OUT / "d3_dates.csv")
     _load_all("intervals").write_parquet(OUT / "intervals.parquet", compression="zstd")
@@ -600,8 +618,9 @@ def cmd_report(_: argparse.Namespace) -> None:
     _load_all("metric_days").write_parquet(OUT / "metrics_days.parquet")
     _load_all("metric_flags").write_parquet(OUT / "metrics_flags.parquet")
     _load_all("errors").write_csv(OUT / "errors.csv")
-    print(f"{full.height} contract-days with a file; D1 pass (S rules) "
-          f"{full['d1_s'].mean():.3f}; D3 drops {d3['d3_dropped'].sum()} dates")
+    print(f"{full.height} contract-days with a file; D1 pass v2 {full['d1_s'].mean():.3f}, "
+          f"v1 {full['d1_s_v1'].mean():.3f}; D3 drops {d3['d3_dropped'].sum()} dates (v2), "
+          f"{d3['d3_dropped_v1'].sum()} (v1)")
 
 
 def _load_onsets(suffix: str = "", key: str = "r60") -> tuple[pl.DataFrame, list[np.ndarray]]:

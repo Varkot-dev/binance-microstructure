@@ -21,8 +21,13 @@ _spec.loader.exec_module(p1)
 
 # --------------------------------------------------------------------------- locks
 
-def test_mask_hash_matches_committed_text():
+def test_mask_hashes_match_committed_texts():
     assert p1.sha256_file(p1.MASK) == p1.MASK_SHA
+    assert p1.sha256_file(p1.MASK_V1) == p1.MASK_V1_SHA
+
+
+def test_plan_and_screen_are_locked():
+    p1.check_locks()  # raises SystemExit if any locked text changed
 
 
 def test_refuses_without_plan_lock(monkeypatch):
@@ -163,11 +168,16 @@ def test_scan_symbol_end_to_end_offline():
     days = res["days"]
     assert days["n_snap"].to_list() == [2880, 2880]
     assert days["n_S1"].to_list() == [0, 1]
-    assert days["n_S6"].to_list() == [0, 40]
-    # one crossed snapshot plus its S6 buffer removes 41 snapshots, a 1,260 s gap between
-    # valid ones, over D1's 900 s limit: under mask v1 one glitch fails the contract-day
-    assert days["d1_s"].to_list() == [True, False]
-    assert days["max_gap_s"].to_list()[1] == 1260
+    # v2 (primary): an isolated crossing removes only itself
+    assert days["n_S6"].to_list() == [0, 0]
+    assert days["d1_s"].to_list() == [True, True]
+    # v1: the crossing plus its S6 buffer removes 41 snapshots, a 1,260 s gap between
+    # valid ones, over D1's 900 s limit, so one glitch fails the contract-day
+    assert days["n_S6_v1"].to_list() == [0, 40]
+    assert days["d1_s_v1"].to_list() == [True, False]
+    assert days["max_gap_s_v1"].to_list()[1] == 1260
+    rules = set(res["intervals"]["rule"])
+    assert "S6_v1" in rules and "S6" not in rules
     assert {"d1_s_s3_10", "d1_s_s3_40"} <= set(days.columns)
     assert res["manifest"].height == 6 and res["manifest"]["error"].null_count() == 6
     assert res["manifest"]["zip_member_mtime"].to_list()[0] == "2026-01-01T00:00:00"
