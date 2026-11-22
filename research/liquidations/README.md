@@ -1,6 +1,7 @@
 # Liquidation cascades: does the market warn you before it breaks?
 
-Status: literature and data review done (2026-11-20). No analysis has been pre-registered or run.
+Status: literature and data review done (2026-11-20). P1 code, metrics screen and pre-registration
+drafted (2026-11-22) and awaiting review; nothing has been locked or run.
 Everything numeric below that comes from our own probes is exploratory: it was seen before any plan
 was locked, and every pre-registration must say so.
 
@@ -12,7 +13,11 @@ Companion files in this folder:
 | [DATA.md](DATA.md) | Every relevant free file: schema, frequency, coverage, size, known glitches, example URL |
 | [EVENT_DEFINITION_DRAFT.md](EVENT_DEFINITION_DRAFT.md) | DRAFT cascade definition and matched control periods |
 | [ML_IDEAS.md](ML_IDEAS.md) | Early-warning models: features, labels, rare-event validation, baselines |
-| [bookdepth_mask_v1_DRAFT.txt](bookdepth_mask_v1_DRAFT.txt) | Drafted bookDepth quality mask, sha256 `61d003375266604e95b2d9ff66149b9f39d0eb03862c8a779f566c6abc4513f7` (not yet committed, so not yet locked) |
+| [bookdepth_mask_v1_DRAFT.txt](bookdepth_mask_v1_DRAFT.txt) | Drafted bookDepth quality mask, sha256 `61d003375266604e95b2d9ff66149b9f39d0eb03862c8a779f566c6abc4513f7` (committed unchanged in 69ebe50; approval pending in PREREGISTRATION_P1.md) |
+| [metrics_screen_v1_DRAFT.txt](metrics_screen_v1_DRAFT.txt) | Drafted metrics screen (spike-and-reverse, ghost rows, per-file label convention) |
+| [PREREGISTRATION_P1.md](PREREGISTRATION_P1.md) | DRAFT P1 plan: scope, interpretation notes, onset test T1, open questions |
+| [p1_scan.py](p1_scan.py) | P1 scanner; refuses to run until the plan is hashed. Library code in `src/microstructure/quality/` |
+| [data/p1/](data/p1/) | `universe.csv` (scope) and `validation.md` (acceptance checks run before locking) |
 
 ## 1. The question
 
@@ -214,10 +219,14 @@ nothing until future events).
       2603.09164, 2603.15963 and SSRN 6579278, 6636998 in full. Resolve the ADL figure conflict for
       2512.01112 (USD 45.0M to 51.7M versus 0.66 to 2.1B in repo notes) and the data-source conflict
       for 2608.03616 (Hyperliquid or Binance).
-- [ ] Commit `bookdepth_mask_v1_DRAFT.txt` unchanged and record its hash in the pre-registration log.
+- [x] Commit `bookdepth_mask_v1_DRAFT.txt` unchanged and record its hash in the pre-registration log.
       State that the calendar exclusions were chosen from artifact data, not outcome data.
-- [ ] Finish the bookDepth scan (about 415,000 contract-days left) and publish the episode ledger.
-- [ ] Write the metrics screen (spike-and-reverse, missing rows, 2026-06-25 label change) and hash it.
+- [x] Write the metrics screen (spike-and-reverse, missing rows, label convention). Finding: the
+      label convention follows whether Binance rewrote the file, not the 2026-06-25 date, so it
+      is decided per file (rule M5).
+- [ ] Review PREREGISTRATION_P1.md (open questions Q1 to Q4), lock it and the screen by hash.
+- [ ] Run the full bookDepth and metrics scan (rewritten from scratch: the earlier scanner was not
+      in the repo) and publish the ledger and test T1.
 - [ ] Deduplicate COIN-M liquidationSnapshot, apply the outage mask, and pre-register P2 with a
       held-out symbol set.
 - [ ] Fix the cascade rule in [EVENT_DEFINITION_DRAFT.md](EVENT_DEFINITION_DRAFT.md), remove "DRAFT",

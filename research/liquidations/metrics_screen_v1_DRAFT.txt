@@ -1,0 +1,29 @@
+metrics screen v1 (liquidation-cascades), drafted 2026-11-22, before any metrics outcome is computed
+Source: data.binance.vision data/futures/um/daily/metrics/<SYMBOL>/<SYMBOL>-metrics-<YYYY-MM-DD>.zip, USDT-M perpetuals in the scope of bookdepth mask v1 (rule X6 applies).
+Unit: a row = one create_time of one symbol. Each symbol's rows are concatenated across daily files in create_time order, so windows and runs continue across midnight.
+Fields: OI = sum_open_interest (base units); OIV = sum_open_interest_value (quote); R1 = count_toptrader_long_short_ratio; R2 = sum_toptrader_long_short_ratio; R3 = count_long_short_ratio; TR = sum_taker_long_short_vol_ratio.
+A row is "300 s spaced" from another if their create_time values differ by exactly 300 s.
+
+Row is FLAGGED if any of M0 to M3 holds. Flagged rows are removed; they are never filled, interpolated or carried forward.
+M0 empty or off-grid: any of OI, OIV, R1, R2, R3, TR is empty or not a number, or create_time is not a multiple of 300 s.
+M1 duplicate: two or more rows share a (symbol, create_time). Exact copies are collapsed to one row and not flagged; if the copies differ in any field, every copy is flagged.
+M2 spike-and-reverse in OI: row t is flagged if rows t-1, t and t+1 are consecutive and 300 s spaced, and
+   (a) |OI_t - OI_(t-1)| > 3 x the median of |OI_s - OI_(s-1)| over the 24 changes ending at row t-1 (300 s-spaced changes only; at least 12 present; median > 0),
+   (b) |OI_t - OI_(t-1)| >= 0.01 x OI_(t-1), and
+   (c) |OI_(t+1) - OI_(t-1)| <= 0.10 x |OI_t - OI_(t-1)| (the next row returns to within 10% of the jump).
+   Only the OI and OIV fields of row t are removed by M2; R1, R2, R3 and TR of row t are kept. The same rule applied to OIV is computed and reported (m2_value) but does not flag.
+M3 ghost rows: OI = 0, or a run of >= 12 consecutive 300 s-spaced rows in which all six numeric fields equal the previous row's exactly. Every row of such a run is flagged.
+
+Day-level checks (reported for every contract-day; they flag no row):
+M4 missing labels: the number of the 288 grid times 00:00, 00:05, ..., 23:55 UTC with no row.
+M5 label convention, decided per file because the archive is rewritten file by file:
+   corr_start = Pearson correlation of log(TR) with log(taker buy volume / taker sell volume) summed over the five 1-minute futures/um klines in [create_time, create_time + 300 s);
+   corr_end = the same over [create_time - 300 s, create_time).
+   Blocks with fewer than five klines, zero buy or zero sell volume, and rows with TR <= 0 are left out. Both correlations use the same day's kline file.
+   Verdict "start" if corr_start >= 0.80 and corr_start - corr_end >= 0.30 on >= 100 pairs; "end" if the mirror holds; otherwise "undetermined".
+   The period a row describes is [create_time, create_time + 300 s) under "start" and [create_time - 300 s, create_time) under "end". Every column of a file is assumed to follow the file's verdict; for OI and OIV, which are snapshots, the snapshot time is taken as the end of that period.
+   Rows of an "undetermined" file are excluded from any test whose result depends on the sub-5-minute alignment of metrics with other data, and that test reports how many rows this removed.
+M6 the 2026-06-25 date in issue #491 is not used to assign conventions; M5 decides. The verdict counts by month are reported.
+
+Disclosure: (b), (c) and the OIV-only reporting were fixed after looking at BTCUSDT 2025-10-10, where the earlier one-sided draft (EVENT_DEFINITION_DRAFT.md section 6) flagged 9 rows including the genuine crash drop at 21:40 UTC; v1 flags only the 21:45 UTC phantom (76,547 to 83,166 to 76,818 BTC). M5 was designed after correlating TR with klines on 10 BTCUSDT and DOGEUSDT files (2023-06-01, 2024-08-05, 2025-10-10, 2026-06-20, 06-24, 06-25, 06-26, 07-01), which showed end-of-period labels in 2023-06-01 files and start-of-period labels in rewritten files dated as early as 2024-08-05.
+Changes after outcomes are seen are allowed only as a new version (v2) with a new hash, and v1 results are reported alongside.
