@@ -102,6 +102,15 @@ def test_prior_returns_use_minutes_strictly_before_onset():
     assert np.isnan(p1.prior_returns(t0, close, np.array([t0 + 30 * 60]), 60))[0]
 
 
+def test_shards_partition_the_symbols():
+    syms = [f"S{i}USDT" for i in range(10)]
+    parts = [p1.shard_symbols(syms, f"{i}/3") for i in range(3)]
+    assert sorted(s for part in parts for s in part) == sorted(syms)
+    assert parts[0] == ["S0USDT", "S3USDT", "S6USDT", "S9USDT"]
+    with pytest.raises(ValueError):
+        p1.shard_symbols(syms, "3/3")
+
+
 def test_is_usdt_perp():
     assert p1.is_usdt_perp("BTCUSDT") and p1.is_usdt_perp("1000PEPEUSDT")
     assert not p1.is_usdt_perp("BTCUSDT_250328") and not p1.is_usdt_perp("BTCUSDC")

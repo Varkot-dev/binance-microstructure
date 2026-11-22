@@ -536,18 +536,42 @@ def cmd_universe(_: argparse.Namespace) -> None:
           "in the 2026-08-13 exchangeInfo snapshot (unclassified for X6)")
 
 
+def shard_symbols(symbols: list[str], shard: str) -> list[str]:
+    """Symbols of shard "i/n" (0-based i): every n-th symbol starting at position i."""
+    i, n = (int(x) for x in shard.split("/"))
+    if not 0 <= i < n:
+        raise ValueError(f"bad shard {shard!r}")
+    return [s for k, s in enumerate(symbols) if k % n == i]
+
+
 def cmd_scan(a: argparse.Namespace) -> None:
+    """Scan every in-scope symbol not yet DONE. A symbol that fails after all retries gets a
+    FAILED file with its traceback and is retried on the next run; the scan goes on."""
+    import traceback
+
     check_locks()
     uni = pl.read_csv(OUT / "universe.csv").filter(pl.col("in_scope"))
     archive = Archive()
-    for sym in uni["symbol"]:
-        if (_symdir(sym) / "DONE").exists():
+    n_fail = 0
+    for sym in shard_symbols(uni["symbol"].to_list(), a.shard):
+        d = _symdir(sym)
+        if (d / "DONE").exists():
             continue
         t = time.time()
-        res = scan_symbol(sym, archive, workers=a.workers, log=lambda s: None)
-        save_symbol(sym, res)
+        try:
+            res = scan_symbol(sym, archive, workers=a.workers, log=lambda s: None)
+            save_symbol(sym, res)
+        except Exception:  # noqa: BLE001 - recorded in FAILED and retried on the next run
+            n_fail += 1
+            d.mkdir(parents=True, exist_ok=True)
+            (d / "FAILED").write_text(traceback.format_exc())
+            print(f"{sym}: FAILED after {time.time() - t:.0f}s (see {d / 'FAILED'})",
+                  flush=True)
+            continue
+        (d / "FAILED").unlink(missing_ok=True)
         print(f"{sym}: {res['days'].height} contract-days, {res['onsets'].height} onsets, "
               f"{time.time() - t:.0f}s", flush=True)
+    print(f"shard {a.shard} finished, {n_fail} symbols failed", flush=True)
 
 
 VALIDATION = (  # (symbol, first date, last date): every one was looked at before the plan
@@ -657,6 +681,7 @@ def main(argv: list[str] | None = None) -> None:
     sub.add_parser("validate").set_defaults(f=cmd_validate)
     s = sub.add_parser("scan")
     s.add_argument("--workers", type=int, default=16)
+    s.add_argument("--shard", default="0/1", help="i/n: scan every n-th symbol from i")
     s.set_defaults(f=cmd_scan)
     sub.add_parser("report").set_defaults(f=cmd_report)
     sub.add_parser("onset").set_defaults(f=cmd_onset)
