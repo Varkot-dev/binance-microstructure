@@ -4,16 +4,18 @@
 #   research/liquidations/p1_checkpoint.sh save      # pack newly DONE symbols, push a batch
 #   research/liquidations/p1_checkpoint.sh restore   # unpack every batch into data/
 #
-# The branch (p1-scan-checkpoint) is append-only: each save adds one archive holding only
-# the symbols finished since the previous save (about 0.45 MB per symbol, so batches stay
-# far below GitHub's 100 MB file limit) and appends their names to DONE_SYMBOLS.txt. The
+# The branch (claude/p1-scan-checkpoint) is append-only: each save adds archives holding
+# only the symbols finished since the previous save, at most BATCH_MAX symbols each (about
+# 0.5 MB per symbol, so an archive stays well below GitHub's 100 MB file limit), and
+# appends their names to DONE_SYMBOLS.txt. Each archive is its own commit and push. The
 # project branches never carry these intermediate files. A restored symbol has its DONE
 # marker, so `p1_scan.py scan` skips it.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 SYM="$ROOT/data/liquidations/p1/sym"
-BRANCH="p1-scan-checkpoint"
+BRANCH="claude/p1-scan-checkpoint"
+BATCH_MAX=60
 WORK="$ROOT/data/liquidations/p1/checkpoint"
 URL="$(git -C "$ROOT" remote get-url origin)"
 
@@ -53,15 +55,21 @@ case "${1:-}" in
       echo "checkpoint: nothing new ($(wc -l < "$WORK/DONE_SYMBOLS.txt") saved)"
       exit 0
     fi
-    batch="batch_$(date -u +%Y%m%dT%H%M%SZ).tar.gz"
-    (cd "$SYM" && tar -czf "$WORK/$batch" -T "$WORK/.new")
-    cat "$WORK/.new" >> "$WORK/DONE_SYMBOLS.txt"
+    stamp="$(date -u +%Y%m%dT%H%M%SZ)"
+    split -l "$BATCH_MAX" -d -a 3 "$WORK/.new" "$WORK/.part_"
     rm -f "$WORK"/.done_* "$WORK/.new"
-    git -C "$WORK" add "$batch" DONE_SYMBOLS.txt
-    git -C "$WORK" -c user.name=Claude -c user.email=noreply@anthropic.com \
-      commit -q -m "P1 scan checkpoint: +$n symbols, $(wc -l < "$WORK/DONE_SYMBOLS.txt") total"
-    push_work
-    echo "checkpoint: +$n symbols in $batch ($(du -h "$WORK/$batch" | cut -f1)), $(wc -l < "$WORK/DONE_SYMBOLS.txt") total"
+    for part in "$WORK"/.part_*; do
+      k=$(wc -l < "$part")
+      batch="batch_${stamp}_${part##*_}.tar.gz"
+      (cd "$SYM" && tar -czf "$WORK/$batch" -T "$part")
+      cat "$part" >> "$WORK/DONE_SYMBOLS.txt"
+      rm -f "$part"
+      git -C "$WORK" add "$batch" DONE_SYMBOLS.txt
+      git -C "$WORK" -c user.name=Claude -c user.email=noreply@anthropic.com \
+        commit -q -m "P1 scan checkpoint: +$k symbols, $(wc -l < "$WORK/DONE_SYMBOLS.txt") total"
+      push_work
+      echo "checkpoint: +$k symbols in $batch ($(du -h "$WORK/$batch" | cut -f1)), $(wc -l < "$WORK/DONE_SYMBOLS.txt") total"
+    done
     ;;
   restore)
     open_work

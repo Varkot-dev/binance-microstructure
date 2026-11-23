@@ -3,10 +3,10 @@ name: ci
 # Runs on every push to any branch (so work branches are checked before a pull request
 # exists) and on pull requests from forks. A pull request from a branch of this repository
 # is already covered by the push run, so its pull_request run is skipped and does not take
-# a runner slot. Data-only branches (p1-scan-checkpoint) carry no code and are ignored.
+# a runner slot. Data-only branches (claude/p1-scan-checkpoint) carry no code and are ignored.
 on:
   push:
-    branches: ["**", "!p1-scan-checkpoint"]
+    branches: ["**", "!claude/p1-scan-checkpoint"]
   pull_request:
 
 concurrency:
