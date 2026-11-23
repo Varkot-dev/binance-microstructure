@@ -248,6 +248,7 @@ def main(argv: list[str] | None = None) -> None:
     g.add_argument("--minutes", type=float)
     g.add_argument("--until-iso")
     r.add_argument("--symbols", default=",".join(SYMBOLS))
+    r.add_argument("--label", default="", help="suffix for file names, e.g. a replica id")
     sub.add_parser("end-time")
     a = p.parse_args(argv)
     if a.cmd == "end-time":
@@ -257,7 +258,8 @@ def main(argv: list[str] | None = None) -> None:
     end = (now + timedelta(minutes=a.minutes) if a.minutes is not None
            else datetime.fromisoformat(a.until_iso))
     end = min(end, now + timedelta(hours=5, minutes=45))  # GitHub Actions jobs stop at 6 h
-    s = record(Api(), a.symbols.split(","), a.out, int(end.timestamp() * 1000))
+    run_id = now.strftime("%Y%m%dT%H%M%SZ") + (f"_{a.label}" if a.label else "")
+    s = record(Api(), a.symbols.split(","), a.out, int(end.timestamp() * 1000), run_id=run_id)
     tot = sum(v["trades"] for v in s["symbols"].values())
     gaps = sum(len(v["gaps"]) for v in s["symbols"].values())
     print(f"run {s['run_id']}: {tot} trades, {gaps} gaps, {s['http_429_or_418']} rate limits")

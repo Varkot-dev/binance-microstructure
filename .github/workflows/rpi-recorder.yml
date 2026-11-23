@@ -2,28 +2,48 @@ name: binance-rpi-recorder
 
 # Record Binance USD-M futures trades with the isRPITrade (retail) flag for a fixed list of
 # RPI-enabled contracts. The flag is not in Binance's downloadable archive, so trades that are
-# not recorded are lost. Runs start every 4 hours and each lasts until 75 minutes after the
-# next start, so consecutive runs overlap and a late start leaves no hole; overlapping trades
-# are removed later by trade id. Each run attaches one gzipped CSV and one JSON summary (counts,
-# id gaps, rate limits) to the monthly pre-release rpi-trades-YYYY-MM.
-# Code: src/microstructure/rpi/recorder.py.
+# not recorded are lost.
+#
+# Continuity: each run records for 5 h 30 min and, 40 minutes before it ends, starts the next
+# run itself (workflow_dispatch), so runs overlap. A daily schedule is only a backup, because
+# scheduled runs on this repository have started hours late or not at all. A run does not start
+# a successor if a newer run is already queued or running, so the chain does not multiply.
+#
+# Redundancy: two replicas (a and b) record the same symbols on different runners. Gaps from
+# polling are mostly at different times, so the union by trade id fills most of them.
+#
+# Each replica attaches one gzipped CSV and one JSON summary (counts, id gaps, rate limits) per
+# run to the monthly pre-release rpi-trades-YYYY-MM. Code: src/microstructure/rpi/recorder.py.
 
 on:
   schedule:
-    - cron: "23 */4 * * *"
+    - cron: "23 3 * * *"
   workflow_dispatch:
     inputs:
       minutes:
-        description: "Run length in minutes (empty: until the end of the current slot)"
+        description: "Run length in minutes (empty: 330)"
         required: false
+      chain:
+        description: "Start the next run before this one ends (true/false)"
+        required: false
+        default: "true"
 
 permissions:
   contents: write
+  actions: write
 
 jobs:
   record:
     runs-on: ubuntu-latest
     timeout-minutes: 355
+    strategy:
+      fail-fast: false
+      matrix:
+        replica: [a, b]
+    env:
+      GH_TOKEN: ${{ github.token }}
+      MINUTES: ${{ github.event.inputs.minutes || '330' }}
+      CHAIN: ${{ github.event.inputs.chain || 'true' }}
     steps:
       - uses: actions/checkout@v5
       - uses: astral-sh/setup-uv@v6
@@ -38,22 +58,25 @@ jobs:
             echo "::error::Binance returned HTTP $code from this runner (451 means a blocked location)"
             exit 1
           fi
-      - name: Record
-        env:
-          MINUTES: ${{ github.event.inputs.minutes }}
+      - name: Record (replica a also starts the next run before the end)
         run: |
           set -euo pipefail
-          if [ -n "${MINUTES:-}" ]; then
-            uv run python -m microstructure.rpi.recorder run --out out --minutes "$MINUTES"
-          else
-            end=$(uv run python -m microstructure.rpi.recorder end-time)
-            echo "recording until $end"
-            uv run python -m microstructure.rpi.recorder run --out out --until-iso "$end"
+          if [ "${{ matrix.replica }}" = "a" ] && [ "$CHAIN" = "true" ] && [ "$MINUTES" -ge 60 ]; then
+            (
+              sleep $(( (MINUTES - 40) * 60 ))
+              newer=$(gh api "repos/$GITHUB_REPOSITORY/actions/workflows/rpi-recorder.yml/runs?per_page=20" \
+                --jq "[.workflow_runs[] | select((.status==\"queued\" or .status==\"in_progress\" or .status==\"waiting\") and .id > $GITHUB_RUN_ID)] | length" || echo 0)
+              if [ "$newer" = "0" ]; then
+                gh workflow run rpi-recorder.yml --ref "$GITHUB_REF_NAME" && echo "started the next run"
+              else
+                echo "a newer run is already queued or running; not starting another"
+              fi
+            ) &
           fi
+          uv run python -m microstructure.rpi.recorder run --out out --minutes "$MINUTES" \
+            --label "${{ matrix.replica }}"
       - name: Attach to the monthly release
         if: always()
-        env:
-          GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
           ls out/rpi_run_*.json >/dev/null 2>&1 || { echo "nothing recorded"; exit 0; }
@@ -62,7 +85,7 @@ jobs:
           if ! gh release view "$tag" >/dev/null 2>&1; then
             gh release create "$tag" --prerelease --target "$GITHUB_SHA" \
               --title "Binance RPI trades ${run:0:4}-${run:4:2}" \
-              --notes "Binance USD-M futures trades with the isRPITrade flag, recorded every 4 hours with overlap. One gzipped CSV and one JSON summary (counts, trade-id gaps, rate limits) per run. Produced by .github/workflows/rpi-recorder.yml." || true
+              --notes "Binance USD-M futures trades with the isRPITrade flag, recorded continuously by two replicas with overlapping runs. One gzipped CSV and one JSON summary (counts, trade-id gaps, rate limits) per replica and run; deduplicate by (symbol, id). Produced by .github/workflows/rpi-recorder.yml." || true
           fi
           for i in 1 2 3 4; do
             gh release upload "$tag" out/* --clobber && break
@@ -72,5 +95,5 @@ jobs:
           import json,glob
           s=json.load(open(glob.glob('out/rpi_run_*.json')[0]))
           v=s['symbols'].values()
-          print(f\"Run {s['run_id']}: {sum(x['trades'] for x in v):,} trades, {sum(x['rpi_trades'] for x in v):,} RPI, {sum(len(x['gaps']) for x in v)} gaps, {s['http_429_or_418']} rate limits\")
+          print(f\"Run {s['run_id']}: {sum(x['trades'] for x in v):,} trades, {sum(len(x['gaps']) for x in v)} gaps, {s['http_429_or_418']} rate limits\")
           " >> "$GITHUB_STEP_SUMMARY"
