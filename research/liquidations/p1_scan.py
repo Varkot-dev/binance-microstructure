@@ -638,7 +638,13 @@ def cmd_report(_: argparse.Namespace) -> None:
     days.write_parquet(OUT / "day_table.parquet")
     d3.write_csv(OUT / "d3_dates.csv")
     _load_all("intervals").write_parquet(OUT / "intervals.parquet", compression="zstd")
-    man.write_parquet(OUT / "manifest.parquet", compression="zstd")
+    # One file per year of the file date: the whole manifest is about 110 MB, above GitHub's
+    # 100 MB file limit. Same rows and columns as the planned manifest.parquet.
+    (OUT / "manifest.parquet").unlink(missing_ok=True)
+    man = man.sort("symbol", "kind", "date")
+    for (year,), part in man.group_by(pl.col("date").dt.year(), maintain_order=True):
+        part.write_parquet(OUT / f"manifest_{year}.parquet", compression="zstd",
+                           compression_level=19)
     _load_all("metric_days").write_parquet(OUT / "metrics_days.parquet")
     _load_all("metric_flags").write_parquet(OUT / "metrics_flags.parquet")
     _load_all("errors").write_csv(OUT / "errors.csv")

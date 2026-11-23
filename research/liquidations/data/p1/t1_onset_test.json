@@ -1,0 +1,248 @@
+{
+ "prereg_sha": "f63240d23064848d73613145d0d8e47aaa9086246b67ef1929539f5453f64543",
+ "mask_sha": "c800985ddac189c14044b8c5364c9bce02d5b62401f956cc5b43237d21731a09",
+ "screen_sha": "4e3934d6f2891f92fcd80deedca26b94a567ad364b594e6e3305919b189d09e4",
+ "n_onsets": 19082,
+ "primary": {
+  "bid": {
+   "n": 8575,
+   "median": -0.0025521069765090942,
+   "null_median": 0.0,
+   "n_shifts": 1298,
+   "p": 0.0007698229407236335,
+   "share_predicted_sign": 0.6348688046647231,
+   "null_share": 0.49102797577755747
+  },
+  "ask": {
+   "n": 10460,
+   "median": 0.0,
+   "null_median": 0.0,
+   "n_shifts": 1298,
+   "p": 0.6012317167051578,
+   "share_predicted_sign": 0.49378585086042065,
+   "null_share": 0.4811170335870446
+  }
+ },
+ "secondary": {
+  "bid:unseen_months": {
+   "n": 6181,
+   "median": -0.0010733453091233969,
+   "null_median": 0.0,
+   "n_shifts": 1298,
+   "p": 0.03695150115473441,
+   "share_predicted_sign": 0.5919754085099499,
+   "null_share": 0.48757935982085965
+  },
+  "bid:hour_clusters": {
+   "n": 8575,
+   "median": 0.0,
+   "null_median": 0.0,
+   "n_shifts": 1298,
+   "p": 0.9923017705927637,
+   "share_predicted_sign": 0.6348688046647231,
+   "null_share": 0.49102797577755747
+  },
+  "bid:h15": {
+   "n": 8580,
+   "median": -0.001547715743072331,
+   "null_median": 0.0,
+   "n_shifts": 1298,
+   "p": 0.0007698229407236335,
+   "share_predicted_sign": 0.598951048951049,
+   "null_share": 0.47963852524925354
+  },
+  "bid:h240": {
+   "n": 8567,
+   "median": -0.003686640178784728,
+   "null_median": -3.923301846953109e-06,
+   "n_shifts": 1298,
+   "p": 0.010007698229407237,
+   "share_predicted_sign": 0.6279911287498541,
+   "null_share": 0.49921315648756726
+  },
+  "bid:S1": {
+   "n": 5402,
+   "median": -0.017998987808823586,
+   "null_median": 0.0,
+   "n_shifts": 1298,
+   "p": 0.0007698229407236335,
+   "share_predicted_sign": 0.7576823398741207,
+   "null_share": 0.490061650047054
+  },
+  "bid:S3": {
+   "n": 3173,
+   "median": 0.0,
+   "null_median": 0.0,
+   "n_shifts": 1298,
+   "p": 0.7336412625096228,
+   "share_predicted_sign": 0.4257800189095493,
+   "null_share": 0.49656843248465826
+  },
+  "bid:2023": {
+   "n": 370,
+   "median": 0.001469895418267697,
+   "null_median": 0.0,
+   "n_shifts": 1298,
+   "p": 0.9992301770592764,
+   "share_predicted_sign": 0.44594594594594594,
+   "null_share": 0.48380558206266805
+  },
+  "bid:2024": {
+   "n": 1055,
+   "median": -0.00872261356562376,
+   "null_median": 0.0,
+   "n_shifts": 1298,
+   "p": 0.0007698229407236335,
+   "share_predicted_sign": 0.704265402843602,
+   "null_share": 0.4897909124970013
+  },
+  "bid:2025": {
+   "n": 2741,
+   "median": -0.023972945287823677,
+   "null_median": 0.0,
+   "n_shifts": 1298,
+   "p": 0.0007698229407236335,
+   "share_predicted_sign": 0.8077344035023714,
+   "null_share": 0.4965133756130212
+  },
+  "bid:2026": {
+   "n": 4409,
+   "median": -0.0001758813887136057,
+   "null_median": 0.0,
+   "n_shifts": 1298,
+   "p": 0.3856812933025404,
+   "share_predicted_sign": 0.52665003402132,
+   "null_share": 0.4857014384247606
+  },
+  "bid:s3_10": {
+   "n": 14864,
+   "median": -0.0004580854292726144,
+   "null_median": 0.0,
+   "n_shifts": 1298,
+   "p": 0.1608929946112394,
+   "share_predicted_sign": 0.5610871905274488,
+   "null_share": 0.4914747915168376
+  },
+  "bid:s3_40": {
+   "n": 6221,
+   "median": -0.01325383223593235,
+   "null_median": 0.0,
+   "n_shifts": 1298,
+   "p": 0.0007698229407236335,
+   "share_predicted_sign": 0.7133901302041472,
+   "null_share": 0.4905831777970245
+  },
+  "ask:unseen_months": {
+   "n": 8079,
+   "median": -2.100024175888393e-05,
+   "null_median": 0.0,
+   "n_shifts": 1298,
+   "p": 0.5842956120092379,
+   "share_predicted_sign": 0.4589676940215373,
+   "null_share": 0.47881172795592697
+  },
+  "ask:hour_clusters": {
+   "n": 10460,
+   "median": 0.00042203644989058375,
+   "null_median": 0.0,
+   "n_shifts": 1298,
+   "p": 0.0007698229407236335,
+   "share_predicted_sign": 0.49378585086042065,
+   "null_share": 0.4811170335870446
+  },
+  "ask:h15": {
+   "n": 10467,
+   "median": 0.0,
+   "null_median": 0.0,
+   "n_shifts": 1298,
+   "p": 0.7321016166281755,
+   "share_predicted_sign": 0.42438138912773476,
+   "null_share": 0.47339586389677235
+  },
+  "ask:h240": {
+   "n": 10443,
+   "median": 0.00041101520764641464,
+   "null_median": 0.0,
+   "n_shifts": 1298,
+   "p": 0.2779060816012317,
+   "share_predicted_sign": 0.5208273484630853,
+   "null_share": 0.48601329564843226
+  },
+  "ask:S1": {
+   "n": 6563,
+   "median": 0.0009180629276670516,
+   "null_median": 0.0,
+   "n_shifts": 1298,
+   "p": 0.0800615858352579,
+   "share_predicted_sign": 0.5118086241048301,
+   "null_share": 0.4805639064652512
+  },
+  "ask:S3": {
+   "n": 3897,
+   "median": 0.0,
+   "null_median": 0.0,
+   "n_shifts": 1298,
+   "p": 0.6004618937644342,
+   "share_predicted_sign": 0.4634334103156274,
+   "null_share": 0.4838595664467483
+  },
+  "ask:2023": {
+   "n": 400,
+   "median": 0.0028304177103564143,
+   "null_median": 0.0,
+   "n_shifts": 1298,
+   "p": 0.0007698229407236335,
+   "share_predicted_sign": 0.5825,
+   "null_share": 0.48918064723376475
+  },
+  "ask:2024": {
+   "n": 2400,
+   "median": 0.004904745379462838,
+   "null_median": 0.0001488491689087823,
+   "n_shifts": 1298,
+   "p": 0.010007698229407237,
+   "share_predicted_sign": 0.6729166666666667,
+   "null_share": 0.5003513538450385
+  },
+  "ask:2025": {
+   "n": 2032,
+   "median": -0.011063548270612955,
+   "null_median": 0.0,
+   "n_shifts": 1298,
+   "p": 1.0,
+   "share_predicted_sign": 0.43208661417322836,
+   "null_share": 0.46955138362996446
+  },
+  "ask:2026": {
+   "n": 5628,
+   "median": -1.0486561677680584e-05,
+   "null_median": 0.0,
+   "n_shifts": 1298,
+   "p": 0.5665896843725943,
+   "share_predicted_sign": 0.43336886993603413,
+   "null_share": 0.47475620194147733
+  },
+  "ask:s3_10": {
+   "n": 16468,
+   "median": 0.0,
+   "null_median": 0.0,
+   "n_shifts": 1298,
+   "p": 0.6066204772902233,
+   "share_predicted_sign": 0.48900898712654844,
+   "null_share": 0.481292078183156
+  },
+  "ask:s3_40": {
+   "n": 7783,
+   "median": 0.0004633920325431973,
+   "null_median": 0.0,
+   "n_shifts": 1298,
+   "p": 0.16628175519630484,
+   "share_predicted_sign": 0.5111139663368881,
+   "null_share": 0.4816616870465115
+  }
+ },
+ "holm_reject": {
+  "bid": true,
+  "ask": false
+ }
+}

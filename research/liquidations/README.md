@@ -1,7 +1,8 @@
 # Liquidation cascades: does the market warn you before it breaks?
 
 Status: literature and data review done (2026-11-20). P1 pre-registration, mask v2 and metrics
-screen reviewed and locked (2026-11-22); the full P1 scan is running.
+screen reviewed and locked (2026-11-22); P1 scan and test T1 done (2026-11-23), results in
+[data/p1/p1_report.md](data/p1/p1_report.md), awaiting review.
 Everything numeric below that comes from our own probes is exploratory: it was seen before any plan
 was locked, and every pre-registration must say so.
 
@@ -18,7 +19,8 @@ Companion files in this folder:
 | [metrics_screen_v1.txt](metrics_screen_v1.txt) | Metrics screen (spike-and-reverse, ghost rows, per-file label convention), locked |
 | [PREREGISTRATION_P1.md](PREREGISTRATION_P1.md) | Locked P1 plan: scope, interpretation notes, onset test T1, review decisions |
 | [p1_scan.py](p1_scan.py) | P1 scanner; refuses to run until the plan is hashed. Library code in `src/microstructure/quality/` |
-| [data/p1/](data/p1/) | `universe.csv` (scope) and `validation.md` (acceptance checks run before locking) |
+| [data/p1/](data/p1/) | `universe.csv` (scope), `validation.md` (acceptance checks run before locking), `p1_report.md` (results), the day table, intervals, D3 dates, metrics screen, onsets, T1 and the download manifest (one file per year, `manifest_YYYY.parquet`, because the single planned file exceeds GitHub's 100 MB limit) |
+| [p1_checkpoint.sh](p1_checkpoint.sh) | Saves or restores per-symbol scan outputs on the data-only branch `claude/p1-scan-checkpoint` |
 
 ## 1. The question
 
@@ -226,8 +228,9 @@ nothing until future events).
       label convention follows whether Binance rewrote the file, not the 2026-06-25 date, so it
       is decided per file (rule M5).
 - [x] Review PREREGISTRATION_P1.md (open questions Q1 to Q4), lock it and the screen by hash.
-- [ ] Run the full bookDepth and metrics scan (rewritten from scratch: the earlier scanner was not
-      in the repo) and publish the ledger and test T1.
+- [x] Run the full bookDepth and metrics scan (rewritten from scratch: the earlier scanner was not
+      in the repo) and publish the ledger and test T1. 845 symbols, 1,580,488 files, 0 errors.
+      T1 rejects H-bid (p = 1/1,299), not H-ask; see data/p1/p1_report.md.
 - [ ] Deduplicate COIN-M liquidationSnapshot, apply the outage mask, and pre-register P2 with a
       held-out symbol set.
 - [ ] Fix the cascade rule in [EVENT_DEFINITION_DRAFT.md](EVENT_DEFINITION_DRAFT.md), remove "DRAFT",
