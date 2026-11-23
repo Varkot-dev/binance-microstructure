@@ -1,0 +1,119 @@
+name: hyperliquid-p1-crawl
+
+# Project 1 data: every 7 days, fetch portfolio, ledger and sub-accounts for all 48,035
+# wallets of the frozen 2026-11-19 leaderboard cohort (plus their sub-accounts) and the
+# benchmark candles, funding and HLP history (research/hyperliquid/PREREGISTRATION_P1.md,
+# section 2.2). A pass is named after the Monday of its ISO week and stored as the
+# pre-release hl-p1-pass-YYYYMMDD. One pass is about 62 h of API weight from one IP, so it
+# is split into 24 shards run as parallel jobs. The workflow runs daily: shards that
+# finished skip at once, and a shard cut short by the time budget resumes where it stopped.
+# Code: src/microstructure/hyperliquid/crawl.py.
+
+on:
+  schedule:
+    - cron: "41 2 * * *"
+  workflow_dispatch:
+    inputs:
+      pass_id:
+        description: "Pass id (YYYYMMDD Monday); empty for the current week"
+        required: false
+
+permissions:
+  contents: write
+
+concurrency:
+  group: hl-p1-crawl
+  cancel-in-progress: false
+
+env:
+  COHORT_TAG: hl-snapshots-2026-11
+  COHORT_FILE: leaderboard_20261119T235851Z.json.gz
+
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    outputs:
+      pass_id: ${{ steps.p.outputs.pass_id }}
+      tag: ${{ steps.p.outputs.tag }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.12"
+      - run: uv sync --no-dev
+      - id: p
+        env:
+          GH_TOKEN: ${{ github.token }}
+          INPUT_PASS: ${{ github.event.inputs.pass_id }}
+        run: |
+          set -euo pipefail
+          pid="${INPUT_PASS:-$(uv run python -m microstructure.hyperliquid.crawl pass-id)}"
+          tag="hl-p1-pass-$pid"
+          echo "pass_id=$pid" >> "$GITHUB_OUTPUT"
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          if ! gh release view "$tag" >/dev/null 2>&1; then
+            gh release create "$tag" --prerelease --target "$GITHUB_SHA" \
+              --title "Hyperliquid P1 crawl, pass $pid" \
+              --notes "Project 1 weekly crawl of the frozen 2026-11-19 cohort (portfolio, ledger, sub-accounts) and benchmarks, as served. One gzipped JSONL file per shard with a status file holding its sha256. Produced by .github/workflows/hl-p1-crawl.yml."
+          fi
+
+  shard:
+    needs: prepare
+    runs-on: ubuntu-latest
+    timeout-minutes: 355
+    strategy:
+      fail-fast: false
+      max-parallel: 16
+      matrix:
+        shard: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23]
+    env:
+      GH_TOKEN: ${{ github.token }}
+      TAG: ${{ needs.prepare.outputs.tag }}
+      PASS_ID: ${{ needs.prepare.outputs.pass_id }}
+      SHARD: ${{ matrix.shard }}
+    steps:
+      - id: s
+        name: Skip if this shard already finished the pass
+        run: |
+          set -euo pipefail
+          name=$(printf 'shard_%02d' "$SHARD")
+          echo "name=$name" >> "$GITHUB_OUTPUT"
+          mkdir -p out
+          if gh release download "$TAG" -R "$GITHUB_REPOSITORY" -p "$name.status.json" -D out 2>/dev/null \
+             && python3 -c "import json,sys; sys.exit(0 if json.load(open('out/$name.status.json'))['complete'] else 1)"; then
+            echo "done=true" >> "$GITHUB_OUTPUT"
+            echo "$name already complete for pass $PASS_ID" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "done=false" >> "$GITHUB_OUTPUT"
+          fi
+      - if: steps.s.outputs.done != 'true'
+        uses: actions/checkout@v5
+        with:
+          path: repo
+      - if: steps.s.outputs.done != 'true'
+        uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.12"
+      - if: steps.s.outputs.done != 'true'
+        name: Fetch the shard (resumes from earlier runs of this pass)
+        run: |
+          set -euo pipefail
+          name=${{ steps.s.outputs.name }}
+          gh release download "$COHORT_TAG" -R "$GITHUB_REPOSITORY" -p "$COHORT_FILE" -D cohort
+          gh release download "$TAG" -R "$GITHUB_REPOSITORY" -p "$name.jsonl.gz" -D out 2>/dev/null || true
+          cd repo && uv sync --no-dev
+          uv run python -m microstructure.hyperliquid.crawl shard \
+            --cohort "../cohort/$COHORT_FILE" --shard "$SHARD" --n-shards 24 \
+            --out ../out --pass-id "$PASS_ID" --budget-s 19200
+      - if: always() && steps.s.outputs.done != 'true'
+        name: Upload to the pass release
+        run: |
+          set -euo pipefail
+          name=${{ steps.s.outputs.name }}
+          [ -f "out/$name.status.json" ] || { echo "no output to upload"; exit 0; }
+          for i in 1 2 3 4; do
+            gh release upload "$TAG" -R "$GITHUB_REPOSITORY" "out/$name.jsonl.gz" "out/$name.status.json" --clobber && break
+            sleep $((i * 20))
+          done
+          python3 -c "import json; s=json.load(open('out/$name.status.json')); print('| ' + ' | '.join(f'{k}: {s[k]}' for k in ('complete','wallets_ok','sub_accounts_ok','bench_ok','failed','pending','http_429_this_run','seconds_this_run')) + ' |')" >> "$GITHUB_STEP_SUMMARY"
