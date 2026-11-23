@@ -64,7 +64,9 @@ jobs:
     timeout-minutes: 355
     strategy:
       fail-fast: false
-      max-parallel: 16
+      # 12 at a time still finishes the 24 shards in two waves, and leaves 8 of the free
+      # plan's 20 concurrent job slots for ci, the RPI recorder and the snapshots.
+      max-parallel: 12
       matrix:
         shard: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23]
     env:
